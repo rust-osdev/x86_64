@@ -1,0 +1,8 @@
+[project]
+name = "cpu"
+version = "0.0.1-pre"
+authors = []
+
+[lib]
+name = "cpu"
+path = "lib.rs"
