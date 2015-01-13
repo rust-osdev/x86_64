@@ -7,14 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![macro_escape]
-
 #[macro_export]
-macro_rules! bitflags(
+macro_rules! bitflags {
     ($(#[$attr:meta])* flags $BitFlags:ident: $T:ty {
         $($(#[$Flag_attr:meta])* static $Flag:ident = $value:expr),+
     }) => (
-        #[deriving(PartialEq, Eq, Clone, PartialOrd, Ord)]
+        #[derive(PartialEq, Eq, Clone, PartialOrd, Ord, Copy)]
         $(#[$attr])*
         pub struct $BitFlags {
             bits: $T,
@@ -43,9 +41,9 @@ macro_rules! bitflags(
             /// representation contains bits that do not correspond to a flag.
             pub fn from_bits(bits: $T) -> ::std::option::Option<$BitFlags> {
                 if (bits & !$BitFlags::all().bits()) != 0 {
-                    ::std::option::None
+                    ::std::option::Option::None
                 } else {
-                    ::std::option::Some($BitFlags { bits: bits })
+                    ::std::option::Option::Some($BitFlags { bits: bits })
                 }
             }
 
@@ -67,12 +65,12 @@ macro_rules! bitflags(
 
             /// Returns `true` if there are flags common to both `self` and `other`.
             pub fn intersects(&self, other: $BitFlags) -> bool {
-                !(self & other).is_empty()
+                !(*self & other).is_empty()
             }
 
             /// Returns `true` all of the flags in `other` are contained within `self`.
             pub fn contains(&self, other: $BitFlags) -> bool {
-                (self & other) == other
+                (*self & other) == other
             }
 
             /// Inserts the specified flags in-place.
@@ -86,36 +84,40 @@ macro_rules! bitflags(
             }
         }
 
-        impl BitOr<$BitFlags, $BitFlags> for $BitFlags {
+        impl ::std::ops::BitOr for $BitFlags {
+            type Output = $BitFlags;
             /// Returns the union of the two sets of flags.
             #[inline]
-            fn bitor(&self, other: &$BitFlags) -> $BitFlags {
+            fn bitor(self, other: $BitFlags) -> $BitFlags {
                 $BitFlags { bits: self.bits | other.bits }
             }
         }
 
-        impl BitAnd<$BitFlags, $BitFlags> for $BitFlags {
+        impl ::std::ops::BitAnd for $BitFlags {
+            type Output = $BitFlags;
             /// Returns the intersection between the two sets of flags.
             #[inline]
-            fn bitand(&self, other: &$BitFlags) -> $BitFlags {
+            fn bitand(self, other: $BitFlags) -> $BitFlags {
                 $BitFlags { bits: self.bits & other.bits }
             }
         }
 
-        impl Sub<$BitFlags, $BitFlags> for $BitFlags {
+        impl ::std::ops::Sub for $BitFlags {
+            type Output = $BitFlags;
             /// Returns the set difference of the two sets of flags.
             #[inline]
-            fn sub(&self, other: &$BitFlags) -> $BitFlags {
+            fn sub(self, other: $BitFlags) -> $BitFlags {
                 $BitFlags { bits: self.bits & !other.bits }
             }
         }
 
-        impl Not<$BitFlags> for $BitFlags {
+        impl ::std::ops::Not for $BitFlags {
+            type Output = $BitFlags;
             /// Returns the complement of this set of flags.
             #[inline]
-            fn not(&self) -> $BitFlags {
+            fn not(self) -> $BitFlags {
                 $BitFlags { bits: !self.bits } & $BitFlags::all()
             }
         }
     )
-)
+}
