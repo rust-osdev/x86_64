@@ -1,4 +1,4 @@
-#![allow(non_uppercase_statics)]
+#![allow(non_upper_case_globals)]
 
 use core::prelude::*;
 use core::mem::size_of;
@@ -24,7 +24,7 @@ bitflags!(
 		static VirtualInterruptPending = 1 << 20,
 		static CpuIdFlag = 1 << 21
 	}
-)
+);
 
 bitflags!(
 	flags Cr0Flags: u32 {
@@ -40,7 +40,7 @@ bitflags!(
 		static CacheDisable = 1 << 30,
 		static EnablePaging = 1 << 31
 	}
-)
+);
 
 bitflags!(
 	flags Cr4Flags: u32 {
@@ -62,8 +62,9 @@ bitflags!(
 		static EnableSmep = 1 << 20,
 		static EnableSmap = 1 << 21
 	}
-)
+);
 
+#[derive(Copy)]
 #[repr(C, packed)]
 pub struct GdtEntry {
 	limit: u16,
@@ -74,6 +75,7 @@ pub struct GdtEntry {
 	base3: u8,
 }
 
+#[derive(Copy)]
 #[repr(C, packed)]
 pub struct IdtEntry {
 	offset1: u16,
@@ -95,12 +97,12 @@ impl GdtEntry {
 		}
 	}
 
-	pub fn new(base: u32, limit: uint, access: u8) -> GdtEntry {
+	pub fn new(base: u32, limit: usize, access: u8) -> GdtEntry {
 		let (limit, flags) = if limit < 0x100000 {
 			((limit & 0xFFFF) as u16, ((limit & 0xF0000) >> 16) as u8 | 0x40u8)
 		} else {
 			if ((limit - 0xFFF) & 0xFFF) > 0 {
-				fail!("bad segment limit for GDT entry");
+				panic!("bad segment limit for GDT entry");
 			}
 			(((limit & 0xFFFF000) >> 12) as u16, ((limit & 0xF0000000) >> 28) as u8 | 0xC0u8)
 		};
@@ -118,10 +120,10 @@ impl GdtEntry {
 pub const NULL_IDT_ENTRY: IdtEntry = IdtEntry { offset1: 0, selector: 0, reserved: 0, flags: 0, offset2: 0 };
 
 impl IdtEntry {
-	pub fn new(f: unsafe extern "C" fn(), dpl: uint, block: bool) -> IdtEntry {
+	pub fn new(f: unsafe extern "C" fn(), dpl: usize, block: bool) -> IdtEntry {
 		IdtEntry {
-			offset1: ((f as uint) & 0xFFFF) as u16,
-			offset2: (((f as uint) & 0xFFFF0000) >> 16) as u16,
+			offset1: ((f as usize) & 0xFFFF) as u16,
+			offset2: (((f as usize) & 0xFFFF0000) >> 16) as u16,
 			selector: 8,
 			reserved: 0,
 			flags: if block { 0x8E } else { 0x8F } | ((dpl as u8 & 3) << 5)
@@ -129,6 +131,7 @@ impl IdtEntry {
 	}
 }
 
+#[derive(Copy)]
 #[repr(C, packed)]
 pub struct Tss {
 	pub link: u16,
@@ -221,7 +224,7 @@ impl Tss {
 pub fn get_cr0() -> Cr0Flags {
 	unsafe {
 		let mut r: u32;
-		asm!("mov $0, cr0" : "=r"(r) ::: "intel")
+		asm!("mov $0, cr0" : "=r"(r) ::: "intel");
 		Cr0Flags::from_bits_truncate(r)
 	}
 }
@@ -230,7 +233,7 @@ pub fn get_cr0() -> Cr0Flags {
 pub fn get_cr2() -> u32 {
 	unsafe {
 		let mut r: u32;
-		asm!("mov $0, cr2" : "=r"(r) ::: "intel")
+		asm!("mov $0, cr2" : "=r"(r) ::: "intel");
 		r
 	}
 }
@@ -239,7 +242,7 @@ pub fn get_cr2() -> u32 {
 pub fn get_cr3() -> u32 {
 	unsafe {
 		let mut r: u32;
-		asm!("mov $0, cr3" : "=r"(r) ::: "intel")
+		asm!("mov $0, cr3" : "=r"(r) ::: "intel");
 		r
 	}
 }
@@ -248,7 +251,7 @@ pub fn get_cr3() -> u32 {
 pub fn get_cr4() -> Cr4Flags {
 	unsafe {
 		let mut r: u32;
-		asm!("mov $0, cr4" : "=r"(r) ::: "intel")
+		asm!("mov $0, cr4" : "=r"(r) ::: "intel");
 		Cr4Flags::from_bits_truncate(r)
 	}
 }
@@ -257,7 +260,7 @@ pub fn get_cr4() -> Cr4Flags {
 pub fn get_flags() -> EFlags {
 	unsafe {
 		let mut r: u32;
-		asm!("pushfd; pop $0" : "=r"(r) ::: "intel")
+		asm!("pushfd; pop $0" : "=r"(r) ::: "intel");
 		EFlags::from_bits_truncate(r)
 	}
 }
@@ -265,17 +268,17 @@ pub fn get_flags() -> EFlags {
 
 #[inline(always)]
 pub unsafe fn set_cr0(flags: Cr0Flags) {
-	asm!("mov cr0, $0" :: "r"(flags.bits()) :: "volatile", "intel")
+	asm!("mov cr0, $0" :: "r"(flags.bits()) :: "volatile", "intel");
 }
 
 #[inline(always)]
 pub unsafe fn set_cr3(val: u32) {
-	asm!("mov cr3, $0" :: "r"(val) :: "volatile", "intel")
+	asm!("mov cr3, $0" :: "r"(val) :: "volatile", "intel");
 }
 
 #[inline(always)]
 pub unsafe fn set_cr4(flags: Cr4Flags) {
-	asm!("mov cr4, $0" :: "r"(flags.bits()) :: "volatile", "intel")
+	asm!("mov cr4, $0" :: "r"(flags.bits()) :: "volatile", "intel");
 }
 
 #[inline(always)]
@@ -285,7 +288,7 @@ pub unsafe fn set_gdt(gdt: &[GdtEntry]) {
 		limit: u16,
 		ptr: *const GdtEntry,
 	}
-	asm!("lgdt $0" :: "*m"(&GDTR { ptr: gdt.as_ptr(), limit: (gdt.len()*8 - 1) as u16 }) :: "volatile", "intel")
+	asm!("lgdt $0" :: "*m"(&GDTR { ptr: gdt.as_ptr(), limit: (gdt.len()*8 - 1) as u16 }) :: "volatile", "intel");
 }
 
 #[inline(always)]
@@ -295,16 +298,16 @@ pub unsafe fn set_idt(idt: &[IdtEntry]) {
 		limit: u16,
 		ptr: *const IdtEntry,
 	}
-	asm!("lidt $0" :: "*m"(&IDTR { ptr: idt.as_ptr(), limit: idt.len() as u16 * 8 }) :: "volatile", "intel")
+	asm!("lidt $0" :: "*m"(&IDTR { ptr: idt.as_ptr(), limit: idt.len() as u16 * 8 }) :: "volatile", "intel");
 }
 
 #[inline(always)]
 pub unsafe fn set_flags(val: EFlags) {
-	asm!("push $0; popfd" :: "r"(val.bits()) : "flags" : "volatile", "intel")
+	asm!("push $0; popfd" :: "r"(val.bits()) : "flags" : "volatile", "intel");
 }
 
 #[inline(always)]
 pub unsafe fn jump_stack(stack: *mut (), ip: *const ()) -> ! {
-	asm!("mov esp, $0; jmp $1" :: "rg"(stack), "r"(ip) :: "volatile", "intel")
+	asm!("mov esp, $0; jmp $1" :: "rg"(stack), "r"(ip) :: "volatile", "intel");
 	loop { }
 }
