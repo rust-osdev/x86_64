@@ -19,12 +19,4 @@ mod cpu;
 #[path = "x86_64.rs"]
 mod cpu;
 
-pub mod std {
-	pub use core::fmt;
-	pub use core::num;
-	pub use core::option;
-	pub use core::cmp;
-	pub use core::clone;
-	pub use core::marker;
-	pub use core::ops;
-}
+pub mod std { pub use core::*; }
