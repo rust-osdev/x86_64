@@ -9,62 +9,62 @@ mod x86_shared;
 
 bitflags!(
 	flags EFlags: u32 {
-		static CarryFlag = 1 << 0,
-		static ParityFlag = 1 << 2,
-		static AdjustFlag = 1 << 4,
-		static ZeroFlag = 1 << 6,
-		static SignFlag = 1 << 7,
-		static TrapFlag = 1 << 8,
-		static InterruptFlag = 1 << 9,
-		static DirectionFlag = 1 << 10,
-		static OverflowFlag = 1 << 11,
-		static Iopl1 = 1 << 12,
-		static Iopl2 = 1 << 13,
-		static NestedTaskFlag = 1 << 14,
-		static ResumeFlag = 1 << 16,
-		static Virtual8086Flag = 1 << 17,
-		static AlignmentFlag = 1 << 18,
-		static VirtualInterruptFlag = 1 << 19,
-		static VirtualInterruptPending = 1 << 20,
-		static CpuIdFlag = 1 << 21
+		const CarryFlag = 1 << 0,
+		const ParityFlag = 1 << 2,
+		const AdjustFlag = 1 << 4,
+		const ZeroFlag = 1 << 6,
+		const SignFlag = 1 << 7,
+		const TrapFlag = 1 << 8,
+		const InterruptFlag = 1 << 9,
+		const DirectionFlag = 1 << 10,
+		const OverflowFlag = 1 << 11,
+		const Iopl1 = 1 << 12,
+		const Iopl2 = 1 << 13,
+		const NestedTaskFlag = 1 << 14,
+		const ResumeFlag = 1 << 16,
+		const Virtual8086Flag = 1 << 17,
+		const AlignmentFlag = 1 << 18,
+		const VirtualInterruptFlag = 1 << 19,
+		const VirtualInterruptPending = 1 << 20,
+		const CpuIdFlag = 1 << 21
 	}
 );
 
 bitflags!(
 	flags Cr0Flags: u32 {
-		static ProtectedMode = 1 << 0,
-		static MonitorCoprocessor = 1 << 1,
-		static EmulateCoprocessor = 1 << 2,
-		static TaskSwitched = 1 << 3,
-		static ExtensionType = 1 << 4,
-		static NumericError = 1 << 5,
-		static WriteProtect = 1 << 16,
-		static AlignmentMask = 1 << 18,
-		static NotWriteThrough = 1 << 29,
-		static CacheDisable = 1 << 30,
-		static EnablePaging = 1 << 31
+		const ProtectedMode = 1 << 0,
+		const MonitorCoprocessor = 1 << 1,
+		const EmulateCoprocessor = 1 << 2,
+		const TaskSwitched = 1 << 3,
+		const ExtensionType = 1 << 4,
+		const NumericError = 1 << 5,
+		const WriteProtect = 1 << 16,
+		const AlignmentMask = 1 << 18,
+		const NotWriteThrough = 1 << 29,
+		const CacheDisable = 1 << 30,
+		const EnablePaging = 1 << 31
 	}
 );
 
 bitflags!(
 	flags Cr4Flags: u32 {
-		static EnableVme = 1 << 0,
-		static VirtualInterrupts = 1 << 1,
-		static TimeStampDisable = 1 << 2,
-		static DebuggingExtensions = 1 << 3,
-		static EnablePse = 1 << 4,
-		static EnablePae = 1 << 5,
-		static EnableMachineCheck = 1 << 6,
-		static EnableGlobalPages = 1 << 7,
-		static EnablePpmc = 1 << 8,
-		static EnableSse = 1 << 9,
-		static UnmaskedSse = 1 << 10,
-		static EnableVmx = 1 << 13,
-		static EnableSmx = 1 << 14,
-		static EnablePcid = 1 << 17,
-		static EnableOsXSave = 1 << 18,
-		static EnableSmep = 1 << 20,
-		static EnableSmap = 1 << 21
+		const EnableVme = 1 << 0,
+		const VirtualInterrupts = 1 << 1,
+		const TimeStampDisable = 1 << 2,
+		const DebuggingExtensions = 1 << 3,
+		const EnablePse = 1 << 4,
+		const EnablePae = 1 << 5,
+		const EnableMachineCheck = 1 << 6,
+		const EnableGlobalPages = 1 << 7,
+		const EnablePpmc = 1 << 8,
+		const EnableSse = 1 << 9,
+		const UnmaskedSse = 1 << 10,
+		const EnableVmx = 1 << 13,
+		const EnableSmx = 1 << 14,
+		const EnablePcid = 1 << 17,
+		const EnableOsXSave = 1 << 18,
+		const EnableSmep = 1 << 20,
+		const EnableSmap = 1 << 21
 	}
 );
 

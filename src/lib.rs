@@ -7,10 +7,10 @@
 
 #[allow(unstable)] #[macro_use]
 extern crate core;
+#[macro_use]
+extern crate bitflags;
 
 pub use cpu::*;
-
-#[macro_use] mod bitflags;
 
 #[cfg(target_arch="x86")]
 #[path = "x86.rs"]
