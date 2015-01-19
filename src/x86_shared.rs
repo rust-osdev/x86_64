@@ -1,5 +1,7 @@
 #![allow(non_upper_case_globals)]
 
+use core::prelude::*;
+
 bitflags!(
 	flags Features: u64 {
 		const Fpu = 1 << 0,
@@ -119,6 +121,14 @@ pub unsafe fn read_msr(msr: Msr) -> u64 {
 	r1 as u64 | ((r2 as u64) << 32)
 }
 
+#[derive(Copy, FromPrimitive)]
+pub enum PrivilegeLevel {
+	Ring0 = 0,
+	Ring1 = 1,
+	Ring2 = 2,
+	Ring3 = 3,
+}
+
 #[derive(Copy)]
 #[repr(C, packed)]
 pub struct SegmentSelector {
@@ -127,7 +137,7 @@ pub struct SegmentSelector {
 
 impl SegmentSelector {
 	#[inline(always)]
-	pub fn new(index: u16, rpl: u8) -> SegmentSelector {
+	pub fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
 		SegmentSelector {
 			data: index << 3 | rpl as u16
 		}
@@ -169,6 +179,14 @@ pub unsafe fn set_fs(selector: SegmentSelector) {
 }
 
 #[inline(always)]
+pub unsafe fn set_cs(selector: SegmentSelector) {
+	asm!("push $0;
+		push $$1f
+		lret;
+		1:" :: "ri"(selector.bits() as u32) :: "volatile");
+}
+
+#[inline(always)]
 pub unsafe fn enable_interrupts() {
 	asm!("sti" :::: "volatile", "intel");
 }
@@ -199,7 +217,23 @@ pub unsafe fn out32(port: u16, value: u32) {
 }
 
 #[inline(always)]
-pub unsafe fn in8(port: u16) -> u8 { // unsafe since devices change state upon being read
+pub unsafe fn outs8(port: u16, buf: &[u8]) {
+	asm!("rep outsb dx, [esi]" :: "{ecx}"(buf.len()), "{dx}"(port), "{esi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
+}
+
+#[inline(always)]
+pub unsafe fn outs16(port: u16, buf: &[u16]) {
+	asm!("rep outsw dx, [esi]" :: "{ecx}"(buf.len()), "{dx}"(port), "{esi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
+}
+
+#[inline(always)]
+pub unsafe fn outs32(port: u16, buf: &[u32]) {
+	asm!("rep outsd dx, [esi]" :: "{ecx}"(buf.len()), "{dx}"(port), "{esi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
+}
+
+
+#[inline(always)]
+pub unsafe fn in8(port: u16) -> u8 {
 	let r: u8;
 	asm!("in $0, $1" : "={al}"(r) : "{dx}"(port) :: "intel");
 	r
@@ -217,4 +251,19 @@ pub unsafe fn in32(port: u16) -> u32 {
 	let r: u32;
 	asm!("in $0, $1" : "={eax}"(r) : "{dx}"(port) :: "intel");
 	r
+}
+
+#[inline(always)]
+pub unsafe fn ins8(port: u16, buf: &mut [u8]) {
+	asm!("rep insb [edi], dx" :: "{ecx}"(buf.len()), "{dx}"(port), "{edi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
+}
+
+#[inline(always)]
+pub unsafe fn ins16(port: u16, buf: &mut [u16]) {
+	asm!("rep insw [edi], dx" :: "{ecx}"(buf.len()), "{dx}"(port), "{edi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
+}
+
+#[inline(always)]
+pub unsafe fn ins32(port: u16, buf: &mut [u32]) {
+	asm!("rep insd [edi], dx" :: "{ecx}"(buf.len()), "{dx}"(port), "{edi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
 }

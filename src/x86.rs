@@ -7,7 +7,7 @@ use core::mem::size_of;
 
 mod x86_shared;
 
-bitflags!(
+bitflags! {
 	flags EFlags: u32 {
 		const CarryFlag = 1 << 0,
 		const ParityFlag = 1 << 2,
@@ -28,9 +28,9 @@ bitflags!(
 		const VirtualInterruptPending = 1 << 20,
 		const CpuIdFlag = 1 << 21
 	}
-);
+}
 
-bitflags!(
+bitflags! {
 	flags Cr0Flags: u32 {
 		const ProtectedMode = 1 << 0,
 		const MonitorCoprocessor = 1 << 1,
@@ -44,9 +44,9 @@ bitflags!(
 		const CacheDisable = 1 << 30,
 		const EnablePaging = 1 << 31
 	}
-);
+}
 
-bitflags!(
+bitflags! {
 	flags Cr4Flags: u32 {
 		const EnableVme = 1 << 0,
 		const VirtualInterrupts = 1 << 1,
@@ -66,7 +66,17 @@ bitflags!(
 		const EnableSmep = 1 << 20,
 		const EnableSmap = 1 << 21
 	}
-);
+}
+
+bitflags! {
+	flags GdtAccess: u8 {
+		const Accessed = 1 << 0,
+		const Writable = 1 << 1,
+		const Direction = 1 << 2,
+		const Executable = 1 << 3,
+		const NotTss = 1 << 4,
+	}
+}
 
 #[derive(Copy)]
 #[repr(C, packed)]
@@ -101,7 +111,7 @@ impl GdtEntry {
 		}
 	}
 
-	pub fn new(base: u32, limit: usize, access: u8) -> GdtEntry {
+	pub fn new(base: *const (), limit: usize, access: GdtAccess, dpl: PrivilegeLevel) -> GdtEntry {
 		let (limit, flags) = if limit < 0x100000 {
 			((limit & 0xFFFF) as u16, ((limit & 0xF0000) >> 16) as u8 | 0x40u8)
 		} else {
@@ -111,10 +121,10 @@ impl GdtEntry {
 			(((limit & 0xFFFF000) >> 12) as u16, ((limit & 0xF0000000) >> 28) as u8 | 0xC0u8)
 		};
 		GdtEntry {
-			base1: (base & 0xFFFF) as u16,
-			base2: ((base & 0xFF0000) >> 16) as u8,
-			base3: ((base & 0xFF000000) >> 24) as u8,
-			access: access,
+			base1: base as u16,
+			base2: ((base as usize & 0xFF0000) >> 16) as u8,
+			base3: ((base as usize & 0xFF000000) >> 24) as u8,
+			access: access.bits() | ((dpl as u8) << 5) | 0x80,
 			limit: limit,
 			flags: flags
 		}
@@ -124,13 +134,13 @@ impl GdtEntry {
 pub const NULL_IDT_ENTRY: IdtEntry = IdtEntry { offset1: 0, selector: 0, reserved: 0, flags: 0, offset2: 0 };
 
 impl IdtEntry {
-	pub fn new(f: unsafe extern "C" fn(), dpl: usize, block: bool) -> IdtEntry {
+	pub fn new(f: unsafe extern "C" fn(), dpl: PrivilegeLevel, block: bool) -> IdtEntry {
 		IdtEntry {
-			offset1: ((f as usize) & 0xFFFF) as u16,
-			offset2: (((f as usize) & 0xFFFF0000) >> 16) as u16,
+			offset1: f as u16,
+			offset2: ((f as usize & 0xFFFF0000) >> 16) as u16,
 			selector: 8,
 			reserved: 0,
-			flags: if block { 0x8E } else { 0x8F } | ((dpl as u8 & 3) << 5)
+			flags: if block { 0x8E } else { 0x8F } | ((dpl as u8) << 5)
 		}
 	}
 }
@@ -139,16 +149,16 @@ impl IdtEntry {
 #[repr(C, packed)]
 pub struct Tss {
 	pub link: u16,
-	pub reserved0: u16,
+	reserved0: u16,
 	pub esp0: u32,
 	pub ss0: u16,
-	pub reserved1: u16,
+	reserved1: u16,
 	pub esp1: u32,
 	pub ss1: u16,
-	pub reserved2: u16,
+	reserved2: u16,
 	pub esp2: u32,
 	pub ss2: u16,
-	pub reserved3: u16,
+	reserved3: u16,
 
 	pub cr3: u32,
 	pub eip: u32,
@@ -164,19 +174,19 @@ pub struct Tss {
 	pub edi: u32,
 
 	pub es: u16,
-	pub reserved4: u16,
+	reserved4: u16,
 	pub cs: u16,
-	pub reserved5: u16,
+	reserved5: u16,
 	pub ss: u16,
-	pub reserved6: u16,
+	reserved6: u16,
 	pub ds: u16,
-	pub reserved7: u16,
+	reserved7: u16,
 	pub fs: u16,
-	pub reserved8: u16,
+	reserved8: u16,
 	pub gs: u16,
-	pub reserved9: u16,
+	reserved9: u16,
 	pub ldtr: u16,
-	pub reserved10: u32,
+	reserved10: u32,
 	pub iobp_offset: u16
 }
 
@@ -311,7 +321,7 @@ pub unsafe fn set_flags(val: EFlags) {
 }
 
 #[inline(always)]
-pub unsafe fn jump_stack(stack: *mut (), ip: *const ()) -> ! {
+pub unsafe fn stack_jmp(stack: *mut (), ip: *const ()) -> ! {
 	asm!("mov esp, $0; jmp $1" :: "rg"(stack), "r"(ip) :: "volatile", "intel");
 	loop { }
 }
