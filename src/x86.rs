@@ -78,7 +78,7 @@ bitflags! {
 	}
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C, packed)]
 pub struct GdtEntry {
 	limit: u16,
@@ -89,7 +89,7 @@ pub struct GdtEntry {
 	base3: u8,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C, packed)]
 pub struct IdtEntry {
 	offset1: u16,
@@ -145,7 +145,7 @@ impl IdtEntry {
 	}
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C, packed)]
 pub struct Tss {
 	pub link: u16,

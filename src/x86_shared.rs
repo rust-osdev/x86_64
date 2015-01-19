@@ -67,7 +67,7 @@ bitflags!(
 	}
 );
 
-#[derive(Copy, FromPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 pub enum Exception {
 	DivisionByZero = 0,
 	Debug = 1,
@@ -92,7 +92,7 @@ pub enum Exception {
 	Security = 30
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Msr {
 	ApicBase = 0x1B
 }
@@ -121,7 +121,7 @@ pub unsafe fn read_msr(msr: Msr) -> u64 {
 	r1 as u64 | ((r2 as u64) << 32)
 }
 
-#[derive(Copy, FromPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 pub enum PrivilegeLevel {
 	Ring0 = 0,
 	Ring1 = 1,
@@ -129,7 +129,7 @@ pub enum PrivilegeLevel {
 	Ring3 = 3,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C, packed)]
 pub struct SegmentSelector {
 	data: u16
