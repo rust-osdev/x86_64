@@ -4,8 +4,10 @@
 #![crate_name="cpu"]
 #![crate_type="rlib"]
 #![feature(asm)]
+#![feature(core)]
+#![feature(hash)]
 
-#[allow(unstable)] #[macro_use]
+#[macro_use]
 extern crate core;
 #[macro_use]
 extern crate bitflags;
