@@ -3,6 +3,7 @@
 #![no_std]
 #![crate_name="cpu"]
 #![crate_type="rlib"]
+#![feature(no_std)]
 #![feature(asm)]
 #![feature(core)]
 #![feature(hash)]

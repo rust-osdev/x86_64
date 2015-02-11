@@ -5,3 +5,4 @@ authors = []
 
 [dependencies.bitflags]
 git = "https://github.com/rust-lang/bitflags.git"
+rev = "6aca402a57dd4c72499afd798cc9787e7ad8e6df"
