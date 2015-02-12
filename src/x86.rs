@@ -78,7 +78,7 @@ bitflags! {
 	}
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct GdtEntry {
 	limit: u16,
@@ -145,7 +145,7 @@ impl IdtEntry {
 	}
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct Tss {
 	pub link: u16,
@@ -302,7 +302,7 @@ pub unsafe fn set_gdt(gdt: &[GdtEntry]) {
 		limit: u16,
 		ptr: *const GdtEntry,
 	}
-	asm!("lgdt $0" :: "*m"(&GDTR { ptr: gdt.as_ptr(), limit: (gdt.len()*8 - 1) as u16 }) :: "volatile", "intel");
+	asm!("lgdtl $0" :: "*m"(&GDTR { ptr: gdt.as_ptr(), limit: (gdt.len()*size_of::<GdtEntry>() - 1) as u16 }) :: "volatile");
 }
 
 #[inline(always)]
@@ -312,7 +312,7 @@ pub unsafe fn set_idt(idt: &[IdtEntry]) {
 		limit: u16,
 		ptr: *const IdtEntry,
 	}
-	asm!("lidt $0" :: "*m"(&IDTR { ptr: idt.as_ptr(), limit: idt.len() as u16 * 8 }) :: "volatile", "intel");
+	asm!("lidtl $0" :: "*m"(&IDTR { ptr: idt.as_ptr(), limit: idt.len() as u16 * 8 }) :: "volatile");
 }
 
 #[inline(always)]
