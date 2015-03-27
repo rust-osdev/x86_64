@@ -4,5 +4,5 @@ version = "0.0.1-pre"
 authors = []
 
 [dependencies.bitflags]
-git = "https://github.com/rust-lang/bitflags.git"
-rev = "6aca402a57dd4c72499afd798cc9787e7ad8e6df"
+git = "https://github.com/Tobba/bitflags.git"
+rev = "29d8782b179d1e1998f4c44e2651372501185499"
