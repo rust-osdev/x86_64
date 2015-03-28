@@ -7,7 +7,7 @@ pub unsafe fn wrmsr(msr: u32, value: u64) {
 /// Read 64 bits msr register.
 pub unsafe fn rdmsr(msr: u32) -> u64 {
     
-    let mut val: u64 = -1;
+    let mut val: u64;
     asm!("rdmsr" : "=A"(val) : "{ecx}"(msr));
     
     return val;
