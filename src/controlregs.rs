@@ -2,7 +2,7 @@
 pub unsafe fn cr0() -> u64
 {
     let ret: u64;
-    asm!("mov %cr0, %rax" : "=r" (ret) :);
+    asm!("mov %cr0, $0" : "=r" (ret) : );
     ret
 }
 
