@@ -38,14 +38,12 @@ pub static EXCEPTIONS: [InterruptDescription; 15] = [
 
 
 /// Enable Interrupts.
-pub unsafe fn enable() 
-{
+pub unsafe fn enable()  {
     asm!("sti");
 }
 
 /// Disable Interrupts.
-pub unsafe fn disable() 
-{
+pub unsafe fn disable()  {
     asm!("cli");
 }
 
@@ -82,8 +80,7 @@ pub struct IdtEntry {
 /// This is in a format suitable for giving to 'lidt'.
 #[derive(Debug)]
 #[repr(packed)]
-pub struct IdtPointer
-{
+pub struct IdtPointer {
    /// Size of the IDT.
    pub limit: u16,
    /// Pointer to the memory region containing the IDT.
@@ -91,9 +88,8 @@ pub struct IdtPointer
 }
 
 /// Load IDT table.
-pub unsafe fn lidt(idt: &IdtPointer)
-{
-    asm!("lidt (%rax)" :: "{rax}" (idt));
+pub unsafe fn lidt(idt: &IdtPointer) {
+    asm!("lidt ($0)" :: "r" (idt));
 }
 
 
