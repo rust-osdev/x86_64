@@ -1,3 +1,5 @@
+use core::fmt;
+
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).
 #[derive(Debug)]
 pub struct InterruptDescription {
@@ -7,6 +9,13 @@ pub struct InterruptDescription {
     pub irqtype: &'static str,
     pub source: &'static str
 }
+
+impl fmt::Display for InterruptDescription {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} ({}, vec={}) {} {}", self.mnemonic, self.irqtype, self.vector, self.description, self.source)
+    }
+}
+
 
 /// x86 External Interrupts (1-16).
 pub static EXCEPTIONS: [InterruptDescription; 15] = [
