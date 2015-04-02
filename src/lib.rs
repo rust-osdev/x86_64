@@ -6,7 +6,6 @@
 #![feature(no_std)]
 #![feature(asm)]
 #![feature(core)]
-#![feature(hash)]
 
 #[macro_use]
 extern crate core;
