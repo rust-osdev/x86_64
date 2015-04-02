@@ -183,7 +183,7 @@ pub unsafe fn set_cs(selector: SegmentSelector) {
 	asm!("push $0;
 		push $$1f
 		lret;
-		1:" :: "ri"(selector.bits() as u32) :: "volatile");
+		1:" :: "ri"(selector.bits() as usize) :: "volatile");
 }
 
 #[inline(always)]
