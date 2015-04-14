@@ -47,7 +47,7 @@ pub unsafe fn disable()  {
     asm!("cli");
 }
 
-/// Generate a software interrupt. 
+/// Generate a software interrupt.
 /// This is a macro argument needs to be an immediate.
 #[macro_export]
 macro_rules! int {
@@ -59,7 +59,7 @@ macro_rules! int {
 }
 
 /// A struct describing an interrupt gate.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 #[repr(packed)]
 pub struct IdtEntry {
     /// Lower 16 bits of ISR.
