@@ -9,6 +9,9 @@
 #[macro_use]
 extern crate core;
 
+#[macro_use]
+extern crate bitflags;
+
 #[cfg(test)]
 extern crate std;
 
