@@ -10,5 +10,6 @@ Currently supports
   * Control registers
   * MSR registers
   * cpuid / rdtsc / cli / sti etc.
+  * IA32-e page table layout
 
 This only depends on libcore so it can be used in kernel level code.
