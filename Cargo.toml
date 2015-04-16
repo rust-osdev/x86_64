@@ -1,7 +1,7 @@
 [package]
 
 name = "x86"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 
 description = "Library to use x86 (amd64) specific functionality and registers."
@@ -10,3 +10,6 @@ repository = "https://github.com/gz/rust-x86"
 readme = "README.md"
 keywords = ["ia32", "os", "amd64", "x86"]
 license = "WTFPL"
+
+[dependencies]
+bitflags = "0.1.0"
