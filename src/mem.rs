@@ -1,11 +1,28 @@
 /// The focus on this file is to describe the data-structures
 /// for IA-32e paging mode.
 use core::fmt;
+use core::mem::{size_of};
 
 pub type PAddr = u64;
-pub type VAddr = u64;
+pub type VAddr = usize;
 
-pub const BASE_PAGE_SIZE: u64 = 4096;
+pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
+pub const LARGE_PAGE_SIZE: u64 = 1024*1024*2; // 2 MiB
+pub const HUGE_PAGE_SIZE: u64 = 1024*1024*1024; // 1 GiB
+
+/// A PML4 table.
+/// In practice this has only 4 entries but it still needs to be the size of a 4K page.
+pub type PML4  = [PML4Entry; 512];
+
+/// A page directory pointer table.
+pub type PDPT  = [PDPTEntry; 512];
+
+/// A page directory.
+pub type PD    = [PDEntry; 512];
+
+/// A page table.
+pub type PT    = [PTEntry; 512];
+
 
 bitflags! {
     flags PML4Entry: u64 {
@@ -75,8 +92,9 @@ bitflags! {
 }
 
 impl PDPTEntry {
-    pub fn new(&mut self) {
-        self.bits = 0;
+    pub fn new(&mut self, pd: PAddr) {
+        assert!(pd % BASE_PAGE_SIZE == 0);
+        self.bits = pd;
     }
 }
 
@@ -120,8 +138,9 @@ bitflags! {
 }
 
 impl PDEntry {
-    pub fn new(&mut self) {
-        self.bits = 0;
+    pub fn new(&mut self, pt: PAddr) {
+        assert!(pt % BASE_PAGE_SIZE == 0);
+        self.bits = pt;
     }
 }
 
@@ -157,8 +176,9 @@ bitflags! {
 }
 
 impl PTEntry {
-    pub fn new(&mut self) {
-        self.bits = 0;
+    pub fn new(&mut self, page: PAddr) {
+        assert!(page % BASE_PAGE_SIZE == 0);
+        self.bits = page;
     }
 }
 
