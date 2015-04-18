@@ -47,9 +47,9 @@ bitflags! {
 }
 
 impl PML4Entry {
-    pub fn new(&mut self, pdpt: PAddr) {
+    pub fn new(pdpt: PAddr) -> PML4Entry {
         assert!(pdpt % BASE_PAGE_SIZE == 0);
-        self.bits = pdpt;
+        PML4Entry { bits: pdpt }
     }
 }
 
