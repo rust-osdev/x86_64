@@ -23,9 +23,33 @@ pub type PD    = [PDEntry; 512];
 /// A page table.
 pub type PT    = [PTEntry; 512];
 
+/// Given virtual address calculate corresponding entry in PML4.
+pub fn pml4_index(addr: VAddr) -> usize {
+    (addr >> 39) & 0b111111111
+}
+
+/// Given virtual address calculate corresponding entry in PDPT.
+#[inline]
+pub fn pdpt_index(addr: VAddr) -> usize {
+    (addr >> 30) & 0b111111111
+}
+
+/// Given virtual address calculate corresponding entry in PD.
+#[inline]
+pub fn pd_index(addr: VAddr) -> usize {
+    (addr >> 21) & 0b111111111
+}
+
+/// Given virtual address calculate corresponding entry in PT.
+#[inline]
+pub fn pt_index(addr: VAddr) -> usize {
+    (addr >> 12) & 0b111111111
+}
 
 bitflags! {
     flags PML4Entry: u64 {
+        /// Present; must be 1 to reference a page-directory-pointer table
+        const PML4_P      = 0b00000001,
         /// Read/write; if 0, writes may not be allowed to the 512-GByte region
         /// controlled by this entry (see Section 4.6)
         const PML4_RW      = 0b00000010,
