@@ -10,6 +10,12 @@ pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
 pub const LARGE_PAGE_SIZE: u64 = 1024*1024*2; // 2 MiB
 pub const HUGE_PAGE_SIZE: u64 = 1024*1024*1024; // 1 GiB
 
+/// MAXPHYADDR, which is at most 52; (use CPUID for finding system value).
+pub const MAXPHYADDR: u64 = 52;
+
+/// Mask to find the physical address of an entry in a page-table.
+const ADDRESS_MASK: u64 = ((1 << MAXPHYADDR) - 1) & !0xfff;
+
 /// A PML4 table.
 /// In practice this has only 4 entries but it still needs to be the size of a 4K page.
 pub type PML4  = [PML4Entry; 512];
@@ -49,7 +55,7 @@ pub fn pt_index(addr: VAddr) -> usize {
 bitflags! {
     flags PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
-        const PML4_P      = 0b00000001,
+        const PML4_P       = 0b00000001,
         /// Read/write; if 0, writes may not be allowed to the 512-GByte region
         /// controlled by this entry (see Section 4.6)
         const PML4_RW      = 0b00000010,
@@ -71,9 +77,13 @@ bitflags! {
 }
 
 impl PML4Entry {
-    pub fn new(pdpt: PAddr) -> PML4Entry {
+    pub fn new(pdpt: PAddr, flags: PML4Entry) -> PML4Entry {
         assert!(pdpt % BASE_PAGE_SIZE == 0);
-        PML4Entry { bits: pdpt }
+        PML4Entry { bits: pdpt | flags.bits }
+    }
+
+    pub fn get_address(&self) -> PAddr {
+        self.bits & ADDRESS_MASK
     }
 }
 
@@ -116,9 +126,13 @@ bitflags! {
 }
 
 impl PDPTEntry {
-    pub fn new(&mut self, pd: PAddr) {
+    pub fn new(pd: PAddr, flags: PDPTEntry) -> PDPTEntry {
         assert!(pd % BASE_PAGE_SIZE == 0);
-        self.bits = pd;
+        PDPTEntry { bits: pd | flags.bits }
+    }
+
+    pub fn get_address(&self) -> PAddr {
+        self.bits & ADDRESS_MASK
     }
 }
 
@@ -162,9 +176,13 @@ bitflags! {
 }
 
 impl PDEntry {
-    pub fn new(&mut self, pt: PAddr) {
+    pub fn new(pt: PAddr, flags: PDEntry) -> PDEntry {
         assert!(pt % BASE_PAGE_SIZE == 0);
-        self.bits = pt;
+        PDEntry { bits: pt | flags.bits }
+    }
+
+    pub fn get_address(&self) -> PAddr {
+        self.bits & ADDRESS_MASK
     }
 }
 
@@ -200,9 +218,13 @@ bitflags! {
 }
 
 impl PTEntry {
-    pub fn new(&mut self, page: PAddr) {
+    pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
         assert!(page % BASE_PAGE_SIZE == 0);
-        self.bits = page;
+        PTEntry{ bits: page | flags.bits }
+    }
+
+    pub fn get_address(&self) -> PAddr {
+        self.bits & ADDRESS_MASK
     }
 }
 
