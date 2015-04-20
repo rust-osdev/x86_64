@@ -52,6 +52,7 @@ pub fn pt_index(addr: VAddr) -> usize {
     (addr >> 12) & 0b111111111
 }
 
+/// PML4 Entry bits description.
 bitflags! {
     flags PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
@@ -76,14 +77,28 @@ bitflags! {
     }
 }
 
+
 impl PML4Entry {
+
+    /// Creates a new PML4Entry.
+    ///
+    /// # Arguments
+    ///
+    ///  * `pdpt` - The physical address of the pdpt table.
+    ///  * `flags`- Additional flags for the entry.
     pub fn new(pdpt: PAddr, flags: PML4Entry) -> PML4Entry {
         assert!(pdpt % BASE_PAGE_SIZE == 0);
         PML4Entry { bits: pdpt | flags.bits }
     }
 
-    pub fn get_address(&self) -> PAddr {
+    /// Retrieves the physical address in this entry.
+    pub fn get_address(self) -> PAddr {
         self.bits & ADDRESS_MASK
+    }
+
+    /// Convenience function to check if the present bit is set.
+    pub fn is_present(self) -> bool {
+        self.contains(PML4_P)
     }
 }
 
@@ -93,6 +108,7 @@ impl fmt::Debug for PML4Entry {
     }
 }
 
+/// PDPT Entry bits description.
 bitflags! {
     flags PDPTEntry: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
@@ -126,13 +142,26 @@ bitflags! {
 }
 
 impl PDPTEntry {
+
+    /// Creates a new PDPTEntry.
+    ///
+    /// # Arguments
+    ///
+    ///  * `pd` - The physical address of the page directory.
+    ///  * `flags`- Additional flags for the entry.
     pub fn new(pd: PAddr, flags: PDPTEntry) -> PDPTEntry {
         assert!(pd % BASE_PAGE_SIZE == 0);
         PDPTEntry { bits: pd | flags.bits }
     }
 
-    pub fn get_address(&self) -> PAddr {
+    /// Retrieves the physical address in this entry.
+    pub fn get_address(self) -> PAddr {
         self.bits & ADDRESS_MASK
+    }
+
+    /// Convenience function to check if the present bit is set.
+    pub fn is_present(self) -> bool {
+        self.contains(PDPT_P)
     }
 }
 
@@ -142,7 +171,7 @@ impl fmt::Debug for PDPTEntry {
     }
 }
 
-
+/// PD Entry bits description.
 bitflags! {
     flags PDEntry: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
@@ -176,13 +205,26 @@ bitflags! {
 }
 
 impl PDEntry {
+
+    /// Creates a new PDEntry.
+    ///
+    /// # Arguments
+    ///
+    ///  * `pt` - The physical address of the page table.
+    ///  * `flags`- Additional flags for the entry.
     pub fn new(pt: PAddr, flags: PDEntry) -> PDEntry {
         assert!(pt % BASE_PAGE_SIZE == 0);
         PDEntry { bits: pt | flags.bits }
     }
 
-    pub fn get_address(&self) -> PAddr {
+    /// Retrieves the physical address in this entry.
+    pub fn get_address(self) -> PAddr {
         self.bits & ADDRESS_MASK
+    }
+
+    /// Convenience function to check if the present bit is set.
+    pub fn is_present(self) -> bool {
+        self.contains(PD_P)
     }
 }
 
@@ -192,7 +234,7 @@ impl fmt::Debug for PDEntry {
     }
 }
 
-
+/// PT Entry bits description.
 bitflags! {
     flags PTEntry: u64 {
         /// Present; must be 1 to map a 4-KByte page.
@@ -217,14 +259,28 @@ bitflags! {
     }
 }
 
+
 impl PTEntry {
+
+    /// Creates a new PTEntry.
+    ///
+    /// # Arguments
+    ///
+    ///  * `page` - The physical address of the backing 4 KiB page.
+    ///  * `flags`- Additional flags for the entry.
     pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
         assert!(page % BASE_PAGE_SIZE == 0);
         PTEntry{ bits: page | flags.bits }
     }
 
-    pub fn get_address(&self) -> PAddr {
+    /// Retrieves the physical address in this entry.
+    pub fn get_address(self) -> PAddr {
         self.bits & ADDRESS_MASK
+    }
+
+    /// Convenience function to check if the present bit is set.
+    pub fn is_present(self) -> bool {
+        self.contains(PT_P)
     }
 }
 
