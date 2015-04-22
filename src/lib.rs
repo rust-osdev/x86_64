@@ -17,12 +17,8 @@ extern crate std;
 
 #[cfg(not(test))]
 mod std {
-    pub use core::fmt;
-    pub use core::cmp;
     pub use core::ops;
-    pub use core::iter;
     pub use core::option;
-    pub use core::marker;
 }
 
 pub mod io;

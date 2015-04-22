@@ -16,13 +16,13 @@ bitflags! {
         /// Nested Task (NT)
         const RFlags_NT   = 1 << 14,
         /// I/O Privilege Level (IOPL) 0
-        const RFlags_IOPL0 = 0 << 12;
+        const RFlags_IOPL0 = 0 << 12,
         /// I/O Privilege Level (IOPL) 1
-        const RFlags_IOPL1 = 1 << 12;
+        const RFlags_IOPL1 = 1 << 12,
         /// I/O Privilege Level (IOPL) 2
-        const RFlags_IOPL2 = 2 << 12;
+        const RFlags_IOPL2 = 2 << 12,
         /// I/O Privilege Level (IOPL) 3
-        const RFlags_IOPL3 = 3 << 12;
+        const RFlags_IOPL3 = 3 << 12,
         /// Overflow Flag (OF)
         const RFlags_OF   = 1 << 11,
         /// Direction Flag (DF)
@@ -49,6 +49,6 @@ bitflags! {
 impl RFlags {
     /// Creates a new RFlags entry. Ensures bit 1 is set.
     pub fn new() -> RFlags {
-        RFLags_A1
+        RFlags_A1
     }
 }
