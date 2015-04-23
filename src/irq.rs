@@ -60,7 +60,7 @@ macro_rules! int {
 
 /// A struct describing an interrupt gate.
 #[derive(Debug, Clone, Copy)]
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct IdtEntry {
     /// Lower 16 bits of ISR.
     pub base_lo: u16,
