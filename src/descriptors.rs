@@ -1,24 +1,28 @@
+use core::fmt;
+
 /// Entry in GDT or LDT. Provides size and location of a segment.
 bitflags! {
     flags SegmentDescriptor: u64 {
         /// Descriptor type (0 = system; 1 = code or data).
-        const DESCRIPTOR_S    = 1 << (31+12),
+        const DESC_S    = 1 << (31+12),
         /// Descriptor privilege level 0.
-        const DESCRIPTOR_DPL0 = 0b00 << (31+13),
+        const DESC_DPL0 = 0b00 << (31+13),
         /// Descriptor privilege level 1.
-        const DESCRIPTOR_DPL1 = 0b01 << (31+13),
+        const DESC_DPL1 = 0b01 << (31+13),
         /// Descriptor privilege level 2.
-        const DESCRIPTOR_DPL2 = 0b10 << (31+13),
+        const DESC_DPL2 = 0b10 << (31+13),
         /// Descriptor privilege level 3.
-        const DESCRIPTOR_DPL3 = 0b11 << (31+13),
+        const DESC_DPL3 = 0b11 << (31+13),
+        /// Descriptor is Present.
+        const DESC_P = 1 << (31+15),
         /// Available for use by system software.
-        const DESCRIPTOR_AVL  = 1 << (31+20),
+        const DESC_AVL  = 1 << (31+20),
         /// 64-bit code segment (IA-32e mode only).
-        const DESCRIPTOR_L    = 1 << (31+21),
+        const DESC_L    = 1 << (31+21),
         /// Default operation size (0 = 16-bit segment, 1 = 32-bit segment)
-        const DESCRIPTOR_DB   = 1 << (31+22),
+        const DESC_DB   = 1 << (31+22),
         ///  Granularity.
-        const DESCRIPTOR_G    = 1 << (31+23),
+        const DESC_G    = 1 << (31+23),
 
         // System-Segment and Gate-Descriptor Types for IA32e mode.
         // When the S (descriptor type) flag in a segment descriptor is clear,
@@ -85,6 +89,13 @@ impl SegmentDescriptor {
         }
     }
 }
+
+impl fmt::Debug for SegmentDescriptor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "SD: 0x{:x}", self.bits)
+    }
+}
+
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism.
