@@ -2,75 +2,73 @@
 bitflags! {
     flags SegmentDescriptor: u64 {
         /// Descriptor type (0 = system; 1 = code or data).
-        const SEGMENT_DESCRIPTOR_S    = 1 << (31+12),
+        const DESCRIPTOR_S    = 1 << (31+12),
         /// Descriptor privilege level 0.
-        const SEGMENT_DESCRIPTOR_DPL0 = 0b00 << (31+13),
+        const DESCRIPTOR_DPL0 = 0b00 << (31+13),
         /// Descriptor privilege level 1.
-        const SEGMENT_DESCRIPTOR_DPL1 = 0b01 << (31+13),
+        const DESCRIPTOR_DPL1 = 0b01 << (31+13),
         /// Descriptor privilege level 2.
-        const SEGMENT_DESCRIPTOR_DPL2 = 0b10 << (31+13),
+        const DESCRIPTOR_DPL2 = 0b10 << (31+13),
         /// Descriptor privilege level 3.
-        const SEGMENT_DESCRIPTOR_DPL3 = 0b11 << (31+13),
+        const DESCRIPTOR_DPL3 = 0b11 << (31+13),
         /// Available for use by system software.
-        const SEGMENT_DESCRIPTOR_AVL  = 1 << (31+20),
+        const DESCRIPTOR_AVL  = 1 << (31+20),
         /// 64-bit code segment (IA-32e mode only).
-        const SEGMENT_DESCRIPTOR_L    = 1 << (31+21),
+        const DESCRIPTOR_L    = 1 << (31+21),
         /// Default operation size (0 = 16-bit segment, 1 = 32-bit segment)
-        const SEGMENT_DESCRIPTOR_DB   = 1 << (31+22),
+        const DESCRIPTOR_DB   = 1 << (31+22),
         ///  Granularity.
-        const SEGMENT_DESCRIPTOR_G    = 1 << (31+23),
+        const DESCRIPTOR_G    = 1 << (31+23),
+
+        // System-Segment and Gate-Descriptor Types for IA32e mode.
+        // When the S (descriptor type) flag in a segment descriptor is clear,
+        // the descriptor type is a system descriptor.
+
+        const TYPE_SYS_LDT = 0b0010 << (31+8),
+        const TYPE_SYS_TSS_AVAILABLE = 0b1001 << (31+8),
+        const TYPE_SYS_TSS_BUSY = 0b1011 << (31+8),
+        const TYPE_SYS_CALL_GATE = 0b1100 << (31+8),
+        const TYPE_SYS_INTERRUPT_GATE = 0b1110 << (31+8),
+        const TYPE_SYS_TRAP_GATE = 0b1111 << (31+8),
+
+        // Code- and Data-Segment Descriptor Types.
+        // When the S (descriptor type) flag in a segment descriptor is set,
+        // the descriptor is for either a code or a data segment.
+
+        /// Data Read-Only
+        const TYPE_D_RO = 0b0000 << (31+8),
+        /// Data Read-Only, accessed
+        const TYPE_D_ROA = 0b0001 << (31+8),
+        /// Data Read/Write
+        const TYPE_D_RW = 0b0010 << (31+8),
+        /// Data Read/Write, accessed
+        const TYPE_D_RWA = 0b0011 << (31+8),
+        /// Data Read-Only, expand-down
+        const TYPE_D_ROEXD = 0b0100 << (31+8),
+        /// Data Read-Only, expand-down, accessed
+        const TYPE_D_ROEXDA = 0b0101 << (31+8),
+        /// Data Read/Write, expand-down
+        const TYPE_D_RWEXD = 0b0110 << (31+8),
+        /// Data Read/Write, expand-down, accessed
+        const TYPE_D_RWEXDA = 0b0111 << (31+8),
+
+        /// Code Execute-Only
+        const TYPE_C_EO = 0b1000 << (31+8),
+        /// Code Execute-Only, accessed
+        const TYPE_C_EOA = 0b1001 << (31+8),
+        /// Code Execute/Read
+        const TYPE_C_ER = 0b1010 << (31+8),
+        /// Code Execute/Read, accessed
+        const TYPE_C_ERA = 0b1011 << (31+8),
+        /// Code Execute-Only, conforming
+        const TYPE_C_EOC = 0b1100 << (31+8),
+        /// Code Execute-Only, conforming, accessed
+        const TYPE_C_EOCA = 0b1101 << (31+8),
+        /// Code Execute/Read, conforming
+        const TYPE_C_ERC = 0b1110 << (31+8),
+        /// Code Execute/Read, conforming, accessed
+        const TYPE_C_ERCA = 0b1111 << (31+8),
     }
-}
-
-/// System-Segment and Gate-Descriptor Types for IA32e mode.
-/// When the S (descriptor type) flag in a segment descriptor is clear,
-/// the descriptor type is a system descriptor.
-pub enum SystemDescriptorType {
-    Ldt = 0b0010,
-    TSSAvailable = 0b1001,
-    TSSBudy = 0b1011,
-    CallGate = 0b1100,
-    InterruptGate = 0b1110,
-    TrapGate = 0b1111,
-}
-
-/// Code- and Data-Segment Descriptor Types.
-/// When the S (descriptor type) flag in a segment descriptor is set,
-/// the descriptor is for either a code or a data segment.
-pub enum CodeDataDescriptorType {
-     /// Data Read-Only
-     DataRO = 0b0000,
-     /// Data Read-Only, accessed
-     DataROA = 0b0001,
-     /// Data Read/Write
-     DataRW = 0b0010,
-     /// Data Read/Write, accessed
-     DataRWA = 0b0011,
-     /// Data Read-Only, expand-down
-     DataROEXD = 0b0100,
-     /// Data Read-Only, expand-down, accessed
-     DataROEXDA = 0b0101,
-     /// Data Read/Write, expand-down
-     DataRWEXD = 0b0110,
-     /// Data Read/Write, expand-down, accessed
-     DataRWEXDA = 0b0111,
-
-     /// Code Execute-Only
-     CodeEO = 0b1000,
-     /// Code Execute-Only, accessed
-     CodeEOA = 0b1001,
-     /// Code Execute/Read
-     CodeER = 0b1010,
-     /// Code Execute/Read, accessed
-     CodeERA = 0b1011,
-     /// Code Execute-Only, conforming
-     CodeEOC = 0b1100,
-     /// Code Execute-Only, conforming, accessed
-     CodeEOCA = 0b1101,
-     /// Code Execute/Read, conforming
-     CodeERC = 0b1110,
-     /// Code Execute/Read, conforming, accessed
-     CodeERCA = 0b1111
 }
 
 /// This is data-structure is a ugly mess thing so we provide some
@@ -82,8 +80,9 @@ impl SegmentDescriptor {
         let limit_low: u64 = limit as u64 & 0xffff;
         let limit_high: u64 = (limit as u64 & (0b1111 << 16)) >> 16;
 
-        let bits: u64 = limit_low | base_low << 16 | limit_high << (31+16) | base_high << (31+24);
-        SegmentDescriptor{ bits: bits }
+        SegmentDescriptor{
+            bits: limit_low | base_low << 16 | limit_high << (31+16) | base_high << (31+24)
+        }
     }
 }
 
@@ -101,4 +100,20 @@ pub struct TaskStateSegement {
     reserved4: u16,
     /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base.
     iomap_base: u16,
+}
+
+/// A struct describing a pointer to a descriptor table (GDT / IDT).
+/// This is in a format suitable for giving to 'lgdt' or 'lidt'.
+#[derive(Debug)]
+#[repr(C, packed)]
+pub struct DescriptorTablePointer {
+   /// Size of the DT.
+   pub limit: u16,
+   /// Pointer to the memory region containing the DT.
+   pub base: u64
+}
+
+/// Load GDT table.
+pub unsafe fn lgdt(idt: &DescriptorTablePointer) {
+    asm!("lgdt ($0)" :: "r" (idt));
 }

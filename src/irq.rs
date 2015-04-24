@@ -1,4 +1,5 @@
 use core::fmt;
+use descriptors::{DescriptorTablePointer};
 
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).
 #[derive(Debug)]
@@ -76,19 +77,8 @@ pub struct IdtEntry {
     pub res1: u16
 }
 
-/// A struct describing a pointer to an array of interrupt handlers.
-/// This is in a format suitable for giving to 'lidt'.
-#[derive(Debug)]
-#[repr(packed)]
-pub struct IdtPointer {
-   /// Size of the IDT.
-   pub limit: u16,
-   /// Pointer to the memory region containing the IDT.
-   pub base: u64
-}
-
 /// Load IDT table.
-pub unsafe fn lidt(idt: &IdtPointer) {
+pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     asm!("lidt ($0)" :: "r" (idt));
 }
 
