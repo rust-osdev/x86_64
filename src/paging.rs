@@ -1,7 +1,6 @@
 /// The focus on this file is to describe the data-structures
 /// for IA-32e paging mode.
 use core::fmt;
-use core::mem::{size_of};
 
 pub type PAddr = u64;
 pub type VAddr = usize;

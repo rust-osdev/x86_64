@@ -1,5 +1,4 @@
 use core::fmt;
-use segmentation::{DescriptorTablePointer};
 
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).
 #[derive(Debug)]
@@ -75,11 +74,6 @@ pub struct IdtEntry {
     pub base_hi: u64,
     /// Must be zero.
     pub res1: u16
-}
-
-/// Load IDT table.
-pub unsafe fn lidt(idt: &DescriptorTablePointer) {
-    asm!("lidt ($0)" :: "r" (idt));
 }
 
 

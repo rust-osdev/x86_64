@@ -29,3 +29,5 @@ pub mod irq;
 pub mod rflags;
 pub mod paging;
 pub mod segmentation;
+pub mod task;
+pub mod dtables;

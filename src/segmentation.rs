@@ -1,7 +1,9 @@
+use core::default::Default;
 use core::fmt;
 
 /// Specifies which element to load into a segment from
-/// descriptor tables (LDT or GDT).
+/// descriptor tables (i.e., is a index to LDT or GDT table
+/// with some additional flags).
 bitflags! {
     flags SegmentSelector: u16 {
         /// Requestor Privilege Level
@@ -28,7 +30,7 @@ impl SegmentSelector {
     }
 }
 
-/// Entry in GDT or LDT. Provides size and location of a segment.
+/// Entry for GDT or LDT. Provides size and location of a segment.
 bitflags! {
     flags SegmentDescriptor: u64 {
         /// Descriptor type (0 = system; 1 = code or data).
@@ -108,7 +110,8 @@ bitflags! {
 impl SegmentDescriptor {
     pub fn new(base: u32, limit: u32) -> SegmentDescriptor {
         let base_low: u64 = base as u64 & 0xffffff;
-        let base_high: u64 = base as u64 & 0xff000000 >> 24;
+        let base_high: u64 = (base as u64 >> 24) & 0xff;
+
         let limit_low: u64 = limit as u64 & 0xffff;
         let limit_high: u64 = (limit as u64 & (0b1111 << 16)) >> 16;
 
@@ -124,65 +127,28 @@ impl fmt::Debug for SegmentDescriptor {
     }
 }
 
-/// In 64-bit mode the TSS holds information that is not
-/// directly related to the task-switch mechanism.
-#[repr(C, packed)]
-pub struct TaskStateSegement {
-    reserved: u32,
-    /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
-    rsp: [u64; 3],
-    reserved2: u64,
-    /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
-    ist: [u64; 7],
-    reserved3: u64,
-    reserved4: u16,
-    /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base.
-    iomap_base: u16,
-}
-
-/// A struct describing a pointer to a descriptor table (GDT / IDT).
-/// This is in a format suitable for giving to 'lgdt' or 'lidt'.
-#[derive(Debug)]
-#[repr(C, packed)]
-pub struct DescriptorTablePointer {
-   /// Size of the DT.
-   pub limit: u16,
-   /// Pointer to the memory region containing the DT.
-   pub base: u64
-}
-
-/// Load GDT table.
-pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
-    asm!("lgdt ($0)" :: "r" (gdt));
-}
-
-/// Load LDT table.
-pub unsafe fn lldt(ldt: &DescriptorTablePointer) {
-    asm!("lldt ($0)" :: "r" (ldt));
-}
-
 /// Reload stack segment register.
-pub unsafe fn reload_ss(sel: SegmentSelector) {
+pub unsafe fn load_ss(sel: SegmentSelector) {
     asm!("movw $0, %ss " :: "r" (sel));
 }
 
 /// Reload data segment register.
-pub unsafe fn reload_ds(sel: SegmentSelector) {
+pub unsafe fn load_ds(sel: SegmentSelector) {
     asm!("movw $0, %ds " :: "r" (sel));
 }
 
 /// Reload fs segment register.
-pub unsafe fn reload_es(sel: SegmentSelector) {
+pub unsafe fn load_es(sel: SegmentSelector) {
     asm!("movw $0, %es " :: "r" (sel));
 }
 
 /// Reload fs segment register.
-pub unsafe fn reload_fs(sel: SegmentSelector) {
+pub unsafe fn load_fs(sel: SegmentSelector) {
     asm!("movw $0, %fs " :: "r" (sel));
 }
 
 /// Reload gs segment register.
-pub unsafe fn reload_gs(sel: SegmentSelector) {
+pub unsafe fn load_gs(sel: SegmentSelector) {
     asm!("movw $0, %gs " :: "r" (sel));
 }
 
@@ -191,7 +157,7 @@ pub unsafe fn reload_gs(sel: SegmentSelector) {
 /// to %cs. Instead we push the new segment selector
 /// and return value on the stack and use lretq
 /// to reload cs and continue at 1:.
-pub unsafe fn reload_cs(sel: SegmentSelector) {
+pub unsafe fn load_cs(sel: SegmentSelector) {
     asm!("pushq $0
          lea 1f(%rip), %rax
          pushq %rax

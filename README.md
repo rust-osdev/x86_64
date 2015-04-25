@@ -9,8 +9,10 @@ Currently supports
   * I/O registers
   * Control registers
   * MSR registers
-  * GDT/LDT descriptor tables and entries
-  * cpuid / rdtsc / cli / sti etc.
+  * Segmentation
+  * Descriptor-tables (GDT, LDT, IDT)
   * IA32-e page table layout
+  * Interrupts
+  * Task state
 
 This only depends on libcore so it can be used in kernel level code.
