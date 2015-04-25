@@ -26,6 +26,6 @@ pub mod controlregs;
 pub mod msr;
 pub mod time;
 pub mod irq;
-pub mod mem;
 pub mod rflags;
-pub mod descriptors;
+pub mod paging;
+pub mod segmentation;

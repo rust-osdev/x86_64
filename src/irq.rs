@@ -1,5 +1,5 @@
 use core::fmt;
-use descriptors::{DescriptorTablePointer};
+use segmentation::{DescriptorTablePointer};
 
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).
 #[derive(Debug)]
