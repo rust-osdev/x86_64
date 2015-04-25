@@ -1,5 +1,4 @@
 use segmentation;
-use paging::{VAddr};
 
 pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;
 pub type TaskStateDescriptorHigh = u64;

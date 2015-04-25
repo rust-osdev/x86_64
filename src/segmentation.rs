@@ -1,4 +1,3 @@
-use core::default::Default;
 use core::fmt;
 
 /// Specifies which element to load into a segment from
