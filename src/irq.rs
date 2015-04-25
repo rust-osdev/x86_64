@@ -12,7 +12,7 @@ pub struct InterruptDescription {
 
 impl fmt::Display for InterruptDescription {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} ({}, vec={}) {} {}", self.mnemonic, self.irqtype, self.vector, self.description, self.source)
+        write!(f, "{} ({}, vec={}) {}", self.mnemonic, self.irqtype, self.vector, self.description)
     }
 }
 
@@ -76,4 +76,56 @@ pub struct IdtEntry {
     pub res1: u16
 }
 
+bitflags!{
+    flags PageFaultError: u32 {
+        /// 0: The fault was caused by a non-present page.
+        /// 1: The fault was caused by a page-level protection violation
+        const PFAULT_ERROR_P = 0b0001,
+
+        /// 0: The access causing the fault was a read.
+        /// 1: The access causing the fault was a write.
+        const PFAULT_ERROR_WR = 0b0010,
+
+        /// 0: The access causing the fault originated when the processor
+        /// was executing in supervisor mode.
+        /// 1: The access causing the fault originated when the processor
+        /// was executing in user mode.
+        const PFAULT_ERROR_US = 0b0100,
+
+        /// 0: The fault was not caused by reserved bit violation.
+        /// 1: The fault was caused by reserved bits set to 1 in a page directory.
+        const PFAULT_ERROR_RSVD = 0b1000,
+
+        /// 0: The fault was not caused by an instruction fetch.
+        /// 1: The fault was caused by an instruction fetch.
+        const PFAULT_ERROR_ID = 0b1000,
+    }
+}
+
+impl fmt::Debug for PageFaultError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let p = match self.contains(PFAULT_ERROR_P) {
+            false => "The fault was caused by a non-present page.",
+            true => "The fault was caused by a page-level protection violation."
+        };
+        let wr = match self.contains(PFAULT_ERROR_WR) {
+            false => "The access causing the fault was a read.",
+            true => "The access causing the fault was a write."
+        };
+        let us = match self.contains(PFAULT_ERROR_US) {
+            false => "The access causing the fault originated when the processor was executing in supervisor mode.",
+            true => "The access causing the fault originated when the processor was executing in user mode."
+        };
+        let rsvd = match self.contains(PFAULT_ERROR_RSVD) {
+            false => "The fault was not caused by reserved bit violation.",
+            true => "The fault was caused by reserved bits set to 1 in a page directory."
+        };
+        let id = match self.contains(PFAULT_ERROR_ID) {
+            false => "The fault was not caused by an instruction fetch.",
+            true => "The fault was caused by an instruction fetch."
+        };
+
+        write!(f, "{}\n{}\n{}\n{}\n{}", p, wr, us, rsvd, id)
+    }
+}
 

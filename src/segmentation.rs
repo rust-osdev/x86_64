@@ -27,7 +27,40 @@ impl SegmentSelector {
     pub fn new(index: u16) -> SegmentSelector {
         SegmentSelector{bits: index << 3}
     }
+
+    pub fn from_raw(bits: u16) -> SegmentSelector{
+        SegmentSelector{bits: bits}
+    }
 }
+
+impl fmt::Debug for SegmentSelector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let r0 = match self.contains(RPL_0) {
+            false => "",
+            true => "Ring 0 segment selector."
+        };
+        let r1 = match self.contains(RPL_1) {
+            false => "",
+            true => "Ring 1 segment selector."
+        };
+        let r2 = match self.contains(RPL_2) {
+            false => "",
+            true => "Ring 2 segment selector."
+        };
+        let r3 = match self.contains(RPL_3) {
+            false => "",
+            true => "Ring 3 segment selector."
+        };
+        let tbl = match self.contains(TI_LDT) {
+            false => "GDT Table",
+            true => "LDT Table"
+        };
+
+        write!(f, "Index {} in {}, {}{}{}{}", self.bits >> 3, tbl, r0, r1, r2, r3)
+        //write!(f, "Index")
+    }
+}
+
 
 /// Entry for GDT or LDT. Provides size and location of a segment.
 bitflags! {
