@@ -1,10 +1,10 @@
 [package]
 
 name = "x86"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 
-description = "Library to use x86 (amd64) specific functionality and registers."
+description = "Library to program x86 (amd64) hardware. Contains x86 specific data structure descriptions, as well as convenience function to call assembly instructions typically not exposed in higher level languages."
 repository = "https://github.com/gz/rust-x86"
 
 readme = "README.md"
