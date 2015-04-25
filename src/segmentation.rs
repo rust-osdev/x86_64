@@ -1,7 +1,7 @@
 use core::fmt;
 
 /// Specifies which element to load into a segment from
-/// descritor tables (LDT or GDT).
+/// descriptor tables (LDT or GDT).
 bitflags! {
     flags SegmentSelector: u16 {
         /// Requestor Privilege Level
@@ -159,4 +159,42 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
 /// Load LDT table.
 pub unsafe fn lldt(ldt: &DescriptorTablePointer) {
     asm!("lldt ($0)" :: "r" (ldt));
+}
+
+/// Reload stack segment register.
+pub unsafe fn reload_ss(sel: SegmentSelector) {
+    asm!("movw $0, %ss " :: "r" (sel));
+}
+
+/// Reload data segment register.
+pub unsafe fn reload_ds(sel: SegmentSelector) {
+    asm!("movw $0, %ds " :: "r" (sel));
+}
+
+/// Reload fs segment register.
+pub unsafe fn reload_es(sel: SegmentSelector) {
+    asm!("movw $0, %es " :: "r" (sel));
+}
+
+/// Reload fs segment register.
+pub unsafe fn reload_fs(sel: SegmentSelector) {
+    asm!("movw $0, %fs " :: "r" (sel));
+}
+
+/// Reload gs segment register.
+pub unsafe fn reload_gs(sel: SegmentSelector) {
+    asm!("movw $0, %gs " :: "r" (sel));
+}
+
+/// Reload code segment register.
+/// Note this is special since we can not directly move
+/// to %cs. Instead we push the new segment selector
+/// and return value on the stack and use lretq
+/// to reload cs and continue at 1:.
+pub unsafe fn reload_cs(sel: SegmentSelector) {
+    asm!("pushq $0
+         lea 1f(%rip), %rax
+         pushq %rax
+         lretq
+         1:" :: "r" (sel.bits() as u64) : "{rax}");
 }
