@@ -67,7 +67,7 @@ bitflags!(
 	}
 );
 
-#[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Exception {
 	DivisionByZero = 0,
 	Debug = 1,
@@ -90,6 +90,36 @@ pub enum Exception {
 	Simd = 19,
 	Virtualization = 20,
 	Security = 30
+}
+
+impl Exception {
+	pub fn from_code(code: u32) -> Option<Exception> {
+		Some(match code {
+			0 => Exception::DivisionByZero,
+			1 => Exception::Debug,
+			2 => Exception::Nmi,
+			3 => Exception::Breakpoint,
+			4 => Exception::Overflow,
+			5 => Exception::Bounds,
+			6 => Exception::InvalidOpcode,
+			7 => Exception::NotAvailable,
+			8 => Exception::DoubleFault,
+			9 => Exception::CoprocessorSegment,
+			10 => Exception::Tss,
+			11 => Exception::NotPresent,
+			12 => Exception::StackSegment,
+			13 => Exception::GeneralProtection,
+			14 => Exception::PageFault,
+			16 => Exception::Fpu,
+			17 => Exception::Alignment,
+			18 => Exception::MachineCheck,
+			19 => Exception::Simd,
+			20 => Exception::Virtualization,
+			30 => Exception::Security,
+			
+			_ => return None
+		})
+	}
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -121,7 +151,7 @@ pub unsafe fn read_msr(msr: Msr) -> u64 {
 	r1 as u64 | ((r2 as u64) << 32)
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PrivilegeLevel {
 	Ring0 = 0,
 	Ring1 = 1,
