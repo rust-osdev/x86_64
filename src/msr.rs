@@ -13,13 +13,16 @@ pub const IA32_FMASK: u32 = 0xC0000084;
 
 /// Write 64 bits to msr register.
 pub unsafe fn wrmsr(msr: u32, value: u64) {
-    asm!("wrmsr" :: "{ecx}" (msr), "A" (value));
+    let low = value as u32;
+    let high = (value >> 32) as u32;
+    asm!("wrmsr" :: "{ecx}" (msr), "{eax}" (low), "{edx}" (high) );
 }
 
 /// Read 64 bits msr register.
 pub unsafe fn rdmsr(msr: u32) -> u64 {
-    let mut val: u64;
-    asm!("rdmsr" : "=A"(val) : "{ecx}" (msr));
+    let mut low = 0;
+    let mut high = 0;
+    asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (msr));
 
-    return val;
+    (high << 32) | low
 }
