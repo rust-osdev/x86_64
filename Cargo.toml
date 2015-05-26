@@ -5,4 +5,4 @@ authors = []
 
 [dependencies.bitflags]
 git = "https://github.com/Tobba/bitflags.git"
-rev = "b6aabe1e057e7e19fec10003419ef9c86a6082a3"
+rev = "5a69e4c1a0840cf03f354e02b47f9809552648df"

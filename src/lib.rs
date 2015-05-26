@@ -5,6 +5,7 @@
 #![crate_type="rlib"]
 #![feature(no_std)]
 #![feature(asm)]
+#![feature(associated_consts)]
 #![feature(core)]
 
 #[macro_use]
