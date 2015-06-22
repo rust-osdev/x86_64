@@ -1,5 +1,6 @@
 #![feature(no_std)]
 #![feature(core)]
+#![feature(core_prelude)]
 #![feature(asm)]
 #![no_std]
 
