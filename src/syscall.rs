@@ -1,8 +1,14 @@
 /// SYSCALL invokes an OS system-call handler at privilege level 0.
 /// It does so by loading RIP from the IA32_LSTAR
 /// MSR (after saving the address of the instruction following SYSCALL into RCX).
-
-// This code is inspired by the syscall.rs (https://github.com/kmcallister/syscall.rs/) project.
+/// "A.2 AMD64 Linux Kernel Conventions" of System V Application Binary Interface AMD64 Architecture Processor Supplement:
+/// A) The kernel interface uses %rdi, %rsi, %rdx, %r10, %r8 and %r9.
+/// B) A system-call is done via the syscall instruction. The kernel destroys registers %rcx and %r11.
+/// C) The number of the syscall has to be passed in register %rax.
+/// D) System-calls are limited to six arguments, no argument is passed directly on the stack.
+/// E) Returning from the syscall, register %rax contains the result of the system-call. A value in the range between -4095 and -1 indicates an error, it is -errno.
+/// F) Only values of class INTEGER or class MEMORY are passed to the kernel.
+/// This code is inspired by the syscall.rs (https://github.com/kmcallister/syscall.rs/) project.
 
 #[macro_export]
 macro_rules! syscall {

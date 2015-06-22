@@ -32,3 +32,4 @@ pub mod segmentation;
 pub mod task;
 pub mod dtables;
 pub mod syscall;
+pub mod cpuid;
