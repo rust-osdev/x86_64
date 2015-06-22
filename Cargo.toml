@@ -1,7 +1,7 @@
 [package]
 
 name = "x86"
-version = "0.0.8"
+version = "0.0.9"
 authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 
 description = "Library to program x86 (amd64) hardware. Contains x86 specific data structure descriptions, as well as convenience function to call assembly instructions typically not exposed in higher level languages."
