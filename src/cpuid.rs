@@ -46,6 +46,7 @@ pub unsafe fn cpuid(eax: u32) -> CpuIdResult {
     res
 }
 
+#[cfg(test)]
 fn to_bytes(val: u32) -> [u8; 4] {
     let mut res: [u8; 4] = [0; 4];
 
@@ -56,6 +57,7 @@ fn to_bytes(val: u32) -> [u8; 4] {
     res
 }
 
+#[cfg(test)]
 fn to_str(t: [u8; 4]) -> [char; 4] {
     let mut arr: [char; 4] = ['\0'; 4];
     for i in 0..4 {
