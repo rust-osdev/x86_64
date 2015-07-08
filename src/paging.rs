@@ -8,6 +8,7 @@ pub type VAddr = usize;
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
 pub const LARGE_PAGE_SIZE: u64 = 1024*1024*2; // 2 MiB
 pub const HUGE_PAGE_SIZE: u64 = 1024*1024*1024; // 1 GiB
+pub const CACHE_LINE_SIZE: usize = 64; // 64 Bytes
 
 /// MAXPHYADDR, which is at most 52; (use CPUID for finding system value).
 pub const MAXPHYADDR: u64 = 52;
