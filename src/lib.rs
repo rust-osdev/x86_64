@@ -13,6 +13,9 @@ extern crate core;
 #[macro_use]
 extern crate bitflags;
 
+#[macro_use]
+extern crate raw_cpuid;
+
 #[cfg(test)]
 extern crate std;
 
@@ -33,4 +36,6 @@ pub mod segmentation;
 pub mod task;
 pub mod dtables;
 pub mod syscall;
-pub mod cpuid;
+pub mod cpuid {
+    pub use raw_cpuid::*;
+}

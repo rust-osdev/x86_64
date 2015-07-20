@@ -1,15 +1,19 @@
 [package]
 
 name = "x86"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 
-description = "Library to program x86 (amd64) hardware. Contains x86 specific data structure descriptions, as well as convenience function to call assembly instructions typically not exposed in higher level languages."
+description = "Library to program x86 (amd64) hardware. Contains x86 specific data structure descriptions, data-tables, as well as convenience function to call assembly instructions typically not exposed in higher level languages."
+
+homepage = "https://github.com/gz/rust-x86"
 repository = "https://github.com/gz/rust-x86"
+documentation = "http://gz.github.io/rust-x86/x86/"
 
 readme = "README.md"
-keywords = ["ia32", "os", "amd64", "x86"]
-license = "WTFPL"
+keywords = ["ia32", "os", "amd64", "x86", "x86-64"]
+license = "MIT"
 
 [dependencies]
 bitflags = "0.1.0"
+raw-cpuid = "1.*"
