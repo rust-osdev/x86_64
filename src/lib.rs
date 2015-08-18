@@ -1,14 +1,9 @@
 #![feature(no_std)]
-#![feature(core)]
-#![feature(core_prelude)]
 #![feature(asm)]
 #![no_std]
 
 #![crate_name = "x86"]
 #![crate_type = "lib"]
-
-#[macro_use]
-extern crate core;
 
 #[macro_use]
 extern crate bitflags;
