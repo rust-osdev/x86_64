@@ -278,7 +278,7 @@ pub unsafe fn set_cs(selector: SegmentSelector) {
 #[inline(always)]
 pub fn get_cr0() -> Cr0 {
 	unsafe {
-		let mut r: usize;
+		let r: usize;
 		asm!("mov $0, cr0" : "=r"(r) ::: "intel");
 		Cr0::from_bits_truncate(r)
 	}
@@ -287,7 +287,7 @@ pub fn get_cr0() -> Cr0 {
 #[inline(always)]
 pub fn get_cr2() -> usize {
 	unsafe {
-		let mut r: usize;
+		let r: usize;
 		asm!("mov $0, cr2" : "=r"(r) ::: "intel");
 		r
 	}
@@ -296,7 +296,7 @@ pub fn get_cr2() -> usize {
 #[inline(always)]
 pub fn get_cr3() -> usize {
 	unsafe {
-		let mut r: usize;
+		let r: usize;
 		asm!("mov $0, cr3" : "=r"(r) ::: "intel");
 		r
 	}
@@ -305,7 +305,7 @@ pub fn get_cr3() -> usize {
 #[inline(always)]
 pub fn get_cr4() -> Cr4 {
 	unsafe {
-		let mut r: usize;
+		let r: usize;
 		asm!("mov $0, cr4" : "=r"(r) ::: "intel");
 		Cr4::from_bits_truncate(r)
 	}

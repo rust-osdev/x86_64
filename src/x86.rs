@@ -179,7 +179,7 @@ impl Tss {
 #[inline(always)]
 pub fn get_flags() -> Flags {
 	unsafe {
-		let mut r: usize;
+		let r: usize;
 		asm!("pushfd; pop $0" : "=r"(r) ::: "intel");
 		Flags::from_bits_truncate(r)
 	}
