@@ -2,7 +2,6 @@
 
 pub use self::x86_shared::*;
 
-use core::prelude::*;
 use core::mem::size_of;
 
 mod x86_shared;

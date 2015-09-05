@@ -1,7 +1,5 @@
 #![allow(non_upper_case_globals)]
 
-use core::prelude::*;
-
 bitflags! {
 	flags Flags: usize {
 		const CarryFlag = 1 << 0,

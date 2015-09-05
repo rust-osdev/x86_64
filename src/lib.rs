@@ -6,10 +6,8 @@
 #![feature(no_std)]
 #![feature(asm)]
 #![feature(associated_consts)]
-#![feature(core, core_prelude, core_slice_ext)]
+#![feature(core, core_slice_ext)]
 
-#[macro_use]
-extern crate core;
 #[macro_use]
 extern crate bitflags;
 
