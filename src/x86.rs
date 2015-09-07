@@ -38,16 +38,14 @@ pub struct IdtEntry {
 }
 
 impl GdtEntry {
-	pub fn null() -> GdtEntry {
-		GdtEntry {
-			base1: 0,
-			base2: 0,
-			base3: 0,
-			access: 0,
-			limit: 0,
-			flags: 0
-		}
-	}
+	pub const NULL: GdtEntry = GdtEntry {
+		base1: 0,
+		base2: 0,
+		base3: 0,
+		access: 0,
+		limit: 0,
+		flags: 0
+	};
 
 	pub fn new(base: *const (), limit: usize, access: GdtAccess, dpl: PrivilegeLevel) -> GdtEntry {
 		let (limit, flags) = if limit < 0x100000 {
@@ -69,9 +67,15 @@ impl GdtEntry {
 	}
 }
 
-pub const NULL_IDT_ENTRY: IdtEntry = IdtEntry { offset1: 0, selector: 0, reserved: 0, flags: 0, offset2: 0 };
-
 impl IdtEntry {
+	pub const NULL: IdtEntry = IdtEntry {
+		offset1: 0,
+		selector: 0,
+		reserved: 0,
+		flags: 0,
+		offset2: 0
+	};
+
 	pub fn new(f: unsafe extern "C" fn(), dpl: PrivilegeLevel, block: bool) -> IdtEntry {
 		IdtEntry {
 			offset1: f as u16,
