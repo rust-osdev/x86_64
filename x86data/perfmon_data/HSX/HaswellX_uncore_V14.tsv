@@ -1,0 +1,1284 @@
+# Performance Monitoring Events for Intel(R) Xeon(R) processor E5 v3 family based on the Haswell-E microarchitecture - V14
+# 8/17/2015 12:07:16 AM
+# Copyright (c) 2007 - 2014 Intel Corporation. All rights reserved.
+Unit	EventCode	UMask	EventName	Description	Counter	MSRValue	Filter	Internal
+CBO	0xA	0x0	UNC_C_BOUNCE_CONTROL	Bounce Control	0,1,2,3	0	null	0
+CBO	0x0	0x0	UNC_C_CLOCKTICKS	Uncore Clocks	0,1,2,3	0	null	0
+CBO	0x1F	0x0	UNC_C_COUNTER0_OCCUPANCY	Counter 0 Occupancy	0,1,2,3	0	null	0
+CBO	0x9	0x0	UNC_C_FAST_ASSERTED	FaST wire asserted	0,1	0	null	0
+CBO	0x34	0x3	UNC_C_LLC_LOOKUP.DATA_READ	Cache Lookups; Data Read Request	0,1,2,3	0	CBoFilter0[23:17]	0
+CBO	0x34	0x5	UNC_C_LLC_LOOKUP.WRITE	Cache Lookups; Write Requests	0,1,2,3	0	CBoFilter0[23:17]	0
+CBO	0x34	0x9	UNC_C_LLC_LOOKUP.REMOTE_SNOOP	Cache Lookups; External Snoop Request	0,1,2,3	0	CBoFilter0[23:17]	0
+CBO	0x34	0x11	UNC_C_LLC_LOOKUP.ANY	Cache Lookups; Any Request	0,1,2,3	0	CBoFilter0[23:17]	0
+CBO	0x34	0x41	UNC_C_LLC_LOOKUP.NID	Cache Lookups; Lookups that Match NID	0,1,2,3	0	CBoFilter0[23:17]	0
+CBO	0x34	0x21	UNC_C_LLC_LOOKUP.READ	Cache Lookups; Any Read Request	0,1,2,3	0	CBoFilter0[22:18]	0
+CBO	0x37	0x1	UNC_C_LLC_VICTIMS.M_STATE	Lines Victimized; Lines in M state	0,1,2,3	0	null	0
+CBO	0x37	0x2	UNC_C_LLC_VICTIMS.E_STATE	Lines Victimized; Lines in E state	0,1,2,3	0	null	0
+CBO	0x37	0x4	UNC_C_LLC_VICTIMS.S_STATE	Lines in S State	0,1,2,3	0	null	0
+CBO	0x37	0x8	UNC_C_LLC_VICTIMS.F_STATE	Lines Victimized	0,1,2,3	0	null	0
+CBO	0x37	0x40	UNC_C_LLC_VICTIMS.NID	Lines Victimized; Victimized Lines that Match NID	0,1,2,3	0	CBoFilter1[17:10]	0
+CBO	0x37	0x10	UNC_C_LLC_VICTIMS.MISS	Lines Victimized	0,1,2,3	0	null	0
+CBO	0x39	0x1	UNC_C_MISC.RSPI_WAS_FSE	Cbo Misc; Silent Snoop Eviction	0,1,2,3	0	null	0
+CBO	0x39	0x2	UNC_C_MISC.WC_ALIASING	Cbo Misc; Write Combining Aliasing	0,1,2,3	0	null	0
+CBO	0x39	0x4	UNC_C_MISC.STARTED	Cbo Misc	0,1,2,3	0	null	0
+CBO	0x39	0x8	UNC_C_MISC.RFO_HIT_S	Cbo Misc; RFO HitS	0,1,2,3	0	null	0
+CBO	0x39	0x10	UNC_C_MISC.CVZERO_PREFETCH_VICTIM	Cbo Misc; Clean Victim with raw CV=0	0,1,2,3	0	null	0
+CBO	0x39	0x20	UNC_C_MISC.CVZERO_PREFETCH_MISS	Cbo Misc; DRd hitting non-M with raw CV=0	0,1,2,3	0	null	0
+CBO	0x3C	0x1	UNC_C_QLRU.AGE0	LRU Queue; LRU Age 0	0,1,2,3	0	null	0
+CBO	0x3C	0x2	UNC_C_QLRU.AGE1	LRU Queue; LRU Age 1	0,1,2,3	0	null	0
+CBO	0x3C	0x4	UNC_C_QLRU.AGE2	LRU Queue; LRU Age 2	0,1,2,3	0	null	0
+CBO	0x3C	0x8	UNC_C_QLRU.AGE3	LRU Queue; LRU Age 3	0,1,2,3	0	null	0
+CBO	0x3C	0x10	UNC_C_QLRU.LRU_DECREMENT	LRU Queue; LRU Bits Decremented	0,1,2,3	0	null	0
+CBO	0x3C	0x20	UNC_C_QLRU.VICTIM_NON_ZERO	LRU Queue; Non-0 Aged Victim	0,1,2,3	0	null	0
+CBO	0x1B	0x1	UNC_C_RING_AD_USED.UP_EVEN	AD Ring In Use; Up and Even	0,1,2,3	0	null	0
+CBO	0x1B	0x2	UNC_C_RING_AD_USED.UP_ODD	AD Ring In Use; Up and Odd	0,1,2,3	0	null	0
+CBO	0x1B	0x4	UNC_C_RING_AD_USED.DOWN_EVEN	AD Ring In Use; Down and Even	0,1,2,3	0	null	0
+CBO	0x1B	0x8	UNC_C_RING_AD_USED.DOWN_ODD	AD Ring In Use; Down and Odd	0,1,2,3	0	null	0
+CBO	0x1B	0x3	UNC_C_RING_AD_USED.UP	AD Ring In Use; Up	0,1,2,3	0	null	0
+CBO	0x1B	0xC	UNC_C_RING_AD_USED.DOWN	AD Ring In Use; Down	0,1,2,3	0	null	0
+CBO	0x1B	0xF	UNC_C_RING_AD_USED.ALL	AD Ring In Use; All	0,1,2,3	0	null	0
+CBO	0x1C	0x1	UNC_C_RING_AK_USED.UP_EVEN	AK Ring In Use; Up and Even	0,1,2,3	0	null	0
+CBO	0x1C	0x2	UNC_C_RING_AK_USED.UP_ODD	AK Ring In Use; Up and Odd	0,1,2,3	0	null	0
+CBO	0x1C	0x4	UNC_C_RING_AK_USED.DOWN_EVEN	AK Ring In Use; Down and Even	0,1,2,3	0	null	0
+CBO	0x1C	0x8	UNC_C_RING_AK_USED.DOWN_ODD	AK Ring In Use; Down and Odd	0,1,2,3	0	null	0
+CBO	0x1C	0x3	UNC_C_RING_AK_USED.UP	AK Ring In Use; Up	0,1,2,3	0	null	0
+CBO	0x1C	0xC	UNC_C_RING_AK_USED.DOWN	AK Ring In Use; Down	0,1,2,3	0	null	0
+CBO	0x1C	0xF	UNC_C_RING_AK_USED.ALL	AK Ring In Use; All	0,1,2,3	0	null	0
+CBO	0x1D	0x1	UNC_C_RING_BL_USED.UP_EVEN	BL Ring in Use; Up and Even	0,1,2,3	0	null	0
+CBO	0x1D	0x2	UNC_C_RING_BL_USED.UP_ODD	BL Ring in Use; Up and Odd	0,1,2,3	0	null	0
+CBO	0x1D	0x4	UNC_C_RING_BL_USED.DOWN_EVEN	BL Ring in Use; Down and Even	0,1,2,3	0	null	0
+CBO	0x1D	0x8	UNC_C_RING_BL_USED.DOWN_ODD	BL Ring in Use; Down and Odd	0,1,2,3	0	null	0
+CBO	0x1D	0x3	UNC_C_RING_BL_USED.UP	BL Ring in Use; Up	0,1,2,3	0	null	0
+CBO	0x1D	0xC	UNC_C_RING_BL_USED.DOWN	BL Ring in Use; Down	0,1,2,3	0	null	0
+CBO	0x1D	0xF	UNC_C_RING_BL_USED.ALL	BL Ring in Use; Down	0,1,2,3	0	null	0
+CBO	0x5	0x1	UNC_C_RING_BOUNCES.AD	Number of LLC responses that bounced on the Ring.; AD	0,1,2,3	0	null	0
+CBO	0x5	0x2	UNC_C_RING_BOUNCES.AK	Number of LLC responses that bounced on the Ring.; AK	0,1,2,3	0	null	0
+CBO	0x5	0x4	UNC_C_RING_BOUNCES.BL	Number of LLC responses that bounced on the Ring.; BL	0,1,2,3	0	null	0
+CBO	0x5	0x10	UNC_C_RING_BOUNCES.IV	Number of LLC responses that bounced on the Ring.; Snoops of processor's cache.	0,1,2,3	0	null	0
+CBO	0x1E	0xF	UNC_C_RING_IV_USED.ANY	BL Ring in Use; Any	0,1,2,3	0	null	0
+CBO	0x1E	0x3	UNC_C_RING_IV_USED.UP	BL Ring in Use; Any	0,1,2,3	0	null	0
+CBO	0x1E	0xCC	UNC_C_RING_IV_USED.DOWN	BL Ring in Use; Down	0,1,2,3	0	null	0
+CBO	0x1E	0xC	UNC_C_RING_IV_USED.DN	BL Ring in Use; Any	0,1,2,3	0	null	0
+CBO	0x6	0x1	UNC_C_RING_SINK_STARVED.AD	AD	0,1,2,3	0	null	0
+CBO	0x6	0x2	UNC_C_RING_SINK_STARVED.AK	AK	0,1,2,3	0	null	0
+CBO	0x6	0x8	UNC_C_RING_SINK_STARVED.IV	IV	0,1,2,3	0	null	0
+CBO	0x6	0x4	UNC_C_RING_SINK_STARVED.BL	BL	0,1,2,3	0	null	0
+CBO	0x7	0x0	UNC_C_RING_SRC_THRTL	Number of cycles the Cbo is actively throttling traffic onto the Ring in order to limit bounce traffic.	0,1,2,3	0	null	0
+CBO	0x12	0x1	UNC_C_RxR_EXT_STARVED.IRQ	Ingress Arbiter Blocking Cycles; IPQ	0,1,2,3	0	null	0
+CBO	0x12	0x2	UNC_C_RxR_EXT_STARVED.IPQ	Ingress Arbiter Blocking Cycles; IRQ	0,1,2,3	0	null	0
+CBO	0x12	0x4	UNC_C_RxR_EXT_STARVED.PRQ	Ingress Arbiter Blocking Cycles; PRQ	0,1,2,3	0	null	0
+CBO	0x12	0x8	UNC_C_RxR_EXT_STARVED.ISMQ_BIDS	Ingress Arbiter Blocking Cycles; ISMQ_BID	0,1,2,3	0	null	0
+CBO	0x13	0x1	UNC_C_RxR_INSERTS.IRQ	Ingress Allocations; IRQ	0,1,2,3	0	null	0
+CBO	0x13	0x2	UNC_C_RxR_INSERTS.IRQ_REJ	Ingress Allocations; IRQ Rejected	0,1,2,3	0	null	0
+CBO	0x13	0x4	UNC_C_RxR_INSERTS.IPQ	Ingress Allocations; IPQ	0,1,2,3	0	null	0
+CBO	0x13	0x10	UNC_C_RxR_INSERTS.PRQ	Ingress Allocations; PRQ	0,1,2,3	0	null	0
+CBO	0x13	0x20	UNC_C_RxR_INSERTS.PRQ_REJ	Ingress Allocations; PRQ	0,1,2,3	0	null	0
+CBO	0x14	0x1	UNC_C_RxR_INT_STARVED.IRQ	Ingress Internal Starvation Cycles; IRQ	0,1,2,3	0	null	0
+CBO	0x14	0x4	UNC_C_RxR_INT_STARVED.IPQ	Ingress Internal Starvation Cycles; IPQ	0,1,2,3	0	null	0
+CBO	0x14	0x8	UNC_C_RxR_INT_STARVED.ISMQ	Ingress Internal Starvation Cycles; ISMQ	0,1,2,3	0	null	0
+CBO	0x14	0x10	UNC_C_RxR_INT_STARVED.PRQ	Ingress Internal Starvation Cycles; PRQ	0,1,2,3	0	null	0
+CBO	0x31	0x1	UNC_C_RxR_IPQ_RETRY.ANY	Probe Queue Retries; Any Reject	0,1,2,3	0	null	0
+CBO	0x31	0x2	UNC_C_RxR_IPQ_RETRY.FULL	Probe Queue Retries; No Egress Credits	0,1,2,3	0	null	0
+CBO	0x31	0x4	UNC_C_RxR_IPQ_RETRY.ADDR_CONFLICT	Probe Queue Retries; Address Conflict	0,1,2,3	0	null	0
+CBO	0x31	0x10	UNC_C_RxR_IPQ_RETRY.QPI_CREDITS	Probe Queue Retries; No QPI Credits	0,1,2,3	0	null	0
+CBO	0x28	0x1	UNC_C_RxR_IPQ_RETRY2.AD_SBO	Probe Queue Retries; No AD Sbo Credits	0,1,2,3	0	null	0
+CBO	0x28	0x40	UNC_C_RxR_IPQ_RETRY2.TARGET	Probe Queue Retries; Target Node Filter	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x32	0x1	UNC_C_RxR_IRQ_RETRY.ANY	Ingress Request Queue Rejects; Any Reject	0,1,2,3	0	null	0
+CBO	0x32	0x2	UNC_C_RxR_IRQ_RETRY.FULL	Ingress Request Queue Rejects; No Egress Credits	0,1,2,3	0	null	0
+CBO	0x32	0x4	UNC_C_RxR_IRQ_RETRY.ADDR_CONFLICT	Ingress Request Queue Rejects; Address Conflict	0,1,2,3	0	null	0
+CBO	0x32	0x8	UNC_C_RxR_IRQ_RETRY.RTID	Ingress Request Queue Rejects; No RTIDs	0,1,2,3	0	null	0
+CBO	0x32	0x10	UNC_C_RxR_IRQ_RETRY.QPI_CREDITS	Ingress Request Queue Rejects; No QPI Credits	0,1,2,3	0	null	0
+CBO	0x32	0x20	UNC_C_RxR_IRQ_RETRY.IIO_CREDITS	Ingress Request Queue Rejects; No IIO Credits	0,1,2,3	0	null	0
+CBO	0x32	0x40	UNC_C_RxR_IRQ_RETRY.NID	Ingress Request Queue Rejects	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x29	0x1	UNC_C_RxR_IRQ_RETRY2.AD_SBO	Ingress Request Queue Rejects; No AD Sbo Credits	0,1,2,3	0	null	0
+CBO	0x29	0x2	UNC_C_RxR_IRQ_RETRY2.BL_SBO	Ingress Request Queue Rejects; No BL Sbo Credits	0,1,2,3	0	null	0
+CBO	0x29	0x40	UNC_C_RxR_IRQ_RETRY2.TARGET	Ingress Request Queue Rejects; Target Node Filter	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x33	0x1	UNC_C_RxR_ISMQ_RETRY.ANY	ISMQ Retries; Any Reject	0,1,2,3	0	null	0
+CBO	0x33	0x2	UNC_C_RxR_ISMQ_RETRY.FULL	ISMQ Retries; No Egress Credits	0,1,2,3	0	null	0
+CBO	0x33	0x8	UNC_C_RxR_ISMQ_RETRY.RTID	ISMQ Retries; No RTIDs	0,1,2,3	0	null	0
+CBO	0x33	0x10	UNC_C_RxR_ISMQ_RETRY.QPI_CREDITS	ISMQ Retries; No QPI Credits	0,1,2,3	0	null	0
+CBO	0x33	0x20	UNC_C_RxR_ISMQ_RETRY.IIO_CREDITS	ISMQ Retries; No IIO Credits	0,1,2,3	0	null	0
+CBO	0x33	0x80	UNC_C_RxR_ISMQ_RETRY.WB_CREDITS	ISMQ Retries	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x33	0x40	UNC_C_RxR_ISMQ_RETRY.NID	ISMQ Retries	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x2A	0x1	UNC_C_RxR_ISMQ_RETRY2.AD_SBO	ISMQ Request Queue Rejects; No AD Sbo Credits	0,1,2,3	0	null	0
+CBO	0x2A	0x2	UNC_C_RxR_ISMQ_RETRY2.BL_SBO	ISMQ Request Queue Rejects; No BL Sbo Credits	0,1,2,3	0	null	0
+CBO	0x2A	0x40	UNC_C_RxR_ISMQ_RETRY2.TARGET	ISMQ Request Queue Rejects; Target Node Filter	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x11	0x1	UNC_C_RxR_OCCUPANCY.IRQ	Ingress Occupancy; IRQ	0	0	null	0
+CBO	0x11	0x2	UNC_C_RxR_OCCUPANCY.IRQ_REJECTED	IRQ Rejected	0	0	null	0
+CBO	0x11	0x4	UNC_C_RxR_OCCUPANCY.IPQ	Ingress Occupancy; IPQ	0	0	null	0
+CBO	0x11	0x20	UNC_C_RxR_OCCUPANCY.PRQ_REJ	Ingress Occupancy; PRQ Rejects	0	0	null	0
+CBO	0x3D	0x1	UNC_C_SBO_CREDITS_ACQUIRED.AD	SBo Credits Acquired; For AD Ring	0,1,2,3	0	null	0
+CBO	0x3D	0x2	UNC_C_SBO_CREDITS_ACQUIRED.BL	SBo Credits Acquired; For BL Ring	0,1,2,3	0	null	0
+CBO	0x3E	0x1	UNC_C_SBO_CREDIT_OCCUPANCY.AD	SBo Credits Occupancy; For AD Ring	0	0	null	0
+CBO	0x3E	0x2	UNC_C_SBO_CREDIT_OCCUPANCY.BL	SBo Credits Occupancy; For BL Ring	0	0	null	0
+CBO	0x35	0x1	UNC_C_TOR_INSERTS.OPCODE	TOR Inserts; Opcode Match	0,1,2,3	0	CBoFilter1[28:20]	0
+CBO	0x35	0x4	UNC_C_TOR_INSERTS.EVICTION	TOR Inserts; Evictions	0,1,2,3	0	null	0
+CBO	0x35	0x8	UNC_C_TOR_INSERTS.ALL	TOR Inserts; All	0,1,2,3	0	null	0
+CBO	0x35	0x10	UNC_C_TOR_INSERTS.WB	TOR Inserts; Writebacks	0,1,2,3	0	null	0
+CBO	0x35	0x3	UNC_C_TOR_INSERTS.MISS_OPCODE	TOR Inserts; Miss Opcode Match	0,1,2,3	0	CBoFilter1[28:20]	0
+CBO	0x35	0x41	UNC_C_TOR_INSERTS.NID_OPCODE	TOR Inserts; NID and Opcode Matched	0,1,2,3	0	CBoFilter1[28:20], CBoFilter1[15:0]	0
+CBO	0x35	0x44	UNC_C_TOR_INSERTS.NID_EVICTION	TOR Inserts; NID Matched Evictions	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x35	0x48	UNC_C_TOR_INSERTS.NID_ALL	TOR Inserts; NID Matched	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x35	0x50	UNC_C_TOR_INSERTS.NID_WB	TOR Inserts; NID Matched Writebacks	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x35	0x43	UNC_C_TOR_INSERTS.NID_MISS_OPCODE	TOR Inserts; NID and Opcode Matched Miss	0,1,2,3	0	CBoFilter1[28:20], CBoFilter1[15:0]	0
+CBO	0x35	0x4A	UNC_C_TOR_INSERTS.NID_MISS_ALL	TOR Inserts; NID Matched Miss All	0,1,2,3	0	CBoFilter1[15:0]	0
+CBO	0x35	0x2A	UNC_C_TOR_INSERTS.MISS_LOCAL	TOR Inserts; Misses to Local Memory	0,1,2,3	0	null	0
+CBO	0x35	0x8A	UNC_C_TOR_INSERTS.MISS_REMOTE	TOR Inserts; Misses to Remote Memory	0,1,2,3	0	null	0
+CBO	0x35	0x28	UNC_C_TOR_INSERTS.LOCAL	TOR Inserts; Local Memory	0,1,2,3	0	null	0
+CBO	0x35	0x88	UNC_C_TOR_INSERTS.REMOTE	TOR Inserts; Remote Memory	0,1,2,3	0	null	0
+CBO	0x35	0x23	UNC_C_TOR_INSERTS.MISS_LOCAL_OPCODE	TOR Inserts; Misses to Local Memory - Opcode Matched	0,1,2,3	0	CBoFilter1[28:20]	0
+CBO	0x35	0x83	UNC_C_TOR_INSERTS.MISS_REMOTE_OPCODE	TOR Inserts; Misses to Remote Memory - Opcode Matched	0,1,2,3	0	CBoFilter1[28:20]	0
+CBO	0x35	0x21	UNC_C_TOR_INSERTS.LOCAL_OPCODE	TOR Inserts; Local Memory - Opcode Matched	0,1,2,3	0	CBoFilter1[28:20]	0
+CBO	0x35	0x81	UNC_C_TOR_INSERTS.REMOTE_OPCODE	TOR Inserts; Remote Memory - Opcode Matched	0,1,2,3	0	CBoFilter1[28:20]	0
+CBO	0x36	0x1	UNC_C_TOR_OCCUPANCY.OPCODE	TOR Occupancy; Opcode Match	0	0	CBoFilter1[28:20]	0
+CBO	0x36	0x4	UNC_C_TOR_OCCUPANCY.EVICTION	TOR Occupancy; Evictions	0	0	null	0
+CBO	0x36	0x8	UNC_C_TOR_OCCUPANCY.ALL	TOR Occupancy; Any	0	0	null	0
+CBO	0x36	0x3	UNC_C_TOR_OCCUPANCY.MISS_OPCODE	TOR Occupancy; Miss Opcode Match	0	0	CBoFilter1[28:20]	0
+CBO	0x36	0xA	UNC_C_TOR_OCCUPANCY.MISS_ALL	TOR Occupancy; Miss All	0	0	null	0
+CBO	0x36	0x41	UNC_C_TOR_OCCUPANCY.NID_OPCODE	TOR Occupancy; NID and Opcode Matched	0	0	CBoFilter1[28:20], CBoFilter1[15:0]	0
+CBO	0x36	0x44	UNC_C_TOR_OCCUPANCY.NID_EVICTION	TOR Occupancy; NID Matched Evictions	0	0	CBoFilter1[15:0]	0
+CBO	0x36	0x48	UNC_C_TOR_OCCUPANCY.NID_ALL	TOR Occupancy; NID Matched	0	0	CBoFilter1[15:0]	0
+CBO	0x36	0x43	UNC_C_TOR_OCCUPANCY.NID_MISS_OPCODE	TOR Occupancy; NID and Opcode Matched Miss	0	0	CBoFilter1[28:20], CBoFilter1[15:0]	0
+CBO	0x36	0x4A	UNC_C_TOR_OCCUPANCY.NID_MISS_ALL	TOR Occupancy; NID Matched	0	0	CBoFilter1[15:0]	0
+CBO	0x36	0x2A	UNC_C_TOR_OCCUPANCY.MISS_LOCAL	TOR Occupancy	0	0	null	0
+CBO	0x36	0x8A	UNC_C_TOR_OCCUPANCY.MISS_REMOTE	TOR Occupancy	0	0	null	0
+CBO	0x36	0x28	UNC_C_TOR_OCCUPANCY.LOCAL	TOR Occupancy	0	0	null	0
+CBO	0x36	0x88	UNC_C_TOR_OCCUPANCY.REMOTE	TOR Occupancy	0	0	null	0
+CBO	0x36	0x23	UNC_C_TOR_OCCUPANCY.MISS_LOCAL_OPCODE	TOR Occupancy; Misses to Local Memory - Opcode Matched	0	0	CBoFilter1[28:20]	0
+CBO	0x36	0x83	UNC_C_TOR_OCCUPANCY.MISS_REMOTE_OPCODE	TOR Occupancy; Misses to Remote Memory - Opcode Matched	0	0	CBoFilter1[28:20]	0
+CBO	0x36	0x21	UNC_C_TOR_OCCUPANCY.LOCAL_OPCODE	TOR Occupancy; Local Memory - Opcode Matched	0	0	CBoFilter1[28:20]	0
+CBO	0x36	0x81	UNC_C_TOR_OCCUPANCY.REMOTE_OPCODE	TOR Occupancy; Remote Memory - Opcode Matched	0	0	CBoFilter1[28:20]	0
+CBO	0x36	0x10	UNC_C_TOR_OCCUPANCY.WB	TOR Occupancy; Writebacks	0	0	null	0
+CBO	0x36	0x50	UNC_C_TOR_OCCUPANCY.NID_WB	TOR Occupancy; NID Matched Writebacks	0	0	CBoFilter1[15:0]	0
+CBO	0x4	0x1	UNC_C_TxR_ADS_USED.AD	Onto AD Ring	0,1,2,3	0	null	0
+CBO	0x4	0x2	UNC_C_TxR_ADS_USED.AK	Onto AK Ring	0,1,2,3	0	null	0
+CBO	0x4	0x4	UNC_C_TxR_ADS_USED.BL	Onto BL Ring	0,1,2,3	0	null	0
+CBO	0x2	0x1	UNC_C_TxR_INSERTS.AD_CACHE	Egress Allocations; AD - Cachebo	0,1,2,3	0	null	0
+CBO	0x2	0x2	UNC_C_TxR_INSERTS.AK_CACHE	Egress Allocations; AK - Cachebo	0,1,2,3	0	null	0
+CBO	0x2	0x4	UNC_C_TxR_INSERTS.BL_CACHE	Egress Allocations; BL - Cacheno	0,1,2,3	0	null	0
+CBO	0x2	0x8	UNC_C_TxR_INSERTS.IV_CACHE	Egress Allocations; IV - Cachebo	0,1,2,3	0	null	0
+CBO	0x2	0x10	UNC_C_TxR_INSERTS.AD_CORE	Egress Allocations; AD - Corebo	0,1,2,3	0	null	0
+CBO	0x2	0x20	UNC_C_TxR_INSERTS.AK_CORE	Egress Allocations; AK - Corebo	0,1,2,3	0	null	0
+CBO	0x2	0x40	UNC_C_TxR_INSERTS.BL_CORE	Egress Allocations; BL - Corebo	0,1,2,3	0	null	0
+CBO	0x3	0x2	UNC_C_TxR_STARVED.AK_BOTH	Injection Starvation; Onto AK Ring	0,1,2,3	0	null	0
+CBO	0x3	0x4	UNC_C_TxR_STARVED.BL_BOTH	Injection Starvation; Onto BL Ring	0,1,2,3	0	null	0
+CBO	0x3	0x8	UNC_C_TxR_STARVED.IV	Injection Starvation; Onto IV Ring	0,1,2,3	0	null	0
+CBO	0x3	0x10	UNC_C_TxR_STARVED.AD_CORE	Injection Starvation; Onto AD Ring (to core)	0,1,2,3	0	null	0
+HA	0x20	0x3	UNC_H_ADDR_OPC_MATCH.FILT	QPI Address/Opcode Match; Address & Opcode Match	0,1,2,3	0	HA_AddrMatch0[31:6], HA_AddrMatch1[13:0], HA_OpcodeMatch[5:0]	0
+HA	0x20	0x1	UNC_H_ADDR_OPC_MATCH.ADDR	QPI Address/Opcode Match; Address	0,1,2,3	0	HA_AddrMatch0[31:6], HA_AddrMatch1[13:0]	0
+HA	0x20	0x2	UNC_H_ADDR_OPC_MATCH.OPC	QPI Address/Opcode Match; Opcode	0,1,2,3	0	HA_OpcodeMatch[5:0]	0
+HA	0x20	0x4	UNC_H_ADDR_OPC_MATCH.AD	QPI Address/Opcode Match; AD Opcodes	0,1,2,3	0	HA_OpcodeMatch[5:0]	0
+HA	0x20	0x8	UNC_H_ADDR_OPC_MATCH.BL	QPI Address/Opcode Match; BL Opcodes	0,1,2,3	0	HA_OpcodeMatch[5:0]	0
+HA	0x20	0x10	UNC_H_ADDR_OPC_MATCH.AK	QPI Address/Opcode Match; AK Opcodes	0,1,2,3	0	HA_OpcodeMatch[5:0]	0
+HA	0x42	0x0	UNC_H_BT_CYCLES_NE	BT Cycles Not Empty	0,1,2,3	0	null	0
+HA	0x51	0x2	UNC_H_BT_TO_HT_NOT_ISSUED.INCOMING_SNP_HAZARD	BT to HT Not Issued; Incoming Snoop Hazard	0,1,2,3	0	null	0
+HA	0x51	0x4	UNC_H_BT_TO_HT_NOT_ISSUED.INCOMING_BL_HAZARD	BT to HT Not Issued; Incoming Data Hazard	0,1,2,3	0	null	0
+HA	0x51	0x8	UNC_H_BT_TO_HT_NOT_ISSUED.RSPACKCFLT_HAZARD	BT to HT Not Issued; Incoming Data Hazard	0,1,2,3	0	null	0
+HA	0x51	0x10	UNC_H_BT_TO_HT_NOT_ISSUED.WBMDATA_HAZARD	BT to HT Not Issued; Incoming Data Hazard	0,1,2,3	0	null	0
+HA	0x14	0x1	UNC_H_BYPASS_IMC.TAKEN	HA to iMC Bypass; Taken	0,1,2,3	0	null	0
+HA	0x14	0x2	UNC_H_BYPASS_IMC.NOT_TAKEN	HA to iMC Bypass; Not Taken	0,1,2,3	0	null	0
+HA	0x0	0x0	UNC_H_CLOCKTICKS	uclks	0,1,2,3	0	null	0
+HA	0x11	0x0	UNC_H_DIRECT2CORE_COUNT	Direct2Core Messages Sent	0,1,2,3	0	null	0
+HA	0x12	0x0	UNC_H_DIRECT2CORE_CYCLES_DISABLED	Cycles when Direct2Core was Disabled	0,1,2,3	0	null	0
+HA	0x13	0x0	UNC_H_DIRECT2CORE_TXN_OVERRIDE	Number of Reads that had Direct2Core Overridden	0,1,2,3	0	null	0
+HA	0x41	0x0	UNC_H_DIRECTORY_LAT_OPT	Directory Lat Opt Return	0,1,2,3	0	null	0
+HA	0xC	0x1	UNC_H_DIRECTORY_LOOKUP.SNP	Directory Lookups; Snoop Needed	0,1,2,3	0	null	0
+HA	0xC	0x2	UNC_H_DIRECTORY_LOOKUP.NO_SNP	Directory Lookups; Snoop Not Needed	0,1,2,3	0	null	0
+HA	0xD	0x1	UNC_H_DIRECTORY_UPDATE.SET	Directory Updates; Directory Set	0,1,2,3	0	null	0
+HA	0xD	0x2	UNC_H_DIRECTORY_UPDATE.CLEAR	Directory Updates; Directory Clear	0,1,2,3	0	null	0
+HA	0xD	0x3	UNC_H_DIRECTORY_UPDATE.ANY	Directory Updates; Any Directory Update	0,1,2,3	0	null	0
+HA	0x71	0x1	UNC_H_HITME_HIT.READ_OR_INVITOE	Counts Number of Hits in HitMe Cache; op is RdCode, RdData, RdDataMigratory, RdInvOwn, RdCur or InvItoE	0,1,2,3	0	null	0
+HA	0x71	0x2	UNC_H_HITME_HIT.WBMTOI	Counts Number of Hits in HitMe Cache; op is WbMtoI	0,1,2,3	0	null	0
+HA	0x71	0x4	UNC_H_HITME_HIT.ACKCNFLTWBI	Counts Number of Hits in HitMe Cache; op is AckCnfltWbI	0,1,2,3	0	null	0
+HA	0x71	0x8	UNC_H_HITME_HIT.WBMTOE_OR_S	Counts Number of Hits in HitMe Cache; op is WbMtoE or WbMtoS	0,1,2,3	0	null	0
+HA	0x71	0x10	UNC_H_HITME_HIT.RSPFWDI_REMOTE	Counts Number of Hits in HitMe Cache; op is RspIFwd or RspIFwdWb for a remote request	0,1,2,3	0	null	0
+HA	0x71	0x20	UNC_H_HITME_HIT.RSPFWDI_LOCAL	Counts Number of Hits in HitMe Cache; op is RspIFwd or RspIFwdWb for a local request	0,1,2,3	0	null	0
+HA	0x71	0x40	UNC_H_HITME_HIT.RSPFWDS	Counts Number of Hits in HitMe Cache; op is RsSFwd or RspSFwdWb	0,1,2,3	0	null	0
+HA	0x71	0x80	UNC_H_HITME_HIT.RSP	Counts Number of Hits in HitMe Cache; op is RspI, RspIWb, RspS, RspSWb, RspCnflt or RspCnfltWbI	0,1,2,3	0	null	0
+HA	0x71	0x70	UNC_H_HITME_HIT.ALLOCS	Counts Number of Hits in HitMe Cache; Allocations	0,1,2,3	0	null	0
+HA	0x71	0x42	UNC_H_HITME_HIT.EVICTS	Counts Number of Hits in HitMe Cache; Allocations	0,1,2,3	0	null	0
+HA	0x71	0x26	UNC_H_HITME_HIT.INVALS	Counts Number of Hits in HitMe Cache; Invalidations	0,1,2,3	0	null	0
+HA	0x71	0xFF	UNC_H_HITME_HIT.ALL	Counts Number of Hits in HitMe Cache; All Requests	0,1,2,3	0	null	0
+HA	0x71	0xF	UNC_H_HITME_HIT.HOM	Counts Number of Hits in HitMe Cache; HOM Requests	0,1,2,3	0	null	0
+HA	0x72	0x1	UNC_H_HITME_HIT_PV_BITS_SET.READ_OR_INVITOE	Accumulates Number of PV bits set on HitMe Cache Hits; op is RdCode, RdData, RdDataMigratory, RdInvOwn, RdCur or InvItoE	0,1,2,3	0	null	0
+HA	0x72	0x2	UNC_H_HITME_HIT_PV_BITS_SET.WBMTOI	Accumulates Number of PV bits set on HitMe Cache Hits; op is WbMtoI	0,1,2,3	0	null	0
+HA	0x72	0x4	UNC_H_HITME_HIT_PV_BITS_SET.ACKCNFLTWBI	Accumulates Number of PV bits set on HitMe Cache Hits; op is AckCnfltWbI	0,1,2,3	0	null	0
+HA	0x72	0x8	UNC_H_HITME_HIT_PV_BITS_SET.WBMTOE_OR_S	Accumulates Number of PV bits set on HitMe Cache Hits; op is WbMtoE or WbMtoS	0,1,2,3	0	null	0
+HA	0x72	0x10	UNC_H_HITME_HIT_PV_BITS_SET.RSPFWDI_REMOTE	Accumulates Number of PV bits set on HitMe Cache Hits; op is RspIFwd or RspIFwdWb for a remote request	0,1,2,3	0	null	0
+HA	0x72	0x20	UNC_H_HITME_HIT_PV_BITS_SET.RSPFWDI_LOCAL	Accumulates Number of PV bits set on HitMe Cache Hits; op is RspIFwd or RspIFwdWb for a local request	0,1,2,3	0	null	0
+HA	0x72	0x40	UNC_H_HITME_HIT_PV_BITS_SET.RSPFWDS	Accumulates Number of PV bits set on HitMe Cache Hits; op is RsSFwd or RspSFwdWb	0,1,2,3	0	null	0
+HA	0x72	0x80	UNC_H_HITME_HIT_PV_BITS_SET.RSP	Accumulates Number of PV bits set on HitMe Cache Hits; op is RspI, RspIWb, RspS, RspSWb, RspCnflt or RspCnfltWbI	0,1,2,3	0	null	0
+HA	0x72	0xFF	UNC_H_HITME_HIT_PV_BITS_SET.ALL	Accumulates Number of PV bits set on HitMe Cache Hits; All Requests	0,1,2,3	0	null	0
+HA	0x72	0xF	UNC_H_HITME_HIT_PV_BITS_SET.HOM	Accumulates Number of PV bits set on HitMe Cache Hits; HOM Requests	0,1,2,3	0	null	0
+HA	0x70	0x1	UNC_H_HITME_LOOKUP.READ_OR_INVITOE	Counts Number of times HitMe Cache is accessed; op is RdCode, RdData, RdDataMigratory, RdInvOwn, RdCur or InvItoE	0,1,2,3	0	null	0
+HA	0x70	0x2	UNC_H_HITME_LOOKUP.WBMTOI	Counts Number of times HitMe Cache is accessed; op is WbMtoI	0,1,2,3	0	null	0
+HA	0x70	0x4	UNC_H_HITME_LOOKUP.ACKCNFLTWBI	Counts Number of times HitMe Cache is accessed; op is AckCnfltWbI	0,1,2,3	0	null	0
+HA	0x70	0x8	UNC_H_HITME_LOOKUP.WBMTOE_OR_S	Counts Number of times HitMe Cache is accessed; op is WbMtoE or WbMtoS	0,1,2,3	0	null	0
+HA	0x70	0x10	UNC_H_HITME_LOOKUP.RSPFWDI_REMOTE	Counts Number of times HitMe Cache is accessed; op is RspIFwd or RspIFwdWb for a remote request	0,1,2,3	0	null	0
+HA	0x70	0x20	UNC_H_HITME_LOOKUP.RSPFWDI_LOCAL	Counts Number of times HitMe Cache is accessed; op is RspIFwd or RspIFwdWb for a local request	0,1,2,3	0	null	0
+HA	0x70	0x40	UNC_H_HITME_LOOKUP.RSPFWDS	Counts Number of times HitMe Cache is accessed; op is RsSFwd or RspSFwdWb	0,1,2,3	0	null	0
+HA	0x70	0x80	UNC_H_HITME_LOOKUP.RSP	Counts Number of times HitMe Cache is accessed; op is RspI, RspIWb, RspS, RspSWb, RspCnflt or RspCnfltWbI	0,1,2,3	0	null	0
+HA	0x70	0x70	UNC_H_HITME_LOOKUP.ALLOCS	Counts Number of times HitMe Cache is accessed; Allocations	0,1,2,3	0	null	0
+HA	0x70	0x26	UNC_H_HITME_LOOKUP.INVALS	Counts Number of times HitMe Cache is accessed; Invalidations	0,1,2,3	0	null	0
+HA	0x70	0xFF	UNC_H_HITME_LOOKUP.ALL	Counts Number of times HitMe Cache is accessed; All Requests	0,1,2,3	0	null	0
+HA	0x70	0xF	UNC_H_HITME_LOOKUP.HOM	Counts Number of times HitMe Cache is accessed; HOM Requests	0,1,2,3	0	null	0
+HA	0x22	0x1	UNC_H_IGR_NO_CREDIT_CYCLES.AD_QPI0	Cycles without QPI Ingress Credits; AD to QPI Link 0	0,1,2,3	0	null	0
+HA	0x22	0x2	UNC_H_IGR_NO_CREDIT_CYCLES.AD_QPI1	Cycles without QPI Ingress Credits; AD to QPI Link 1	0,1,2,3	0	null	0
+HA	0x22	0x4	UNC_H_IGR_NO_CREDIT_CYCLES.BL_QPI0	Cycles without QPI Ingress Credits; BL to QPI Link 0	0,1,2,3	0	null	0
+HA	0x22	0x8	UNC_H_IGR_NO_CREDIT_CYCLES.BL_QPI1	Cycles without QPI Ingress Credits; BL to QPI Link 1	0,1,2,3	0	null	0
+HA	0x22	0x10	UNC_H_IGR_NO_CREDIT_CYCLES.AD_QPI2	Cycles without QPI Ingress Credits; BL to QPI Link 0	0,1,2,3	0	null	0
+HA	0x22	0x20	UNC_H_IGR_NO_CREDIT_CYCLES.BL_QPI2	Cycles without QPI Ingress Credits; BL to QPI Link 1	0,1,2,3	0	null	0
+HA	0x17	0x1	UNC_H_IMC_READS.NORMAL	HA to iMC Normal Priority Reads Issued; Normal Priority	0,1,2,3	0	null	0
+HA	0x1E	0x0	UNC_H_IMC_RETRY	Retry Events	0,1,2,3	0	null	0
+HA	0x1A	0x1	UNC_H_IMC_WRITES.FULL	HA to iMC Full Line Writes Issued; Full Line Non-ISOCH	0,1,2,3	0	null	0
+HA	0x1A	0x2	UNC_H_IMC_WRITES.PARTIAL	HA to iMC Full Line Writes Issued; Partial Non-ISOCH	0,1,2,3	0	null	0
+HA	0x1A	0x4	UNC_H_IMC_WRITES.FULL_ISOCH	HA to iMC Full Line Writes Issued; ISOCH Full Line	0,1,2,3	0	null	0
+HA	0x1A	0x8	UNC_H_IMC_WRITES.PARTIAL_ISOCH	HA to iMC Full Line Writes Issued; ISOCH Partial	0,1,2,3	0	null	0
+HA	0x1A	0xF	UNC_H_IMC_WRITES.ALL	HA to iMC Full Line Writes Issued; All Writes	0,1,2,3	0	null	0
+HA	0x61	0x1	UNC_H_IOT_BACKPRESSURE.SAT	IOT Backpressure	0,1,2	0	null	0
+HA	0x61	0x2	UNC_H_IOT_BACKPRESSURE.HUB	IOT Backpressure	0,1,2	0	null	0
+HA	0x64	0x1	UNC_H_IOT_CTS_EAST_LO.CTS0	IOT Common Trigger Sequencer - Lo	0,1,2	0	null	0
+HA	0x64	0x2	UNC_H_IOT_CTS_EAST_LO.CTS1	IOT Common Trigger Sequencer - Lo	0,1,2	0	null	0
+HA	0x65	0x1	UNC_H_IOT_CTS_HI.CTS2	IOT Common Trigger Sequencer - Hi	0,1,2	0	null	0
+HA	0x65	0x2	UNC_H_IOT_CTS_HI.CTS3	IOT Common Trigger Sequencer - Hi	0,1,2	0	null	0
+HA	0x62	0x1	UNC_H_IOT_CTS_WEST_LO.CTS0	IOT Common Trigger Sequencer - Lo	0,1,2	0	null	0
+HA	0x62	0x2	UNC_H_IOT_CTS_WEST_LO.CTS1	IOT Common Trigger Sequencer - Lo	0,1,2	0	null	0
+HA	0x53	0x2	UNC_H_OSB.READS_LOCAL	OSB Snoop Broadcast; Local Reads	0,1,2,3	0	null	0
+HA	0x53	0x4	UNC_H_OSB.INVITOE_LOCAL	OSB Snoop Broadcast; Local InvItoE	0,1,2,3	0	null	0
+HA	0x53	0x8	UNC_H_OSB.REMOTE	OSB Snoop Broadcast; Remote	0,1,2,3	0	null	0
+HA	0x53	0x10	UNC_H_OSB.CANCELLED	OSB Snoop Broadcast; Cancelled	0,1,2,3	0	null	0
+HA	0x53	0x20	UNC_H_OSB.READS_LOCAL_USEFUL	OSB Snoop Broadcast; Reads Local -  Useful	0,1,2,3	0	null	0
+HA	0x53	0x40	UNC_H_OSB.REMOTE_USEFUL	OSB Snoop Broadcast; Remote - Useful	0,1,2,3	0	null	0
+HA	0x54	0x1	UNC_H_OSB_EDR.ALL	OSB Early Data Return; All	0,1,2,3	0	null	0
+HA	0x54	0x2	UNC_H_OSB_EDR.READS_LOCAL_I	OSB Early Data Return; Reads to Local  I	0,1,2,3	0	null	0
+HA	0x54	0x4	UNC_H_OSB_EDR.READS_REMOTE_I	OSB Early Data Return; Reads to Remote I	0,1,2,3	0	null	0
+HA	0x54	0x8	UNC_H_OSB_EDR.READS_LOCAL_S	OSB Early Data Return; Reads to Local S	0,1,2,3	0	null	0
+HA	0x54	0x10	UNC_H_OSB_EDR.READS_REMOTE_S	OSB Early Data Return; Reads to Remote S	0,1,2,3	0	null	0
+HA	0x1	0x3	UNC_H_REQUESTS.READS	Read and Write Requests; Reads	0,1,2,3	0	null	0
+HA	0x1	0xC	UNC_H_REQUESTS.WRITES	Read and Write Requests; Writes	0,1,2,3	0	null	0
+HA	0x1	0x1	UNC_H_REQUESTS.READS_LOCAL	Read and Write Requests; Local Reads	0,1,2,3	0	null	0
+HA	0x1	0x2	UNC_H_REQUESTS.READS_REMOTE	Read and Write Requests; Remote Reads	0,1,2,3	0	null	0
+HA	0x1	0x4	UNC_H_REQUESTS.WRITES_LOCAL	Read and Write Requests; Local Writes	0,1,2,3	0	null	0
+HA	0x1	0x8	UNC_H_REQUESTS.WRITES_REMOTE	Read and Write Requests; Remote Writes	0,1,2,3	0	null	0
+HA	0x1	0x10	UNC_H_REQUESTS.INVITOE_LOCAL	Read and Write Requests; Local InvItoEs	0,1,2,3	0	null	0
+HA	0x1	0x20	UNC_H_REQUESTS.INVITOE_REMOTE	Read and Write Requests; Remote InvItoEs	0,1,2,3	0	null	0
+HA	0x3E	0x1	UNC_H_RING_AD_USED.CW_EVEN	HA AD Ring in Use; Clockwise and Even	0,1,2,3	0	null	0
+HA	0x3E	0x2	UNC_H_RING_AD_USED.CW_ODD	HA AD Ring in Use; Clockwise and Odd	0,1,2,3	0	null	0
+HA	0x3E	0x4	UNC_H_RING_AD_USED.CCW_EVEN	HA AD Ring in Use; Counterclockwise and Even	0,1,2,3	0	null	0
+HA	0x3E	0x8	UNC_H_RING_AD_USED.CCW_ODD	HA AD Ring in Use; Counterclockwise and Odd	0,1,2,3	0	null	0
+HA	0x3E	0x3	UNC_H_RING_AD_USED.CW	HA AD Ring in Use; Clockwise	0,1,2,3	0	null	0
+HA	0x3E	0xC	UNC_H_RING_AD_USED.CCW	HA AD Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+HA	0x3F	0x1	UNC_H_RING_AK_USED.CW_EVEN	HA AK Ring in Use; Clockwise and Even	0,1,2,3	0	null	0
+HA	0x3F	0x2	UNC_H_RING_AK_USED.CW_ODD	HA AK Ring in Use; Clockwise and Odd	0,1,2,3	0	null	0
+HA	0x3F	0x4	UNC_H_RING_AK_USED.CCW_EVEN	HA AK Ring in Use; Counterclockwise and Even	0,1,2,3	0	null	0
+HA	0x3F	0x8	UNC_H_RING_AK_USED.CCW_ODD	HA AK Ring in Use; Counterclockwise and Odd	0,1,2,3	0	null	0
+HA	0x3F	0x3	UNC_H_RING_AK_USED.CW	HA AK Ring in Use; Clockwise	0,1,2,3	0	null	0
+HA	0x3F	0xC	UNC_H_RING_AK_USED.CCW	HA AK Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+HA	0x40	0x1	UNC_H_RING_BL_USED.CW_EVEN	HA BL Ring in Use; Clockwise and Even	0,1,2,3	0	null	0
+HA	0x40	0x2	UNC_H_RING_BL_USED.CW_ODD	HA BL Ring in Use; Clockwise and Odd	0,1,2,3	0	null	0
+HA	0x40	0x4	UNC_H_RING_BL_USED.CCW_EVEN	HA BL Ring in Use; Counterclockwise and Even	0,1,2,3	0	null	0
+HA	0x40	0x8	UNC_H_RING_BL_USED.CCW_ODD	HA BL Ring in Use; Counterclockwise and Odd	0,1,2,3	0	null	0
+HA	0x40	0x3	UNC_H_RING_BL_USED.CW	HA BL Ring in Use; Clockwise	0,1,2,3	0	null	0
+HA	0x40	0xC	UNC_H_RING_BL_USED.CCW	HA BL Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+HA	0x15	0x1	UNC_H_RPQ_CYCLES_NO_REG_CREDITS.CHN0	iMC RPQ Credits Empty - Regular; Channel 0	0,1,2,3	0	null	0
+HA	0x15	0x2	UNC_H_RPQ_CYCLES_NO_REG_CREDITS.CHN1	iMC RPQ Credits Empty - Regular; Channel 1	0,1,2,3	0	null	0
+HA	0x15	0x4	UNC_H_RPQ_CYCLES_NO_REG_CREDITS.CHN2	iMC RPQ Credits Empty - Regular; Channel 2	0,1,2,3	0	null	0
+HA	0x15	0x8	UNC_H_RPQ_CYCLES_NO_REG_CREDITS.CHN3	iMC RPQ Credits Empty - Regular; Channel 3	0,1,2,3	0	null	0
+HA	0x16	0x1	UNC_H_RPQ_CYCLES_NO_SPEC_CREDITS.CHN0	iMC RPQ Credits Empty - Special; Channel 0	0,1,2,3	0	null	0
+HA	0x16	0x2	UNC_H_RPQ_CYCLES_NO_SPEC_CREDITS.CHN1	iMC RPQ Credits Empty - Special; Channel 1	0,1,2,3	0	null	0
+HA	0x16	0x4	UNC_H_RPQ_CYCLES_NO_SPEC_CREDITS.CHN2	iMC RPQ Credits Empty - Special; Channel 2	0,1,2,3	0	null	0
+HA	0x16	0x8	UNC_H_RPQ_CYCLES_NO_SPEC_CREDITS.CHN3	iMC RPQ Credits Empty - Special; Channel 3	0,1,2,3	0	null	0
+HA	0x68	0x1	UNC_H_SBO0_CREDITS_ACQUIRED.AD	SBo0 Credits Acquired; For AD Ring	0,1,2,3	0	null	0
+HA	0x68	0x2	UNC_H_SBO0_CREDITS_ACQUIRED.BL	SBo0 Credits Acquired; For BL Ring	0,1,2,3	0	null	0
+HA	0x6A	0x1	UNC_H_SBO0_CREDIT_OCCUPANCY.AD	SBo0 Credits Occupancy; For AD Ring	0,1,2,3	0	null	0
+HA	0x6A	0x2	UNC_H_SBO0_CREDIT_OCCUPANCY.BL	SBo0 Credits Occupancy; For BL Ring	0,1,2,3	0	null	0
+HA	0x69	0x1	UNC_H_SBO1_CREDITS_ACQUIRED.AD	SBo1 Credits Acquired; For AD Ring	0,1,2,3	0	null	0
+HA	0x69	0x2	UNC_H_SBO1_CREDITS_ACQUIRED.BL	SBo1 Credits Acquired; For BL Ring	0,1,2,3	0	null	0
+HA	0x6B	0x1	UNC_H_SBO1_CREDIT_OCCUPANCY.AD	SBo1 Credits Occupancy; For AD Ring	0,1,2,3	0	null	0
+HA	0x6B	0x2	UNC_H_SBO1_CREDIT_OCCUPANCY.BL	SBo1 Credits Occupancy; For BL Ring	0,1,2,3	0	null	0
+HA	0xA	0x1	UNC_H_SNOOPS_RSP_AFTER_DATA.LOCAL	Data beat the Snoop Responses; Local Requests	0,1,2,3	0	null	0
+HA	0xA	0x2	UNC_H_SNOOPS_RSP_AFTER_DATA.REMOTE	Data beat the Snoop Responses; Remote Requests	0,1,2,3	0	null	0
+HA	0x8	0x1	UNC_H_SNOOP_CYCLES_NE.LOCAL	Cycles with Snoops Outstanding; Local Requests	0,1,2,3	0	null	0
+HA	0x8	0x2	UNC_H_SNOOP_CYCLES_NE.REMOTE	Cycles with Snoops Outstanding; Remote Requests	0,1,2,3	0	null	0
+HA	0x8	0x3	UNC_H_SNOOP_CYCLES_NE.ALL	Cycles with Snoops Outstanding; All Requests	0,1,2,3	0	null	0
+HA	0x9	0x1	UNC_H_SNOOP_OCCUPANCY.LOCAL	Tracker Snoops Outstanding Accumulator; Local Requests	0,1,2,3	0	null	0
+HA	0x9	0x2	UNC_H_SNOOP_OCCUPANCY.REMOTE	Tracker Snoops Outstanding Accumulator; Remote Requests	0,1,2,3	0	null	0
+HA	0x21	0x1	UNC_H_SNOOP_RESP.RSPI	Snoop Responses Received; RspI	0,1,2,3	0	null	0
+HA	0x21	0x2	UNC_H_SNOOP_RESP.RSPS	Snoop Responses Received; RspS	0,1,2,3	0	null	0
+HA	0x21	0x4	UNC_H_SNOOP_RESP.RSPIFWD	Snoop Responses Received; RspIFwd	0,1,2,3	0	null	0
+HA	0x21	0x8	UNC_H_SNOOP_RESP.RSPSFWD	Snoop Responses Received; RspSFwd	0,1,2,3	0	null	0
+HA	0x21	0x10	UNC_H_SNOOP_RESP.RSP_WB	Snoop Responses Received; Rsp*WB	0,1,2,3	0	null	0
+HA	0x21	0x20	UNC_H_SNOOP_RESP.RSP_FWD_WB	Snoop Responses Received; Rsp*Fwd*WB	0,1,2,3	0	null	0
+HA	0x21	0x40	UNC_H_SNOOP_RESP.RSPCNFLCT	Snoop Responses Received; RSPCNFLCT*	0,1,2,3	0	null	0
+HA	0x60	0x1	UNC_H_SNP_RESP_RECV_LOCAL.RSPI	Snoop Responses Received Local; RspI	0,1,2,3	0	null	0
+HA	0x60	0x2	UNC_H_SNP_RESP_RECV_LOCAL.RSPS	Snoop Responses Received Local; RspS	0,1,2,3	0	null	0
+HA	0x60	0x4	UNC_H_SNP_RESP_RECV_LOCAL.RSPIFWD	Snoop Responses Received Local; RspIFwd	0,1,2,3	0	null	0
+HA	0x60	0x8	UNC_H_SNP_RESP_RECV_LOCAL.RSPSFWD	Snoop Responses Received Local; RspSFwd	0,1,2,3	0	null	0
+HA	0x60	0x10	UNC_H_SNP_RESP_RECV_LOCAL.RSPxWB	Snoop Responses Received Local; Rsp*WB	0,1,2,3	0	null	0
+HA	0x60	0x20	UNC_H_SNP_RESP_RECV_LOCAL.RSPxFWDxWB	Snoop Responses Received Local; Rsp*FWD*WB	0,1,2,3	0	null	0
+HA	0x60	0x40	UNC_H_SNP_RESP_RECV_LOCAL.RSPCNFLCT	Snoop Responses Received Local; RspCnflct	0,1,2,3	0	null	0
+HA	0x60	0x80	UNC_H_SNP_RESP_RECV_LOCAL.OTHER	Snoop Responses Received Local; Other	0,1,2,3	0	null	0
+HA	0x6C	0x1	UNC_H_STALL_NO_SBO_CREDIT.SBO0_AD	Stall on No Sbo Credits; For SBo0, AD Ring	0,1,2,3	0	null	0
+HA	0x6C	0x2	UNC_H_STALL_NO_SBO_CREDIT.SBO1_AD	Stall on No Sbo Credits; For SBo1, AD Ring	0,1,2,3	0	null	0
+HA	0x6C	0x4	UNC_H_STALL_NO_SBO_CREDIT.SBO0_BL	Stall on No Sbo Credits; For SBo0, BL Ring	0,1,2,3	0	null	0
+HA	0x6C	0x8	UNC_H_STALL_NO_SBO_CREDIT.SBO1_BL	Stall on No Sbo Credits; For SBo1, BL Ring	0,1,2,3	0	null	0
+HA	0x1B	0x1	UNC_H_TAD_REQUESTS_G0.REGION0	HA Requests to a TAD Region - Group 0; TAD Region 0	0,1,2,3	0	null	0
+HA	0x1B	0x2	UNC_H_TAD_REQUESTS_G0.REGION1	HA Requests to a TAD Region - Group 0; TAD Region 1	0,1,2,3	0	null	0
+HA	0x1B	0x4	UNC_H_TAD_REQUESTS_G0.REGION2	HA Requests to a TAD Region - Group 0; TAD Region 2	0,1,2,3	0	null	0
+HA	0x1B	0x8	UNC_H_TAD_REQUESTS_G0.REGION3	HA Requests to a TAD Region - Group 0; TAD Region 3	0,1,2,3	0	null	0
+HA	0x1B	0x10	UNC_H_TAD_REQUESTS_G0.REGION4	HA Requests to a TAD Region - Group 0; TAD Region 4	0,1,2,3	0	null	0
+HA	0x1B	0x20	UNC_H_TAD_REQUESTS_G0.REGION5	HA Requests to a TAD Region - Group 0; TAD Region 5	0,1,2,3	0	null	0
+HA	0x1B	0x40	UNC_H_TAD_REQUESTS_G0.REGION6	HA Requests to a TAD Region - Group 0; TAD Region 6	0,1,2,3	0	null	0
+HA	0x1B	0x80	UNC_H_TAD_REQUESTS_G0.REGION7	HA Requests to a TAD Region - Group 0; TAD Region 7	0,1,2,3	0	null	0
+HA	0x1C	0x1	UNC_H_TAD_REQUESTS_G1.REGION8	HA Requests to a TAD Region - Group 1; TAD Region 8	0,1,2,3	0	null	0
+HA	0x1C	0x2	UNC_H_TAD_REQUESTS_G1.REGION9	HA Requests to a TAD Region - Group 1; TAD Region 9	0,1,2,3	0	null	0
+HA	0x1C	0x4	UNC_H_TAD_REQUESTS_G1.REGION10	HA Requests to a TAD Region - Group 1; TAD Region 10	0,1,2,3	0	null	0
+HA	0x1C	0x8	UNC_H_TAD_REQUESTS_G1.REGION11	HA Requests to a TAD Region - Group 1; TAD Region 11	0,1,2,3	0	null	0
+HA	0x2	0x1	UNC_H_TRACKER_CYCLES_FULL.GP	Tracker Cycles Full; Cycles GP Completely Used	0,1,2,3	0	null	0
+HA	0x2	0x2	UNC_H_TRACKER_CYCLES_FULL.ALL	Tracker Cycles Full; Cycles Completely Used	0,1,2,3	0	null	0
+HA	0x4	0x4	UNC_H_TRACKER_OCCUPANCY.READS_LOCAL	Tracker Occupancy Accumultor; Local Read Requests	0,1,2,3	0	null	0
+HA	0x4	0x8	UNC_H_TRACKER_OCCUPANCY.READS_REMOTE	Tracker Occupancy Accumultor; Remote Read Requests	0,1,2,3	0	null	0
+HA	0x4	0x10	UNC_H_TRACKER_OCCUPANCY.WRITES_LOCAL	Tracker Occupancy Accumultor; Local Write Requests	0,1,2,3	0	null	0
+HA	0x4	0x20	UNC_H_TRACKER_OCCUPANCY.WRITES_REMOTE	Tracker Occupancy Accumultor; Remote Write Requests	0,1,2,3	0	null	0
+HA	0x4	0x40	UNC_H_TRACKER_OCCUPANCY.INVITOE_LOCAL	Tracker Occupancy Accumultor; Local InvItoE Requests	0,1,2,3	0	null	0
+HA	0x4	0x80	UNC_H_TRACKER_OCCUPANCY.INVITOE_REMOTE	Tracker Occupancy Accumultor; Remote InvItoE Requests	0,1,2,3	0	null	0
+HA	0x5	0x1	UNC_H_TRACKER_PENDING_OCCUPANCY.LOCAL	Data Pending Occupancy Accumultor; Local Requests	0,1,2,3	0	null	0
+HA	0x5	0x2	UNC_H_TRACKER_PENDING_OCCUPANCY.REMOTE	Data Pending Occupancy Accumultor; Remote Requests	0,1,2,3	0	null	0
+HA	0xF	0x4	UNC_H_TxR_AD.HOM	Outbound NDR Ring Transactions; Non-data Responses	0,1,2,3	0	null	0
+HA	0x2A	0x1	UNC_H_TxR_AD_CYCLES_FULL.SCHED0	AD Egress Full; Scheduler 0	0,1,2,3	0	null	0
+HA	0x2A	0x2	UNC_H_TxR_AD_CYCLES_FULL.SCHED1	AD Egress Full; Scheduler 1	0,1,2,3	0	null	0
+HA	0x2A	0x3	UNC_H_TxR_AD_CYCLES_FULL.ALL	AD Egress Full; All	0,1,2,3	0	null	0
+HA	0x29	0x1	UNC_H_TxR_AD_CYCLES_NE.SCHED0	AD Egress Not Empty; Scheduler 0	0,1,2,3	0	null	0
+HA	0x29	0x2	UNC_H_TxR_AD_CYCLES_NE.SCHED1	AD Egress Not Empty; Scheduler 1	0,1,2,3	0	null	0
+HA	0x29	0x3	UNC_H_TxR_AD_CYCLES_NE.ALL	AD Egress Not Empty; All	0,1,2,3	0	null	0
+HA	0x27	0x1	UNC_H_TxR_AD_INSERTS.SCHED0	AD Egress Allocations; Scheduler 0	0,1,2,3	0	null	0
+HA	0x27	0x2	UNC_H_TxR_AD_INSERTS.SCHED1	AD Egress Allocations; Scheduler 1	0,1,2,3	0	null	0
+HA	0x27	0x3	UNC_H_TxR_AD_INSERTS.ALL	AD Egress Allocations; All	0,1,2,3	0	null	0
+HA	0x32	0x1	UNC_H_TxR_AK_CYCLES_FULL.SCHED0	AK Egress Full; Scheduler 0	0,1,2,3	0	null	0
+HA	0x32	0x2	UNC_H_TxR_AK_CYCLES_FULL.SCHED1	AK Egress Full; Scheduler 1	0,1,2,3	0	null	0
+HA	0x32	0x3	UNC_H_TxR_AK_CYCLES_FULL.ALL	AK Egress Full; All	0,1,2,3	0	null	0
+HA	0x31	0x1	UNC_H_TxR_AK_CYCLES_NE.SCHED0	AK Egress Not Empty; Scheduler 0	0,1,2,3	0	null	0
+HA	0x31	0x2	UNC_H_TxR_AK_CYCLES_NE.SCHED1	AK Egress Not Empty; Scheduler 1	0,1,2,3	0	null	0
+HA	0x31	0x3	UNC_H_TxR_AK_CYCLES_NE.ALL	AK Egress Not Empty; All	0,1,2,3	0	null	0
+HA	0x2F	0x1	UNC_H_TxR_AK_INSERTS.SCHED0	AK Egress Allocations; Scheduler 0	0,1,2,3	0	null	0
+HA	0x2F	0x2	UNC_H_TxR_AK_INSERTS.SCHED1	AK Egress Allocations; Scheduler 1	0,1,2,3	0	null	0
+HA	0x2F	0x3	UNC_H_TxR_AK_INSERTS.ALL	AK Egress Allocations; All	0,1,2,3	0	null	0
+HA	0x10	0x1	UNC_H_TxR_BL.DRS_CACHE	Outbound DRS Ring Transactions to Cache; Data to Cache	0,1,2,3	0	null	0
+HA	0x10	0x2	UNC_H_TxR_BL.DRS_CORE	Outbound DRS Ring Transactions to Cache; Data to Core	0,1,2,3	0	null	0
+HA	0x10	0x4	UNC_H_TxR_BL.DRS_QPI	Outbound DRS Ring Transactions to Cache; Data to QPI	0,1,2,3	0	null	0
+HA	0x36	0x1	UNC_H_TxR_BL_CYCLES_FULL.SCHED0	BL Egress Full; Scheduler 0	0,1,2,3	0	null	0
+HA	0x36	0x2	UNC_H_TxR_BL_CYCLES_FULL.SCHED1	BL Egress Full; Scheduler 1	0,1,2,3	0	null	0
+HA	0x36	0x3	UNC_H_TxR_BL_CYCLES_FULL.ALL	BL Egress Full; All	0,1,2,3	0	null	0
+HA	0x35	0x1	UNC_H_TxR_BL_CYCLES_NE.SCHED0	BL Egress Not Empty; Scheduler 0	0,1,2,3	0	null	0
+HA	0x35	0x2	UNC_H_TxR_BL_CYCLES_NE.SCHED1	BL Egress Not Empty; Scheduler 1	0,1,2,3	0	null	0
+HA	0x35	0x3	UNC_H_TxR_BL_CYCLES_NE.ALL	BL Egress Not Empty; All	0,1,2,3	0	null	0
+HA	0x33	0x1	UNC_H_TxR_BL_INSERTS.SCHED0	BL Egress Allocations; Scheduler 0	0,1,2,3	0	null	0
+HA	0x33	0x2	UNC_H_TxR_BL_INSERTS.SCHED1	BL Egress Allocations; Scheduler 1	0,1,2,3	0	null	0
+HA	0x33	0x3	UNC_H_TxR_BL_INSERTS.ALL	BL Egress Allocations; All	0,1,2,3	0	null	0
+HA	0x6D	0x1	UNC_H_TxR_STARVED.AK	Injection Starvation; For AK Ring	0,1,2,3	0	null	0
+HA	0x6D	0x2	UNC_H_TxR_STARVED.BL	Injection Starvation; For BL Ring	0,1,2,3	0	null	0
+HA	0x18	0x1	UNC_H_WPQ_CYCLES_NO_REG_CREDITS.CHN0	HA iMC CHN0 WPQ Credits Empty - Regular; Channel 0	0,1,2,3	0	null	0
+HA	0x18	0x2	UNC_H_WPQ_CYCLES_NO_REG_CREDITS.CHN1	HA iMC CHN0 WPQ Credits Empty - Regular; Channel 1	0,1,2,3	0	null	0
+HA	0x18	0x4	UNC_H_WPQ_CYCLES_NO_REG_CREDITS.CHN2	HA iMC CHN0 WPQ Credits Empty - Regular; Channel 2	0,1,2,3	0	null	0
+HA	0x18	0x8	UNC_H_WPQ_CYCLES_NO_REG_CREDITS.CHN3	HA iMC CHN0 WPQ Credits Empty - Regular; Channel 3	0,1,2,3	0	null	0
+HA	0x19	0x1	UNC_H_WPQ_CYCLES_NO_SPEC_CREDITS.CHN0	HA iMC CHN0 WPQ Credits Empty - Special; Channel 0	0,1,2,3	0	null	0
+HA	0x19	0x2	UNC_H_WPQ_CYCLES_NO_SPEC_CREDITS.CHN1	HA iMC CHN0 WPQ Credits Empty - Special; Channel 1	0,1,2,3	0	null	0
+HA	0x19	0x4	UNC_H_WPQ_CYCLES_NO_SPEC_CREDITS.CHN2	HA iMC CHN0 WPQ Credits Empty - Special; Channel 2	0,1,2,3	0	null	0
+HA	0x19	0x8	UNC_H_WPQ_CYCLES_NO_SPEC_CREDITS.CHN3	HA iMC CHN0 WPQ Credits Empty - Special; Channel 3	0,1,2,3	0	null	0
+IRP	0x12	0x1	UNC_I_CACHE_TOTAL_OCCUPANCY.ANY	Total Write Cache Occupancy; Any Source	0,1	0	null	0
+IRP	0x12	0x2	UNC_I_CACHE_TOTAL_OCCUPANCY.SOURCE	Total Write Cache Occupancy; Select Source	0,1	0	null	0
+IRP	0x0	0x0	UNC_I_CLOCKTICKS	Clocks in the IRP	0,1	0	null	0
+IRP	0x13	0x1	UNC_I_COHERENT_OPS.PCIRDCUR	Coherent Ops; PCIRdCur	0,1	0	null	0
+IRP	0x13	0x2	UNC_I_COHERENT_OPS.CRD	Coherent Ops; CRd	0,1	0	null	0
+IRP	0x13	0x4	UNC_I_COHERENT_OPS.DRD	Coherent Ops; DRd	0,1	0	null	0
+IRP	0x13	0x8	UNC_I_COHERENT_OPS.RFO	Coherent Ops; RFO	0,1	0	null	0
+IRP	0x13	0x10	UNC_I_COHERENT_OPS.PCITOM	Coherent Ops; PCIItoM	0,1	0	null	0
+IRP	0x13	0x20	UNC_I_COHERENT_OPS.PCIDCAHINT	Coherent Ops; PCIDCAHin5t	0,1	0	null	0
+IRP	0x13	0x40	UNC_I_COHERENT_OPS.WBMTOI	Coherent Ops; WbMtoI	0,1	0	null	0
+IRP	0x13	0x80	UNC_I_COHERENT_OPS.CLFLUSH	Coherent Ops; CLFlush	0,1	0	null	0
+IRP	0x14	0x1	UNC_I_MISC0.FAST_REQ	Misc Events - Set 0; Fastpath Requests	0,1	0	null	0
+IRP	0x14	0x2	UNC_I_MISC0.FAST_REJ	Misc Events - Set 0; Fastpath Rejects	0,1	0	null	0
+IRP	0x14	0x4	UNC_I_MISC0.2ND_RD_INSERT	Misc Events - Set 0; Cache Inserts of Read Transactions as Secondary	0,1	0	null	0
+IRP	0x14	0x8	UNC_I_MISC0.2ND_WR_INSERT	Misc Events - Set 0; Cache Inserts of Write Transactions as Secondary	0,1	0	null	0
+IRP	0x14	0x10	UNC_I_MISC0.2ND_ATOMIC_INSERT	Misc Events - Set 0; Cache Inserts of Atomic Transactions as Secondary	0,1	0	null	0
+IRP	0x14	0x20	UNC_I_MISC0.FAST_XFER	Misc Events - Set 0; Fastpath Transfers From Primary to Secondary	0,1	0	null	0
+IRP	0x14	0x40	UNC_I_MISC0.PF_ACK_HINT	Misc Events - Set 0; Prefetch Ack Hints From Primary to Secondary	0,1	0	null	0
+IRP	0x14	0x80	UNC_I_MISC0.UNKNOWN	Misc Events - Set 0	0,1	0	null	0
+IRP	0x15	0x1	UNC_I_MISC1.SLOW_I	Misc Events - Set 1; Slow Transfer of I Line	0,1	0	null	0
+IRP	0x15	0x2	UNC_I_MISC1.SLOW_S	Misc Events - Set 1; Slow Transfer of S Line	0,1	0	null	0
+IRP	0x15	0x4	UNC_I_MISC1.SLOW_E	Misc Events - Set 1; Slow Transfer of E Line	0,1	0	null	0
+IRP	0x15	0x8	UNC_I_MISC1.SLOW_M	Misc Events - Set 1; Slow Transfer of M Line	0,1	0	null	0
+IRP	0x15	0x10	UNC_I_MISC1.LOST_FWD	Misc Events - Set 1	0,1	0	null	0
+IRP	0x15	0x20	UNC_I_MISC1.SEC_RCVD_INVLD	Misc Events - Set 1; Received Invalid	0,1	0	null	0
+IRP	0x15	0x40	UNC_I_MISC1.SEC_RCVD_VLD	Misc Events - Set 1; Received Valid	0,1	0	null	0
+IRP	0x15	0x80	UNC_I_MISC1.DATA_THROTTLE	Misc Events - Set 1; Data Throttled	0,1	0	null	0
+IRP	0xA	0x0	UNC_I_RxR_AK_INSERTS	AK Ingress Occupancy	0,1	0	null	0
+IRP	0x4	0x0	UNC_I_RxR_BL_DRS_CYCLES_FULL	tbd	0,1	0	null	0
+IRP	0x1	0x0	UNC_I_RxR_BL_DRS_INSERTS	BL Ingress Occupancy - DRS	0,1	0	null	0
+IRP	0x7	0x0	UNC_I_RxR_BL_DRS_OCCUPANCY	tbd	0,1	0	null	0
+IRP	0x5	0x0	UNC_I_RxR_BL_NCB_CYCLES_FULL	tbd	0,1	0	null	0
+IRP	0x2	0x0	UNC_I_RxR_BL_NCB_INSERTS	BL Ingress Occupancy - NCB	0,1	0	null	0
+IRP	0x8	0x0	UNC_I_RxR_BL_NCB_OCCUPANCY	tbd	0,1	0	null	0
+IRP	0x6	0x0	UNC_I_RxR_BL_NCS_CYCLES_FULL	tbd	0,1	0	null	0
+IRP	0x3	0x0	UNC_I_RxR_BL_NCS_INSERTS	BL Ingress Occupancy - NCS	0,1	0	null	0
+IRP	0x9	0x0	UNC_I_RxR_BL_NCS_OCCUPANCY	tbd	0,1	0	null	0
+IRP	0x17	0x1	UNC_I_SNOOP_RESP.MISS	Snoop Responses; Miss	0,1	0	null	0
+IRP	0x17	0x2	UNC_I_SNOOP_RESP.HIT_I	Snoop Responses; Hit I	0,1	0	null	0
+IRP	0x17	0x4	UNC_I_SNOOP_RESP.HIT_ES	Snoop Responses; Hit E or S	0,1	0	null	0
+IRP	0x17	0x8	UNC_I_SNOOP_RESP.HIT_M	Snoop Responses; Hit M	0,1	0	null	0
+IRP	0x17	0x10	UNC_I_SNOOP_RESP.SNPCODE	Snoop Responses; SnpCode	0,1	0	null	0
+IRP	0x17	0x20	UNC_I_SNOOP_RESP.SNPDATA	Snoop Responses; SnpData	0,1	0	null	0
+IRP	0x17	0x40	UNC_I_SNOOP_RESP.SNPINV	Snoop Responses; SnpInv	0,1	0	null	0
+IRP	0x16	0x1	UNC_I_TRANSACTIONS.READS	Inbound Transaction Count; Reads	0,1	0	null	0
+IRP	0x16	0x2	UNC_I_TRANSACTIONS.WRITES	Inbound Transaction Count; Writes	0,1	0	null	0
+IRP	0x16	0x4	UNC_I_TRANSACTIONS.RD_PREF	Inbound Transaction Count; Read Prefetches	0,1	0	null	0
+IRP	0x16	0x8	UNC_I_TRANSACTIONS.WR_PREF	Inbound Transaction Count; Write Prefetches	0,1	0	null	0
+IRP	0x16	0x10	UNC_I_TRANSACTIONS.ATOMIC	Inbound Transaction Count; Atomic	0,1	0	null	0
+IRP	0x16	0x20	UNC_I_TRANSACTIONS.OTHER	Inbound Transaction Count; Other	0,1	0	null	0
+IRP	0x16	0x40	UNC_I_TRANSACTIONS.ORDERINGQ	Inbound Transaction Count; Select Source	0,1	0	IRPFilter[4:0]	0
+IRP	0x18	0x0	UNC_I_TxR_AD_STALL_CREDIT_CYCLES	No AD Egress Credit Stalls	0,1	0	null	0
+IRP	0x19	0x0	UNC_I_TxR_BL_STALL_CREDIT_CYCLES	No BL Egress Credit Stalls	0,1	0	null	0
+IRP	0xE	0x0	UNC_I_TxR_DATA_INSERTS_NCB	Outbound Read Requests	0,1	0	null	0
+IRP	0xF	0x0	UNC_I_TxR_DATA_INSERTS_NCS	Outbound Read Requests	0,1	0	null	0
+IRP	0xD	0x0	UNC_I_TxR_REQUEST_OCCUPANCY	Outbound Request Queue Occupancy	0,1	0	null	0
+PCU	0x0	0x0	UNC_P_CLOCKTICKS	pclk Cycles	0,1,2,3	0	null	0
+PCU	0x60	0x0	UNC_P_CORE0_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x6A	0x0	UNC_P_CORE10_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x6B	0x0	UNC_P_CORE11_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x6C	0x0	UNC_P_CORE12_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x6D	0x0	UNC_P_CORE13_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x6E	0x0	UNC_P_CORE14_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x6F	0x0	UNC_P_CORE15_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x70	0x0	UNC_P_CORE16_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x71	0x0	UNC_P_CORE17_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x61	0x0	UNC_P_CORE1_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x62	0x0	UNC_P_CORE2_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x63	0x0	UNC_P_CORE3_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x64	0x0	UNC_P_CORE4_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x65	0x0	UNC_P_CORE5_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x66	0x0	UNC_P_CORE6_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x67	0x0	UNC_P_CORE7_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x68	0x0	UNC_P_CORE8_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x69	0x0	UNC_P_CORE9_TRANSITION_CYCLES	Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x30	0x0	UNC_P_DEMOTIONS_CORE0	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x31	0x0	UNC_P_DEMOTIONS_CORE1	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x3A	0x0	UNC_P_DEMOTIONS_CORE10	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x3B	0x0	UNC_P_DEMOTIONS_CORE11	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x3C	0x0	UNC_P_DEMOTIONS_CORE12	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x3D	0x0	UNC_P_DEMOTIONS_CORE13	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x3E	0x0	UNC_P_DEMOTIONS_CORE14	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x3F	0x0	UNC_P_DEMOTIONS_CORE15	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x40	0x0	UNC_P_DEMOTIONS_CORE16	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x41	0x0	UNC_P_DEMOTIONS_CORE17	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x32	0x0	UNC_P_DEMOTIONS_CORE2	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x33	0x0	UNC_P_DEMOTIONS_CORE3	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x34	0x0	UNC_P_DEMOTIONS_CORE4	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x35	0x0	UNC_P_DEMOTIONS_CORE5	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x36	0x0	UNC_P_DEMOTIONS_CORE6	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x37	0x0	UNC_P_DEMOTIONS_CORE7	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x38	0x0	UNC_P_DEMOTIONS_CORE8	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0x39	0x0	UNC_P_DEMOTIONS_CORE9	Core C State Demotions	0,1,2,3	0	null	0
+PCU	0xB	0x0	UNC_P_FREQ_BAND0_CYCLES	Frequency Residency	0,1,2,3	0	PCUFilter[7:0]	0
+PCU	0xC	0x0	UNC_P_FREQ_BAND1_CYCLES	Frequency Residency	0,1,2,3	0	PCUFilter[15:8]	0
+PCU	0xD	0x0	UNC_P_FREQ_BAND2_CYCLES	Frequency Residency	0,1,2,3	0	PCUFilter[23:16]	0
+PCU	0xE	0x0	UNC_P_FREQ_BAND3_CYCLES	Frequency Residency	0,1,2,3	0	PCUFilter[31:24]	0
+PCU	0x4	0x0	UNC_P_FREQ_MAX_LIMIT_THERMAL_CYCLES	Thermal Strongest Upper Limit Cycles	0,1,2,3	0	null	0
+PCU	0x6	0x0	UNC_P_FREQ_MAX_OS_CYCLES	OS Strongest Upper Limit Cycles	0,1,2,3	0	null	0
+PCU	0x5	0x0	UNC_P_FREQ_MAX_POWER_CYCLES	Power Strongest Upper Limit Cycles	0,1,2,3	0	null	0
+PCU	0x73	0x0	UNC_P_FREQ_MIN_IO_P_CYCLES	IO P Limit Strongest Lower Limit Cycles	0,1,2,3	0	null	0
+PCU	0x74	0x0	UNC_P_FREQ_TRANS_CYCLES	Cycles spent changing Frequency	0,1,2,3	0	null	0
+PCU	0x2F	0x0	UNC_P_MEMORY_PHASE_SHEDDING_CYCLES	Memory Phase Shedding Cycles	0,1,2,3	0	null	0
+PCU	0x2A	0x0	UNC_P_PKG_RESIDENCY_C0_CYCLES	Package C State Residency - C0	0,1,2,3	0	null	0
+PCU	0x2B	0x0	UNC_P_PKG_RESIDENCY_C2E_CYCLES	Package C State Residency - C2E	0,1,2,3	0	null	0
+PCU	0x2C	0x0	UNC_P_PKG_RESIDENCY_C3_CYCLES	Package C State Residency - C3	0,1,2,3	0	null	0
+PCU	0x2D	0x0	UNC_P_PKG_RESIDENCY_C6_CYCLES	Package C State Residency - C6	0,1,2,3	0	null	0
+PCU	0x2E	0x0	UNC_P_PKG_RESIDENCY_C7_CYCLES	Package C7 State Residency	0,1,2,3	0	null	0
+PCU	0x80	0x40	UNC_P_POWER_STATE_OCCUPANCY.CORES_C0	Number of cores in C-State; C0 and C1	0,1,2,3	0	null	0
+PCU	0x80	0x80	UNC_P_POWER_STATE_OCCUPANCY.CORES_C3	Number of cores in C-State; C3	0,1,2,3	0	null	0
+PCU	0x80	0xC0	UNC_P_POWER_STATE_OCCUPANCY.CORES_C6	Number of cores in C-State; C6 and C7	0,1,2,3	0	null	0
+PCU	0xA	0x0	UNC_P_PROCHOT_EXTERNAL_CYCLES	External Prochot	0,1,2,3	0	null	0
+PCU	0x9	0x0	UNC_P_PROCHOT_INTERNAL_CYCLES	Internal Prochot	0,1,2,3	0	null	0
+PCU	0x72	0x0	UNC_P_TOTAL_TRANSITION_CYCLES	Total Core C State Transition Cycles	0,1,2,3	0	null	0
+PCU	0x79	0x0	UNC_P_UFS_TRANSITIONS_NO_CHANGE	tbd	0,1,2,3	0	null	0
+PCU	0x42	0x0	UNC_P_VR_HOT_CYCLES	VR Hot	0,1,2,3	0	null	0
+QPI LL	0x14	0x0	UNC_Q_CLOCKTICKS	Number of qfclks	0,1,2,3	0	null	0
+QPI LL	0x38	0x0	UNC_Q_CTO_COUNT	Count of CTO Events	0,1,2,3	0	QPIMask0[17:0],QPIMatch0[17:0],QPIMask1[19:16],QPIMatch1[19:16]	1
+QPI LL	0x13	0x1	UNC_Q_DIRECT2CORE.SUCCESS_RBT_HIT	Direct 2 Core Spawning; Spawn Success	0,1,2,3	0	null	0
+QPI LL	0x13	0x2	UNC_Q_DIRECT2CORE.FAILURE_CREDITS	Direct 2 Core Spawning; Spawn Failure - Egress Credits	0,1,2,3	0	null	0
+QPI LL	0x13	0x4	UNC_Q_DIRECT2CORE.FAILURE_RBT_HIT	Direct 2 Core Spawning; Spawn Failure - RBT Invalid	0,1,2,3	0	null	0
+QPI LL	0x13	0x8	UNC_Q_DIRECT2CORE.FAILURE_CREDITS_RBT	Direct 2 Core Spawning; Spawn Failure - Egress and RBT Invalid	0,1,2,3	0	null	0
+QPI LL	0x13	0x10	UNC_Q_DIRECT2CORE.FAILURE_MISS	Direct 2 Core Spawning; Spawn Failure - RBT Miss	0,1,2,3	0	null	0
+QPI LL	0x13	0x20	UNC_Q_DIRECT2CORE.FAILURE_CREDITS_MISS	Direct 2 Core Spawning; Spawn Failure - Egress and RBT Miss	0,1,2,3	0	null	0
+QPI LL	0x13	0x40	UNC_Q_DIRECT2CORE.FAILURE_RBT_MISS	Direct 2 Core Spawning; Spawn Failure - RBT Miss and Invalid	0,1,2,3	0	null	0
+QPI LL	0x13	0x80	UNC_Q_DIRECT2CORE.FAILURE_CREDITS_RBT_MISS	Direct 2 Core Spawning; Spawn Failure - Egress and RBT Miss, Invalid	0,1,2,3	0	null	0
+QPI LL	0x12	0x0	UNC_Q_L1_POWER_CYCLES	Cycles in L1	0,1,2,3	0	null	0
+QPI LL	0x10	0x0	UNC_Q_RxL0P_POWER_CYCLES	Cycles in L0p	0,1,2,3	0	null	0
+QPI LL	0xF	0x0	UNC_Q_RxL0_POWER_CYCLES	Cycles in L0	0,1,2,3	0	null	0
+QPI LL	0x9	0x0	UNC_Q_RxL_BYPASSED	Rx Flit Buffer Bypassed	0,1,2,3	0	null	0
+QPI LL	0x3	0x1	UNC_Q_RxL_CRC_ERRORS.LINK_INIT	CRC Errors Detected; LinkInit	0,1,2,3	0	null	0
+QPI LL	0x3	0x2	UNC_Q_RxL_CRC_ERRORS.NORMAL_OP	CRC Errors Detected; Normal Operations	0,1,2,3	0	null	0
+QPI LL	0x1E	0x1	UNC_Q_RxL_CREDITS_CONSUMED_VN0.DRS	VN0 Credit Consumed; DRS	0,1,2,3	0	null	1
+QPI LL	0x1E	0x2	UNC_Q_RxL_CREDITS_CONSUMED_VN0.NCB	VN0 Credit Consumed; NCB	0,1,2,3	0	null	1
+QPI LL	0x1E	0x4	UNC_Q_RxL_CREDITS_CONSUMED_VN0.NCS	VN0 Credit Consumed; NCS	0,1,2,3	0	null	1
+QPI LL	0x1E	0x8	UNC_Q_RxL_CREDITS_CONSUMED_VN0.HOM	VN0 Credit Consumed; HOM	0,1,2,3	0	null	1
+QPI LL	0x1E	0x10	UNC_Q_RxL_CREDITS_CONSUMED_VN0.SNP	VN0 Credit Consumed; SNP	0,1,2,3	0	null	1
+QPI LL	0x1E	0x20	UNC_Q_RxL_CREDITS_CONSUMED_VN0.NDR	VN0 Credit Consumed; NDR	0,1,2,3	0	null	1
+QPI LL	0x39	0x1	UNC_Q_RxL_CREDITS_CONSUMED_VN1.DRS	VN1 Credit Consumed; DRS	0,1,2,3	0	null	1
+QPI LL	0x39	0x2	UNC_Q_RxL_CREDITS_CONSUMED_VN1.NCB	VN1 Credit Consumed; NCB	0,1,2,3	0	null	1
+QPI LL	0x39	0x4	UNC_Q_RxL_CREDITS_CONSUMED_VN1.NCS	VN1 Credit Consumed; NCS	0,1,2,3	0	null	1
+QPI LL	0x39	0x8	UNC_Q_RxL_CREDITS_CONSUMED_VN1.HOM	VN1 Credit Consumed; HOM	0,1,2,3	0	null	1
+QPI LL	0x39	0x10	UNC_Q_RxL_CREDITS_CONSUMED_VN1.SNP	VN1 Credit Consumed; SNP	0,1,2,3	0	null	1
+QPI LL	0x39	0x20	UNC_Q_RxL_CREDITS_CONSUMED_VN1.NDR	VN1 Credit Consumed; NDR	0,1,2,3	0	null	1
+QPI LL	0x1D	0x0	UNC_Q_RxL_CREDITS_CONSUMED_VNA	VNA Credit Consumed	0,1,2,3	0	null	1
+QPI LL	0xA	0x0	UNC_Q_RxL_CYCLES_NE	RxQ Cycles Not Empty	0,1,2,3	0	null	0
+QPI LL	0xF	0x1	UNC_Q_RxL_CYCLES_NE_DRS.VN0	RxQ Cycles Not Empty - DRS; for VN0	0,1,2,3	0	null	1
+QPI LL	0xF	0x2	UNC_Q_RxL_CYCLES_NE_DRS.VN1	RxQ Cycles Not Empty - DRS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x12	0x1	UNC_Q_RxL_CYCLES_NE_HOM.VN0	RxQ Cycles Not Empty - HOM; for VN0	0,1,2,3	0	null	1
+QPI LL	0x12	0x2	UNC_Q_RxL_CYCLES_NE_HOM.VN1	RxQ Cycles Not Empty - HOM; for VN1	0,1,2,3	0	null	1
+QPI LL	0x10	0x1	UNC_Q_RxL_CYCLES_NE_NCB.VN0	RxQ Cycles Not Empty - NCB; for VN0	0,1,2,3	0	null	1
+QPI LL	0x10	0x2	UNC_Q_RxL_CYCLES_NE_NCB.VN1	RxQ Cycles Not Empty - NCB; for VN1	0,1,2,3	0	null	1
+QPI LL	0x11	0x1	UNC_Q_RxL_CYCLES_NE_NCS.VN0	RxQ Cycles Not Empty - NCS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x11	0x2	UNC_Q_RxL_CYCLES_NE_NCS.VN1	RxQ Cycles Not Empty - NCS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x14	0x1	UNC_Q_RxL_CYCLES_NE_NDR.VN0	RxQ Cycles Not Empty - NDR; for VN0	0,1,2,3	0	null	1
+QPI LL	0x14	0x2	UNC_Q_RxL_CYCLES_NE_NDR.VN1	RxQ Cycles Not Empty - NDR; for VN1	0,1,2,3	0	null	1
+QPI LL	0x13	0x1	UNC_Q_RxL_CYCLES_NE_SNP.VN0	RxQ Cycles Not Empty - SNP; for VN0	0,1,2,3	0	null	1
+QPI LL	0x13	0x2	UNC_Q_RxL_CYCLES_NE_SNP.VN1	RxQ Cycles Not Empty - SNP; for VN1	0,1,2,3	0	null	1
+QPI LL	0x1	0x1	UNC_Q_RxL_FLITS_G0.IDLE	Flits Received - Group 0; Idle and Null Flits	0,1,2,3	0	null	0
+QPI LL	0x2	0x1	UNC_Q_RxL_FLITS_G1.SNP	Flits Received - Group 1; SNP Flits	0,1,2,3	0	null	1
+QPI LL	0x2	0x2	UNC_Q_RxL_FLITS_G1.HOM_REQ	Flits Received - Group 1; HOM Request Flits	0,1,2,3	0	null	1
+QPI LL	0x2	0x4	UNC_Q_RxL_FLITS_G1.HOM_NONREQ	Flits Received - Group 1; HOM Non-Request Flits	0,1,2,3	0	null	1
+QPI LL	0x2	0x6	UNC_Q_RxL_FLITS_G1.HOM	Flits Received - Group 1; HOM Flits	0,1,2,3	0	null	1
+QPI LL	0x2	0x8	UNC_Q_RxL_FLITS_G1.DRS_DATA	Flits Received - Group 1; DRS Data Flits	0,1,2,3	0	null	1
+QPI LL	0x2	0x10	UNC_Q_RxL_FLITS_G1.DRS_NONDATA	Flits Received - Group 1; DRS Header Flits	0,1,2,3	0	null	1
+QPI LL	0x2	0x18	UNC_Q_RxL_FLITS_G1.DRS	Flits Received - Group 1; DRS Flits (both Header and Data)	0,1,2,3	0	null	1
+QPI LL	0x3	0x1	UNC_Q_RxL_FLITS_G2.NDR_AD	Flits Received - Group 2; Non-Data Response Rx Flits - AD	0,1,2,3	0	null	1
+QPI LL	0x3	0x2	UNC_Q_RxL_FLITS_G2.NDR_AK	Flits Received - Group 2; Non-Data Response Rx Flits - AK	0,1,2,3	0	null	1
+QPI LL	0x3	0x4	UNC_Q_RxL_FLITS_G2.NCB_DATA	Flits Received - Group 2; Non-Coherent data Rx Flits	0,1,2,3	0	null	1
+QPI LL	0x3	0x8	UNC_Q_RxL_FLITS_G2.NCB_NONDATA	Flits Received - Group 2; Non-Coherent non-data Rx Flits	0,1,2,3	0	null	1
+QPI LL	0x3	0xC	UNC_Q_RxL_FLITS_G2.NCB	Flits Received - Group 2; Non-Coherent Rx Flits	0,1,2,3	0	null	1
+QPI LL	0x3	0x10	UNC_Q_RxL_FLITS_G2.NCS	Flits Received - Group 2; Non-Coherent standard Rx Flits	0,1,2,3	0	null	1
+QPI LL	0x8	0x0	UNC_Q_RxL_INSERTS	Rx Flit Buffer Allocations	0,1,2,3	0	null	0
+QPI LL	0x9	0x1	UNC_Q_RxL_INSERTS_DRS.VN0	Rx Flit Buffer Allocations - DRS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x9	0x2	UNC_Q_RxL_INSERTS_DRS.VN1	Rx Flit Buffer Allocations - DRS; for VN1	0,1,2,3	0	null	1
+QPI LL	0xC	0x1	UNC_Q_RxL_INSERTS_HOM.VN0	Rx Flit Buffer Allocations - HOM; for VN0	0,1,2,3	0	null	1
+QPI LL	0xC	0x2	UNC_Q_RxL_INSERTS_HOM.VN1	Rx Flit Buffer Allocations - HOM; for VN1	0,1,2,3	0	null	1
+QPI LL	0xA	0x1	UNC_Q_RxL_INSERTS_NCB.VN0	Rx Flit Buffer Allocations - NCB; for VN0	0,1,2,3	0	null	1
+QPI LL	0xA	0x2	UNC_Q_RxL_INSERTS_NCB.VN1	Rx Flit Buffer Allocations - NCB; for VN1	0,1,2,3	0	null	1
+QPI LL	0xB	0x1	UNC_Q_RxL_INSERTS_NCS.VN0	Rx Flit Buffer Allocations - NCS; for VN0	0,1,2,3	0	null	1
+QPI LL	0xB	0x2	UNC_Q_RxL_INSERTS_NCS.VN1	Rx Flit Buffer Allocations - NCS; for VN1	0,1,2,3	0	null	1
+QPI LL	0xE	0x1	UNC_Q_RxL_INSERTS_NDR.VN0	Rx Flit Buffer Allocations - NDR; for VN0	0,1,2,3	0	null	1
+QPI LL	0xE	0x2	UNC_Q_RxL_INSERTS_NDR.VN1	Rx Flit Buffer Allocations - NDR; for VN1	0,1,2,3	0	null	1
+QPI LL	0xD	0x1	UNC_Q_RxL_INSERTS_SNP.VN0	Rx Flit Buffer Allocations - SNP; for VN0	0,1,2,3	0	null	1
+QPI LL	0xD	0x2	UNC_Q_RxL_INSERTS_SNP.VN1	Rx Flit Buffer Allocations - SNP; for VN1	0,1,2,3	0	null	1
+QPI LL	0xB	0x0	UNC_Q_RxL_OCCUPANCY	RxQ Occupancy - All Packets	0,1,2,3	0	null	0
+QPI LL	0x15	0x1	UNC_Q_RxL_OCCUPANCY_DRS.VN0	RxQ Occupancy - DRS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x15	0x2	UNC_Q_RxL_OCCUPANCY_DRS.VN1	RxQ Occupancy - DRS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x18	0x1	UNC_Q_RxL_OCCUPANCY_HOM.VN0	RxQ Occupancy - HOM; for VN0	0,1,2,3	0	null	1
+QPI LL	0x18	0x2	UNC_Q_RxL_OCCUPANCY_HOM.VN1	RxQ Occupancy - HOM; for VN1	0,1,2,3	0	null	1
+QPI LL	0x16	0x1	UNC_Q_RxL_OCCUPANCY_NCB.VN0	RxQ Occupancy - NCB; for VN0	0,1,2,3	0	null	1
+QPI LL	0x16	0x2	UNC_Q_RxL_OCCUPANCY_NCB.VN1	RxQ Occupancy - NCB; for VN1	0,1,2,3	0	null	1
+QPI LL	0x17	0x1	UNC_Q_RxL_OCCUPANCY_NCS.VN0	RxQ Occupancy - NCS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x17	0x2	UNC_Q_RxL_OCCUPANCY_NCS.VN1	RxQ Occupancy - NCS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x1A	0x1	UNC_Q_RxL_OCCUPANCY_NDR.VN0	RxQ Occupancy - NDR; for VN0	0,1,2,3	0	null	1
+QPI LL	0x1A	0x2	UNC_Q_RxL_OCCUPANCY_NDR.VN1	RxQ Occupancy - NDR; for VN1	0,1,2,3	0	null	1
+QPI LL	0x19	0x1	UNC_Q_RxL_OCCUPANCY_SNP.VN0	RxQ Occupancy - SNP; for VN0	0,1,2,3	0	null	1
+QPI LL	0x19	0x2	UNC_Q_RxL_OCCUPANCY_SNP.VN1	RxQ Occupancy - SNP; for VN1	0,1,2,3	0	null	1
+QPI LL	0x35	0x1	UNC_Q_RxL_STALLS_VN0.BGF_DRS	Stalls Sending to R3QPI on VN0; BGF Stall - HOM	0,1,2,3	0	null	1
+QPI LL	0x35	0x2	UNC_Q_RxL_STALLS_VN0.BGF_NCB	Stalls Sending to R3QPI on VN0; BGF Stall - SNP	0,1,2,3	0	null	1
+QPI LL	0x35	0x4	UNC_Q_RxL_STALLS_VN0.BGF_NCS	Stalls Sending to R3QPI on VN0; BGF Stall - NDR	0,1,2,3	0	null	1
+QPI LL	0x35	0x8	UNC_Q_RxL_STALLS_VN0.BGF_HOM	Stalls Sending to R3QPI on VN0; BGF Stall - DRS	0,1,2,3	0	null	1
+QPI LL	0x35	0x10	UNC_Q_RxL_STALLS_VN0.BGF_SNP	Stalls Sending to R3QPI on VN0; BGF Stall - NCB	0,1,2,3	0	null	1
+QPI LL	0x35	0x20	UNC_Q_RxL_STALLS_VN0.BGF_NDR	Stalls Sending to R3QPI on VN0; BGF Stall - NCS	0,1,2,3	0	null	1
+QPI LL	0x35	0x40	UNC_Q_RxL_STALLS_VN0.EGRESS_CREDITS	Stalls Sending to R3QPI on VN0; Egress Credits	0,1,2,3	0	null	1
+QPI LL	0x35	0x80	UNC_Q_RxL_STALLS_VN0.GV	Stalls Sending to R3QPI on VN0; GV	0,1,2,3	0	null	1
+QPI LL	0x3A	0x1	UNC_Q_RxL_STALLS_VN1.BGF_DRS	Stalls Sending to R3QPI on VN1; BGF Stall - HOM	0,1,2,3	0	null	1
+QPI LL	0x3A	0x2	UNC_Q_RxL_STALLS_VN1.BGF_NCB	Stalls Sending to R3QPI on VN1; BGF Stall - SNP	0,1,2,3	0	null	1
+QPI LL	0x3A	0x4	UNC_Q_RxL_STALLS_VN1.BGF_NCS	Stalls Sending to R3QPI on VN1; BGF Stall - NDR	0,1,2,3	0	null	1
+QPI LL	0x3A	0x8	UNC_Q_RxL_STALLS_VN1.BGF_HOM	Stalls Sending to R3QPI on VN1; BGF Stall - DRS	0,1,2,3	0	null	1
+QPI LL	0x3A	0x10	UNC_Q_RxL_STALLS_VN1.BGF_SNP	Stalls Sending to R3QPI on VN1; BGF Stall - NCB	0,1,2,3	0	null	1
+QPI LL	0x3A	0x20	UNC_Q_RxL_STALLS_VN1.BGF_NDR	Stalls Sending to R3QPI on VN1; BGF Stall - NCS	0,1,2,3	0	null	1
+QPI LL	0xD	0x0	UNC_Q_TxL0P_POWER_CYCLES	Cycles in L0p	0,1,2,3	0	null	0
+QPI LL	0xC	0x0	UNC_Q_TxL0_POWER_CYCLES	Cycles in L0	0,1,2,3	0	null	0
+QPI LL	0x5	0x0	UNC_Q_TxL_BYPASSED	Tx Flit Buffer Bypassed	0,1,2,3	0	null	0
+QPI LL	0x2	0x1	UNC_Q_TxL_CRC_NO_CREDITS.FULL	Cycles Stalled with no LLR Credits; LLR is full	0,1,2,3	0	null	0
+QPI LL	0x2	0x2	UNC_Q_TxL_CRC_NO_CREDITS.ALMOST_FULL	Cycles Stalled with no LLR Credits; LLR is almost full	0,1,2,3	0	null	0
+QPI LL	0x6	0x0	UNC_Q_TxL_CYCLES_NE	Tx Flit Buffer Cycles not Empty	0,1,2,3	0	null	0
+QPI LL	0x0	0x2	UNC_Q_TxL_FLITS_G0.DATA	Flits Transferred - Group 0; Data Tx Flits	0,1,2,3	0	null	0
+QPI LL	0x0	0x4	UNC_Q_TxL_FLITS_G0.NON_DATA	Flits Transferred - Group 0; Non-Data protocol Tx Flits	0,1,2,3	0	null	0
+QPI LL	0x0	0x1	UNC_Q_TxL_FLITS_G1.SNP	Flits Transferred - Group 1; SNP Flits	0,1,2,3	0	null	1
+QPI LL	0x0	0x2	UNC_Q_TxL_FLITS_G1.HOM_REQ	Flits Transferred - Group 1; HOM Request Flits	0,1,2,3	0	null	1
+QPI LL	0x0	0x4	UNC_Q_TxL_FLITS_G1.HOM_NONREQ	Flits Transferred - Group 1; HOM Non-Request Flits	0,1,2,3	0	null	1
+QPI LL	0x0	0x6	UNC_Q_TxL_FLITS_G1.HOM	Flits Transferred - Group 1; HOM Flits	0,1,2,3	0	null	1
+QPI LL	0x0	0x8	UNC_Q_TxL_FLITS_G1.DRS_DATA	Flits Transferred - Group 1; DRS Data Flits	0,1,2,3	0	null	1
+QPI LL	0x0	0x10	UNC_Q_TxL_FLITS_G1.DRS_NONDATA	Flits Transferred - Group 1; DRS Header Flits	0,1,2,3	0	null	1
+QPI LL	0x0	0x18	UNC_Q_TxL_FLITS_G1.DRS	Flits Transferred - Group 1; DRS Flits (both Header and Data)	0,1,2,3	0	null	1
+QPI LL	0x1	0x1	UNC_Q_TxL_FLITS_G2.NDR_AD	Flits Transferred - Group 2; Non-Data Response Tx Flits - AD	0,1,2,3	0	null	1
+QPI LL	0x1	0x2	UNC_Q_TxL_FLITS_G2.NDR_AK	Flits Transferred - Group 2; Non-Data Response Tx Flits - AK	0,1,2,3	0	null	1
+QPI LL	0x1	0x4	UNC_Q_TxL_FLITS_G2.NCB_DATA	Flits Transferred - Group 2; Non-Coherent data Tx Flits	0,1,2,3	0	null	1
+QPI LL	0x1	0x8	UNC_Q_TxL_FLITS_G2.NCB_NONDATA	Flits Transferred - Group 2; Non-Coherent non-data Tx Flits	0,1,2,3	0	null	1
+QPI LL	0x1	0xC	UNC_Q_TxL_FLITS_G2.NCB	Flits Transferred - Group 2; Non-Coherent Bypass Tx Flits	0,1,2,3	0	null	1
+QPI LL	0x1	0x10	UNC_Q_TxL_FLITS_G2.NCS	Flits Transferred - Group 2; Non-Coherent standard Tx Flits	0,1,2,3	0	null	1
+QPI LL	0x4	0x0	UNC_Q_TxL_INSERTS	Tx Flit Buffer Allocations	0,1,2,3	0	null	0
+QPI LL	0x7	0x0	UNC_Q_TxL_OCCUPANCY	Tx Flit Buffer Occupancy	0,1,2,3	0	null	0
+QPI LL	0x26	0x1	UNC_Q_TxR_AD_HOM_CREDIT_ACQUIRED.VN0	R3QPI Egress Credit Occupancy - HOM; for VN0	0,1,2,3	0	null	1
+QPI LL	0x26	0x2	UNC_Q_TxR_AD_HOM_CREDIT_ACQUIRED.VN1	R3QPI Egress Credit Occupancy - HOM; for VN1	0,1,2,3	0	null	1
+QPI LL	0x22	0x1	UNC_Q_TxR_AD_HOM_CREDIT_OCCUPANCY.VN0	R3QPI Egress Credit Occupancy - AD HOM; for VN0	0,1,2,3	0	null	1
+QPI LL	0x22	0x2	UNC_Q_TxR_AD_HOM_CREDIT_OCCUPANCY.VN1	R3QPI Egress Credit Occupancy - AD HOM; for VN1	0,1,2,3	0	null	1
+QPI LL	0x28	0x1	UNC_Q_TxR_AD_NDR_CREDIT_ACQUIRED.VN0	R3QPI Egress Credit Occupancy - AD NDR; for VN0	0,1,2,3	0	null	1
+QPI LL	0x28	0x2	UNC_Q_TxR_AD_NDR_CREDIT_ACQUIRED.VN1	R3QPI Egress Credit Occupancy - AD NDR; for VN1	0,1,2,3	0	null	1
+QPI LL	0x24	0x1	UNC_Q_TxR_AD_NDR_CREDIT_OCCUPANCY.VN0	R3QPI Egress Credit Occupancy - AD NDR; for VN0	0,1,2,3	0	null	1
+QPI LL	0x24	0x2	UNC_Q_TxR_AD_NDR_CREDIT_OCCUPANCY.VN1	R3QPI Egress Credit Occupancy - AD NDR; for VN1	0,1,2,3	0	null	1
+QPI LL	0x27	0x1	UNC_Q_TxR_AD_SNP_CREDIT_ACQUIRED.VN0	R3QPI Egress Credit Occupancy - SNP; for VN0	0,1,2,3	0	null	1
+QPI LL	0x27	0x2	UNC_Q_TxR_AD_SNP_CREDIT_ACQUIRED.VN1	R3QPI Egress Credit Occupancy - SNP; for VN1	0,1,2,3	0	null	1
+QPI LL	0x23	0x1	UNC_Q_TxR_AD_SNP_CREDIT_OCCUPANCY.VN0	R3QPI Egress Credit Occupancy - AD SNP; for VN0	0,1,2,3	0	null	1
+QPI LL	0x23	0x2	UNC_Q_TxR_AD_SNP_CREDIT_OCCUPANCY.VN1	R3QPI Egress Credit Occupancy - AD SNP; for VN1	0,1,2,3	0	null	1
+QPI LL	0x29	0x0	UNC_Q_TxR_AK_NDR_CREDIT_ACQUIRED	R3QPI Egress Credit Occupancy - AK NDR	0,1,2,3	0	null	1
+QPI LL	0x25	0x0	UNC_Q_TxR_AK_NDR_CREDIT_OCCUPANCY	R3QPI Egress Credit Occupancy - AK NDR	0,1,2,3	0	null	1
+QPI LL	0x2A	0x1	UNC_Q_TxR_BL_DRS_CREDIT_ACQUIRED.VN0	R3QPI Egress Credit Occupancy - DRS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x2A	0x2	UNC_Q_TxR_BL_DRS_CREDIT_ACQUIRED.VN1	R3QPI Egress Credit Occupancy - DRS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x2A	0x4	UNC_Q_TxR_BL_DRS_CREDIT_ACQUIRED.VN_SHR	R3QPI Egress Credit Occupancy - DRS; for Shared VN	0,1,2,3	0	null	1
+QPI LL	0x1F	0x1	UNC_Q_TxR_BL_DRS_CREDIT_OCCUPANCY.VN0	R3QPI Egress Credit Occupancy - BL DRS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x1F	0x2	UNC_Q_TxR_BL_DRS_CREDIT_OCCUPANCY.VN1	R3QPI Egress Credit Occupancy - BL DRS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x1F	0x4	UNC_Q_TxR_BL_DRS_CREDIT_OCCUPANCY.VN_SHR	R3QPI Egress Credit Occupancy - BL DRS; for Shared VN	0,1,2,3	0	null	1
+QPI LL	0x2B	0x1	UNC_Q_TxR_BL_NCB_CREDIT_ACQUIRED.VN0	R3QPI Egress Credit Occupancy - NCB; for VN0	0,1,2,3	0	null	1
+QPI LL	0x2B	0x2	UNC_Q_TxR_BL_NCB_CREDIT_ACQUIRED.VN1	R3QPI Egress Credit Occupancy - NCB; for VN1	0,1,2,3	0	null	1
+QPI LL	0x20	0x1	UNC_Q_TxR_BL_NCB_CREDIT_OCCUPANCY.VN0	R3QPI Egress Credit Occupancy - BL NCB; for VN0	0,1,2,3	0	null	1
+QPI LL	0x20	0x2	UNC_Q_TxR_BL_NCB_CREDIT_OCCUPANCY.VN1	R3QPI Egress Credit Occupancy - BL NCB; for VN1	0,1,2,3	0	null	1
+QPI LL	0x2C	0x1	UNC_Q_TxR_BL_NCS_CREDIT_ACQUIRED.VN0	R3QPI Egress Credit Occupancy - NCS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x2C	0x2	UNC_Q_TxR_BL_NCS_CREDIT_ACQUIRED.VN1	R3QPI Egress Credit Occupancy - NCS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x21	0x1	UNC_Q_TxR_BL_NCS_CREDIT_OCCUPANCY.VN0	R3QPI Egress Credit Occupancy - BL NCS; for VN0	0,1,2,3	0	null	1
+QPI LL	0x21	0x2	UNC_Q_TxR_BL_NCS_CREDIT_OCCUPANCY.VN1	R3QPI Egress Credit Occupancy - BL NCS; for VN1	0,1,2,3	0	null	1
+QPI LL	0x1C	0x0	UNC_Q_VNA_CREDIT_RETURNS	VNA Credits Returned	0,1,2,3	0	null	1
+QPI LL	0x1B	0x0	UNC_Q_VNA_CREDIT_RETURN_OCCUPANCY	VNA Credits Pending Return - Occupancy	0,1,2,3	0	null	1
+R2PCIe	0x1	0x0	UNC_R2_CLOCKTICKS	Number of uclks in domain	0,1,2,3	0	null	0
+R2PCIe	0x2D	0x1	UNC_R2_IIO_CREDIT.PRQ_QPI0	tbd	0,1	0	null	0
+R2PCIe	0x2D	0x2	UNC_R2_IIO_CREDIT.PRQ_QPI1	tbd	0,1	0	null	0
+R2PCIe	0x2D	0x4	UNC_R2_IIO_CREDIT.ISOCH_QPI0	tbd	0,1	0	null	0
+R2PCIe	0x2D	0x8	UNC_R2_IIO_CREDIT.ISOCH_QPI1	tbd	0,1	0	null	0
+R2PCIe	0x33	0x8	UNC_R2_IIO_CREDITS_ACQUIRED.DRS	R2PCIe IIO Credit Acquired; DRS	0,1	0	null	0
+R2PCIe	0x33	0x10	UNC_R2_IIO_CREDITS_ACQUIRED.NCB	R2PCIe IIO Credit Acquired; NCB	0,1	0	null	0
+R2PCIe	0x33	0x20	UNC_R2_IIO_CREDITS_ACQUIRED.NCS	R2PCIe IIO Credit Acquired; NCS	0,1	0	null	0
+R2PCIe	0x32	0x8	UNC_R2_IIO_CREDITS_USED.DRS	R2PCIe IIO Credits in Use; DRS	0,1	0	null	0
+R2PCIe	0x32	0x10	UNC_R2_IIO_CREDITS_USED.NCB	R2PCIe IIO Credits in Use; NCB	0,1	0	null	0
+R2PCIe	0x32	0x20	UNC_R2_IIO_CREDITS_USED.NCS	R2PCIe IIO Credits in Use; NCS	0,1	0	null	0
+R2PCIe	0x7	0x1	UNC_R2_RING_AD_USED.CW_EVEN	R2 AD Ring in Use; Clockwise and Even	0,1,2,3	0	null	0
+R2PCIe	0x7	0x2	UNC_R2_RING_AD_USED.CW_ODD	R2 AD Ring in Use; Clockwise and Odd	0,1,2,3	0	null	0
+R2PCIe	0x7	0x4	UNC_R2_RING_AD_USED.CCW_EVEN	R2 AD Ring in Use; Counterclockwise and Even	0,1,2,3	0	null	0
+R2PCIe	0x7	0x8	UNC_R2_RING_AD_USED.CCW_ODD	R2 AD Ring in Use; Counterclockwise and Odd	0,1,2,3	0	null	0
+R2PCIe	0x7	0x3	UNC_R2_RING_AD_USED.CW	R2 AD Ring in Use; Clockwise	0,1,2,3	0	null	0
+R2PCIe	0x7	0xC	UNC_R2_RING_AD_USED.CCW	R2 AD Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+R2PCIe	0x12	0x1	UNC_R2_RING_AK_BOUNCES.UP	AK Ingress Bounced; Up	0,1,2,3	0	null	0
+R2PCIe	0x12	0x2	UNC_R2_RING_AK_BOUNCES.DN	AK Ingress Bounced; Dn	0,1,2,3	0	null	0
+R2PCIe	0x8	0x1	UNC_R2_RING_AK_USED.CW_EVEN	R2 AK Ring in Use; Clockwise and Even	0,1,2,3	0	null	0
+R2PCIe	0x8	0x2	UNC_R2_RING_AK_USED.CW_ODD	R2 AK Ring in Use; Clockwise and Odd	0,1,2,3	0	null	0
+R2PCIe	0x8	0x4	UNC_R2_RING_AK_USED.CCW_EVEN	R2 AK Ring in Use; Counterclockwise and Even	0,1,2,3	0	null	0
+R2PCIe	0x8	0x8	UNC_R2_RING_AK_USED.CCW_ODD	R2 AK Ring in Use; Counterclockwise and Odd	0,1,2,3	0	null	0
+R2PCIe	0x8	0x3	UNC_R2_RING_AK_USED.CW	R2 AK Ring in Use; Clockwise	0,1,2,3	0	null	0
+R2PCIe	0x8	0xC	UNC_R2_RING_AK_USED.CCW	R2 AK Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+R2PCIe	0x9	0x1	UNC_R2_RING_BL_USED.CW_EVEN	R2 BL Ring in Use; Clockwise and Even	0,1,2,3	0	null	0
+R2PCIe	0x9	0x2	UNC_R2_RING_BL_USED.CW_ODD	R2 BL Ring in Use; Clockwise and Odd	0,1,2,3	0	null	0
+R2PCIe	0x9	0x4	UNC_R2_RING_BL_USED.CCW_EVEN	R2 BL Ring in Use; Counterclockwise and Even	0,1,2,3	0	null	0
+R2PCIe	0x9	0x8	UNC_R2_RING_BL_USED.CCW_ODD	R2 BL Ring in Use; Counterclockwise and Odd	0,1,2,3	0	null	0
+R2PCIe	0x9	0x3	UNC_R2_RING_BL_USED.CW	R2 BL Ring in Use; Clockwise	0,1,2,3	0	null	0
+R2PCIe	0x9	0xC	UNC_R2_RING_BL_USED.CCW	R2 BL Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+R2PCIe	0xA	0x3	UNC_R2_RING_IV_USED.CW	R2 IV Ring in Use; Clockwise	0,1,2,3	0	null	0
+R2PCIe	0xA	0xC	UNC_R2_RING_IV_USED.CCW	R2 IV Ring in Use; Counterclockwise	0,1,2,3	0	null	0
+R2PCIe	0xA	0xF	UNC_R2_RING_IV_USED.ANY	R2 IV Ring in Use; Any	0,1,2,3	0	null	0
+R2PCIe	0x10	0x10	UNC_R2_RxR_CYCLES_NE.NCB	Ingress Cycles Not Empty; NCB	0,1	0	null	0
+R2PCIe	0x10	0x20	UNC_R2_RxR_CYCLES_NE.NCS	Ingress Cycles Not Empty; NCS	0,1	0	null	0
+R2PCIe	0x11	0x10	UNC_R2_RxR_INSERTS.NCB	Ingress Allocations; NCB	0,1	0	null	0
+R2PCIe	0x11	0x20	UNC_R2_RxR_INSERTS.NCS	Ingress Allocations; NCS	0,1	0	null	0
+R2PCIe	0x13	0x8	UNC_R2_RxR_OCCUPANCY.DRS	Ingress Occupancy Accumulator; DRS	0	0	null	0
+R2PCIe	0x28	0x1	UNC_R2_SBO0_CREDITS_ACQUIRED.AD	SBo0 Credits Acquired; For AD Ring	0,1	0	null	0
+R2PCIe	0x28	0x2	UNC_R2_SBO0_CREDITS_ACQUIRED.BL	SBo0 Credits Acquired; For BL Ring	0,1	0	null	0
+R2PCIe	0x2A	0x1	UNC_R2_SBO0_CREDIT_OCCUPANCY.AD	SBo0 Credits Occupancy; For AD Ring	0	0	null	0
+R2PCIe	0x2A	0x2	UNC_R2_SBO0_CREDIT_OCCUPANCY.BL	SBo0 Credits Occupancy; For BL Ring	0	0	null	0
+R2PCIe	0x2C	0x1	UNC_R2_STALL_NO_SBO_CREDIT.SBO0_AD	Stall on No Sbo Credits; For SBo0, AD Ring	0,1	0	null	0
+R2PCIe	0x2C	0x2	UNC_R2_STALL_NO_SBO_CREDIT.SBO1_AD	Stall on No Sbo Credits; For SBo1, AD Ring	0,1	0	null	0
+R2PCIe	0x2C	0x4	UNC_R2_STALL_NO_SBO_CREDIT.SBO0_BL	Stall on No Sbo Credits; For SBo0, BL Ring	0,1	0	null	0
+R2PCIe	0x2C	0x8	UNC_R2_STALL_NO_SBO_CREDIT.SBO1_BL	Stall on No Sbo Credits; For SBo1, BL Ring	0,1	0	null	0
+R2PCIe	0x25	0x1	UNC_R2_TxR_CYCLES_FULL.AD	Egress Cycles Full; AD	0	0	null	0
+R2PCIe	0x25	0x2	UNC_R2_TxR_CYCLES_FULL.AK	Egress Cycles Full; AK	0	0	null	0
+R2PCIe	0x25	0x4	UNC_R2_TxR_CYCLES_FULL.BL	Egress Cycles Full; BL	0	0	null	0
+R2PCIe	0x23	0x1	UNC_R2_TxR_CYCLES_NE.AD	Egress Cycles Not Empty; AD	0	0	null	0
+R2PCIe	0x23	0x2	UNC_R2_TxR_CYCLES_NE.AK	Egress Cycles Not Empty; AK	0	0	null	0
+R2PCIe	0x23	0x4	UNC_R2_TxR_CYCLES_NE.BL	Egress Cycles Not Empty; BL	0	0	null	0
+R2PCIe	0x26	0x1	UNC_R2_TxR_NACK_CW.DN_AD	Egress CCW NACK; AD CCW	0,1	0	null	0
+R2PCIe	0x26	0x2	UNC_R2_TxR_NACK_CW.DN_BL	Egress CCW NACK; BL CCW	0,1	0	null	0
+R2PCIe	0x26	0x4	UNC_R2_TxR_NACK_CW.DN_AK	Egress CCW NACK; AK CCW	0,1	0	null	0
+R2PCIe	0x26	0x8	UNC_R2_TxR_NACK_CW.UP_AD	Egress CCW NACK; AK CCW	0,1	0	null	0
+R2PCIe	0x26	0x10	UNC_R2_TxR_NACK_CW.UP_BL	Egress CCW NACK; BL CCW	0,1	0	null	0
+R2PCIe	0x26	0x20	UNC_R2_TxR_NACK_CW.UP_AK	Egress CCW NACK; BL CW	0,1	0	null	0
+R3QPI	0x1	0x0	UNC_R3_CLOCKTICKS	Number of uclks in domain	0,1,2	0	null	0
+R3QPI	0x1F	0x1	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO8	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x2	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO9	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x4	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO10	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x8	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO11	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x10	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO12	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x20	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO13	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x40	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO14_16	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x1F	0x80	UNC_R3_C_HI_AD_CREDITS_EMPTY.CBO_15_17	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x1	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO0	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x2	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO1	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x4	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO2	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x8	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO3	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x10	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO4	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x20	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO5	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x40	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO6	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x22	0x80	UNC_R3_C_LO_AD_CREDITS_EMPTY.CBO7	CBox AD Credits Empty	0,1	0	null	0
+R3QPI	0x2D	0x1	UNC_R3_HA_R2_BL_CREDITS_EMPTY.HA0	HA/R2 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2D	0x2	UNC_R3_HA_R2_BL_CREDITS_EMPTY.HA1	HA/R2 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2D	0x4	UNC_R3_HA_R2_BL_CREDITS_EMPTY.R2_NCB	HA/R2 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2D	0x8	UNC_R3_HA_R2_BL_CREDITS_EMPTY.R2_NCS	HA/R2 AD Credits Empty	0,1	0	null	0
+R3QPI	0xB	0x1	UNC_R3_IOT_BACKPRESSURE.SAT	IOT Backpressure	0,1,2	0	null	0
+R3QPI	0xB	0x2	UNC_R3_IOT_BACKPRESSURE.HUB	IOT Backpressure	0,1,2	0	null	0
+R3QPI	0xD	0x1	UNC_R3_IOT_CTS_HI.CTS2	IOT Common Trigger Sequencer - Hi	0,1,2	0	null	0
+R3QPI	0xD	0x2	UNC_R3_IOT_CTS_HI.CTS3	IOT Common Trigger Sequencer - Hi	0,1,2	0	null	0
+R3QPI	0xC	0x1	UNC_R3_IOT_CTS_LO.CTS0	IOT Common Trigger Sequencer - Lo	0,1,2	0	null	0
+R3QPI	0xC	0x2	UNC_R3_IOT_CTS_LO.CTS1	IOT Common Trigger Sequencer - Lo	0,1,2	0	null	0
+R3QPI	0x20	0x1	UNC_R3_QPI0_AD_CREDITS_EMPTY.VNA	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x20	0x2	UNC_R3_QPI0_AD_CREDITS_EMPTY.VN0_HOM	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x20	0x4	UNC_R3_QPI0_AD_CREDITS_EMPTY.VN0_SNP	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x20	0x8	UNC_R3_QPI0_AD_CREDITS_EMPTY.VN0_NDR	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x20	0x10	UNC_R3_QPI0_AD_CREDITS_EMPTY.VN1_HOM	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x20	0x20	UNC_R3_QPI0_AD_CREDITS_EMPTY.VN1_SNP	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x20	0x40	UNC_R3_QPI0_AD_CREDITS_EMPTY.VN1_NDR	QPI0 AD Credits Empty	0,1	0	null	0
+R3QPI	0x21	0x1	UNC_R3_QPI0_BL_CREDITS_EMPTY.VNA	QPI0 BL Credits Empty	0,1	0	null	0
+R3QPI	0x21	0x10	UNC_R3_QPI0_BL_CREDITS_EMPTY.VN1_HOM	QPI0 BL Credits Empty	0,1	0	null	0
+R3QPI	0x21	0x20	UNC_R3_QPI0_BL_CREDITS_EMPTY.VN1_SNP	QPI0 BL Credits Empty	0,1	0	null	0
+R3QPI	0x21	0x40	UNC_R3_QPI0_BL_CREDITS_EMPTY.VN1_NDR	QPI0 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2E	0x1	UNC_R3_QPI1_AD_CREDITS_EMPTY.VNA	QPI1 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2E	0x10	UNC_R3_QPI1_AD_CREDITS_EMPTY.VN1_HOM	QPI1 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2E	0x20	UNC_R3_QPI1_AD_CREDITS_EMPTY.VN1_SNP	QPI1 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2E	0x40	UNC_R3_QPI1_AD_CREDITS_EMPTY.VN1_NDR	QPI1 AD Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x1	UNC_R3_QPI1_BL_CREDITS_EMPTY.VNA	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x2	UNC_R3_QPI1_BL_CREDITS_EMPTY.VN0_HOM	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x4	UNC_R3_QPI1_BL_CREDITS_EMPTY.VN0_SNP	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x8	UNC_R3_QPI1_BL_CREDITS_EMPTY.VN0_NDR	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x10	UNC_R3_QPI1_BL_CREDITS_EMPTY.VN1_HOM	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x20	UNC_R3_QPI1_BL_CREDITS_EMPTY.VN1_SNP	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x2F	0x40	UNC_R3_QPI1_BL_CREDITS_EMPTY.VN1_NDR	QPI1 BL Credits Empty	0,1	0	null	0
+R3QPI	0x7	0x1	UNC_R3_RING_AD_USED.CW_EVEN	R3 AD Ring in Use; Clockwise and Even	0,1,2	0	null	0
+R3QPI	0x7	0x2	UNC_R3_RING_AD_USED.CW_ODD	R3 AD Ring in Use; Clockwise and Odd	0,1,2	0	null	0
+R3QPI	0x7	0x4	UNC_R3_RING_AD_USED.CCW_EVEN	R3 AD Ring in Use; Counterclockwise and Even	0,1,2	0	null	0
+R3QPI	0x7	0x8	UNC_R3_RING_AD_USED.CCW_ODD	R3 AD Ring in Use; Counterclockwise and Odd	0,1,2	0	null	0
+R3QPI	0x7	0x3	UNC_R3_RING_AD_USED.CW	R3 AD Ring in Use; Clockwise	0,1,2	0	null	0
+R3QPI	0x7	0xC	UNC_R3_RING_AD_USED.CCW	R3 AD Ring in Use; Counterclockwise	0,1,2	0	null	0
+R3QPI	0x8	0x1	UNC_R3_RING_AK_USED.CW_EVEN	R3 AK Ring in Use; Clockwise and Even	0,1,2	0	null	0
+R3QPI	0x8	0x2	UNC_R3_RING_AK_USED.CW_ODD	R3 AK Ring in Use; Clockwise and Odd	0,1,2	0	null	0
+R3QPI	0x8	0x4	UNC_R3_RING_AK_USED.CCW_EVEN	R3 AK Ring in Use; Counterclockwise and Even	0,1,2	0	null	0
+R3QPI	0x8	0x8	UNC_R3_RING_AK_USED.CCW_ODD	R3 AK Ring in Use; Counterclockwise and Odd	0,1,2	0	null	0
+R3QPI	0x8	0x3	UNC_R3_RING_AK_USED.CW	R3 AK Ring in Use; Clockwise	0,1,2	0	null	0
+R3QPI	0x8	0xC	UNC_R3_RING_AK_USED.CCW	R3 AK Ring in Use; Counterclockwise	0,1,2	0	null	0
+R3QPI	0x9	0x1	UNC_R3_RING_BL_USED.CW_EVEN	R3 BL Ring in Use; Clockwise and Even	0,1,2	0	null	0
+R3QPI	0x9	0x2	UNC_R3_RING_BL_USED.CW_ODD	R3 BL Ring in Use; Clockwise and Odd	0,1,2	0	null	0
+R3QPI	0x9	0x4	UNC_R3_RING_BL_USED.CCW_EVEN	R3 BL Ring in Use; Counterclockwise and Even	0,1,2	0	null	0
+R3QPI	0x9	0x8	UNC_R3_RING_BL_USED.CCW_ODD	R3 BL Ring in Use; Counterclockwise and Odd	0,1,2	0	null	0
+R3QPI	0x9	0x3	UNC_R3_RING_BL_USED.CW	R3 BL Ring in Use; Clockwise	0,1,2	0	null	0
+R3QPI	0x9	0xC	UNC_R3_RING_BL_USED.CCW	R3 BL Ring in Use; Counterclockwise	0,1,2	0	null	0
+R3QPI	0xA	0x3	UNC_R3_RING_IV_USED.CW	R3 IV Ring in Use; Clockwise	0,1,2	0	null	0
+R3QPI	0xA	0xF	UNC_R3_RING_IV_USED.ANY	R3 IV Ring in Use; Any	0,1,2	0	null	0
+R3QPI	0xE	0x2	UNC_R3_RING_SINK_STARVED.AK	Ring Stop Starved; AK	0,1,2	0	null	0
+R3QPI	0x10	0x1	UNC_R3_RxR_CYCLES_NE.HOM	Ingress Cycles Not Empty; HOM	0,1	0	null	0
+R3QPI	0x10	0x2	UNC_R3_RxR_CYCLES_NE.SNP	Ingress Cycles Not Empty; SNP	0,1	0	null	0
+R3QPI	0x10	0x4	UNC_R3_RxR_CYCLES_NE.NDR	Ingress Cycles Not Empty; NDR	0,1	0	null	0
+R3QPI	0x14	0x1	UNC_R3_RxR_CYCLES_NE_VN1.HOM	VN1 Ingress Cycles Not Empty; HOM	0,1	0	null	0
+R3QPI	0x14	0x2	UNC_R3_RxR_CYCLES_NE_VN1.SNP	VN1 Ingress Cycles Not Empty; SNP	0,1	0	null	0
+R3QPI	0x14	0x4	UNC_R3_RxR_CYCLES_NE_VN1.NDR	VN1 Ingress Cycles Not Empty; NDR	0,1	0	null	0
+R3QPI	0x14	0x8	UNC_R3_RxR_CYCLES_NE_VN1.DRS	VN1 Ingress Cycles Not Empty; DRS	0,1	0	null	0
+R3QPI	0x14	0x10	UNC_R3_RxR_CYCLES_NE_VN1.NCB	VN1 Ingress Cycles Not Empty; NCB	0,1	0	null	0
+R3QPI	0x14	0x20	UNC_R3_RxR_CYCLES_NE_VN1.NCS	VN1 Ingress Cycles Not Empty; NCS	0,1	0	null	0
+R3QPI	0x11	0x1	UNC_R3_RxR_INSERTS.HOM	Ingress Allocations; HOM	0,1	0	null	0
+R3QPI	0x11	0x2	UNC_R3_RxR_INSERTS.SNP	Ingress Allocations; SNP	0,1	0	null	0
+R3QPI	0x11	0x4	UNC_R3_RxR_INSERTS.NDR	Ingress Allocations; NDR	0,1	0	null	0
+R3QPI	0x11	0x8	UNC_R3_RxR_INSERTS.DRS	Ingress Allocations; DRS	0,1	0	null	0
+R3QPI	0x11	0x10	UNC_R3_RxR_INSERTS.NCB	Ingress Allocations; NCB	0,1	0	null	0
+R3QPI	0x11	0x20	UNC_R3_RxR_INSERTS.NCS	Ingress Allocations; NCS	0,1	0	null	0
+R3QPI	0x15	0x1	UNC_R3_RxR_INSERTS_VN1.HOM	VN1 Ingress Allocations; HOM	0,1	0	null	0
+R3QPI	0x15	0x2	UNC_R3_RxR_INSERTS_VN1.SNP	VN1 Ingress Allocations; SNP	0,1	0	null	0
+R3QPI	0x15	0x4	UNC_R3_RxR_INSERTS_VN1.NDR	VN1 Ingress Allocations; NDR	0,1	0	null	0
+R3QPI	0x15	0x8	UNC_R3_RxR_INSERTS_VN1.DRS	VN1 Ingress Allocations; DRS	0,1	0	null	0
+R3QPI	0x15	0x10	UNC_R3_RxR_INSERTS_VN1.NCB	VN1 Ingress Allocations; NCB	0,1	0	null	0
+R3QPI	0x15	0x20	UNC_R3_RxR_INSERTS_VN1.NCS	VN1 Ingress Allocations; NCS	0,1	0	null	0
+R3QPI	0x13	0x1	UNC_R3_RxR_OCCUPANCY_VN1.HOM	VN1 Ingress Occupancy Accumulator; HOM	0	0	null	0
+R3QPI	0x13	0x2	UNC_R3_RxR_OCCUPANCY_VN1.SNP	VN1 Ingress Occupancy Accumulator; SNP	0	0	null	0
+R3QPI	0x13	0x4	UNC_R3_RxR_OCCUPANCY_VN1.NDR	VN1 Ingress Occupancy Accumulator; NDR	0	0	null	0
+R3QPI	0x13	0x8	UNC_R3_RxR_OCCUPANCY_VN1.DRS	VN1 Ingress Occupancy Accumulator; DRS	0	0	null	0
+R3QPI	0x13	0x10	UNC_R3_RxR_OCCUPANCY_VN1.NCB	VN1 Ingress Occupancy Accumulator; NCB	0	0	null	0
+R3QPI	0x13	0x20	UNC_R3_RxR_OCCUPANCY_VN1.NCS	VN1 Ingress Occupancy Accumulator; NCS	0	0	null	0
+R3QPI	0x28	0x1	UNC_R3_SBO0_CREDITS_ACQUIRED.AD	SBo0 Credits Acquired; For AD Ring	0,1	0	null	0
+R3QPI	0x28	0x2	UNC_R3_SBO0_CREDITS_ACQUIRED.BL	SBo0 Credits Acquired; For BL Ring	0,1	0	null	0
+R3QPI	0x2A	0x1	UNC_R3_SBO0_CREDIT_OCCUPANCY.AD	SBo0 Credits Occupancy; For AD Ring	0	0	null	0
+R3QPI	0x2A	0x2	UNC_R3_SBO0_CREDIT_OCCUPANCY.BL	SBo0 Credits Occupancy; For BL Ring	0	0	null	0
+R3QPI	0x29	0x1	UNC_R3_SBO1_CREDITS_ACQUIRED.AD	SBo1 Credits Acquired; For AD Ring	0,1	0	null	0
+R3QPI	0x29	0x2	UNC_R3_SBO1_CREDITS_ACQUIRED.BL	SBo1 Credits Acquired; For BL Ring	0,1	0	null	0
+R3QPI	0x2B	0x1	UNC_R3_SBO1_CREDIT_OCCUPANCY.AD	SBo1 Credits Occupancy; For AD Ring	0	0	null	0
+R3QPI	0x2B	0x2	UNC_R3_SBO1_CREDIT_OCCUPANCY.BL	SBo1 Credits Occupancy; For BL Ring	0	0	null	0
+R3QPI	0x2C	0x1	UNC_R3_STALL_NO_SBO_CREDIT.SBO0_AD	Stall on No Sbo Credits; For SBo0, AD Ring	0,1	0	null	0
+R3QPI	0x2C	0x2	UNC_R3_STALL_NO_SBO_CREDIT.SBO1_AD	Stall on No Sbo Credits; For SBo1, AD Ring	0,1	0	null	0
+R3QPI	0x2C	0x4	UNC_R3_STALL_NO_SBO_CREDIT.SBO0_BL	Stall on No Sbo Credits; For SBo0, BL Ring	0,1	0	null	0
+R3QPI	0x2C	0x8	UNC_R3_STALL_NO_SBO_CREDIT.SBO1_BL	Stall on No Sbo Credits; For SBo1, BL Ring	0,1	0	null	0
+R3QPI	0x26	0x1	UNC_R3_TxR_NACK.DN_AD	Egress CCW NACK; AD CCW	0,1	0	null	0
+R3QPI	0x26	0x2	UNC_R3_TxR_NACK.DN_BL	Egress CCW NACK; BL CCW	0,1	0	null	0
+R3QPI	0x26	0x4	UNC_R3_TxR_NACK.DN_AK	Egress CCW NACK; AK CCW	0,1	0	null	0
+R3QPI	0x26	0x8	UNC_R3_TxR_NACK.UP_AD	Egress CCW NACK; AK CCW	0,1	0	null	0
+R3QPI	0x26	0x10	UNC_R3_TxR_NACK.UP_BL	Egress CCW NACK; BL CCW	0,1	0	null	0
+R3QPI	0x26	0x20	UNC_R3_TxR_NACK.UP_AK	Egress CCW NACK; BL CW	0,1	0	null	0
+R3QPI	0x37	0x1	UNC_R3_VN0_CREDITS_REJECT.HOM	VN0 Credit Acquisition Failed on DRS; HOM Message Class	0,1	0	null	0
+R3QPI	0x37	0x2	UNC_R3_VN0_CREDITS_REJECT.SNP	VN0 Credit Acquisition Failed on DRS; SNP Message Class	0,1	0	null	0
+R3QPI	0x37	0x4	UNC_R3_VN0_CREDITS_REJECT.NDR	VN0 Credit Acquisition Failed on DRS; NDR Message Class	0,1	0	null	0
+R3QPI	0x37	0x8	UNC_R3_VN0_CREDITS_REJECT.DRS	VN0 Credit Acquisition Failed on DRS; DRS Message Class	0,1	0	null	0
+R3QPI	0x37	0x10	UNC_R3_VN0_CREDITS_REJECT.NCB	VN0 Credit Acquisition Failed on DRS; NCB Message Class	0,1	0	null	0
+R3QPI	0x37	0x20	UNC_R3_VN0_CREDITS_REJECT.NCS	VN0 Credit Acquisition Failed on DRS; NCS Message Class	0,1	0	null	0
+R3QPI	0x36	0x1	UNC_R3_VN0_CREDITS_USED.HOM	VN0 Credit Used; HOM Message Class	0,1	0	null	0
+R3QPI	0x36	0x2	UNC_R3_VN0_CREDITS_USED.SNP	VN0 Credit Used; SNP Message Class	0,1	0	null	0
+R3QPI	0x36	0x4	UNC_R3_VN0_CREDITS_USED.NDR	VN0 Credit Used; NDR Message Class	0,1	0	null	0
+R3QPI	0x36	0x8	UNC_R3_VN0_CREDITS_USED.DRS	VN0 Credit Used; DRS Message Class	0,1	0	null	0
+R3QPI	0x36	0x10	UNC_R3_VN0_CREDITS_USED.NCB	VN0 Credit Used; NCB Message Class	0,1	0	null	0
+R3QPI	0x36	0x20	UNC_R3_VN0_CREDITS_USED.NCS	VN0 Credit Used; NCS Message Class	0,1	0	null	0
+R3QPI	0x39	0x1	UNC_R3_VN1_CREDITS_REJECT.HOM	VN1 Credit Acquisition Failed on DRS; HOM Message Class	0,1	0	null	0
+R3QPI	0x39	0x2	UNC_R3_VN1_CREDITS_REJECT.SNP	VN1 Credit Acquisition Failed on DRS; SNP Message Class	0,1	0	null	0
+R3QPI	0x39	0x4	UNC_R3_VN1_CREDITS_REJECT.NDR	VN1 Credit Acquisition Failed on DRS; NDR Message Class	0,1	0	null	0
+R3QPI	0x39	0x8	UNC_R3_VN1_CREDITS_REJECT.DRS	VN1 Credit Acquisition Failed on DRS; DRS Message Class	0,1	0	null	0
+R3QPI	0x39	0x10	UNC_R3_VN1_CREDITS_REJECT.NCB	VN1 Credit Acquisition Failed on DRS; NCB Message Class	0,1	0	null	0
+R3QPI	0x39	0x20	UNC_R3_VN1_CREDITS_REJECT.NCS	VN1 Credit Acquisition Failed on DRS; NCS Message Class	0,1	0	null	0
+R3QPI	0x38	0x1	UNC_R3_VN1_CREDITS_USED.HOM	VN1 Credit Used; HOM Message Class	0,1	0	null	0
+R3QPI	0x38	0x2	UNC_R3_VN1_CREDITS_USED.SNP	VN1 Credit Used; SNP Message Class	0,1	0	null	0
+R3QPI	0x38	0x4	UNC_R3_VN1_CREDITS_USED.NDR	VN1 Credit Used; NDR Message Class	0,1	0	null	0
+R3QPI	0x38	0x8	UNC_R3_VN1_CREDITS_USED.DRS	VN1 Credit Used; DRS Message Class	0,1	0	null	0
+R3QPI	0x38	0x10	UNC_R3_VN1_CREDITS_USED.NCB	VN1 Credit Used; NCB Message Class	0,1	0	null	0
+R3QPI	0x38	0x20	UNC_R3_VN1_CREDITS_USED.NCS	VN1 Credit Used; NCS Message Class	0,1	0	null	0
+R3QPI	0x33	0x1	UNC_R3_VNA_CREDITS_ACQUIRED.AD	VNA credit Acquisitions; HOM Message Class	0,1	0	null	0
+R3QPI	0x33	0x4	UNC_R3_VNA_CREDITS_ACQUIRED.BL	VNA credit Acquisitions; HOM Message Class	0,1	0	null	0
+R3QPI	0x34	0x1	UNC_R3_VNA_CREDITS_REJECT.HOM	VNA Credit Reject; HOM Message Class	0,1	0	null	0
+R3QPI	0x34	0x2	UNC_R3_VNA_CREDITS_REJECT.SNP	VNA Credit Reject; SNP Message Class	0,1	0	null	0
+R3QPI	0x34	0x4	UNC_R3_VNA_CREDITS_REJECT.NDR	VNA Credit Reject; NDR Message Class	0,1	0	null	0
+R3QPI	0x34	0x8	UNC_R3_VNA_CREDITS_REJECT.DRS	VNA Credit Reject; DRS Message Class	0,1	0	null	0
+R3QPI	0x34	0x10	UNC_R3_VNA_CREDITS_REJECT.NCB	VNA Credit Reject; NCB Message Class	0,1	0	null	0
+R3QPI	0x34	0x20	UNC_R3_VNA_CREDITS_REJECT.NCS	VNA Credit Reject; NCS Message Class	0,1	0	null	0
+SBO	0xA	0x0	UNC_S_BOUNCE_CONTROL	Bounce Control	0,1,2,3	0	null	0
+SBO	0x0	0x0	UNC_S_CLOCKTICKS	Uncore Clocks	0,1,2,3	0	null	0
+SBO	0x9	0x0	UNC_S_FAST_ASSERTED	FaST wire asserted	0,1,2,3	0	null	0
+SBO	0x1B	0x1	UNC_S_RING_AD_USED.UP_EVEN	AD Ring In Use; Up and Even	0,1,2,3	0	null	0
+SBO	0x1B	0x2	UNC_S_RING_AD_USED.UP_ODD	AD Ring In Use; Up and Odd	0,1,2,3	0	null	0
+SBO	0x1B	0x4	UNC_S_RING_AD_USED.DOWN_EVEN	AD Ring In Use; Down and Event	0,1,2,3	0	null	0
+SBO	0x1B	0x8	UNC_S_RING_AD_USED.DOWN_ODD	AD Ring In Use; Down and Odd	0,1,2,3	0	null	0
+SBO	0x1B	0x3	UNC_S_RING_AD_USED.UP	AD Ring In Use; Up	0,1,2,3	0	null	0
+SBO	0x1B	0xC	UNC_S_RING_AD_USED.DOWN	AD Ring In Use; Down	0,1,2,3	0	null	0
+SBO	0x1C	0x1	UNC_S_RING_AK_USED.UP_EVEN	AK Ring In Use; Up and Even	0,1,2,3	0	null	0
+SBO	0x1C	0x2	UNC_S_RING_AK_USED.UP_ODD	AK Ring In Use; Up and Odd	0,1,2,3	0	null	0
+SBO	0x1C	0x4	UNC_S_RING_AK_USED.DOWN_EVEN	AK Ring In Use; Down and Event	0,1,2,3	0	null	0
+SBO	0x1C	0x8	UNC_S_RING_AK_USED.DOWN_ODD	AK Ring In Use; Down and Odd	0,1,2,3	0	null	0
+SBO	0x1C	0x3	UNC_S_RING_AK_USED.UP	AK Ring In Use; Up	0,1,2,3	0	null	0
+SBO	0x1C	0xC	UNC_S_RING_AK_USED.DOWN	AK Ring In Use; Down	0,1,2,3	0	null	0
+SBO	0x1D	0x1	UNC_S_RING_BL_USED.UP_EVEN	BL Ring in Use; Up and Even	0,1,2,3	0	null	0
+SBO	0x1D	0x2	UNC_S_RING_BL_USED.UP_ODD	BL Ring in Use; Up and Odd	0,1,2,3	0	null	0
+SBO	0x1D	0x4	UNC_S_RING_BL_USED.DOWN_EVEN	BL Ring in Use; Down and Event	0,1,2,3	0	null	0
+SBO	0x1D	0x8	UNC_S_RING_BL_USED.DOWN_ODD	BL Ring in Use; Down and Odd	0,1,2,3	0	null	0
+SBO	0x1D	0x3	UNC_S_RING_BL_USED.UP	BL Ring in Use; Up	0,1,2,3	0	null	0
+SBO	0x1D	0xC	UNC_S_RING_BL_USED.DOWN	BL Ring in Use; Down	0,1,2,3	0	null	0
+SBO	0x5	0x1	UNC_S_RING_BOUNCES.AD_CACHE	Number of LLC responses that bounced on the Ring.	0,1,2,3	0	null	0
+SBO	0x5	0x2	UNC_S_RING_BOUNCES.AK_CORE	Number of LLC responses that bounced on the Ring.; Acknowledgements to core	0,1,2,3	0	null	0
+SBO	0x5	0x4	UNC_S_RING_BOUNCES.BL_CORE	Number of LLC responses that bounced on the Ring.; Data Responses to core	0,1,2,3	0	null	0
+SBO	0x5	0x8	UNC_S_RING_BOUNCES.IV_CORE	Number of LLC responses that bounced on the Ring.; Snoops of processor's cache.	0,1,2,3	0	null	0
+SBO	0x1E	0x3	UNC_S_RING_IV_USED.UP	BL Ring in Use; Any	0,1,2,3	0	null	0
+SBO	0x1E	0xC	UNC_S_RING_IV_USED.DN	BL Ring in Use; Any	0,1,2,3	0	null	0
+SBO	0x6	0x1	UNC_S_RING_SINK_STARVED.AD_CACHE	tbd	0,1,2,3	0	null	0
+SBO	0x6	0x2	UNC_S_RING_SINK_STARVED.AK_CORE	tbd	0,1,2,3	0	null	0
+SBO	0x6	0x4	UNC_S_RING_SINK_STARVED.BL_CORE	tbd	0,1,2,3	0	null	0
+SBO	0x6	0x8	UNC_S_RING_SINK_STARVED.IV_CORE	tbd	0,1,2,3	0	null	0
+SBO	0x15	0x1	UNC_S_RxR_BUSY_STARVED.AD_CRD	Injection Starvation; AD - Credits	0,1,2,3	0	null	0
+SBO	0x15	0x2	UNC_S_RxR_BUSY_STARVED.AD_BNC	Injection Starvation; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x15	0x4	UNC_S_RxR_BUSY_STARVED.BL_CRD	Injection Starvation; BL - Credits	0,1,2,3	0	null	0
+SBO	0x15	0x8	UNC_S_RxR_BUSY_STARVED.BL_BNC	Injection Starvation; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x12	0x1	UNC_S_RxR_BYPASS.AD_CRD	Bypass; AD - Credits	0,1,2,3	0	null	0
+SBO	0x12	0x2	UNC_S_RxR_BYPASS.AD_BNC	Bypass; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x12	0x4	UNC_S_RxR_BYPASS.BL_CRD	Bypass; BL - Credits	0,1,2,3	0	null	0
+SBO	0x12	0x8	UNC_S_RxR_BYPASS.BL_BNC	Bypass; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x12	0x10	UNC_S_RxR_BYPASS.AK	Bypass; AK	0,1,2,3	0	null	0
+SBO	0x12	0x20	UNC_S_RxR_BYPASS.IV	Bypass; IV	0,1,2,3	0	null	0
+SBO	0x14	0x1	UNC_S_RxR_CRD_STARVED.AD_CRD	Injection Starvation; AD - Credits	0,1,2,3	0	null	0
+SBO	0x14	0x2	UNC_S_RxR_CRD_STARVED.AD_BNC	Injection Starvation; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x14	0x4	UNC_S_RxR_CRD_STARVED.BL_CRD	Injection Starvation; BL - Credits	0,1,2,3	0	null	0
+SBO	0x14	0x8	UNC_S_RxR_CRD_STARVED.BL_BNC	Injection Starvation; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x14	0x10	UNC_S_RxR_CRD_STARVED.AK	Injection Starvation; AK	0,1,2,3	0	null	0
+SBO	0x14	0x20	UNC_S_RxR_CRD_STARVED.IV	Injection Starvation; IV	0,1,2,3	0	null	0
+SBO	0x14	0x40	UNC_S_RxR_CRD_STARVED.IFV	Injection Starvation; IVF Credit	0,1,2,3	0	null	0
+SBO	0x13	0x1	UNC_S_RxR_INSERTS.AD_CRD	Ingress Allocations; AD - Credits	0,1,2,3	0	null	0
+SBO	0x13	0x2	UNC_S_RxR_INSERTS.AD_BNC	Ingress Allocations; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x13	0x4	UNC_S_RxR_INSERTS.BL_CRD	Ingress Allocations; BL - Credits	0,1,2,3	0	null	0
+SBO	0x13	0x8	UNC_S_RxR_INSERTS.BL_BNC	Ingress Allocations; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x13	0x10	UNC_S_RxR_INSERTS.AK	Ingress Allocations; AK	0,1,2,3	0	null	0
+SBO	0x13	0x20	UNC_S_RxR_INSERTS.IV	Ingress Allocations; IV	0,1,2,3	0	null	0
+SBO	0x11	0x1	UNC_S_RxR_OCCUPANCY.AD_CRD	Ingress Occupancy; AD - Credits	0,1,2,3	0	null	0
+SBO	0x11	0x2	UNC_S_RxR_OCCUPANCY.AD_BNC	Ingress Occupancy; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x11	0x4	UNC_S_RxR_OCCUPANCY.BL_CRD	Ingress Occupancy; BL - Credits	0,1,2,3	0	null	0
+SBO	0x11	0x8	UNC_S_RxR_OCCUPANCY.BL_BNC	Ingress Occupancy; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x11	0x10	UNC_S_RxR_OCCUPANCY.AK	Ingress Occupancy; AK	0,1,2,3	0	null	0
+SBO	0x11	0x20	UNC_S_RxR_OCCUPANCY.IV	Ingress Occupancy; IV	0,1,2,3	0	null	0
+SBO	0x4	0x1	UNC_S_TxR_ADS_USED.AD	tbd	0,1,2,3	0	null	0
+SBO	0x4	0x2	UNC_S_TxR_ADS_USED.AK	tbd	0,1,2,3	0	null	0
+SBO	0x4	0x4	UNC_S_TxR_ADS_USED.BL	tbd	0,1,2,3	0	null	0
+SBO	0x2	0x1	UNC_S_TxR_INSERTS.AD_CRD	Egress Allocations; AD - Credits	0,1,2,3	0	null	0
+SBO	0x2	0x2	UNC_S_TxR_INSERTS.AD_BNC	Egress Allocations; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x2	0x4	UNC_S_TxR_INSERTS.BL_CRD	Egress Allocations; BL - Credits	0,1,2,3	0	null	0
+SBO	0x2	0x8	UNC_S_TxR_INSERTS.BL_BNC	Egress Allocations; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x2	0x10	UNC_S_TxR_INSERTS.AK	Egress Allocations; AK	0,1,2,3	0	null	0
+SBO	0x2	0x20	UNC_S_TxR_INSERTS.IV	Egress Allocations; IV	0,1,2,3	0	null	0
+SBO	0x1	0x1	UNC_S_TxR_OCCUPANCY.AD_CRD	Egress Occupancy; AD - Credits	0,1,2,3	0	null	0
+SBO	0x1	0x2	UNC_S_TxR_OCCUPANCY.AD_BNC	Egress Occupancy; AD - Bounces	0,1,2,3	0	null	0
+SBO	0x1	0x4	UNC_S_TxR_OCCUPANCY.BL_CRD	Egress Occupancy; BL - Credits	0,1,2,3	0	null	0
+SBO	0x1	0x8	UNC_S_TxR_OCCUPANCY.BL_BNC	Egress Occupancy; BL - Bounces	0,1,2,3	0	null	0
+SBO	0x1	0x10	UNC_S_TxR_OCCUPANCY.AK	Egress Occupancy; AK	0,1,2,3	0	null	0
+SBO	0x1	0x20	UNC_S_TxR_OCCUPANCY.IV	Egress Occupancy; IV	0,1,2,3	0	null	0
+SBO	0x3	0x1	UNC_S_TxR_STARVED.AD	Injection Starvation; Onto AD Ring	0,1,2,3	0	null	0
+SBO	0x3	0x2	UNC_S_TxR_STARVED.AK	Injection Starvation; Onto AK Ring	0,1,2,3	0	null	0
+SBO	0x3	0x4	UNC_S_TxR_STARVED.BL	Injection Starvation; Onto BL Ring	0,1,2,3	0	null	0
+SBO	0x3	0x8	UNC_S_TxR_STARVED.IV	Injection Starvation; Onto IV Ring	0,1,2,3	0	null	0
+UBOX	0x42	0x8	UNC_U_EVENT_MSG.DOORBELL_RCVD	VLW Received	0,1	0	null	0
+UBOX	0x41	0x1	UNC_U_FILTER_MATCH.ENABLE	Filter Match	0,1	0	UBoxFilter[3:0]	0
+UBOX	0x41	0x2	UNC_U_FILTER_MATCH.DISABLE	Filter Match	0,1	0	null	0
+UBOX	0x41	0x4	UNC_U_FILTER_MATCH.U2C_ENABLE	Filter Match	0,1	0	UBoxFilter[3:0]	0
+UBOX	0x41	0x8	UNC_U_FILTER_MATCH.U2C_DISABLE	Filter Match	0,1	0	null	0
+UBOX	0x45	0x1	UNC_U_PHOLD_CYCLES.ASSERT_TO_ACK	Cycles PHOLD Assert to Ack; Assert to ACK	0,1	0	null	0
+UBOX	0x46	0x0	UNC_U_RACU_REQUESTS	RACU Request	0,1	0	null	0
+UBOX	0x43	0x1	UNC_U_U2C_EVENTS.MONITOR_T0	Monitor Sent to T0; Monitor T0	0,1	0	null	0
+UBOX	0x43	0x2	UNC_U_U2C_EVENTS.MONITOR_T1	Monitor Sent to T0; Monitor T1	0,1	0	null	0
+UBOX	0x43	0x4	UNC_U_U2C_EVENTS.LIVELOCK	Monitor Sent to T0; Livelock	0,1	0	null	0
+UBOX	0x43	0x8	UNC_U_U2C_EVENTS.LTERROR	Monitor Sent to T0; LTError	0,1	0	null	0
+UBOX	0x43	0x10	UNC_U_U2C_EVENTS.CMC	Monitor Sent to T0; Correctable Machine Check	0,1	0	null	0
+UBOX	0x43	0x20	UNC_U_U2C_EVENTS.UMC	Monitor Sent to T0; Uncorrectable Machine Check	0,1	0	null	0
+UBOX	0x43	0x40	UNC_U_U2C_EVENTS.TRAP	Monitor Sent to T0; Trap	0,1	0	null	0
+UBOX	0x43	0x80	UNC_U_U2C_EVENTS.OTHER	Monitor Sent to T0; Other	0,1	0	null	0
+iMC	0x1	0x1	UNC_M_ACT_COUNT.RD	DRAM Activate Count; Activate due to Read	0,1,2,3	0	null	0
+iMC	0x1	0x2	UNC_M_ACT_COUNT.WR	DRAM Activate Count; Activate due to Write	0,1,2,3	0	null	0
+iMC	0x1	0x8	UNC_M_ACT_COUNT.BYP	DRAM Activate Count; Activate due to Write	0,1,2,3	0	null	0
+iMC	0xA1	0x1	UNC_M_BYP_CMDS.ACT	ACT command issued by 2 cycle bypass	0,1,2,3	0	null	0
+iMC	0xA1	0x2	UNC_M_BYP_CMDS.CAS	CAS command issued by 2 cycle bypass	0,1,2,3	0	null	0
+iMC	0xA1	0x4	UNC_M_BYP_CMDS.PRE	PRE command issued by 2 cycle bypass	0,1,2,3	0	null	0
+iMC	0x4	0x1	UNC_M_CAS_COUNT.RD_REG	DRAM RD_CAS and WR_CAS Commands.; All DRAM RD_CAS (w/ and w/out auto-pre)	0,1,2,3	0	null	0
+iMC	0x4	0x2	UNC_M_CAS_COUNT.RD_UNDERFILL	DRAM RD_CAS and WR_CAS Commands.; Underfill Read Issued	0,1,2,3	0	null	0
+iMC	0x4	0x3	UNC_M_CAS_COUNT.RD	DRAM RD_CAS and WR_CAS Commands.; All DRAM Reads (RD_CAS + Underfills)	0,1,2,3	0	null	0
+iMC	0x4	0x4	UNC_M_CAS_COUNT.WR_WMM	DRAM RD_CAS and WR_CAS Commands.; DRAM WR_CAS (w/ and w/out auto-pre) in Write Major Mode	0,1,2,3	0	null	0
+iMC	0x4	0x8	UNC_M_CAS_COUNT.WR_RMM	DRAM RD_CAS and WR_CAS Commands.; DRAM WR_CAS (w/ and w/out auto-pre) in Read Major Mode	0,1,2,3	0	null	0
+iMC	0x4	0xC	UNC_M_CAS_COUNT.WR	DRAM RD_CAS and WR_CAS Commands.; All DRAM WR_CAS (both Modes)	0,1,2,3	0	null	0
+iMC	0x4	0xF	UNC_M_CAS_COUNT.ALL	DRAM RD_CAS and WR_CAS Commands.; All DRAM WR_CAS (w/ and w/out auto-pre)	0,1,2,3	0	null	0
+iMC	0x4	0x10	UNC_M_CAS_COUNT.RD_WMM	DRAM RD_CAS and WR_CAS Commands.; Read CAS issued in WMM	0,1,2,3	0	null	0
+iMC	0x4	0x20	UNC_M_CAS_COUNT.RD_RMM	DRAM RD_CAS and WR_CAS Commands.; Read CAS issued in RMM	0,1,2,3	0	null	0
+iMC	0x0	0x0	UNC_M_CLOCKTICKS	DRAM Clockticks	0,1,2,3	0	null	0
+iMC	0x6	0x0	UNC_M_DRAM_PRE_ALL	DRAM Precharge All Commands	0,1,2,3	0	null	0
+iMC	0x5	0x2	UNC_M_DRAM_REFRESH.PANIC	Number of DRAM Refreshes Issued	0,1,2,3	0	null	0
+iMC	0x5	0x4	UNC_M_DRAM_REFRESH.HIGH	Number of DRAM Refreshes Issued	0,1,2,3	0	null	0
+iMC	0x9	0x0	UNC_M_ECC_CORRECTABLE_ERRORS	ECC Correctable Errors	0,1,2,3	0	null	0
+iMC	0x7	0x1	UNC_M_MAJOR_MODES.READ	Cycles in a Major Mode; Read Major Mode	0,1,2,3	0	null	0
+iMC	0x7	0x2	UNC_M_MAJOR_MODES.WRITE	Cycles in a Major Mode; Write Major Mode	0,1,2,3	0	null	0
+iMC	0x7	0x4	UNC_M_MAJOR_MODES.PARTIAL	Cycles in a Major Mode; Partial Major Mode	0,1,2,3	0	null	0
+iMC	0x7	0x8	UNC_M_MAJOR_MODES.ISOCH	Cycles in a Major Mode; Isoch Major Mode	0,1,2,3	0	null	0
+iMC	0x84	0x0	UNC_M_POWER_CHANNEL_DLLOFF	Channel DLLOFF Cycles	0,1,2,3	0	null	0
+iMC	0x85	0x0	UNC_M_POWER_CHANNEL_PPD	Channel PPD Cycles	0,1,2,3	0	null	0
+iMC	0x83	0x1	UNC_M_POWER_CKE_CYCLES.RANK0	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x2	UNC_M_POWER_CKE_CYCLES.RANK1	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x4	UNC_M_POWER_CKE_CYCLES.RANK2	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x8	UNC_M_POWER_CKE_CYCLES.RANK3	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x10	UNC_M_POWER_CKE_CYCLES.RANK4	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x20	UNC_M_POWER_CKE_CYCLES.RANK5	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x40	UNC_M_POWER_CKE_CYCLES.RANK6	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x83	0x80	UNC_M_POWER_CKE_CYCLES.RANK7	CKE_ON_CYCLES by Rank; DIMM ID	0,1,2,3	0	null	0
+iMC	0x86	0x0	UNC_M_POWER_CRITICAL_THROTTLE_CYCLES	Critical Throttle Cycles	0,1,2,3	0	null	0
+iMC	0x42	0x0	UNC_M_POWER_PCU_THROTTLING	tbd	0,1,2,3	0	null	0
+iMC	0x43	0x0	UNC_M_POWER_SELF_REFRESH	Clock-Enabled Self-Refresh	0,1,2,3	0	null	0
+iMC	0x41	0x1	UNC_M_POWER_THROTTLE_CYCLES.RANK0	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x2	UNC_M_POWER_THROTTLE_CYCLES.RANK1	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x4	UNC_M_POWER_THROTTLE_CYCLES.RANK2	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x8	UNC_M_POWER_THROTTLE_CYCLES.RANK3	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x10	UNC_M_POWER_THROTTLE_CYCLES.RANK4	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x20	UNC_M_POWER_THROTTLE_CYCLES.RANK5	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x40	UNC_M_POWER_THROTTLE_CYCLES.RANK6	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x41	0x80	UNC_M_POWER_THROTTLE_CYCLES.RANK7	Throttle Cycles for Rank 0; DIMM ID	0,1,2,3	0	null	0
+iMC	0x8	0x1	UNC_M_PREEMPTION.RD_PREEMPT_RD	Read Preemption Count; Read over Read Preemption	0,1,2,3	0	null	0
+iMC	0x8	0x2	UNC_M_PREEMPTION.RD_PREEMPT_WR	Read Preemption Count; Read over Write Preemption	0,1,2,3	0	null	0
+iMC	0x2	0x1	UNC_M_PRE_COUNT.PAGE_MISS	DRAM Precharge commands.; Precharges due to page miss	0,1,2,3	0	null	0
+iMC	0x2	0x2	UNC_M_PRE_COUNT.PAGE_CLOSE	DRAM Precharge commands.; Precharge due to timer expiration	0,1,2,3	0	null	0
+iMC	0x2	0x4	UNC_M_PRE_COUNT.RD	DRAM Precharge commands.; Precharge due to read	0,1,2,3	0	null	0
+iMC	0x2	0x8	UNC_M_PRE_COUNT.WR	DRAM Precharge commands.; Precharge due to write	0,1,2,3	0	null	0
+iMC	0x2	0x10	UNC_M_PRE_COUNT.BYP	DRAM Precharge commands.; Precharge due to bypass	0,1,2,3	0	null	0
+iMC	0xA0	0x1	UNC_M_RD_CAS_PRIO.LOW	Read CAS issued with LOW priority	0,1,2,3	0	null	0
+iMC	0xA0	0x2	UNC_M_RD_CAS_PRIO.MED	Read CAS issued with MEDIUM priority	0,1,2,3	0	null	0
+iMC	0xA0	0x4	UNC_M_RD_CAS_PRIO.HIGH	Read CAS issued with HIGH priority	0,1,2,3	0	null	0
+iMC	0xA0	0x8	UNC_M_RD_CAS_PRIO.PANIC	Read CAS issued with PANIC NON ISOCH priority (starved)	0,1,2,3	0	null	0
+iMC	0xB0	0x1	UNC_M_RD_CAS_RANK0.BANK1	RD_CAS Access to Rank 0; Bank 1	0,1,2,3	0	null	0
+iMC	0xB0	0x2	UNC_M_RD_CAS_RANK0.BANK2	RD_CAS Access to Rank 0; Bank 2	0,1,2,3	0	null	0
+iMC	0xB0	0x4	UNC_M_RD_CAS_RANK0.BANK4	RD_CAS Access to Rank 0; Bank 4	0,1,2,3	0	null	0
+iMC	0xB0	0x8	UNC_M_RD_CAS_RANK0.BANK8	RD_CAS Access to Rank 0; Bank 8	0,1,2,3	0	null	0
+iMC	0xB0	0x10	UNC_M_RD_CAS_RANK0.ALLBANKS	RD_CAS Access to Rank 0; All Banks	0,1,2,3	0	null	0
+iMC	0xB0	0x0	UNC_M_RD_CAS_RANK0.BANK0	RD_CAS Access to Rank 0; Bank 0	0,1,2,3	0	null	0
+iMC	0xB0	0x3	UNC_M_RD_CAS_RANK0.BANK3	RD_CAS Access to Rank 0; Bank 3	0,1,2,3	0	null	0
+iMC	0xB0	0x5	UNC_M_RD_CAS_RANK0.BANK5	RD_CAS Access to Rank 0; Bank 5	0,1,2,3	0	null	0
+iMC	0xB0	0x6	UNC_M_RD_CAS_RANK0.BANK6	RD_CAS Access to Rank 0; Bank 6	0,1,2,3	0	null	0
+iMC	0xB0	0x7	UNC_M_RD_CAS_RANK0.BANK7	RD_CAS Access to Rank 0; Bank 7	0,1,2,3	0	null	0
+iMC	0xB0	0x9	UNC_M_RD_CAS_RANK0.BANK9	RD_CAS Access to Rank 0; Bank 9	0,1,2,3	0	null	0
+iMC	0xB0	0xA	UNC_M_RD_CAS_RANK0.BANK10	RD_CAS Access to Rank 0; Bank 10	0,1,2,3	0	null	0
+iMC	0xB0	0xB	UNC_M_RD_CAS_RANK0.BANK11	RD_CAS Access to Rank 0; Bank 11	0,1,2,3	0	null	0
+iMC	0xB0	0xC	UNC_M_RD_CAS_RANK0.BANK12	RD_CAS Access to Rank 0; Bank 12	0,1,2,3	0	null	0
+iMC	0xB0	0xD	UNC_M_RD_CAS_RANK0.BANK13	RD_CAS Access to Rank 0; Bank 13	0,1,2,3	0	null	0
+iMC	0xB0	0xE	UNC_M_RD_CAS_RANK0.BANK14	RD_CAS Access to Rank 0; Bank 14	0,1,2,3	0	null	0
+iMC	0xB0	0xF	UNC_M_RD_CAS_RANK0.BANK15	RD_CAS Access to Rank 0; Bank 15	0,1,2,3	0	null	0
+iMC	0xB0	0x11	UNC_M_RD_CAS_RANK0.BANKG0	RD_CAS Access to Rank 0; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB0	0x12	UNC_M_RD_CAS_RANK0.BANKG1	RD_CAS Access to Rank 0; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB0	0x13	UNC_M_RD_CAS_RANK0.BANKG2	RD_CAS Access to Rank 0; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB0	0x14	UNC_M_RD_CAS_RANK0.BANKG3	RD_CAS Access to Rank 0; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xB1	0x1	UNC_M_RD_CAS_RANK1.BANK1	RD_CAS Access to Rank 1; Bank 1	0,1,2,3	0	null	0
+iMC	0xB1	0x2	UNC_M_RD_CAS_RANK1.BANK2	RD_CAS Access to Rank 1; Bank 2	0,1,2,3	0	null	0
+iMC	0xB1	0x4	UNC_M_RD_CAS_RANK1.BANK4	RD_CAS Access to Rank 1; Bank 4	0,1,2,3	0	null	0
+iMC	0xB1	0x8	UNC_M_RD_CAS_RANK1.BANK8	RD_CAS Access to Rank 1; Bank 8	0,1,2,3	0	null	0
+iMC	0xB1	0x10	UNC_M_RD_CAS_RANK1.ALLBANKS	RD_CAS Access to Rank 1; All Banks	0,1,2,3	0	null	0
+iMC	0xB1	0x0	UNC_M_RD_CAS_RANK1.BANK0	RD_CAS Access to Rank 1; Bank 0	0,1,2,3	0	null	0
+iMC	0xB1	0x3	UNC_M_RD_CAS_RANK1.BANK3	RD_CAS Access to Rank 1; Bank 3	0,1,2,3	0	null	0
+iMC	0xB1	0x5	UNC_M_RD_CAS_RANK1.BANK5	RD_CAS Access to Rank 1; Bank 5	0,1,2,3	0	null	0
+iMC	0xB1	0x6	UNC_M_RD_CAS_RANK1.BANK6	RD_CAS Access to Rank 1; Bank 6	0,1,2,3	0	null	0
+iMC	0xB1	0x7	UNC_M_RD_CAS_RANK1.BANK7	RD_CAS Access to Rank 1; Bank 7	0,1,2,3	0	null	0
+iMC	0xB1	0x9	UNC_M_RD_CAS_RANK1.BANK9	RD_CAS Access to Rank 1; Bank 9	0,1,2,3	0	null	0
+iMC	0xB1	0xA	UNC_M_RD_CAS_RANK1.BANK10	RD_CAS Access to Rank 1; Bank 10	0,1,2,3	0	null	0
+iMC	0xB1	0xB	UNC_M_RD_CAS_RANK1.BANK11	RD_CAS Access to Rank 1; Bank 11	0,1,2,3	0	null	0
+iMC	0xB1	0xC	UNC_M_RD_CAS_RANK1.BANK12	RD_CAS Access to Rank 1; Bank 12	0,1,2,3	0	null	0
+iMC	0xB1	0xD	UNC_M_RD_CAS_RANK1.BANK13	RD_CAS Access to Rank 1; Bank 13	0,1,2,3	0	null	0
+iMC	0xB1	0xE	UNC_M_RD_CAS_RANK1.BANK14	RD_CAS Access to Rank 1; Bank 14	0,1,2,3	0	null	0
+iMC	0xB1	0xF	UNC_M_RD_CAS_RANK1.BANK15	RD_CAS Access to Rank 1; Bank 15	0,1,2,3	0	null	0
+iMC	0xB1	0x11	UNC_M_RD_CAS_RANK1.BANKG0	RD_CAS Access to Rank 1; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB1	0x12	UNC_M_RD_CAS_RANK1.BANKG1	RD_CAS Access to Rank 1; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB1	0x13	UNC_M_RD_CAS_RANK1.BANKG2	RD_CAS Access to Rank 1; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB1	0x14	UNC_M_RD_CAS_RANK1.BANKG3	RD_CAS Access to Rank 1; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xB2	0x0	UNC_M_RD_CAS_RANK2.BANK0	RD_CAS Access to Rank 2; Bank 0	0,1,2,3	0	null	0
+iMC	0xB4	0x1	UNC_M_RD_CAS_RANK4.BANK1	RD_CAS Access to Rank 4; Bank 1	0,1,2,3	0	null	0
+iMC	0xB4	0x2	UNC_M_RD_CAS_RANK4.BANK2	RD_CAS Access to Rank 4; Bank 2	0,1,2,3	0	null	0
+iMC	0xB4	0x4	UNC_M_RD_CAS_RANK4.BANK4	RD_CAS Access to Rank 4; Bank 4	0,1,2,3	0	null	0
+iMC	0xB4	0x8	UNC_M_RD_CAS_RANK4.BANK8	RD_CAS Access to Rank 4; Bank 8	0,1,2,3	0	null	0
+iMC	0xB4	0x10	UNC_M_RD_CAS_RANK4.ALLBANKS	RD_CAS Access to Rank 4; All Banks	0,1,2,3	0	null	0
+iMC	0xB4	0x0	UNC_M_RD_CAS_RANK4.BANK0	RD_CAS Access to Rank 4; Bank 0	0,1,2,3	0	null	0
+iMC	0xB4	0x3	UNC_M_RD_CAS_RANK4.BANK3	RD_CAS Access to Rank 4; Bank 3	0,1,2,3	0	null	0
+iMC	0xB4	0x5	UNC_M_RD_CAS_RANK4.BANK5	RD_CAS Access to Rank 4; Bank 5	0,1,2,3	0	null	0
+iMC	0xB4	0x6	UNC_M_RD_CAS_RANK4.BANK6	RD_CAS Access to Rank 4; Bank 6	0,1,2,3	0	null	0
+iMC	0xB4	0x7	UNC_M_RD_CAS_RANK4.BANK7	RD_CAS Access to Rank 4; Bank 7	0,1,2,3	0	null	0
+iMC	0xB4	0x9	UNC_M_RD_CAS_RANK4.BANK9	RD_CAS Access to Rank 4; Bank 9	0,1,2,3	0	null	0
+iMC	0xB4	0xA	UNC_M_RD_CAS_RANK4.BANK10	RD_CAS Access to Rank 4; Bank 10	0,1,2,3	0	null	0
+iMC	0xB4	0xB	UNC_M_RD_CAS_RANK4.BANK11	RD_CAS Access to Rank 4; Bank 11	0,1,2,3	0	null	0
+iMC	0xB4	0xC	UNC_M_RD_CAS_RANK4.BANK12	RD_CAS Access to Rank 4; Bank 12	0,1,2,3	0	null	0
+iMC	0xB4	0xD	UNC_M_RD_CAS_RANK4.BANK13	RD_CAS Access to Rank 4; Bank 13	0,1,2,3	0	null	0
+iMC	0xB4	0xE	UNC_M_RD_CAS_RANK4.BANK14	RD_CAS Access to Rank 4; Bank 14	0,1,2,3	0	null	0
+iMC	0xB4	0xF	UNC_M_RD_CAS_RANK4.BANK15	RD_CAS Access to Rank 4; Bank 15	0,1,2,3	0	null	0
+iMC	0xB4	0x11	UNC_M_RD_CAS_RANK4.BANKG0	RD_CAS Access to Rank 4; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB4	0x12	UNC_M_RD_CAS_RANK4.BANKG1	RD_CAS Access to Rank 4; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB4	0x13	UNC_M_RD_CAS_RANK4.BANKG2	RD_CAS Access to Rank 4; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB4	0x14	UNC_M_RD_CAS_RANK4.BANKG3	RD_CAS Access to Rank 4; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xB5	0x1	UNC_M_RD_CAS_RANK5.BANK1	RD_CAS Access to Rank 5; Bank 1	0,1,2,3	0	null	0
+iMC	0xB5	0x2	UNC_M_RD_CAS_RANK5.BANK2	RD_CAS Access to Rank 5; Bank 2	0,1,2,3	0	null	0
+iMC	0xB5	0x4	UNC_M_RD_CAS_RANK5.BANK4	RD_CAS Access to Rank 5; Bank 4	0,1,2,3	0	null	0
+iMC	0xB5	0x8	UNC_M_RD_CAS_RANK5.BANK8	RD_CAS Access to Rank 5; Bank 8	0,1,2,3	0	null	0
+iMC	0xB5	0x10	UNC_M_RD_CAS_RANK5.ALLBANKS	RD_CAS Access to Rank 5; All Banks	0,1,2,3	0	null	0
+iMC	0xB5	0x0	UNC_M_RD_CAS_RANK5.BANK0	RD_CAS Access to Rank 5; Bank 0	0,1,2,3	0	null	0
+iMC	0xB5	0x3	UNC_M_RD_CAS_RANK5.BANK3	RD_CAS Access to Rank 5; Bank 3	0,1,2,3	0	null	0
+iMC	0xB5	0x5	UNC_M_RD_CAS_RANK5.BANK5	RD_CAS Access to Rank 5; Bank 5	0,1,2,3	0	null	0
+iMC	0xB5	0x6	UNC_M_RD_CAS_RANK5.BANK6	RD_CAS Access to Rank 5; Bank 6	0,1,2,3	0	null	0
+iMC	0xB5	0x7	UNC_M_RD_CAS_RANK5.BANK7	RD_CAS Access to Rank 5; Bank 7	0,1,2,3	0	null	0
+iMC	0xB5	0x9	UNC_M_RD_CAS_RANK5.BANK9	RD_CAS Access to Rank 5; Bank 9	0,1,2,3	0	null	0
+iMC	0xB5	0xA	UNC_M_RD_CAS_RANK5.BANK10	RD_CAS Access to Rank 5; Bank 10	0,1,2,3	0	null	0
+iMC	0xB5	0xB	UNC_M_RD_CAS_RANK5.BANK11	RD_CAS Access to Rank 5; Bank 11	0,1,2,3	0	null	0
+iMC	0xB5	0xC	UNC_M_RD_CAS_RANK5.BANK12	RD_CAS Access to Rank 5; Bank 12	0,1,2,3	0	null	0
+iMC	0xB5	0xD	UNC_M_RD_CAS_RANK5.BANK13	RD_CAS Access to Rank 5; Bank 13	0,1,2,3	0	null	0
+iMC	0xB5	0xE	UNC_M_RD_CAS_RANK5.BANK14	RD_CAS Access to Rank 5; Bank 14	0,1,2,3	0	null	0
+iMC	0xB5	0xF	UNC_M_RD_CAS_RANK5.BANK15	RD_CAS Access to Rank 5; Bank 15	0,1,2,3	0	null	0
+iMC	0xB5	0x11	UNC_M_RD_CAS_RANK5.BANKG0	RD_CAS Access to Rank 5; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB5	0x12	UNC_M_RD_CAS_RANK5.BANKG1	RD_CAS Access to Rank 5; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB5	0x13	UNC_M_RD_CAS_RANK5.BANKG2	RD_CAS Access to Rank 5; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB5	0x14	UNC_M_RD_CAS_RANK5.BANKG3	RD_CAS Access to Rank 5; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xB6	0x1	UNC_M_RD_CAS_RANK6.BANK1	RD_CAS Access to Rank 6; Bank 1	0,1,2,3	0	null	0
+iMC	0xB6	0x2	UNC_M_RD_CAS_RANK6.BANK2	RD_CAS Access to Rank 6; Bank 2	0,1,2,3	0	null	0
+iMC	0xB6	0x4	UNC_M_RD_CAS_RANK6.BANK4	RD_CAS Access to Rank 6; Bank 4	0,1,2,3	0	null	0
+iMC	0xB6	0x8	UNC_M_RD_CAS_RANK6.BANK8	RD_CAS Access to Rank 6; Bank 8	0,1,2,3	0	null	0
+iMC	0xB6	0x10	UNC_M_RD_CAS_RANK6.ALLBANKS	RD_CAS Access to Rank 6; All Banks	0,1,2,3	0	null	0
+iMC	0xB6	0x0	UNC_M_RD_CAS_RANK6.BANK0	RD_CAS Access to Rank 6; Bank 0	0,1,2,3	0	null	0
+iMC	0xB6	0x3	UNC_M_RD_CAS_RANK6.BANK3	RD_CAS Access to Rank 6; Bank 3	0,1,2,3	0	null	0
+iMC	0xB6	0x5	UNC_M_RD_CAS_RANK6.BANK5	RD_CAS Access to Rank 6; Bank 5	0,1,2,3	0	null	0
+iMC	0xB6	0x6	UNC_M_RD_CAS_RANK6.BANK6	RD_CAS Access to Rank 6; Bank 6	0,1,2,3	0	null	0
+iMC	0xB6	0x7	UNC_M_RD_CAS_RANK6.BANK7	RD_CAS Access to Rank 6; Bank 7	0,1,2,3	0	null	0
+iMC	0xB6	0x9	UNC_M_RD_CAS_RANK6.BANK9	RD_CAS Access to Rank 6; Bank 9	0,1,2,3	0	null	0
+iMC	0xB6	0xA	UNC_M_RD_CAS_RANK6.BANK10	RD_CAS Access to Rank 6; Bank 10	0,1,2,3	0	null	0
+iMC	0xB6	0xB	UNC_M_RD_CAS_RANK6.BANK11	RD_CAS Access to Rank 6; Bank 11	0,1,2,3	0	null	0
+iMC	0xB6	0xC	UNC_M_RD_CAS_RANK6.BANK12	RD_CAS Access to Rank 6; Bank 12	0,1,2,3	0	null	0
+iMC	0xB6	0xD	UNC_M_RD_CAS_RANK6.BANK13	RD_CAS Access to Rank 6; Bank 13	0,1,2,3	0	null	0
+iMC	0xB6	0xE	UNC_M_RD_CAS_RANK6.BANK14	RD_CAS Access to Rank 6; Bank 14	0,1,2,3	0	null	0
+iMC	0xB6	0xF	UNC_M_RD_CAS_RANK6.BANK15	RD_CAS Access to Rank 6; Bank 15	0,1,2,3	0	null	0
+iMC	0xB6	0x11	UNC_M_RD_CAS_RANK6.BANKG0	RD_CAS Access to Rank 6; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB6	0x12	UNC_M_RD_CAS_RANK6.BANKG1	RD_CAS Access to Rank 6; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB6	0x13	UNC_M_RD_CAS_RANK6.BANKG2	RD_CAS Access to Rank 6; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB6	0x14	UNC_M_RD_CAS_RANK6.BANKG3	RD_CAS Access to Rank 6; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xB7	0x1	UNC_M_RD_CAS_RANK7.BANK1	RD_CAS Access to Rank 7; Bank 1	0,1,2,3	0	null	0
+iMC	0xB7	0x2	UNC_M_RD_CAS_RANK7.BANK2	RD_CAS Access to Rank 7; Bank 2	0,1,2,3	0	null	0
+iMC	0xB7	0x4	UNC_M_RD_CAS_RANK7.BANK4	RD_CAS Access to Rank 7; Bank 4	0,1,2,3	0	null	0
+iMC	0xB7	0x8	UNC_M_RD_CAS_RANK7.BANK8	RD_CAS Access to Rank 7; Bank 8	0,1,2,3	0	null	0
+iMC	0xB7	0x10	UNC_M_RD_CAS_RANK7.ALLBANKS	RD_CAS Access to Rank 7; All Banks	0,1,2,3	0	null	0
+iMC	0xB7	0x0	UNC_M_RD_CAS_RANK7.BANK0	RD_CAS Access to Rank 7; Bank 0	0,1,2,3	0	null	0
+iMC	0xB7	0x3	UNC_M_RD_CAS_RANK7.BANK3	RD_CAS Access to Rank 7; Bank 3	0,1,2,3	0	null	0
+iMC	0xB7	0x5	UNC_M_RD_CAS_RANK7.BANK5	RD_CAS Access to Rank 7; Bank 5	0,1,2,3	0	null	0
+iMC	0xB7	0x6	UNC_M_RD_CAS_RANK7.BANK6	RD_CAS Access to Rank 7; Bank 6	0,1,2,3	0	null	0
+iMC	0xB7	0x7	UNC_M_RD_CAS_RANK7.BANK7	RD_CAS Access to Rank 7; Bank 7	0,1,2,3	0	null	0
+iMC	0xB7	0x9	UNC_M_RD_CAS_RANK7.BANK9	RD_CAS Access to Rank 7; Bank 9	0,1,2,3	0	null	0
+iMC	0xB7	0xA	UNC_M_RD_CAS_RANK7.BANK10	RD_CAS Access to Rank 7; Bank 10	0,1,2,3	0	null	0
+iMC	0xB7	0xB	UNC_M_RD_CAS_RANK7.BANK11	RD_CAS Access to Rank 7; Bank 11	0,1,2,3	0	null	0
+iMC	0xB7	0xC	UNC_M_RD_CAS_RANK7.BANK12	RD_CAS Access to Rank 7; Bank 12	0,1,2,3	0	null	0
+iMC	0xB7	0xD	UNC_M_RD_CAS_RANK7.BANK13	RD_CAS Access to Rank 7; Bank 13	0,1,2,3	0	null	0
+iMC	0xB7	0xE	UNC_M_RD_CAS_RANK7.BANK14	RD_CAS Access to Rank 7; Bank 14	0,1,2,3	0	null	0
+iMC	0xB7	0xF	UNC_M_RD_CAS_RANK7.BANK15	RD_CAS Access to Rank 7; Bank 15	0,1,2,3	0	null	0
+iMC	0xB7	0x11	UNC_M_RD_CAS_RANK7.BANKG0	RD_CAS Access to Rank 7; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB7	0x12	UNC_M_RD_CAS_RANK7.BANKG1	RD_CAS Access to Rank 7; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB7	0x13	UNC_M_RD_CAS_RANK7.BANKG2	RD_CAS Access to Rank 7; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB7	0x14	UNC_M_RD_CAS_RANK7.BANKG3	RD_CAS Access to Rank 7; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0x11	0x0	UNC_M_RPQ_CYCLES_NE	Read Pending Queue Not Empty	0,1,2,3	0	null	0
+iMC	0x10	0x0	UNC_M_RPQ_INSERTS	Read Pending Queue Allocations	0,1,2,3	0	null	0
+iMC	0x91	0x0	UNC_M_VMSE_MXB_WR_OCCUPANCY	VMSE MXB write buffer occupancy	0,1,2,3	0	null	0
+iMC	0x90	0x1	UNC_M_VMSE_WR_PUSH.WMM	VMSE WR PUSH issued; VMSE write PUSH issued in WMM	0,1,2,3	0	null	0
+iMC	0x90	0x2	UNC_M_VMSE_WR_PUSH.RMM	VMSE WR PUSH issued; VMSE write PUSH issued in RMM	0,1,2,3	0	null	0
+iMC	0xC0	0x1	UNC_M_WMM_TO_RMM.LOW_THRESH	Transition from WMM to RMM because of low threshold; Transition from WMM to RMM because of starve counter	0,1,2,3	0	null	0
+iMC	0xC0	0x2	UNC_M_WMM_TO_RMM.STARVE	Transition from WMM to RMM because of low threshold	0,1,2,3	0	null	0
+iMC	0xC0	0x4	UNC_M_WMM_TO_RMM.VMSE_RETRY	Transition from WMM to RMM because of low threshold	0,1,2,3	0	null	0
+iMC	0x22	0x0	UNC_M_WPQ_CYCLES_FULL	Write Pending Queue Full Cycles	0,1,2,3	0	null	0
+iMC	0x21	0x0	UNC_M_WPQ_CYCLES_NE	Write Pending Queue Not Empty	0,1,2,3	0	null	0
+iMC	0x23	0x0	UNC_M_WPQ_READ_HIT	Write Pending Queue CAM Match	0,1,2,3	0	null	0
+iMC	0x24	0x0	UNC_M_WPQ_WRITE_HIT	Write Pending Queue CAM Match	0,1,2,3	0	null	0
+iMC	0xC1	0x0	UNC_M_WRONG_MM	Not getting the requested Major Mode	0,1,2,3	0	null	0
+iMC	0xB8	0x1	UNC_M_WR_CAS_RANK0.BANK1	WR_CAS Access to Rank 0; Bank 1	0,1,2,3	0	null	0
+iMC	0xB8	0x2	UNC_M_WR_CAS_RANK0.BANK2	WR_CAS Access to Rank 0; Bank 2	0,1,2,3	0	null	0
+iMC	0xB8	0x4	UNC_M_WR_CAS_RANK0.BANK4	WR_CAS Access to Rank 0; Bank 4	0,1,2,3	0	null	0
+iMC	0xB8	0x8	UNC_M_WR_CAS_RANK0.BANK8	WR_CAS Access to Rank 0; Bank 8	0,1,2,3	0	null	0
+iMC	0xB8	0x10	UNC_M_WR_CAS_RANK0.ALLBANKS	WR_CAS Access to Rank 0; All Banks	0,1,2,3	0	null	0
+iMC	0xB8	0x0	UNC_M_WR_CAS_RANK0.BANK0	WR_CAS Access to Rank 0; Bank 0	0,1,2,3	0	null	0
+iMC	0xB8	0x3	UNC_M_WR_CAS_RANK0.BANK3	WR_CAS Access to Rank 0; Bank 3	0,1,2,3	0	null	0
+iMC	0xB8	0x5	UNC_M_WR_CAS_RANK0.BANK5	WR_CAS Access to Rank 0; Bank 5	0,1,2,3	0	null	0
+iMC	0xB8	0x6	UNC_M_WR_CAS_RANK0.BANK6	WR_CAS Access to Rank 0; Bank 6	0,1,2,3	0	null	0
+iMC	0xB8	0x7	UNC_M_WR_CAS_RANK0.BANK7	WR_CAS Access to Rank 0; Bank 7	0,1,2,3	0	null	0
+iMC	0xB8	0x9	UNC_M_WR_CAS_RANK0.BANK9	WR_CAS Access to Rank 0; Bank 9	0,1,2,3	0	null	0
+iMC	0xB8	0xA	UNC_M_WR_CAS_RANK0.BANK10	WR_CAS Access to Rank 0; Bank 10	0,1,2,3	0	null	0
+iMC	0xB8	0xB	UNC_M_WR_CAS_RANK0.BANK11	WR_CAS Access to Rank 0; Bank 11	0,1,2,3	0	null	0
+iMC	0xB8	0xC	UNC_M_WR_CAS_RANK0.BANK12	WR_CAS Access to Rank 0; Bank 12	0,1,2,3	0	null	0
+iMC	0xB8	0xD	UNC_M_WR_CAS_RANK0.BANK13	WR_CAS Access to Rank 0; Bank 13	0,1,2,3	0	null	0
+iMC	0xB8	0xE	UNC_M_WR_CAS_RANK0.BANK14	WR_CAS Access to Rank 0; Bank 14	0,1,2,3	0	null	0
+iMC	0xB8	0xF	UNC_M_WR_CAS_RANK0.BANK15	WR_CAS Access to Rank 0; Bank 15	0,1,2,3	0	null	0
+iMC	0xB8	0x11	UNC_M_WR_CAS_RANK0.BANKG0	WR_CAS Access to Rank 0; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB8	0x12	UNC_M_WR_CAS_RANK0.BANKG1	WR_CAS Access to Rank 0; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB8	0x13	UNC_M_WR_CAS_RANK0.BANKG2	WR_CAS Access to Rank 0; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB8	0x14	UNC_M_WR_CAS_RANK0.BANKG3	WR_CAS Access to Rank 0; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xB9	0x1	UNC_M_WR_CAS_RANK1.BANK1	WR_CAS Access to Rank 1; Bank 1	0,1,2,3	0	null	0
+iMC	0xB9	0x2	UNC_M_WR_CAS_RANK1.BANK2	WR_CAS Access to Rank 1; Bank 2	0,1,2,3	0	null	0
+iMC	0xB9	0x4	UNC_M_WR_CAS_RANK1.BANK4	WR_CAS Access to Rank 1; Bank 4	0,1,2,3	0	null	0
+iMC	0xB9	0x8	UNC_M_WR_CAS_RANK1.BANK8	WR_CAS Access to Rank 1; Bank 8	0,1,2,3	0	null	0
+iMC	0xB9	0x10	UNC_M_WR_CAS_RANK1.ALLBANKS	WR_CAS Access to Rank 1; All Banks	0,1,2,3	0	null	0
+iMC	0xB9	0x0	UNC_M_WR_CAS_RANK1.BANK0	WR_CAS Access to Rank 1; Bank 0	0,1,2,3	0	null	0
+iMC	0xB9	0x3	UNC_M_WR_CAS_RANK1.BANK3	WR_CAS Access to Rank 1; Bank 3	0,1,2,3	0	null	0
+iMC	0xB9	0x5	UNC_M_WR_CAS_RANK1.BANK5	WR_CAS Access to Rank 1; Bank 5	0,1,2,3	0	null	0
+iMC	0xB9	0x6	UNC_M_WR_CAS_RANK1.BANK6	WR_CAS Access to Rank 1; Bank 6	0,1,2,3	0	null	0
+iMC	0xB9	0x7	UNC_M_WR_CAS_RANK1.BANK7	WR_CAS Access to Rank 1; Bank 7	0,1,2,3	0	null	0
+iMC	0xB9	0x9	UNC_M_WR_CAS_RANK1.BANK9	WR_CAS Access to Rank 1; Bank 9	0,1,2,3	0	null	0
+iMC	0xB9	0xA	UNC_M_WR_CAS_RANK1.BANK10	WR_CAS Access to Rank 1; Bank 10	0,1,2,3	0	null	0
+iMC	0xB9	0xB	UNC_M_WR_CAS_RANK1.BANK11	WR_CAS Access to Rank 1; Bank 11	0,1,2,3	0	null	0
+iMC	0xB9	0xC	UNC_M_WR_CAS_RANK1.BANK12	WR_CAS Access to Rank 1; Bank 12	0,1,2,3	0	null	0
+iMC	0xB9	0xD	UNC_M_WR_CAS_RANK1.BANK13	WR_CAS Access to Rank 1; Bank 13	0,1,2,3	0	null	0
+iMC	0xB9	0xE	UNC_M_WR_CAS_RANK1.BANK14	WR_CAS Access to Rank 1; Bank 14	0,1,2,3	0	null	0
+iMC	0xB9	0xF	UNC_M_WR_CAS_RANK1.BANK15	WR_CAS Access to Rank 1; Bank 15	0,1,2,3	0	null	0
+iMC	0xB9	0x11	UNC_M_WR_CAS_RANK1.BANKG0	WR_CAS Access to Rank 1; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xB9	0x12	UNC_M_WR_CAS_RANK1.BANKG1	WR_CAS Access to Rank 1; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xB9	0x13	UNC_M_WR_CAS_RANK1.BANKG2	WR_CAS Access to Rank 1; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xB9	0x14	UNC_M_WR_CAS_RANK1.BANKG3	WR_CAS Access to Rank 1; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xBC	0x1	UNC_M_WR_CAS_RANK4.BANK1	WR_CAS Access to Rank 4; Bank 1	0,1,2,3	0	null	0
+iMC	0xBC	0x2	UNC_M_WR_CAS_RANK4.BANK2	WR_CAS Access to Rank 4; Bank 2	0,1,2,3	0	null	0
+iMC	0xBC	0x4	UNC_M_WR_CAS_RANK4.BANK4	WR_CAS Access to Rank 4; Bank 4	0,1,2,3	0	null	0
+iMC	0xBC	0x8	UNC_M_WR_CAS_RANK4.BANK8	WR_CAS Access to Rank 4; Bank 8	0,1,2,3	0	null	0
+iMC	0xBC	0x10	UNC_M_WR_CAS_RANK4.ALLBANKS	WR_CAS Access to Rank 4; All Banks	0,1,2,3	0	null	0
+iMC	0xBC	0x0	UNC_M_WR_CAS_RANK4.BANK0	WR_CAS Access to Rank 4; Bank 0	0,1,2,3	0	null	0
+iMC	0xBC	0x3	UNC_M_WR_CAS_RANK4.BANK3	WR_CAS Access to Rank 4; Bank 3	0,1,2,3	0	null	0
+iMC	0xBC	0x5	UNC_M_WR_CAS_RANK4.BANK5	WR_CAS Access to Rank 4; Bank 5	0,1,2,3	0	null	0
+iMC	0xBC	0x6	UNC_M_WR_CAS_RANK4.BANK6	WR_CAS Access to Rank 4; Bank 6	0,1,2,3	0	null	0
+iMC	0xBC	0x7	UNC_M_WR_CAS_RANK4.BANK7	WR_CAS Access to Rank 4; Bank 7	0,1,2,3	0	null	0
+iMC	0xBC	0x9	UNC_M_WR_CAS_RANK4.BANK9	WR_CAS Access to Rank 4; Bank 9	0,1,2,3	0	null	0
+iMC	0xBC	0xA	UNC_M_WR_CAS_RANK4.BANK10	WR_CAS Access to Rank 4; Bank 10	0,1,2,3	0	null	0
+iMC	0xBC	0xB	UNC_M_WR_CAS_RANK4.BANK11	WR_CAS Access to Rank 4; Bank 11	0,1,2,3	0	null	0
+iMC	0xBC	0xC	UNC_M_WR_CAS_RANK4.BANK12	WR_CAS Access to Rank 4; Bank 12	0,1,2,3	0	null	0
+iMC	0xBC	0xD	UNC_M_WR_CAS_RANK4.BANK13	WR_CAS Access to Rank 4; Bank 13	0,1,2,3	0	null	0
+iMC	0xBC	0xE	UNC_M_WR_CAS_RANK4.BANK14	WR_CAS Access to Rank 4; Bank 14	0,1,2,3	0	null	0
+iMC	0xBC	0xF	UNC_M_WR_CAS_RANK4.BANK15	WR_CAS Access to Rank 4; Bank 15	0,1,2,3	0	null	0
+iMC	0xBC	0x11	UNC_M_WR_CAS_RANK4.BANKG0	WR_CAS Access to Rank 4; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xBC	0x12	UNC_M_WR_CAS_RANK4.BANKG1	WR_CAS Access to Rank 4; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xBC	0x13	UNC_M_WR_CAS_RANK4.BANKG2	WR_CAS Access to Rank 4; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xBC	0x14	UNC_M_WR_CAS_RANK4.BANKG3	WR_CAS Access to Rank 4; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xBD	0x1	UNC_M_WR_CAS_RANK5.BANK1	WR_CAS Access to Rank 5; Bank 1	0,1,2,3	0	null	0
+iMC	0xBD	0x2	UNC_M_WR_CAS_RANK5.BANK2	WR_CAS Access to Rank 5; Bank 2	0,1,2,3	0	null	0
+iMC	0xBD	0x4	UNC_M_WR_CAS_RANK5.BANK4	WR_CAS Access to Rank 5; Bank 4	0,1,2,3	0	null	0
+iMC	0xBD	0x8	UNC_M_WR_CAS_RANK5.BANK8	WR_CAS Access to Rank 5; Bank 8	0,1,2,3	0	null	0
+iMC	0xBD	0x10	UNC_M_WR_CAS_RANK5.ALLBANKS	WR_CAS Access to Rank 5; All Banks	0,1,2,3	0	null	0
+iMC	0xBD	0x0	UNC_M_WR_CAS_RANK5.BANK0	WR_CAS Access to Rank 5; Bank 0	0,1,2,3	0	null	0
+iMC	0xBD	0x3	UNC_M_WR_CAS_RANK5.BANK3	WR_CAS Access to Rank 5; Bank 3	0,1,2,3	0	null	0
+iMC	0xBD	0x5	UNC_M_WR_CAS_RANK5.BANK5	WR_CAS Access to Rank 5; Bank 5	0,1,2,3	0	null	0
+iMC	0xBD	0x6	UNC_M_WR_CAS_RANK5.BANK6	WR_CAS Access to Rank 5; Bank 6	0,1,2,3	0	null	0
+iMC	0xBD	0x7	UNC_M_WR_CAS_RANK5.BANK7	WR_CAS Access to Rank 5; Bank 7	0,1,2,3	0	null	0
+iMC	0xBD	0x9	UNC_M_WR_CAS_RANK5.BANK9	WR_CAS Access to Rank 5; Bank 9	0,1,2,3	0	null	0
+iMC	0xBD	0xA	UNC_M_WR_CAS_RANK5.BANK10	WR_CAS Access to Rank 5; Bank 10	0,1,2,3	0	null	0
+iMC	0xBD	0xB	UNC_M_WR_CAS_RANK5.BANK11	WR_CAS Access to Rank 5; Bank 11	0,1,2,3	0	null	0
+iMC	0xBD	0xC	UNC_M_WR_CAS_RANK5.BANK12	WR_CAS Access to Rank 5; Bank 12	0,1,2,3	0	null	0
+iMC	0xBD	0xD	UNC_M_WR_CAS_RANK5.BANK13	WR_CAS Access to Rank 5; Bank 13	0,1,2,3	0	null	0
+iMC	0xBD	0xE	UNC_M_WR_CAS_RANK5.BANK14	WR_CAS Access to Rank 5; Bank 14	0,1,2,3	0	null	0
+iMC	0xBD	0xF	UNC_M_WR_CAS_RANK5.BANK15	WR_CAS Access to Rank 5; Bank 15	0,1,2,3	0	null	0
+iMC	0xBD	0x11	UNC_M_WR_CAS_RANK5.BANKG0	WR_CAS Access to Rank 5; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xBD	0x12	UNC_M_WR_CAS_RANK5.BANKG1	WR_CAS Access to Rank 5; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xBD	0x13	UNC_M_WR_CAS_RANK5.BANKG2	WR_CAS Access to Rank 5; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xBD	0x14	UNC_M_WR_CAS_RANK5.BANKG3	WR_CAS Access to Rank 5; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xBE	0x1	UNC_M_WR_CAS_RANK6.BANK1	WR_CAS Access to Rank 6; Bank 1	0,1,2,3	0	null	0
+iMC	0xBE	0x2	UNC_M_WR_CAS_RANK6.BANK2	WR_CAS Access to Rank 6; Bank 2	0,1,2,3	0	null	0
+iMC	0xBE	0x4	UNC_M_WR_CAS_RANK6.BANK4	WR_CAS Access to Rank 6; Bank 4	0,1,2,3	0	null	0
+iMC	0xBE	0x8	UNC_M_WR_CAS_RANK6.BANK8	WR_CAS Access to Rank 6; Bank 8	0,1,2,3	0	null	0
+iMC	0xBE	0x10	UNC_M_WR_CAS_RANK6.ALLBANKS	WR_CAS Access to Rank 6; All Banks	0,1,2,3	0	null	0
+iMC	0xBE	0x0	UNC_M_WR_CAS_RANK6.BANK0	WR_CAS Access to Rank 6; Bank 0	0,1,2,3	0	null	0
+iMC	0xBE	0x3	UNC_M_WR_CAS_RANK6.BANK3	WR_CAS Access to Rank 6; Bank 3	0,1,2,3	0	null	0
+iMC	0xBE	0x5	UNC_M_WR_CAS_RANK6.BANK5	WR_CAS Access to Rank 6; Bank 5	0,1,2,3	0	null	0
+iMC	0xBE	0x6	UNC_M_WR_CAS_RANK6.BANK6	WR_CAS Access to Rank 6; Bank 6	0,1,2,3	0	null	0
+iMC	0xBE	0x7	UNC_M_WR_CAS_RANK6.BANK7	WR_CAS Access to Rank 6; Bank 7	0,1,2,3	0	null	0
+iMC	0xBE	0x9	UNC_M_WR_CAS_RANK6.BANK9	WR_CAS Access to Rank 6; Bank 9	0,1,2,3	0	null	0
+iMC	0xBE	0xA	UNC_M_WR_CAS_RANK6.BANK10	WR_CAS Access to Rank 6; Bank 10	0,1,2,3	0	null	0
+iMC	0xBE	0xB	UNC_M_WR_CAS_RANK6.BANK11	WR_CAS Access to Rank 6; Bank 11	0,1,2,3	0	null	0
+iMC	0xBE	0xC	UNC_M_WR_CAS_RANK6.BANK12	WR_CAS Access to Rank 6; Bank 12	0,1,2,3	0	null	0
+iMC	0xBE	0xD	UNC_M_WR_CAS_RANK6.BANK13	WR_CAS Access to Rank 6; Bank 13	0,1,2,3	0	null	0
+iMC	0xBE	0xE	UNC_M_WR_CAS_RANK6.BANK14	WR_CAS Access to Rank 6; Bank 14	0,1,2,3	0	null	0
+iMC	0xBE	0xF	UNC_M_WR_CAS_RANK6.BANK15	WR_CAS Access to Rank 6; Bank 15	0,1,2,3	0	null	0
+iMC	0xBE	0x11	UNC_M_WR_CAS_RANK6.BANKG0	WR_CAS Access to Rank 6; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xBE	0x12	UNC_M_WR_CAS_RANK6.BANKG1	WR_CAS Access to Rank 6; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xBE	0x13	UNC_M_WR_CAS_RANK6.BANKG2	WR_CAS Access to Rank 6; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xBE	0x14	UNC_M_WR_CAS_RANK6.BANKG3	WR_CAS Access to Rank 6; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+iMC	0xBF	0x1	UNC_M_WR_CAS_RANK7.BANK1	WR_CAS Access to Rank 7; Bank 1	0,1,2,3	0	null	0
+iMC	0xBF	0x2	UNC_M_WR_CAS_RANK7.BANK2	WR_CAS Access to Rank 7; Bank 2	0,1,2,3	0	null	0
+iMC	0xBF	0x4	UNC_M_WR_CAS_RANK7.BANK4	WR_CAS Access to Rank 7; Bank 4	0,1,2,3	0	null	0
+iMC	0xBF	0x8	UNC_M_WR_CAS_RANK7.BANK8	WR_CAS Access to Rank 7; Bank 8	0,1,2,3	0	null	0
+iMC	0xBF	0x10	UNC_M_WR_CAS_RANK7.ALLBANKS	WR_CAS Access to Rank 7; All Banks	0,1,2,3	0	null	0
+iMC	0xBF	0x0	UNC_M_WR_CAS_RANK7.BANK0	WR_CAS Access to Rank 7; Bank 0	0,1,2,3	0	null	0
+iMC	0xBF	0x3	UNC_M_WR_CAS_RANK7.BANK3	WR_CAS Access to Rank 7; Bank 3	0,1,2,3	0	null	0
+iMC	0xBF	0x5	UNC_M_WR_CAS_RANK7.BANK5	WR_CAS Access to Rank 7; Bank 5	0,1,2,3	0	null	0
+iMC	0xBF	0x6	UNC_M_WR_CAS_RANK7.BANK6	WR_CAS Access to Rank 7; Bank 6	0,1,2,3	0	null	0
+iMC	0xBF	0x7	UNC_M_WR_CAS_RANK7.BANK7	WR_CAS Access to Rank 7; Bank 7	0,1,2,3	0	null	0
+iMC	0xBF	0x9	UNC_M_WR_CAS_RANK7.BANK9	WR_CAS Access to Rank 7; Bank 9	0,1,2,3	0	null	0
+iMC	0xBF	0xA	UNC_M_WR_CAS_RANK7.BANK10	WR_CAS Access to Rank 7; Bank 10	0,1,2,3	0	null	0
+iMC	0xBF	0xB	UNC_M_WR_CAS_RANK7.BANK11	WR_CAS Access to Rank 7; Bank 11	0,1,2,3	0	null	0
+iMC	0xBF	0xC	UNC_M_WR_CAS_RANK7.BANK12	WR_CAS Access to Rank 7; Bank 12	0,1,2,3	0	null	0
+iMC	0xBF	0xD	UNC_M_WR_CAS_RANK7.BANK13	WR_CAS Access to Rank 7; Bank 13	0,1,2,3	0	null	0
+iMC	0xBF	0xE	UNC_M_WR_CAS_RANK7.BANK14	WR_CAS Access to Rank 7; Bank 14	0,1,2,3	0	null	0
+iMC	0xBF	0xF	UNC_M_WR_CAS_RANK7.BANK15	WR_CAS Access to Rank 7; Bank 15	0,1,2,3	0	null	0
+iMC	0xBF	0x11	UNC_M_WR_CAS_RANK7.BANKG0	WR_CAS Access to Rank 7; Bank Group 0 (Banks 0-3)	0,1,2,3	0	null	0
+iMC	0xBF	0x12	UNC_M_WR_CAS_RANK7.BANKG1	WR_CAS Access to Rank 7; Bank Group 1 (Banks 4-7)	0,1,2,3	0	null	0
+iMC	0xBF	0x13	UNC_M_WR_CAS_RANK7.BANKG2	WR_CAS Access to Rank 7; Bank Group 2 (Banks 8-11)	0,1,2,3	0	null	0
+iMC	0xBF	0x14	UNC_M_WR_CAS_RANK7.BANKG3	WR_CAS Access to Rank 7; Bank Group 3 (Banks 12-15)	0,1,2,3	0	null	0
+UBOX	0x0	0x0	UNC_U_CLOCKTICKS	tbd	0	0	null	0
+CBO	0x11	0x2	UNC_C_RxR_OCCUPANCY.IRQ_REJ	Ingress Occupancy; IRQ Rejected	0	0	null	0
+HA	0x3	0x1	UNC_H_TRACKER_CYCLES_NE.LOCAL	Tracker Cycles Not Empty; Local Requests	0,1,2,3	0	null	0
+HA	0x3	0x2	UNC_H_TRACKER_CYCLES_NE.REMOTE	Tracker Cycles Not Empty; Remote Requests	0,1,2,3	0	null	0
+HA	0x3	0x3	UNC_H_TRACKER_CYCLES_NE.ALL	Tracker Cycles Not Empty; All Requests	0,1,2,3	0	null	0
+IRP	0x14	0x80	UNC_I_MISC0.PF_TIMEOUT	Misc Events - Set 0; Prefetch TimeOut	0,1	0	null	0
+iMC	0x0	0x0	UNC_M_DCLOCKTICKS	DRAM Clockticks	0,1,2,3	0	null	0
+CBO	0x37	0x4	UNC_C_LLC_VICTIMS.I_STATE	Lines Victimized; Lines in S State	0,1,2,3	0	null	0
+PCU	0x4E	0x0	UNC_P_PKG_RESIDENCY_C1E_CYCLES	Package C State Residency - C1E	0,1,2,3	0	null	0
+PCU	0x79	0x0	UNC_P_UFS_TRANSITIONS_RING_GV	tbd	0,1,2,3	0	null	0

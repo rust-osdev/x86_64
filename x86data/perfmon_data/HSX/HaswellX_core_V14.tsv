@@ -1,0 +1,332 @@
+# Performance Monitoring Events for Intel(R) Xeon(R) processor E5 v3 family based on the Haswell-E microarchitecture - V14
+# 8/3/2015 11:49:51 AM
+# Copyright (c) 2007 - 2014 Intel Corporation. All rights reserved.
+EventCode	UMask	EventName	BriefDescription	Counter	CounterHTOff	SampleAfterValue	MSRIndex	MSRValue	TakenAlone	CounterMask	Invert	AnyThread	EdgeDetect	PEBS	Data_LA	L1_Hit_Indication	Errata	ELLC
+0x00	0x01	INST_RETIRED.ANY	Instructions retired from execution.	Fixed counter 1	Fixed counter 1	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x00	0x02	CPU_CLK_UNHALTED.THREAD	Core cycles when the thread is not in halt state.	Fixed counter 2	Fixed counter 2	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x00	0x03	CPU_CLK_UNHALTED.REF_TSC	Reference cycles when the core is not in halt state.	Fixed counter 3	Fixed counter 3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x03	0x02	LD_BLOCKS.STORE_FORWARD	loads blocked by overlapping with store buffer that cannot be forwarded	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x03	0x08	LD_BLOCKS.NO_SR	The number of times that split load operations are temporarily blocked because all resources for handling the split accesses are in use	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x05	0x01	MISALIGN_MEM_REF.LOADS	Speculative cache line split load uops dispatched to L1 cache	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x05	0x02	MISALIGN_MEM_REF.STORES	Speculative cache line split STA uops dispatched to L1 cache	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x07	0x01	LD_BLOCKS_PARTIAL.ADDRESS_ALIAS	False dependencies in MOB due to partial compare on address.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x01	DTLB_LOAD_MISSES.MISS_CAUSES_A_WALK	Load misses in all DTLB levels that cause page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x02	DTLB_LOAD_MISSES.WALK_COMPLETED_4K	Demand load Miss in all translation lookaside buffer (TLB) levels causes a page walk that completes (4K).	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x04	DTLB_LOAD_MISSES.WALK_COMPLETED_2M_4M	Demand load Miss in all translation lookaside buffer (TLB) levels causes a page walk that completes (2M/4M).	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x10	DTLB_LOAD_MISSES.WALK_DURATION	Cycles when PMH is busy with page walks	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x20	DTLB_LOAD_MISSES.STLB_HIT_4K	Load misses that miss the  DTLB and hit the STLB (4K)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x40	DTLB_LOAD_MISSES.STLB_HIT_2M	Load misses that miss the  DTLB and hit the STLB (2M)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x80	DTLB_LOAD_MISSES.PDE_CACHE_MISS	DTLB demand load misses with low part of linear-to-physical address translation missed	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x0D	0x03	INT_MISC.RECOVERY_CYCLES	Number of cycles waiting for the checkpoints in Resource Allocation Table (RAT) to be recovered after Nuke due to all other cases except JEClear (e.g. whenever a ucode assist is needed like SSE exception, memory disambiguation, etc...)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x0E	0x01	UOPS_ISSUED.ANY	Uops that Resource Allocation Table (RAT) issues to Reservation Station (RS)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x0E	0x10	UOPS_ISSUED.FLAGS_MERGE	Number of flags-merge uops being allocated. Such uops considered perf sensitive; added by GSR u-arch.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x0E	0x20	UOPS_ISSUED.SLOW_LEA	Number of slow LEA uops being allocated. A uop is generally considered SlowLea if it has 3 sources (e.g. 2 sources + immediate) regardless if as a result of LEA instruction or not.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x0E	0x40	UOPS_ISSUED.SINGLE_MUL	Number of Multiply packed/scalar single precision uops allocated	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x0E	0x01	UOPS_ISSUED.STALL_CYCLES	Cycles when Resource Allocation Table (RAT) does not issue Uops to Reservation Station (RS) for the thread	0,1,2,3	0,1,2,3	2000003	0	0	0	1	1	0	0	0	0	0	null	0
+0x0E	0x01	UOPS_ISSUED.CORE_STALL_CYCLES	Cycles when Resource Allocation Table (RAT) does not issue Uops to Reservation Station (RS) for all threads	0,1,2,3	0,1,2,3	2000003	0	0	0	1	1	1	0	0	0	0	null	0
+0x14	0x02	ARITH.DIVIDER_UOPS	Any uop executed by the Divider. (This includes all divide uops, sqrt, ...)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x21	L2_RQSTS.DEMAND_DATA_RD_MISS	Demand Data Read miss L2, no rejects	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x41	L2_RQSTS.DEMAND_DATA_RD_HIT	Demand Data Read requests that hit L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x30	L2_RQSTS.L2_PF_MISS	L2 prefetch requests that miss L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x50	L2_RQSTS.L2_PF_HIT	L2 prefetch requests that hit L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0xE1	L2_RQSTS.ALL_DEMAND_DATA_RD	Demand Data Read requests	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0xE2	L2_RQSTS.ALL_RFO	RFO requests to L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0xE4	L2_RQSTS.ALL_CODE_RD	L2 code requests	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0xF8	L2_RQSTS.ALL_PF	Requests from L2 hardware prefetchers	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x27	0x50	L2_DEMAND_RQSTS.WB_HIT	Not rejected writebacks that hit L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x2e	0x41	LONGEST_LAT_CACHE.MISS	Core-originated cacheable demand requests missed L3	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x2e	0x4F	LONGEST_LAT_CACHE.REFERENCE	Core-originated cacheable demand requests that refer to L3	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x3c	0x01	CPU_CLK_THREAD_UNHALTED.REF_XCLK	Reference cycles when the thread is unhalted (counts at 100 MHz rate)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x3c	0x02	CPU_CLK_THREAD_UNHALTED.ONE_THREAD_ACTIVE	Count XClk pulses when this thread is unhalted and the other thread is halted.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x48	0x01	L1D_PEND_MISS.PENDING	L1D miss oustandings duration in cycles	2	2	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x48	0x02	L1D_PEND_MISS.REQUEST_FB_FULL	Number of times a request needed a FB entry but there was no entry available for it. That is the FB unavailability was dominant reason for blocking the request. A request includes cacheable/uncacheable demands that is load, store or SW prefetch. HWP are e	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x48	0x01	L1D_PEND_MISS.PENDING_CYCLES	Cycles with L1D load Misses outstanding.	2	2	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x49	0x01	DTLB_STORE_MISSES.MISS_CAUSES_A_WALK	Store misses in all DTLB levels that cause page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x02	DTLB_STORE_MISSES.WALK_COMPLETED_4K	Store miss in all TLB levels causes a page walk that completes. (4K)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x04	DTLB_STORE_MISSES.WALK_COMPLETED_2M_4M	Store misses in all DTLB levels that cause completed page walks (2M/4M)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x10	DTLB_STORE_MISSES.WALK_DURATION	Cycles when PMH is busy with page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x20	DTLB_STORE_MISSES.STLB_HIT_4K	Store misses that miss the  DTLB and hit the STLB (4K)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x40	DTLB_STORE_MISSES.STLB_HIT_2M	Store misses that miss the  DTLB and hit the STLB (2M)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x80	DTLB_STORE_MISSES.PDE_CACHE_MISS	DTLB store misses with low part of linear-to-physical address translation missed	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x4c	0x01	LOAD_HIT_PRE.SW_PF	Not software-prefetch load dispatches that hit FB allocated for software prefetch	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x4c	0x02	LOAD_HIT_PRE.HW_PF	Not software-prefetch load dispatches that hit FB allocated for hardware prefetch	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x4f	0x10	EPT.WALK_CYCLES	Cycle count for an Extended Page table walk.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x51	0x01	L1D.REPLACEMENT	L1D data line replacements	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x01	TX_MEM.ABORT_CONFLICT	Number of times a transactional abort was signaled due to a data conflict on a transactionally accessed address	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x02	TX_MEM.ABORT_CAPACITY_WRITE	Number of times a transactional abort was signaled due to a data capacity limitation for transactional writes.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x04	TX_MEM.ABORT_HLE_STORE_TO_ELIDED_LOCK	Number of times a HLE transactional region aborted due to a non XRELEASE prefixed instruction writing to an elided lock in the elision buffer	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x08	TX_MEM.ABORT_HLE_ELISION_BUFFER_NOT_EMPTY	Number of times an HLE transactional execution aborted due to NoAllocatedElisionBuffer being non-zero.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x10	TX_MEM.ABORT_HLE_ELISION_BUFFER_MISMATCH	Number of times an HLE transactional execution aborted due to XRELEASE lock not satisfying the address and value requirements in the elision buffer	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x20	TX_MEM.ABORT_HLE_ELISION_BUFFER_UNSUPPORTED_ALIGNMENT	Number of times an HLE transactional execution aborted due to an unsupported read alignment from the elision buffer.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x54	0x40	TX_MEM.HLE_ELISION_BUFFER_FULL	Number of times HLE lock could not be elided due to ElisionBufferAvailable being zero.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x58	0x01	MOVE_ELIMINATION.INT_ELIMINATED	Number of integer Move Elimination candidate uops that were eliminated.	0,1,2,3	0,1,2,3,4,5,6,7	1000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x58	0x02	MOVE_ELIMINATION.SIMD_ELIMINATED	Number of SIMD Move Elimination candidate uops that were eliminated.	0,1,2,3	0,1,2,3,4,5,6,7	1000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x58	0x04	MOVE_ELIMINATION.INT_NOT_ELIMINATED	Number of integer Move Elimination candidate uops that were not eliminated.	0,1,2,3	0,1,2,3,4,5,6,7	1000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x58	0x08	MOVE_ELIMINATION.SIMD_NOT_ELIMINATED	Number of SIMD Move Elimination candidate uops that were not eliminated.	0,1,2,3	0,1,2,3,4,5,6,7	1000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5C	0x01	CPL_CYCLES.RING0	Unhalted core cycles when the thread is in ring 0	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5C	0x02	CPL_CYCLES.RING123	Unhalted core cycles when thread is in rings 1, 2, or 3	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5C	0x01	CPL_CYCLES.RING0_TRANS	Number of intervals between processor halts while thread is in ring 0	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	1	0	0	1	0	0	0	null	0
+0x5d	0x01	TX_EXEC.MISC1	Counts the number of times a class of instructions that may cause a transactional abort was executed. Since this is the count of execution, it may not always cause a transactional abort.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5d	0x02	TX_EXEC.MISC2	Counts the number of times a class of instructions (e.g., vzeroupper) that may cause a transactional abort was executed inside a transactional region	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5d	0x04	TX_EXEC.MISC3	Counts the number of times an instruction execution caused the transactional nest count supported to be exceeded	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5d	0x08	TX_EXEC.MISC4	Counts the number of times a XBEGIN instruction was executed inside an HLE transactional region.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5d	0x10	TX_EXEC.MISC5	Counts the number of times an HLE XACQUIRE instruction was executed inside an RTM transactional region	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x5E	0x01	RS_EVENTS.EMPTY_CYCLES	Cycles when Reservation Station (RS) is empty for the thread	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x60	0x01	OFFCORE_REQUESTS_OUTSTANDING.DEMAND_DATA_RD	Offcore outstanding Demand Data Read transactions in uncore queue.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x60	0x02	OFFCORE_REQUESTS_OUTSTANDING.DEMAND_CODE_RD	Offcore outstanding code reads transactions in SuperQueue (SQ), queue to uncore, every cycle	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x60	0x04	OFFCORE_REQUESTS_OUTSTANDING.DEMAND_RFO	Offcore outstanding RFO store transactions in SuperQueue (SQ), queue to uncore	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x60	0x08	OFFCORE_REQUESTS_OUTSTANDING.ALL_DATA_RD	Offcore outstanding cacheable Core Data Read transactions in SuperQueue (SQ), queue to uncore	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x60	0x01	OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DEMAND_DATA_RD	Cycles when offcore outstanding Demand Data Read transactions are present in SuperQueue (SQ), queue to uncore	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x60	0x08	OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DATA_RD	Cycles when offcore outstanding cacheable Core Data Read transactions are present in SuperQueue (SQ), queue to uncore	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x63	0x01	LOCK_CYCLES.SPLIT_LOCK_UC_LOCK_DURATION	Cycles when L1 and L2 are locked due to UC or split lock	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x63	0x02	LOCK_CYCLES.CACHE_LOCK_DURATION	Cycles when L1D is locked	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x02	IDQ.EMPTY	Instruction Decode Queue (IDQ) empty cycles	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x04	IDQ.MITE_UOPS	Uops delivered to Instruction Decode Queue (IDQ) from MITE path	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x08	IDQ.DSB_UOPS	Uops delivered to Instruction Decode Queue (IDQ) from the Decode Stream Buffer (DSB) path	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x10	IDQ.MS_DSB_UOPS	Uops initiated by Decode Stream Buffer (DSB) that are being delivered to Instruction Decode Queue (IDQ) while Microcode Sequenser (MS) is busy	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x20	IDQ.MS_MITE_UOPS	Uops initiated by MITE and delivered to Instruction Decode Queue (IDQ) while Microcode Sequenser (MS) is busy	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x30	IDQ.MS_UOPS	Uops delivered to Instruction Decode Queue (IDQ) while Microcode Sequenser (MS) is busy	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x79	0x30	IDQ.MS_CYCLES	Cycles when uops are being delivered to Instruction Decode Queue (IDQ) while Microcode Sequenser (MS) is busy	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x79	0x04	IDQ.MITE_CYCLES	Cycles when uops are being delivered to Instruction Decode Queue (IDQ) from MITE path	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x79	0x08	IDQ.DSB_CYCLES	Cycles when uops are being delivered to Instruction Decode Queue (IDQ) from Decode Stream Buffer (DSB) path	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x79	0x10	IDQ.MS_DSB_CYCLES	Cycles when uops initiated by Decode Stream Buffer (DSB) are being delivered to Instruction Decode Queue (IDQ) while Microcode Sequenser (MS) is busy	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x79	0x10	IDQ.MS_DSB_OCCUR	Deliveries to Instruction Decode Queue (IDQ) initiated by Decode Stream Buffer (DSB) while Microcode Sequenser (MS) is busy	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	1	0	0	0	null	0
+0x79	0x18	IDQ.ALL_DSB_CYCLES_4_UOPS	Cycles Decode Stream Buffer (DSB) is delivering 4 Uops	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	4	0	0	0	0	0	0	null	0
+0x79	0x18	IDQ.ALL_DSB_CYCLES_ANY_UOPS	Cycles Decode Stream Buffer (DSB) is delivering any Uop	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x79	0x24	IDQ.ALL_MITE_CYCLES_4_UOPS	Cycles MITE is delivering 4 Uops	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	4	0	0	0	0	0	0	null	0
+0x79	0x24	IDQ.ALL_MITE_CYCLES_ANY_UOPS	Cycles MITE is delivering any Uop	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x79	0x3c	IDQ.MITE_ALL_UOPS	Uops delivered to Instruction Decode Queue (IDQ) from MITE path	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x80	0x01	ICACHE.HIT	Number of Instruction Cache, Streaming Buffer and Victim Cache Reads. both cacheable and noncacheable, including UC fetches	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x80	0x02	ICACHE.MISSES	Number of Instruction Cache, Streaming Buffer and Victim Cache Misses. Includes Uncacheable accesses.	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x80	0x04	ICACHE.IFETCH_STALL	Cycles where a code fetch is stalled due to L1 instruction-cache miss.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x01	ITLB_MISSES.MISS_CAUSES_A_WALK	Misses at all ITLB levels that cause page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x02	ITLB_MISSES.WALK_COMPLETED_4K	Code miss in all TLB levels causes a page walk that completes. (4K)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x04	ITLB_MISSES.WALK_COMPLETED_2M_4M	Code miss in all TLB levels causes a page walk that completes. (2M/4M)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x10	ITLB_MISSES.WALK_DURATION	Cycles when PMH is busy with page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x20	ITLB_MISSES.STLB_HIT_4K	Core misses that miss the  DTLB and hit the STLB (4K)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x40	ITLB_MISSES.STLB_HIT_2M	Code misses that miss the  DTLB and hit the STLB (2M)	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x87	0x01	ILD_STALL.LCP	Stalls caused by changing prefix length of the instruction.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x87	0x04	ILD_STALL.IQ_FULL	Stall cycles because IQ is full	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0x41	BR_INST_EXEC.NONTAKEN_CONDITIONAL	Not taken macro-conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0x81	BR_INST_EXEC.TAKEN_CONDITIONAL	Taken speculative and retired macro-conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0x82	BR_INST_EXEC.TAKEN_DIRECT_JUMP	Taken speculative and retired macro-conditional branch instructions excluding calls and indirects	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0x84	BR_INST_EXEC.TAKEN_INDIRECT_JUMP_NON_CALL_RET	Taken speculative and retired indirect branches excluding calls and returns	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0x88	BR_INST_EXEC.TAKEN_INDIRECT_NEAR_RETURN	Taken speculative and retired indirect branches with return mnemonic	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0x90	BR_INST_EXEC.TAKEN_DIRECT_NEAR_CALL	Taken speculative and retired direct near calls	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xA0	BR_INST_EXEC.TAKEN_INDIRECT_NEAR_CALL	Taken speculative and retired indirect calls	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xC1	BR_INST_EXEC.ALL_CONDITIONAL	Speculative and retired macro-conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xC2	BR_INST_EXEC.ALL_DIRECT_JMP	Speculative and retired macro-unconditional branches excluding calls and indirects	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xC4	BR_INST_EXEC.ALL_INDIRECT_JUMP_NON_CALL_RET	Speculative and retired indirect branches excluding calls and returns	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xC8	BR_INST_EXEC.ALL_INDIRECT_NEAR_RETURN	Speculative and retired indirect return branches.	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xD0	BR_INST_EXEC.ALL_DIRECT_NEAR_CALL	Speculative and retired direct near calls	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x88	0xFF	BR_INST_EXEC.ALL_BRANCHES	Speculative and retired  branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0x41	BR_MISP_EXEC.NONTAKEN_CONDITIONAL	Not taken speculative and retired mispredicted macro conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0x81	BR_MISP_EXEC.TAKEN_CONDITIONAL	Taken speculative and retired mispredicted macro conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0x84	BR_MISP_EXEC.TAKEN_INDIRECT_JUMP_NON_CALL_RET	Taken speculative and retired mispredicted indirect branches excluding calls and returns	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0x88	BR_MISP_EXEC.TAKEN_RETURN_NEAR	Taken speculative and retired mispredicted indirect branches with return mnemonic	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0xC1	BR_MISP_EXEC.ALL_CONDITIONAL	Speculative and retired mispredicted macro conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0xC4	BR_MISP_EXEC.ALL_INDIRECT_JUMP_NON_CALL_RET	Mispredicted indirect branches excluding calls and returns	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0xFF	BR_MISP_EXEC.ALL_BRANCHES	Speculative and retired mispredicted macro conditional branches	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x9c	0x01	IDQ_UOPS_NOT_DELIVERED.CORE	Uops not delivered to Resource Allocation Table (RAT) per thread when backend of the machine is not stalled	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x9C	0x01	IDQ_UOPS_NOT_DELIVERED.CYCLES_0_UOPS_DELIV.CORE	Cycles per thread when 4 or more uops are not delivered to Resource Allocation Table (RAT) when backend of the machine is not stalled	0,1,2,3	0,1,2,3	2000003	0	0	0	4	0	0	0	0	0	0	null	0
+0x9C	0x01	IDQ_UOPS_NOT_DELIVERED.CYCLES_LE_1_UOP_DELIV.CORE	Cycles per thread when 3 or more uops are not delivered to Resource Allocation Table (RAT) when backend of the machine is not stalled	0,1,2,3	0,1,2,3	2000003	0	0	0	3	0	0	0	0	0	0	null	0
+0x9C	0x01	IDQ_UOPS_NOT_DELIVERED.CYCLES_LE_2_UOP_DELIV.CORE	Cycles with less than 2 uops delivered by the front end.	0,1,2,3	0,1,2,3	2000003	0	0	0	2	0	0	0	0	0	0	null	0
+0x9C	0x01	IDQ_UOPS_NOT_DELIVERED.CYCLES_LE_3_UOP_DELIV.CORE	Cycles with less than 3 uops delivered by the front end.	0,1,2,3	0,1,2,3	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0x9C	0x01	IDQ_UOPS_NOT_DELIVERED.CYCLES_FE_WAS_OK	Counts cycles FE delivered 4 uops or Resource Allocation Table (RAT) was stalling FE.	0,1,2,3	0,1,2,3	2000003	0	0	0	1	1	0	0	0	0	0	null	0
+0xA1	0x01	UOPS_EXECUTED_PORT.PORT_0	Cycles per thread when uops are executed in port 0	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x02	UOPS_EXECUTED_PORT.PORT_1	Cycles per thread when uops are executed in port 1	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x04	UOPS_EXECUTED_PORT.PORT_2	Cycles per thread when uops are executed in port 2	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x08	UOPS_EXECUTED_PORT.PORT_3	Cycles per thread when uops are executed in port 3	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x10	UOPS_EXECUTED_PORT.PORT_4	Cycles per thread when uops are executed in port 4	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x20	UOPS_EXECUTED_PORT.PORT_5	Cycles per thread when uops are executed in port 5	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x40	UOPS_EXECUTED_PORT.PORT_6	Cycles per thread when uops are executed in port 6	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x80	UOPS_EXECUTED_PORT.PORT_7	Cycles per thread when uops are executed in port 7	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA2	0x01	RESOURCE_STALLS.ANY	Resource-related stall cycles	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA2	0x04	RESOURCE_STALLS.RS	Cycles stalled due to no eligible RS entry available.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA2	0x08	RESOURCE_STALLS.SB	Cycles stalled due to no store buffers available. (not including draining form sync).	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA2	0x10	RESOURCE_STALLS.ROB	Cycles stalled due to re-order buffer full.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA3	0x01	CYCLE_ACTIVITY.CYCLES_L2_PENDING	Cycles with pending L2 cache miss loads.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0xA3	0x08	CYCLE_ACTIVITY.CYCLES_L1D_PENDING	Cycles with pending L1 cache miss loads.	2	2	2000003	0	0	0	8	0	0	0	0	0	0	null	0
+0xA3	0x02	CYCLE_ACTIVITY.CYCLES_LDM_PENDING	Cycles with pending memory loads.	0,1,2,3	0,1,2,3	2000003	0	0	0	2	0	0	0	0	0	0	null	0
+0xA3	0x04	CYCLE_ACTIVITY.CYCLES_NO_EXECUTE	Total execution stalls	0,1,2,3	0,1,2,3	2000003	0	0	0	4	0	0	0	0	0	0	null	0
+0xA3	0x05	CYCLE_ACTIVITY.STALLS_L2_PENDING	Execution stalls due to L2 cache misses.	0,1,2,3	0,1,2,3	2000003	0	0	0	5	0	0	0	0	0	0	null	0
+0xA3	0x06	CYCLE_ACTIVITY.STALLS_LDM_PENDING	Execution stalls due to memory subsystem.	0,1,2,3	0,1,2,3	2000003	0	0	0	6	0	0	0	0	0	0	null	0
+0xA3	0x0C	CYCLE_ACTIVITY.STALLS_L1D_PENDING	Execution stalls due to L1 data cache misses	2	2	2000003	0	0	0	12	0	0	0	0	0	0	null	0
+0xa8	0x01	LSD.UOPS	Number of Uops delivered by the LSD.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xAB	0x02	DSB2MITE_SWITCHES.PENALTY_CYCLES	Decode Stream Buffer (DSB)-to-MITE switch true penalty cycles.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xae	0x01	ITLB.ITLB_FLUSH	Flushing of the Instruction TLB (ITLB) pages, includes 4k/2M/4M pages.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xb0	0x01	OFFCORE_REQUESTS.DEMAND_DATA_RD	Demand Data Read requests sent to uncore	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xb0	0x02	OFFCORE_REQUESTS.DEMAND_CODE_RD	Cacheable and noncachaeble code read requests	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xb0	0x04	OFFCORE_REQUESTS.DEMAND_RFO	Demand RFO requests including regular RFOs, locks, ItoM	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xb0	0x08	OFFCORE_REQUESTS.ALL_DATA_RD	Demand and prefetch data reads	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xb1	0x02	UOPS_EXECUTED.CORE	Number of uops executed on the core.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	HSM31	0
+0xB1	0x01	UOPS_EXECUTED.STALL_CYCLES	Counts number of cycles no uops were dispatched to be executed on this thread.	0,1,2,3	0,1,2,3	2000003	0	0	0	1	1	0	0	0	0	0	null	0
+0xb2	0x01	OFFCORE_REQUESTS_BUFFER.SQ_FULL	Offcore requests buffer cannot take more entries for this thread core.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x11	PAGE_WALKER_LOADS.DTLB_L1	Number of DTLB page walker hits in the L1+FB	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x21	PAGE_WALKER_LOADS.ITLB_L1	Number of ITLB page walker hits in the L1+FB	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x41	PAGE_WALKER_LOADS.EPT_DTLB_L1	Counts the number of Extended Page Table walks from the DTLB that hit in the L1 and FB.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x81	PAGE_WALKER_LOADS.EPT_ITLB_L1	Counts the number of Extended Page Table walks from the ITLB that hit in the L1 and FB.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x12	PAGE_WALKER_LOADS.DTLB_L2	Number of DTLB page walker hits in the L2	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x22	PAGE_WALKER_LOADS.ITLB_L2	Number of ITLB page walker hits in the L2	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x42	PAGE_WALKER_LOADS.EPT_DTLB_L2	Counts the number of Extended Page Table walks from the DTLB that hit in the L2.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x82	PAGE_WALKER_LOADS.EPT_ITLB_L2	Counts the number of Extended Page Table walks from the ITLB that hit in the L2.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x14	PAGE_WALKER_LOADS.DTLB_L3	Number of DTLB page walker hits in the L3 + XSNP	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x24	PAGE_WALKER_LOADS.ITLB_L3	Number of ITLB page walker hits in the L3 + XSNP	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x44	PAGE_WALKER_LOADS.EPT_DTLB_L3	Counts the number of Extended Page Table walks from the DTLB that hit in the L3.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x84	PAGE_WALKER_LOADS.EPT_ITLB_L3	Counts the number of Extended Page Table walks from the ITLB that hit in the L2.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x18	PAGE_WALKER_LOADS.DTLB_MEMORY	Number of DTLB page walker hits in Memory	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x28	PAGE_WALKER_LOADS.ITLB_MEMORY	Number of ITLB page walker hits in Memory	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x48	PAGE_WALKER_LOADS.EPT_DTLB_MEMORY	Counts the number of Extended Page Table walks from the DTLB that hit in memory.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBC	0x88	PAGE_WALKER_LOADS.EPT_ITLB_MEMORY	Counts the number of Extended Page Table walks from the ITLB that hit in memory.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBD	0x01	TLB_FLUSH.DTLB_THREAD	DTLB flush attempts of the thread-specific entries	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xBD	0x20	TLB_FLUSH.STLB_ANY	STLB flush attempts	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC0	0x00	INST_RETIRED.ANY_P	Number of instructions retired. General Counter   - architectural event	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC0	0x01	INST_RETIRED.PREC_DIST	Precise instruction retired event with HW to reduce effect of PEBS shadow in IP distribution	1	1	2000003	0	0	0	0	0	0	0	2	0	0	null	0
+0xC1	0x08	OTHER_ASSISTS.AVX_TO_SSE	Number of transitions from AVX-256 to legacy SSE when penalty applicable.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	HSM57	0
+0xC1	0x10	OTHER_ASSISTS.SSE_TO_AVX	Number of transitions from SSE to AVX-256 when penalty applicable.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	HSM57	0
+0xC1	0x40	OTHER_ASSISTS.ANY_WB_ASSIST	Number of times any microcode assist is invoked by HW upon uop writeback.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC2	0x01	UOPS_RETIRED.ALL	Actually retired uops.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	1	1	0	null	0
+0xC2	0x02	UOPS_RETIRED.RETIRE_SLOTS	Retirement slots used.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	1	0	0	null	0
+0xC2	0x01	UOPS_RETIRED.STALL_CYCLES	Cycles without actually retired uops.	0,1,2,3	0,1,2,3	2000003	0	0	0	1	1	0	0	0	0	0	null	0
+0xC2	0x01	UOPS_RETIRED.TOTAL_CYCLES	Cycles with less than 10 actually retired uops.	0,1,2,3	0,1,2,3	2000003	0	0	0	10	1	0	0	0	0	0	null	0
+0xC2	0x01	UOPS_RETIRED.CORE_STALL_CYCLES	Cycles without actually retired uops.	0,1,2,3	0,1,2,3	2000003	0	0	0	1	1	1	0	0	0	0	null	0
+0xC3	0x01	MACHINE_CLEARS.CYCLES	Cycles there was a Nuke. Account for both thread-specific and All Thread Nukes.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC3	0x02	MACHINE_CLEARS.MEMORY_ORDERING	Counts the number of machine clears due to memory order conflicts.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC3	0x04	MACHINE_CLEARS.SMC	Self-modifying code (SMC) detected.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC3	0x20	MACHINE_CLEARS.MASKMOV	This event counts the number of executed Intel AVX masked load operations that refer to an illegal address range with the mask bits set to 0.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC4	0x01	BR_INST_RETIRED.CONDITIONAL	Conditional branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	1	0	0	null	0
+0xC4	0x02	BR_INST_RETIRED.NEAR_CALL	Direct and indirect near call instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	1	0	0	null	0
+0xC4	0x00	BR_INST_RETIRED.ALL_BRANCHES	All (macro) branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	0	0	0	null	0
+0xC4	0x08	BR_INST_RETIRED.NEAR_RETURN	Return instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	1	0	0	null	0
+0xC4	0x10	BR_INST_RETIRED.NOT_TAKEN	Not taken branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	0	0	0	null	0
+0xC4	0x20	BR_INST_RETIRED.NEAR_TAKEN	Taken branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	1	0	0	null	0
+0xC4	0x40	BR_INST_RETIRED.FAR_BRANCH	Far branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC4	0x04	BR_INST_RETIRED.ALL_BRANCHES_PEBS	All (macro) branch instructions retired. 	0,1,2,3	0,1,2,3	400009	0	0	0	0	0	0	0	2	0	0	null	0
+0xC4	0x02	BR_INST_RETIRED.NEAR_CALL_R3	Direct and indirect macro near call instructions retired (captured in ring 3).	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	1	0	0	null	0
+0xC5	0x01	BR_MISP_RETIRED.CONDITIONAL	Mispredicted conditional branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	1	0	0	null	0
+0xC5	0x00	BR_MISP_RETIRED.ALL_BRANCHES	All mispredicted macro branch instructions retired.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	0	0	0	null	0
+0xC5	0x04	BR_MISP_RETIRED.ALL_BRANCHES_PEBS	Mispredicted macro branch instructions retired. 	0,1,2,3	0,1,2,3	400009	0	0	0	0	0	0	0	2	0	0	null	0
+0xc8	0x01	HLE_RETIRED.START	Number of times an HLE execution started.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc8	0x02	HLE_RETIRED.COMMIT	Number of times an HLE execution successfully committed	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc8	0x04	HLE_RETIRED.ABORTED	Number of times an HLE execution aborted due to any reasons (multiple categories may count as one). 	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	1	0	0	null	0
+0xc8	0x08	HLE_RETIRED.ABORTED_MISC1	Number of times an HLE execution aborted due to various memory events (e.g., read/write capacity and conflicts).	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc8	0x10	HLE_RETIRED.ABORTED_MISC2	Number of times an HLE execution aborted due to uncommon conditions	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc8	0x20	HLE_RETIRED.ABORTED_MISC3	Number of times an HLE execution aborted due to HLE-unfriendly instructions	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc8	0x40	HLE_RETIRED.ABORTED_MISC4	Number of times an HLE execution aborted due to incompatible memory type	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc8	0x80	HLE_RETIRED.ABORTED_MISC5	Number of times an HLE execution aborted due to none of the previous 4 categories (e.g. interrupts)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x01	RTM_RETIRED.START	Number of times an RTM execution started.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x02	RTM_RETIRED.COMMIT	Number of times an RTM execution successfully committed	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x04	RTM_RETIRED.ABORTED	Number of times an RTM execution aborted due to any reasons (multiple categories may count as one). 	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	1	0	0	null	0
+0xc9	0x08	RTM_RETIRED.ABORTED_MISC1	Number of times an RTM execution aborted due to various memory events (e.g. read/write capacity and conflicts)	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x10	RTM_RETIRED.ABORTED_MISC2	Number of times an RTM execution aborted due to various memory events (e.g., read/write capacity and conflicts).	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x20	RTM_RETIRED.ABORTED_MISC3	Number of times an RTM execution aborted due to HLE-unfriendly instructions	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x40	RTM_RETIRED.ABORTED_MISC4	Number of times an RTM execution aborted due to incompatible memory type	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xc9	0x80	RTM_RETIRED.ABORTED_MISC5	Number of times an RTM execution aborted due to none of the previous 4 categories (e.g. interrupt)	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xCA	0x02	FP_ASSIST.X87_OUTPUT	Number of X87 assists due to output value.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xCA	0x04	FP_ASSIST.X87_INPUT	Number of X87 assists due to input value.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xCA	0x08	FP_ASSIST.SIMD_OUTPUT	Number of SIMD FP assists due to Output values	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xCA	0x10	FP_ASSIST.SIMD_INPUT	Number of SIMD FP assists due to input values	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xCA	0x1E	FP_ASSIST.ANY	Cycles with any input/output SSE or FP assist	0,1,2,3	0,1,2,3	100003	0	0	0	1	0	0	0	0	0	0	null	0
+0xCC	0x20	ROB_MISC_EVENTS.LBR_INSERTS	Count cases of saving new LBR	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_4	Loads with latency value being above 4	3	3	100003	0x3F6	0x4	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_8	Loads with latency value being above 8	3	3	50021	0x3F6	0x8	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_16	Loads with latency value being above 16	3	3	20011	0x3F6	0x10	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_32	Loads with latency value being above 32	3	3	100003	0x3F6	0x20	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_64	Loads with latency value being above 64	3	3	2003	0x3F6	0x40	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_128	Loads with latency value being above 128	3	3	1009	0x3F6	0x80	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_256	Loads with latency value being above 256	3	3	503	0x3F6	0x100	1	0	0	0	0	2	0	0	HSM26	0
+0xCD	0x01	MEM_TRANS_RETIRED.LOAD_LATENCY_GT_512	Loads with latency value being above 512	3	3	101	0x3F6	0x200	1	0	0	0	0	2	0	0	HSM26	0
+0xD0	0x11	MEM_UOPS_RETIRED.STLB_MISS_LOADS	Retired load uops that miss the STLB.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD0	0x12	MEM_UOPS_RETIRED.STLB_MISS_STORES	Retired store uops that miss the STLB.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	1	HSM30	0
+0xD0	0x21	MEM_UOPS_RETIRED.LOCK_LOADS	Retired load uops with locked access.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD0	0x41	MEM_UOPS_RETIRED.SPLIT_LOADS	Retired load uops that split across a cacheline boundary.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD0	0x42	MEM_UOPS_RETIRED.SPLIT_STORES	Retired store uops that split across a cacheline boundary.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	1	HSM30	0
+0xD0	0x81	MEM_UOPS_RETIRED.ALL_LOADS	All retired load uops.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD0	0x82	MEM_UOPS_RETIRED.ALL_STORES	All retired store uops.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	1	1	1	HSM30	0
+0xD1	0x01	MEM_LOAD_UOPS_RETIRED.L1_HIT	Retired load uops with L1 cache hits as data sources.	0,1,2,3	0,1,2,3	2000003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD1	0x02	MEM_LOAD_UOPS_RETIRED.L2_HIT	Retired load uops with L2 cache hits as data sources.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD1	0x04	MEM_LOAD_UOPS_RETIRED.L3_HIT	Retired load uops which data sources were data hits in L3 without snoops required.	0,1,2,3	0,1,2,3	50021	0	0	0	0	0	0	0	1	1	0	HSM26, HSM30	0
+0xD1	0x08	MEM_LOAD_UOPS_RETIRED.L1_MISS	Retired load uops misses in L1 cache as data sources.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD1	0x10	MEM_LOAD_UOPS_RETIRED.L2_MISS	Miss in mid-level (L2) cache. Excludes Unknown data-source.	0,1,2,3	0,1,2,3	50021	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD1	0x20	MEM_LOAD_UOPS_RETIRED.L3_MISS	Miss in last-level (L3) cache. Excludes Unknown data-source.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM26, HSM30	0
+0xD1	0x40	MEM_LOAD_UOPS_RETIRED.HIT_LFB	Retired load uops which data sources were load uops missed L1 but hit FB due to preceding miss to the same cache line with data not ready.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD2	0x01	MEM_LOAD_UOPS_L3_HIT_RETIRED.XSNP_MISS	Retired load uops which data sources were L3 hit and cross-core snoop missed in on-pkg core cache.	0,1,2,3	0,1,2,3	20011	0	0	0	0	0	0	0	1	1	0	HSM26, HSM30	0
+0xD2	0x02	MEM_LOAD_UOPS_L3_HIT_RETIRED.XSNP_HIT	Retired load uops which data sources were L3 and cross-core snoop hits in on-pkg core cache.	0,1,2,3	0,1,2,3	20011	0	0	0	0	0	0	0	1	1	0	HSM26, HSM30	0
+0xD2	0x04	MEM_LOAD_UOPS_L3_HIT_RETIRED.XSNP_HITM	Retired load uops which data sources were HitM responses from shared L3.	0,1,2,3	0,1,2,3	20011	0	0	0	0	0	0	0	1	1	0	HSM26, HSM30	0
+0xD2	0x08	MEM_LOAD_UOPS_L3_HIT_RETIRED.XSNP_NONE	Retired load uops which data sources were hits in L3 without snoops required.	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM26, HSM30	0
+0xD3	0x01	MEM_LOAD_UOPS_L3_MISS_RETIRED.LOCAL_DRAM	Data from local DRAM either Snoop not needed or Snoop Miss (RspI)	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD3	0x04	MEM_LOAD_UOPS_L3_MISS_RETIRED.REMOTE_DRAM	Retired load uop whose Data Source was: remote DRAM either Snoop not needed or Snoop Miss (RspI)	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD3	0x10	MEM_LOAD_UOPS_L3_MISS_RETIRED.REMOTE_HITM	Retired load uop whose Data Source was: Remote cache HITM	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0xD3	0x20	MEM_LOAD_UOPS_L3_MISS_RETIRED.REMOTE_FWD	Retired load uop whose Data Source was: forwarded from remote cache	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	1	1	0	HSM30	0
+0x3c	0x00	CPU_CLK_UNHALTED.THREAD_P	Thread cycles when thread is not in halt state	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x01	L2_TRANS.DEMAND_DATA_RD	Demand Data Read requests that access L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x02	L2_TRANS.RFO	RFO requests that access L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x04	L2_TRANS.CODE_RD	L2 cache accesses when fetching instructions	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x08	L2_TRANS.ALL_PF	L2 or L3 HW prefetches that access L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x10	L2_TRANS.L1D_WB	L1D writebacks that access L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x20	L2_TRANS.L2_FILL	L2 fill requests that access L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x40	L2_TRANS.L2_WB	L2 writebacks that access L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf0	0x80	L2_TRANS.ALL_REQUESTS	Transactions accessing L2 pipe	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf1	0x01	L2_LINES_IN.I	L2 cache lines in I state filling L2	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf1	0x02	L2_LINES_IN.S	L2 cache lines in S state filling L2	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xf1	0x04	L2_LINES_IN.E	L2 cache lines in E state filling L2	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xF1	0x07	L2_LINES_IN.ALL	L2 cache lines filling L2	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xF2	0x05	L2_LINES_OUT.DEMAND_CLEAN	Clean L2 cache lines evicted by demand	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xF2	0x06	L2_LINES_OUT.DEMAND_DIRTY	Dirty L2 cache lines evicted by demand	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x89	0xA0	BR_MISP_EXEC.TAKEN_INDIRECT_NEAR_CALL	Taken speculative and retired mispredicted indirect calls	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x01	UOPS_EXECUTED_PORT.PORT_0_CORE	Cycles per core when uops are exectuted in port 0	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x02	UOPS_EXECUTED_PORT.PORT_1_CORE	Cycles per core when uops are exectuted in port 1	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x04	UOPS_EXECUTED_PORT.PORT_2_CORE	Cycles per core when uops are dispatched to port 2	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x08	UOPS_EXECUTED_PORT.PORT_3_CORE	Cycles per core when uops are dispatched to port 3	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x10	UOPS_EXECUTED_PORT.PORT_4_CORE	Cycles per core when uops are exectuted in port 4	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x20	UOPS_EXECUTED_PORT.PORT_5_CORE	Cycles per core when uops are exectuted in port 5	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x40	UOPS_EXECUTED_PORT.PORT_6_CORE	Cycles per core when uops are exectuted in port 6	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xA1	0x80	UOPS_EXECUTED_PORT.PORT_7_CORE	Cycles per core when uops are dispatched to port 7	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0xC5	0x20	BR_MISP_RETIRED.NEAR_TAKEN	number of near branch instructions retired that were mispredicted and taken.	0,1,2,3	0,1,2,3,4,5,6,7	400009	0	0	0	0	0	0	0	1	0	0	null	0
+0x08	0x0e	DTLB_LOAD_MISSES.WALK_COMPLETED	Demand load Miss in all translation lookaside buffer (TLB) levels causes a page walk that completes of any page size.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x08	0x60	DTLB_LOAD_MISSES.STLB_HIT	Load operations that miss the first DTLB level but hit the second and do not cause page walks	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x42	L2_RQSTS.RFO_HIT	RFO requests that hit L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x22	L2_RQSTS.RFO_MISS	RFO requests that miss L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x44	L2_RQSTS.CODE_RD_HIT	L2 cache hits when fetching instructions, code reads.	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x24	L2_RQSTS.CODE_RD_MISS	L2 cache misses when fetching instructions	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x27	L2_RQSTS.ALL_DEMAND_MISS	Demand requests that miss L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0xe7	L2_RQSTS.ALL_DEMAND_REFERENCES	Demand requests to L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0x3F	L2_RQSTS.MISS	All requests that miss L2 cache	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x24	0xFF	L2_RQSTS.REFERENCES	All L2 requests	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x0e	DTLB_STORE_MISSES.WALK_COMPLETED	Store misses in all DTLB levels that cause completed page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x49	0x60	DTLB_STORE_MISSES.STLB_HIT	Store operations that miss the first TLB level but hit the second and do not cause page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x0e	ITLB_MISSES.WALK_COMPLETED	Misses in all ITLB levels that cause completed page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0x85	0x60	ITLB_MISSES.STLB_HIT	Operations that miss the first ITLB level but hit the second and do not cause any page walks	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xB1	0x01	UOPS_EXECUTED.CYCLES_GE_1_UOP_EXEC	Cycles where at least 1 uop was executed per-thread	0,1,2,3	0,1,2,3	2000003	0	0	0	1	0	0	0	0	0	0	HSM31	0
+0xB1	0x01	UOPS_EXECUTED.CYCLES_GE_2_UOPS_EXEC	Cycles where at least 2 uops were executed per-thread	0,1,2,3	0,1,2,3	2000003	0	0	0	2	0	0	0	0	0	0	HSM31	0
+0xB1	0x01	UOPS_EXECUTED.CYCLES_GE_3_UOPS_EXEC	Cycles where at least 3 uops were executed per-thread	0,1,2,3	0,1,2,3	2000003	0	0	0	3	0	0	0	0	0	0	HSM31	0
+0xB1	0x01	UOPS_EXECUTED.CYCLES_GE_4_UOPS_EXEC	Cycles where at least 4 uops were executed per-thread	0,1,2,3	0,1,2,3	2000003	0	0	0	4	0	0	0	0	0	0	HSM31	0
+0xe6	0x1f	BACLEARS.ANY	Counts the total number when the front end is resteered, mainly when the BPU cannot provide a correct prediction and this is corrected by other branch handling mechanisms at the front end.	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xB7, 0xBB	0x01	OFFCORE_RESPONSE	Offcore response can be programmed only with a specific pair of event select and counter MSR, and with specific event codes and predefine mask bit value in a dedicated MSR to specify attributes of the offcore transaction	0,1,2,3	0,1,2,3	100003	0	0	0	0	0	0	0	0	0	0	null	0
+0xC3	0x01	MACHINE_CLEARS.COUNT	Number of machine clears (nukes) of any type. 	0,1,2,3	0,1,2,3,4,5,6,7	100003	0	0	0	1	0	0	1	0	0	0	null	0
+0xA8	0x01	LSD.CYCLES_ACTIVE	Cycles Uops delivered by the LSD, but didn't come from the decoder	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0xA8	0x01	LSD.CYCLES_4_UOPS	Cycles 4 Uops delivered by the LSD, but didn't come from the decoder	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	4	0	0	0	0	0	0	null	0
+0x5E	0x01	RS_EVENTS.EMPTY_END	Counts end of periods where the Reservation Station (RS) was empty. Could be useful to precisely locate Frontend Latency Bound issues.	0,1,2,3	0,1,2,3,4,5,6,7	200003	0	0	0	1	1	0	1	0	0	0	null	0
+0x79	0x30	IDQ.MS_SWITCHES	Number of switches from DSB (Decode Stream Buffer) or MITE (legacy decode pipeline) to the Microcode Sequencer	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	1	0	0	0	null	0
+0xA1	0x01	UOPS_DISPATCHED_PORT.PORT_0	Cycles per thread when uops are executed in port 0	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x02	UOPS_DISPATCHED_PORT.PORT_1	Cycles per thread when uops are executed in port 1	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x04	UOPS_DISPATCHED_PORT.PORT_2	Cycles per thread when uops are executed in port 2	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x08	UOPS_DISPATCHED_PORT.PORT_3	Cycles per thread when uops are executed in port 3	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x10	UOPS_DISPATCHED_PORT.PORT_4	Cycles per thread when uops are executed in port 4	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x20	UOPS_DISPATCHED_PORT.PORT_5	Cycles per thread when uops are executed in port 5	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x40	UOPS_DISPATCHED_PORT.PORT_6	Cycles per thread when uops are executed in port 6	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0xA1	0x80	UOPS_DISPATCHED_PORT.PORT_7	Cycles per thread when uops are executed in port 7	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x00	0x02	CPU_CLK_UNHALTED.THREAD_ANY	Core cycles when at least one thread on the physical core is not in halt state	Fixed counter 2	Fixed counter 2	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0x3C	0x00	CPU_CLK_UNHALTED.THREAD_P_ANY	Core cycles when at least one thread on the physical core is not in halt state	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0x3C	0x01	CPU_CLK_THREAD_UNHALTED.REF_XCLK_ANY	Reference cycles when the at least one thread on the physical core is unhalted (counts at 100 MHz rate)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	1	0	0	0	0	null	0
+0x0D	0x03	INT_MISC.RECOVERY_CYCLES_ANY	Core cycles the allocator was stalled due to recovery from earlier clear event for any thread running on the physical core (e.g. misprediction or memory nuke)	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	1	0	0	0	0	null	0
+0xb1	0x02	UOPS_EXECUTED.CORE_CYCLES_GE_1	Cycles at least 1 micro-op is executed from any thread on physical core	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0xb1	0x02	UOPS_EXECUTED.CORE_CYCLES_GE_2	Cycles at least 2 micro-op is executed from any thread on physical core	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	2	0	0	0	0	0	0	null	0
+0xb1	0x02	UOPS_EXECUTED.CORE_CYCLES_GE_3	Cycles at least 3 micro-op is executed from any thread on physical core	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	3	0	0	0	0	0	0	null	0
+0xb1	0x02	UOPS_EXECUTED.CORE_CYCLES_GE_4	Cycles at least 4 micro-op is executed from any thread on physical core	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	4	0	0	0	0	0	0	null	0
+0xb1	0x02	UOPS_EXECUTED.CORE_CYCLES_NONE	Cycles with no micro-ops executed from any thread on physical core	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	1	0	0	0	0	0	null	0
+0x60	0x01	OFFCORE_REQUESTS_OUTSTANDING.DEMAND_DATA_RD_GE_6	Cycles with at least 6 offcore outstanding Demand Data Read transactions in uncore queue	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	6	0	0	0	0	0	0	null	0
+0x48	0x01	L1D_PEND_MISS.PENDING_CYCLES_ANY	Cycles with L1D load Misses outstanding from any thread on physical core	2	2	2000003	0	0	0	1	0	1	0	0	0	0	null	0
+0x48	0x02	L1D_PEND_MISS.FB_FULL	Cycles a demand request was blocked due to Fill Buffers inavailability	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	1	0	0	0	0	0	0	null	0
+0xC6	0x07	AVX_INSTS.ALL	Approximate counts of AVX & AVX2 256-bit instructions, including non-arithmetic instructions, loads, and stores.  May count non-AVX instructions that employ 256-bit operations, including (but not necessarily limited to) rep string instructions that use 256-bit loads and stores for optimized performance, XSAVE* and XRSTOR*, and operations that transition the x87 FPU data registers between x87 and MMX.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0
+0x80	0x04	ICACHE.IFDATA_STALL	Cycles where a code fetch is stalled due to L1 instruction-cache miss.	0,1,2,3	0,1,2,3,4,5,6,7	2000003	0	0	0	0	0	0	0	0	0	0	null	0

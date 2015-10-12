@@ -1,0 +1,296 @@
+[
+  {
+    "MATRIX_REQUEST": "DEMAND_DATA_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000001",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts demand data reads"
+  },
+  {
+    "MATRIX_REQUEST": "DEMAND_RFO",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000002",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all demand data writes (RFOs)"
+  },
+  {
+    "MATRIX_REQUEST": "DEMAND_CODE_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000004",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all demand code reads"
+  },
+  {
+    "MATRIX_REQUEST": "COREWB",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000008",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts writebacks (modified to exclusive)"
+  },
+  {
+    "MATRIX_REQUEST": "PF_L2_DATA_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000010",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts prefetch (that bring data to L2) data reads"
+  },
+  {
+    "MATRIX_REQUEST": "PF_L2_RFO",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000020",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all prefetch (that bring data to L2) RFOs"
+  },
+  {
+    "MATRIX_REQUEST": "PF_L2_CODE_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000040",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all prefetch (that bring data to LLC only) code reads"
+  },
+  {
+    "MATRIX_REQUEST": "PF_L3_DATA_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000080",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all prefetch (that bring data to LLC only) data reads"
+  },
+  {
+    "MATRIX_REQUEST": "PF_L3_RFO",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000100",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all prefetch (that bring data to LLC only) RFOs"
+  },
+  {
+    "MATRIX_REQUEST": "PF_L3_CODE_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000200",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts prefetch (that bring data to LLC only) code reads"
+  },
+  {
+    "MATRIX_REQUEST": "OTHER",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000008000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts any other requests"
+  },
+  {
+    "MATRIX_REQUEST": "ALL_PF_DATA_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000090",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all prefetch data reads"
+  },
+  {
+    "MATRIX_REQUEST": "ALL_PF_RFO",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000120",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts prefetch RFOs"
+  },
+  {
+    "MATRIX_REQUEST": "ALL_PF_CODE_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000240",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all prefetch code reads"
+  },
+  {
+    "MATRIX_REQUEST": "ALL_DATA_RD",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000091",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all demand & prefetch data reads"
+  },
+  {
+    "MATRIX_REQUEST": "ALL_RFO",
+    "MATRIX_RESPONSE": "Null",
+    "MATRIX_VALUE": "0x0000000122",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "Counts all demand & prefetch RFOs"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "ANY_RESPONSE",
+    "MATRIX_VALUE": "0x0000010000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "have any response type."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.SNOOP_NONE",
+    "MATRIX_VALUE": "0x0080020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.SNOOP_NOT_NEEDED",
+    "MATRIX_VALUE": "0x0100020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.SNOOP_MISS",
+    "MATRIX_VALUE": "0x0200020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.SNOOP_HIT_NO_FWD",
+    "MATRIX_VALUE": "0x0400020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.SNOOP_HITM",
+    "MATRIX_VALUE": "0x1000020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.SNOOP_NON_DRAM",
+    "MATRIX_VALUE": "0x2000020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "SUPPLIER_NONE.ANY_SNOOP",
+    "MATRIX_VALUE": "0x3f80020000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.SNOOP_NONE",
+    "MATRIX_VALUE": "0x00803c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "hit in the L3 with no details on snoop-related information."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.SNOOP_NOT_NEEDED",
+    "MATRIX_VALUE": "0x01003c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "hit in the L3 and sibling core snoops are not needed as either the core-valid bit is not set or the shared line is present in multiple cores."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.SNOOP_MISS",
+    "MATRIX_VALUE": "0x02003c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "hit in the L3 with a snoop miss response."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.SNOOP_HIT_NO_FWD",
+    "MATRIX_VALUE": "0x04003c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "hit in the L3 and the snoops to sibling cores hit in either E/S state and the line is not forwarded."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.SNOOP_HITM",
+    "MATRIX_VALUE": "0x10003c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.SNOOP_NON_DRAM",
+    "MATRIX_VALUE": "0x20003c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "hit in the L3 and the target was non-DRAM system address."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_HIT.ANY_SNOOP",
+    "MATRIX_VALUE": "0x3f803c0000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "hit in the L3."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.SNOOP_NONE",
+    "MATRIX_VALUE": "0x0084000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.SNOOP_NOT_NEEDED",
+    "MATRIX_VALUE": "0x0104000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.SNOOP_MISS",
+    "MATRIX_VALUE": "0x0204000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.SNOOP_HIT_NO_FWD",
+    "MATRIX_VALUE": "0x0404000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.SNOOP_HITM",
+    "MATRIX_VALUE": "0x1004000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.SNOOP_NON_DRAM",
+    "MATRIX_VALUE": "0x2004000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS_LOCAL_DRAM.ANY_SNOOP",
+    "MATRIX_VALUE": "0x3f84000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS.SNOOP_NONE",
+    "MATRIX_VALUE": "0x00bc000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "miss the L3 with no details on snoop-related information."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS.SNOOP_NOT_NEEDED",
+    "MATRIX_VALUE": "0x013c000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS.SNOOP_MISS",
+    "MATRIX_VALUE": "0x023c000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "miss the L3 with a snoop miss response."
+  },
+  {
+    "MATRIX_REQUEST": "Null",
+    "MATRIX_RESPONSE": "L3_MISS.SNOOP_HIT_NO_FWD",
+    "MATRIX_VALUE": "0x043c000000",
+    "MATRIX_REGISTER": "0,1",
+    "DESCRIPTION": "tbd"
+  }
+]

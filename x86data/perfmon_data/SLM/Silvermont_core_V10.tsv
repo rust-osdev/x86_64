@@ -1,0 +1,75 @@
+# Performance Monitoring Events for Intel Atom Processors Based on the Silvermont Microarchitecture - V10
+# 7/7/2015 1:13:11 PM
+# Copyright (c) 2007 - 2014 Intel Corporation. All rights reserved.
+EventCode	UMask	EventName	BriefDescription	Counter	PEBScounters	SampleAfterValue	MSRIndex	MSRValue	CounterMask	Invert	AnyThread	EdgeDetect	PEBS	Errata
+0xC4	0x00	BR_INST_RETIRED.ALL_BRANCHES	Counts the number of branch instructions retired...	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0x7E	BR_INST_RETIRED.JCC	Counts the number of JCC branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xFE	BR_INST_RETIRED.TAKEN_JCC	Counts the number of taken JCC branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xF9	BR_INST_RETIRED.CALL	Counts the number of near CALL branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xFD	BR_INST_RETIRED.REL_CALL	Counts the number of near relative CALL branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xFB	BR_INST_RETIRED.IND_CALL	Counts the number of near indirect CALL branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xF7	BR_INST_RETIRED.RETURN	Counts the number of near RET branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xEB	BR_INST_RETIRED.NON_RETURN_IND	Counts the number of near indirect JMP and near indirect CALL branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC4	0xBF	BR_INST_RETIRED.FAR_BRANCH	Counts the number of far branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC5	0x00	BR_MISP_RETIRED.ALL_BRANCHES	Counts the number of mispredicted branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC5	0x7E	BR_MISP_RETIRED.JCC	Counts the number of mispredicted JCC branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC5	0xFE	BR_MISP_RETIRED.TAKEN_JCC	Counts the number of mispredicted taken JCC branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC5	0xFB	BR_MISP_RETIRED.IND_CALL	Counts the number of mispredicted near indirect CALL branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC5	0xF7	BR_MISP_RETIRED.RETURN	Counts the number of mispredicted near RET branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC5	0xEB	BR_MISP_RETIRED.NON_RETURN_IND	Counts the number of mispredicted near indirect JMP and near indirect CALL branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	null
+0xC2	0x01	UOPS_RETIRED.MS	MSROM micro-ops retired	0,1	0	2000003	0	0	0	0	0	0	0	null
+0xC2	0x10	UOPS_RETIRED.ALL	Micro-ops retired	0,1	0	2000003	0	0	0	0	0	0	0	null
+0xC3	0x01	MACHINE_CLEARS.SMC	Self-Modifying Code detected	0,1	0	200003	0	0	0	0	0	0	0	null
+0xC3	0x02	MACHINE_CLEARS.MEMORY_ORDERING	Stalls due to Memory ordering	0,1	0	200003	0	0	0	0	0	0	0	null
+0xC3	0x04	MACHINE_CLEARS.FP_ASSIST	Stalls due to FP assists	0,1	0	200003	0	0	0	0	0	0	0	null
+0xC3	0x08	MACHINE_CLEARS.ALL	Counts all machine clears	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCA	0x01	NO_ALLOC_CYCLES.ROB_FULL	Counts the number of cycles when no uops are allocated and the ROB is full (less than 2 entries available)	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCA	0x04	NO_ALLOC_CYCLES.MISPREDICTS	Counts the number of cycles when no uops are allocated and the alloc pipe is stalled waiting for a mispredicted jump to retire.  After the misprediction is detected, the front end will start immediately but the allocate pipe stalls until the mispredicted 	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCA	0x20	NO_ALLOC_CYCLES.RAT_STALL	Counts the number of cycles when no uops are allocated and a RATstall is asserted.	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCA	0x50	NO_ALLOC_CYCLES.NOT_DELIVERED	Counts the number of cycles when no uops are allocated, the IQ is empty, and no other condition is blocking allocation.  The Silvermont implementation for this event is identical to NO_ALLOC_CYCLES.IQ_EMPTY.  This is a good approximation for NO_ALLOC_CYCLES.NOT_DELIVERED.	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCA	0x3F	NO_ALLOC_CYCLES.ALL	Counts the number of cycles when no uops are allocated for any reason.	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCB	0x01	RS_FULL_STALL.MEC	Counts the number of cycles and allocation pipeline is stalled and is waiting for a free MEC reservation station entry.  The cycles should be appropriately counted in case of the cracked ops e.g. In case of a cracked load-op, the load portion is sent to M	0,1	0	200003	0	0	0	0	0	0	0	null
+0xCB	0x1F	RS_FULL_STALL.ALL	Counts the number of cycles the Alloc pipeline is stalled when any one of the RSs (IEC, FPC and MEC) is full. This event is a superset of all the individual RS stall event counts.	0,1	0	200003	0	0	0	0	0	0	0	null
+0xC0	0x00	INST_RETIRED.ANY_P	Instructions retired	0,1	0	2000003	0	0	0	0	0	0	0	null
+0xCD	0x01	CYCLES_DIV_BUSY.ALL	Cycles the divider is busy.  Does not imply a stall waiting for the divider.	0,1	0	2000003	0	0	0	0	0	0	0	null
+0x00	0x01	INST_RETIRED.ANY	Fixed Counter: Counts the number of instructions retired	Fixed counter 1	0	2000003	0	0	0	0	0	0	0	null
+0x00	0x02	CPU_CLK_UNHALTED.CORE	Fixed Counter: Counts the number of unhalted core clock cycles	Fixed counter 2	0	2000003	0	0	0	0	0	0	0	null
+0x00	0x03	CPU_CLK_UNHALTED.REF_TSC	Fixed Counter: Counts the number of unhalted reference clock cycles	Fixed counter 3	0	2000003	0	0	0	0	0	0	0	null
+0x3C	0x00	CPU_CLK_UNHALTED.CORE_P	Core cycles when core is not halted	0,1	0	2000003	0	0	0	0	0	0	0	null
+0x3C	0x01	CPU_CLK_UNHALTED.REF	Reference cycles when core is not halted	0,1	0	2000003	0	0	0	0	0	0	0	null
+0x30	0x00	L2_REJECT_XQ.ALL	Counts the number of request from the L2 that were not accepted into the XQ	0,1	0	200003	0	0	0	0	0	0	0	null
+0x31	0x00	CORE_REJECT_L2Q.ALL	Counts the number of request that were not accepted into the L2Q because the L2Q is FULL.	0,1	0	200003	0	0	0	0	0	0	0	null
+0x2E	0x4F	LONGEST_LAT_CACHE.REFERENCE	L2 cache requests from this core	0,1	0	200003	0	0	0	0	0	0	0	null
+0x2E	0x41	LONGEST_LAT_CACHE.MISS	L2 cache request misses	0,1	0	200003	0	0	0	0	0	0	0	null
+0x80	0x03	ICACHE.ACCESSES	Instruction fetches	0,1	0	200003	0	0	0	0	0	0	0	null
+0x80	0x01	ICACHE.HIT	Instruction fetches from Icache	0,1	0	200003	0	0	0	0	0	0	0	null
+0x80	0x02	ICACHE.MISSES	Icache miss	0,1	0	200003	0	0	0	0	0	0	0	null
+0x86	0x04	FETCH_STALL.ICACHE_FILL_PENDING_CYCLES	Counts the number of cycles the NIP stalls because of an icache miss. This is a cumulative count of cycles the NIP stalled for all icache misses.	0,1	0	200003	0	0	0	0	0	0	0	null
+0xE6	0x01	BACLEARS.ALL	Counts the number of baclears	0,1	0	200003	0	0	0	0	0	0	0	null
+0xE6	0x08	BACLEARS.RETURN	Counts the number of RETURN baclears	0,1	0	200003	0	0	0	0	0	0	0	null
+0xE6	0x10	BACLEARS.COND	Counts the number of JCC baclears	0,1	0	200003	0	0	0	0	0	0	0	null
+0xE7	0x01	MS_DECODED.MS_ENTRY	Counts the number of times entered into a ucode flow in the FEC.  Includes inserted flows due to front-end detected faults or assists.  Speculative count.	0,1	0	200003	0	0	0	0	0	0	0	null
+0xE9	0x01	DECODE_RESTRICTION.PREDECODE_WRONG	Counts the number of times a decode restriction reduced the decode throughput due to wrong instruction length prediction	0,1	0	200003	0	0	0	0	0	0	0	null
+0x03	0x01	REHABQ.LD_BLOCK_ST_FORWARD	Loads blocked due to store forward restriction	0,1	0	200003	0	0	0	0	0	0	1	null
+0x03	0x02	REHABQ.LD_BLOCK_STD_NOTREADY	Loads blocked due to store data not ready	0,1	0	200003	0	0	0	0	0	0	0	null
+0x03	0x04	REHABQ.ST_SPLITS	Store uops that split cache line boundary	0,1	0	200003	0	0	0	0	0	0	0	null
+0x03	0x08	REHABQ.LD_SPLITS	Load uops that split cache line boundary	0,1	0	200003	0	0	0	0	0	0	1	null
+0x03	0x10	REHABQ.LOCK	Uops with lock semantics	0,1	0	200003	0	0	0	0	0	0	0	null
+0x03	0x20	REHABQ.STA_FULL	Store address buffer full	0,1	0	200003	0	0	0	0	0	0	0	null
+0x03	0x40	REHABQ.ANY_LD	Any reissued load uops	0,1	0	200003	0	0	0	0	0	0	0	null
+0x03	0x80	REHABQ.ANY_ST	Any reissued store uops	0,1	0	200003	0	0	0	0	0	0	0	null
+0x04	0x01	MEM_UOPS_RETIRED.L1_MISS_LOADS	Loads missed L1	0,1	0	200003	0	0	0	0	0	0	0	null
+0x04	0x02	MEM_UOPS_RETIRED.L2_HIT_LOADS	Loads hit L2	0,1	0	200003	0	0	0	0	0	0	1	null
+0x04	0x04	MEM_UOPS_RETIRED.L2_MISS_LOADS	Loads missed L2	0,1	0	100007	0	0	0	0	0	0	1	null
+0x04	0x08	MEM_UOPS_RETIRED.DTLB_MISS_LOADS	Loads missed DTLB	0,1	0	200003	0	0	0	0	0	0	1	null
+0x04	0x10	MEM_UOPS_RETIRED.UTLB_MISS	Loads missed UTLB	0,1	0	200003	0	0	0	0	0	0	0	null
+0x04	0x20	MEM_UOPS_RETIRED.HITM	Cross core or cross module hitm	0,1	0	200003	0	0	0	0	0	0	1	null
+0x04	0x40	MEM_UOPS_RETIRED.ALL_LOADS	All Loads	0,1	0	200003	0	0	0	0	0	0	0	null
+0x04	0x80	MEM_UOPS_RETIRED.ALL_STORES	All Stores	0,1	0	200003	0	0	0	0	0	0	0	null
+0x05	0x01	PAGE_WALKS.D_SIDE_WALKS	D-side page-walks	0,1	0	100003	0	0	0	0	0	1	0	null
+0x05	0x01	PAGE_WALKS.D_SIDE_CYCLES	Duration of D-side page-walks in core cycles	0,1	0	200003	0	0	0	0	0	0	0	null
+0x05	0x02	PAGE_WALKS.I_SIDE_WALKS	I-side page-walks	0,1	0	100003	0	0	0	0	0	1	0	null
+0x05	0x02	PAGE_WALKS.I_SIDE_CYCLES	Duration of I-side page-walks in core cycles	0,1	0	200003	0	0	0	0	0	0	0	null
+0x05	0x03	PAGE_WALKS.WALKS	Total page walks that are completed (I-side and D-side)	0,1	0	100003	0	0	0	0	0	1	0	null
+0x05	0x03	PAGE_WALKS.CYCLES	Total cycles for all the page walks. (I-side and D-side)	0,1	0	200003	0	0	0	0	0	0	0	null
+0xB7	0x01,0x02	OFFCORE_RESPONSE	Offcore response can be programmed only with a specific pair of event select and counter MSR, and with specific event codes and predefine mask bit value in a dedicated MSR to specify attributes of the offcore transaction	0,1	0	100007	0	0	0	0	0	0	0	null
