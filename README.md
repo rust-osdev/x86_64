@@ -12,6 +12,7 @@ Currently supports
   * Interrupts
   * Task state
   * Querying CPUID (uses [raw_cpuid](https://github.com/gz/rust-cpuid) library)
+  * Performance counter information
 
 This library depends on libcore so it can be used in kernel level code.
 
