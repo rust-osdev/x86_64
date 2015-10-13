@@ -6,6 +6,7 @@ pub unsafe fn wrmsr(msr: u32, value: u64) {
 }
 
 /// Read 64 bits msr register.
+#[allow(unused_mut)]
 pub unsafe fn rdmsr(msr: u32) -> u64 {
     let mut low: u32;
     let mut high: u32;

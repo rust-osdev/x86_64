@@ -306,7 +306,7 @@ fn parse_performance_counters(input: &str, variable: &str, file: &mut BufWriter<
     }
 
 
-    write!(file, "pub static {}: phf::Map<&'static str, IntelPerformanceCounterDescription> = ", variable).unwrap();
+    write!(file, "const {}: phf::Map<&'static str, IntelPerformanceCounterDescription> = ", variable).unwrap();
     builder.build(file).unwrap();
     write!(file, ";\n").unwrap();
 }
@@ -352,10 +352,10 @@ fn main() {
         let path = Path::new(file.as_str());
         let (_, ref variable_upper) = make_file_name(&path);
 
-        builder.entry(family_model.as_str(), format!("&{}", variable_upper.as_str()).as_str());
+        builder.entry(family_model.as_str(), format!("{}", variable_upper.as_str()).as_str());
     }
 
-    write!(&mut filewriter, "pub static {}: phf::Map<&'static str, &'static phf::Map<&'static str, IntelPerformanceCounterDescription>> = ", "COUNTER_MAP").unwrap();
+    write!(&mut filewriter, "pub static {}: phf::Map<&'static str, phf::Map<&'static str, IntelPerformanceCounterDescription>> = ", "COUNTER_MAP").unwrap();
     builder.build(&mut filewriter).unwrap();
     write!(&mut filewriter, ";\n").unwrap();
 

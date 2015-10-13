@@ -1,5 +1,6 @@
 
 /// Read the time stamp counter.
+#[allow(unused_mut)]
 pub unsafe fn rdtsc() -> u64 {
     let mut low: u32;
     let mut high: u32;
