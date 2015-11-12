@@ -1,6 +1,7 @@
 #![feature(no_std, core_str_ext, core_slice_ext)]
 #![feature(asm)]
 #![no_std]
+#![cfg_attr(test, allow(unused_features))]
 
 #![crate_name = "x86"]
 #![crate_type = "lib"]
@@ -8,17 +9,12 @@
 #[macro_use]
 mod bitflags;
 
-#[cfg(test)]
-#[macro_use]
-extern crate std;
-
 #[macro_use]
 extern crate raw_cpuid;
 
 #[macro_use]
 extern crate phf;
 
-#[cfg(not(test))]
 mod std {
     pub use core::fmt;
     pub use core::ops;
