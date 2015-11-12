@@ -15,19 +15,14 @@ license = "MIT"
 
 build = "build.rs"
 
-[build-dependencies.phf_codegen]
-phf_codegen = "0.7.5"
-
-[build-dependencies.serde_json]
+[build-dependencies]
+phf_codegen = "0.7.7"
+csv = "0.14.3"
 serde_json = "0.6.0"
 
-[build-dependencies.csv]
-csv = "0.14.3"
-
 [dependencies]
-bitflags = "0.1.0"
-raw-cpuid = "1.*"
+raw-cpuid = "1.0.4"
 
 [dependencies.phf]
-git = "https://github.com/sfackler/rust-phf.git"
+phf = "0.7.7"
 features = ["core"]

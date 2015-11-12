@@ -1,24 +1,16 @@
-// Verify that we can be linked against an appliction which only uses
-// libcore, which is common in kernel space.
-
-#![feature(no_std, lang_items)]
+#![feature(lang_items, start, no_std, core, libc)]
 #![no_std]
 
+extern crate libc;
 extern crate x86;
 
-fn main() {
+use core::prelude::*;
+use core::mem;
+
+#[start]
+fn start(_argc: isize, _argv: *const *const u8) -> isize {
+    0
 }
 
-// We want to supply these definitions ourselves, and not have them
-// accidentally pulled in via the x86 crate.
-#[lang = "eh_personality"]
-extern "C" fn eh_personality() {
-}
-
-#[lang = "panic_fmt"]
-extern "C" fn panic_fmt(
-    args: ::core::fmt::Arguments, file: &str, line: usize)
-    -> !
-{
-    loop {}
-}
+#[lang = "eh_personality"] extern fn eh_personality() {}
+#[lang = "panic_fmt"] fn panic_fmt() -> ! { loop {} }
