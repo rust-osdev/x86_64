@@ -99,7 +99,7 @@ bitflags!{
 
         /// 0: The fault was not caused by an instruction fetch.
         /// 1: The fault was caused by an instruction fetch.
-        const PFAULT_ERROR_ID = 0b100000,
+        const PFAULT_ERROR_ID = 0b010000,
 
         /// 0: The fault was not by protection keys.
         /// 1: There was a protection key violation.
