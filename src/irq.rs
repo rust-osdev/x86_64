@@ -58,7 +58,9 @@ macro_rules! int {
     };
 }
 
-/// A struct describing an interrupt gate.
+/// A struct describing an interrupt gate.  See the Intel manual mentioned
+/// above for details, specifically, the section "6.14.1 64-Bit Mode IDT"
+/// and "Table 3-2. System-Segment and Gate-Descriptor Types".
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
 pub struct IdtEntry {
@@ -74,6 +76,47 @@ pub struct IdtEntry {
     pub base_hi: u64,
     /// Must be zero.
     pub res1: u16
+}
+
+impl IdtEntry {
+
+    /// Create a "missing" IdtEntry.  This is a `const` function, so we can
+    /// call it at compile time to initialize static variables.
+    ///
+    /// If the CPU tries to invoke a missing interrupt, it will instead
+    /// send a General Protection fault (13), with the interrupt number and
+    /// some other data stored in the error code.
+    pub const fn missing() -> IdtEntry {
+        IdtEntry {
+            base_lo: 0,
+            sel: 0,
+            res0: 0,
+            flags: 0,
+            base_hi: 0,
+            res1: 0,
+        }
+    }
+
+    /// Create a new IdtEntry pointing at `handler`, which must be a
+    /// function with interrupt calling conventions.  (This must be
+    /// currently defined in assembly language.)  The `gdt_code_selector`
+    /// value must be the offset of code segment entry in the GDT.
+    ///
+    /// Create an interrupt gate with the "Present" flag set, which is the
+    /// most common case.  If you need something else, you can construct it
+    /// manually.
+    pub fn new(gdt_code_selector: u16, handler: *const u8) -> IdtEntry {
+        IdtEntry {
+            base_lo: ((handler as u64) & 0xFFFF) as u16,
+            sel: gdt_code_selector,
+            res0: 0,
+            // Bit 7: "Present" flag set.
+            // Bits 0-4: This is an interrupt gate.
+            flags: 0b1000_1110,
+            base_hi: (handler as u64) >> 16,
+            res1: 0,
+        }
+    }
 }
 
 bitflags!{
