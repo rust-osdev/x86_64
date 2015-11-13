@@ -77,28 +77,33 @@ pub struct IdtEntry {
 }
 
 bitflags!{
+    // Taken from Intel Manual Section 4.7 Page-Fault Exceptions.
     flags PageFaultError: u32 {
         /// 0: The fault was caused by a non-present page.
         /// 1: The fault was caused by a page-level protection violation
-        const PFAULT_ERROR_P = 0b0001,
+        const PFAULT_ERROR_P = 0b000001,
 
         /// 0: The access causing the fault was a read.
         /// 1: The access causing the fault was a write.
-        const PFAULT_ERROR_WR = 0b0010,
+        const PFAULT_ERROR_WR = 0b000010,
 
         /// 0: The access causing the fault originated when the processor
         /// was executing in supervisor mode.
         /// 1: The access causing the fault originated when the processor
         /// was executing in user mode.
-        const PFAULT_ERROR_US = 0b0100,
+        const PFAULT_ERROR_US = 0b000100,
 
         /// 0: The fault was not caused by reserved bit violation.
         /// 1: The fault was caused by reserved bits set to 1 in a page directory.
-        const PFAULT_ERROR_RSVD = 0b1000,
+        const PFAULT_ERROR_RSVD = 0b001000,
 
         /// 0: The fault was not caused by an instruction fetch.
         /// 1: The fault was caused by an instruction fetch.
-        const PFAULT_ERROR_ID = 0b1000,
+        const PFAULT_ERROR_ID = 0b100000,
+
+        /// 0: The fault was not by protection keys.
+        /// 1: There was a protection key violation.
+        const PFAULT_ERROR_PK = 0b100000,
     }
 }
 
