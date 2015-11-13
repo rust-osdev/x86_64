@@ -9,6 +9,12 @@
 #[macro_use]
 mod bitflags;
 
+macro_rules! bit {
+    ( $x:expr ) => {
+        1 << $x
+    };
+}
+
 #[macro_use]
 extern crate raw_cpuid;
 

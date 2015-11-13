@@ -81,29 +81,29 @@ bitflags!{
     flags PageFaultError: u32 {
         /// 0: The fault was caused by a non-present page.
         /// 1: The fault was caused by a page-level protection violation
-        const PFAULT_ERROR_P = 0b000001,
+        const PFAULT_ERROR_P = bit!(0),
 
         /// 0: The access causing the fault was a read.
         /// 1: The access causing the fault was a write.
-        const PFAULT_ERROR_WR = 0b000010,
+        const PFAULT_ERROR_WR = bit!(1),
 
         /// 0: The access causing the fault originated when the processor
         /// was executing in supervisor mode.
         /// 1: The access causing the fault originated when the processor
         /// was executing in user mode.
-        const PFAULT_ERROR_US = 0b000100,
+        const PFAULT_ERROR_US = bit!(2),
 
         /// 0: The fault was not caused by reserved bit violation.
         /// 1: The fault was caused by reserved bits set to 1 in a page directory.
-        const PFAULT_ERROR_RSVD = 0b001000,
+        const PFAULT_ERROR_RSVD = bit!(3),
 
         /// 0: The fault was not caused by an instruction fetch.
         /// 1: The fault was caused by an instruction fetch.
-        const PFAULT_ERROR_ID = 0b010000,
+        const PFAULT_ERROR_ID = bit!(4),
 
         /// 0: The fault was not by protection keys.
         /// 1: There was a protection key violation.
-        const PFAULT_ERROR_PK = 0b100000,
+        const PFAULT_ERROR_PK = bit!(5),
     }
 }
 
@@ -134,3 +134,13 @@ impl fmt::Debug for PageFaultError {
     }
 }
 
+#[test]
+fn bit_macro() {
+
+    assert!(PFAULT_ERROR_PK.bits() == 0b100000);
+    assert!(PFAULT_ERROR_ID.bits() == 0b10000);
+    assert!(PFAULT_ERROR_RSVD.bits() == 0b1000);
+    assert!(PFAULT_ERROR_US.bits() == 0b100);
+    assert!(PFAULT_ERROR_WR.bits() == 0b10);
+    assert!(PFAULT_ERROR_P.bits() == 0b1);
+}
