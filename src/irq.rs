@@ -105,7 +105,7 @@ impl IdtEntry {
     /// Create an interrupt gate with the "Present" flag set, which is the
     /// most common case.  If you need something else, you can construct it
     /// manually.
-    pub fn new(gdt_code_selector: u16, handler: *const u8) -> IdtEntry {
+    pub fn interrupt_gate(gdt_code_selector: u16, handler: *const u8) -> IdtEntry {
         IdtEntry {
             base_lo: ((handler as u64) & 0xFFFF) as u16,
             sel: gdt_code_selector,
