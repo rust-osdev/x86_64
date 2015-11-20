@@ -42,3 +42,4 @@ pub mod perfcnt;
 pub mod cpuid {
     pub use raw_cpuid::*;
 }
+pub mod tlb;
