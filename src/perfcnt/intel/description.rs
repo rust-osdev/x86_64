@@ -194,6 +194,12 @@ pub struct IntelPerformanceCounterDescription {
     /// There is only 1 file for core and offcore events in this format.
     /// This field is set to 1 for offcore events and 0 for core events.
     pub offcore: bool,
+
+    pub unit: Option<&'static str>,
+
+    pub filter: Option<&'static str>,
+
+    pub extsel: bool
 }
 
 impl IntelPerformanceCounterDescription {
@@ -205,7 +211,8 @@ impl IntelPerformanceCounterDescription {
            sample_after_value: u64, msr_index: MSRIndex, msr_value: u64, taken_alone: bool,
            counter_mask: u8, invert: bool, any_thread: bool, edge_detect: bool, pebs:
            PebsType, precise_store: bool, data_la: bool, l1_hit_indication: bool,
-           errata: Option<&'static str>, offcore: bool) -> IntelPerformanceCounterDescription {
+           errata: Option<&'static str>, offcore: bool, unit: Option<&'static str>,
+           filter: Option<&'static str>, extsel: bool) -> IntelPerformanceCounterDescription {
 
         IntelPerformanceCounterDescription {
             event_code: event_code,
@@ -229,7 +236,10 @@ impl IntelPerformanceCounterDescription {
             data_la: data_la,
             l1_hit_indication: l1_hit_indication,
             errata: errata,
-            offcore: offcore
+            offcore: offcore,
+            unit: unit,
+            filter: filter,
+            extsel: extsel
         }
     }
 }
