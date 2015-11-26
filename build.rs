@@ -16,9 +16,8 @@ use serde_json::Value;
 
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/perfcnt/intel/description.rs"));
 
-/// We need to convert parsed strings to static because we're reusing
-/// the struct definition which declare strings (rightfully) as
-/// static in the generated code.
+/// HACK: We need to convert parsed strings to static because we're reusing
+/// the struct definition which declare strings as static in the generated code.
 fn string_to_static_str<'a>(s: &'a str) -> &'static str {
     unsafe {
         let ret = mem::transmute(&s as &str);
