@@ -1,10 +1,10 @@
 use super::cpuid;
 use phf;
 
-pub mod intel;
-
 use core::fmt::{Write, Result, Error};
 use core::str;
+
+pub mod intel;
 
 const MODEL_LEN: usize = 20;
 
@@ -34,22 +34,33 @@ impl Write for ModelWriter {
     }
 }
 
-/// Return performance counter description for the running micro-architecture.
-pub fn available_counters() -> Option<&'static phf::Map<&'static str, intel::description::IntelPerformanceCounterDescription>> {
+// Format must be a string literal
+macro_rules! get_counters {
+    ($format:expr) => ({
+        let cpuid = cpuid::CpuId::new();
 
-    let cpuid = cpuid::CpuId::new();
+        cpuid.get_vendor_info().map_or(None, |vf| {
+            cpuid.get_feature_info().map_or(None, |fi| {
+                let vendor = vf.as_string();
+                let (family, extended_model, model) = (fi.family_id(), fi.extended_model_id(), fi.model_id());
 
-    cpuid.get_vendor_info().map_or(None, |vf| {
-        cpuid.get_feature_info().map_or(None, |fi| {
-            let vendor = vf.as_string();
-            let (family, extended_model, model) = (fi.family_id(), fi.extended_model_id(), fi.model_id());
+                let mut writer: ModelWriter = Default::default();
+                // Should work as long as it fits in MODEL_LEN bytes:
+                write!(writer, $format, vendor, family, extended_model, model).unwrap();
+                let key = writer.as_str();
 
-            let mut writer: ModelWriter = Default::default();
-            // Should work as long as it fits in MODEL_LEN bytes:
-            write!(writer, "{}-{}-{:X}{:X}", vendor, family, extended_model, model).unwrap();
-            let key = writer.as_str();
-
-            intel::counters::COUNTER_MAP.get(key)
+                intel::counters::COUNTER_MAP.get(key)
+            })
         })
-    })
+    });
+}
+
+/// Return all core performance counters for the running micro-architecture.
+pub fn core_counters() -> Option<&'static phf::Map<&'static str, intel::description::IntelPerformanceCounterDescription>> {
+    get_counters!("{}-{}-{:X}{:X}-core")
+}
+
+/// Return all uncore performance counters for the running micro-architecture.
+pub fn uncore_counters() -> Option<&'static phf::Map<&'static str, intel::description::IntelPerformanceCounterDescription>> {
+    get_counters!("{}-{}-{:X}{:X}-uncore")
 }
