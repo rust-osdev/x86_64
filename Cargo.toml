@@ -12,8 +12,10 @@ documentation = "http://gz.github.io/rust-x86/x86/"
 readme = "README.md"
 keywords = ["ia32", "os", "amd64", "x86", "x86-64"]
 license = "MIT"
-
 build = "build.rs"
+
+[features]
+cached_counters = []
 
 [[test]]
 name = "no_std_build"

@@ -179,7 +179,6 @@ impl fmt::Debug for PageFaultError {
 
 #[test]
 fn bit_macro() {
-
     assert!(PFAULT_ERROR_PK.bits() == 0b100000);
     assert!(PFAULT_ERROR_ID.bits() == 0b10000);
     assert!(PFAULT_ERROR_RSVD.bits() == 0b1000);

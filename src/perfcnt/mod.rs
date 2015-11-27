@@ -6,7 +6,7 @@ use core::str;
 
 pub mod intel;
 
-const MODEL_LEN: usize = 20;
+const MODEL_LEN: usize = 30;
 
 #[derive(Default)]
 struct ModelWriter {
@@ -63,4 +63,13 @@ pub fn core_counters() -> Option<&'static phf::Map<&'static str, intel::descript
 /// Return all uncore performance counters for the running micro-architecture.
 pub fn uncore_counters() -> Option<&'static phf::Map<&'static str, intel::description::IntelPerformanceCounterDescription>> {
     get_counters!("{}-{}-{:X}{:X}-uncore")
+}
+
+#[test]
+fn counter_test() {
+    core_counters().map(|cc| {
+        cc.get("INST_RETIRED.ANY").map(|p| {
+            assert!(p.event_name == "INST_RETIRED.ANY");
+        });
+    });
 }
