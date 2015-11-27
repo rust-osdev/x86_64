@@ -67,6 +67,7 @@ pub fn uncore_counters() -> Option<&'static phf::Map<&'static str, intel::descri
 
 #[test]
 fn counter_test() {
+    // Note: This will silently fail in case the counter is not available.
     core_counters().map(|cc| {
         cc.get("INST_RETIRED.ANY").map(|p| {
             assert!(p.event_name == "INST_RETIRED.ANY");
