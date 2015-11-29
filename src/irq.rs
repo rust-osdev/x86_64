@@ -1,3 +1,5 @@
+//! Interrupt description and set-up code.
+
 use core::fmt;
 
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).

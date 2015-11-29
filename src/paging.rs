@@ -1,5 +1,4 @@
-/// The focus on this file is to describe the data-structures
-/// for IA-32e paging mode.
+//!  Description of the data-structures for IA-32e paging mode.
 use core::fmt;
 
 pub type PAddr = u64;

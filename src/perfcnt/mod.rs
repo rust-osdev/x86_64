@@ -1,3 +1,5 @@
+//! Information about available performance counters.
+
 use super::cpuid;
 use phf;
 

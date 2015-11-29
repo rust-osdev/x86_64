@@ -1,4 +1,4 @@
-/// SYSCALL invokes an OS system-call handler at privilege level 0.
+//! Invokes an OS system-call handler at privilege level 0.
 ///
 /// It does so by loading RIP from the IA32_LSTAR MSR (after saving the address of the instruction following SYSCALL into RCX).
 ///

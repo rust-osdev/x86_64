@@ -1,3 +1,5 @@
+//! Program x86 segmentation hardware.
+
 use core::fmt;
 
 /// Specifies which element to load into a segment from
@@ -161,27 +163,27 @@ impl fmt::Debug for SegmentDescriptor {
 
 /// Reload stack segment register.
 pub unsafe fn load_ss(sel: SegmentSelector) {
-    asm!("movw $0, %ss " :: "r" (sel));
+    asm!("movw $0, %ss " :: "r" (sel) : "memory");
 }
 
 /// Reload data segment register.
 pub unsafe fn load_ds(sel: SegmentSelector) {
-    asm!("movw $0, %ds " :: "r" (sel));
+    asm!("movw $0, %ds " :: "r" (sel) : "memory");
 }
 
 /// Reload fs segment register.
 pub unsafe fn load_es(sel: SegmentSelector) {
-    asm!("movw $0, %es " :: "r" (sel));
+    asm!("movw $0, %es " :: "r" (sel) : "memory");
 }
 
 /// Reload fs segment register.
 pub unsafe fn load_fs(sel: SegmentSelector) {
-    asm!("movw $0, %fs " :: "r" (sel));
+    asm!("movw $0, %fs " :: "r" (sel) : "memory");
 }
 
 /// Reload gs segment register.
 pub unsafe fn load_gs(sel: SegmentSelector) {
-    asm!("movw $0, %gs " :: "r" (sel));
+    asm!("movw $0, %gs " :: "r" (sel) : "memory");
 }
 
 /// Reload code segment register.
@@ -194,5 +196,5 @@ pub unsafe fn load_cs(sel: SegmentSelector) {
          lea 1f(%rip), %rax
          pushq %rax
          lretq
-         1:" :: "r" (sel.bits() as u64) : "{rax}");
+         1:" :: "r" (sel.bits() as u64) : "{rax}" "memory");
 }

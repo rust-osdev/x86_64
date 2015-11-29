@@ -1,3 +1,5 @@
+//! Helpers to program the task state segment.
+
 use segmentation;
 
 pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;

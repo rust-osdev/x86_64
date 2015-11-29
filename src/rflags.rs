@@ -1,3 +1,5 @@
+//! Description of RFlag values that store the results of operations and the state of the processor.
+
 /// RFLAGS description.
 bitflags! {
     flags RFlags: u64 {

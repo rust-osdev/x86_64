@@ -279,7 +279,7 @@ fn parse_performance_counters(input: &str, variable: &str, file: &mut BufWriter<
     }
 
 
-    write!(file, "const {}: phf::Map<&'static str, IntelPerformanceCounterDescription> = ", variable).unwrap();
+    write!(file, "pub const {}: phf::Map<&'static str, IntelPerformanceCounterDescription> = ", variable).unwrap();
     builder.build(file).unwrap();
     write!(file, ";\n").unwrap();
 }

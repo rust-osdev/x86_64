@@ -1,8 +1,10 @@
+//!  MSR value list and function to read and write them.
+
 /// Write 64 bits to msr register.
 pub unsafe fn wrmsr(msr: u32, value: u64) {
     let low = value as u32;
     let high = (value >> 32) as u32;
-    asm!("wrmsr" :: "{ecx}" (msr), "{eax}" (low), "{edx}" (high) );
+    asm!("wrmsr" :: "{ecx}" (msr), "{eax}" (low), "{edx}" (high) : "memory" : "volatile" );
 }
 
 /// Read 64 bits msr register.
@@ -10,7 +12,7 @@ pub unsafe fn wrmsr(msr: u32, value: u64) {
 pub unsafe fn rdmsr(msr: u32) -> u64 {
     let mut low: u32;
     let mut high: u32;
-    asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (msr));
+    asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (msr) : "memory" : "volatile");
 
     ((high as u64) << 32) | (low as u64)
 }
