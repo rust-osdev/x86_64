@@ -134,6 +134,7 @@ pub fn pt_index(addr: VAddr) -> usize {
 
 /// PML4 Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
         const PML4_P       = 0b00000001,
@@ -183,14 +184,9 @@ impl PML4Entry {
     }
 }
 
-impl fmt::Debug for PML4Entry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
-    }
-}
-
 /// PDPT Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PDPTEntry: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
         const PDPT_P       = 0b00000001,
@@ -247,14 +243,9 @@ impl PDPTEntry {
     }
 }
 
-impl fmt::Debug for PDPTEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
-    }
-}
-
 /// PD Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PDEntry: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
         const PD_P       = 0b00000001,
@@ -311,14 +302,9 @@ impl PDEntry {
     }
 }
 
-impl fmt::Debug for PDEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
-    }
-}
-
 /// PT Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PTEntry: u64 {
         /// Present; must be 1 to map a 4-KByte page.
         const PT_P       = 0b00000001,
@@ -365,11 +351,5 @@ impl PTEntry {
     /// Convenience function to check if the present bit is set.
     pub fn is_present(self) -> bool {
         self.contains(PT_P)
-    }
-}
-
-impl fmt::Debug for PTEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
     }
 }
