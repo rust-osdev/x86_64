@@ -1,8 +1,89 @@
 //!  Description of the data-structures for IA-32e paging mode.
 use core::fmt;
 
-pub type PAddr = u64;
-pub type VAddr = usize;
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct PAddr(u64);
+
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct VAddr(usize);
+
+impl PAddr {
+    pub const fn as_u64(&self) -> u64 {
+        self.0
+    }
+    pub const fn from_u64(v: u64) -> Self {
+        PAddr(v)
+    }
+}
+
+impl VAddr {
+    pub const fn as_usize(&self) -> usize {
+        self.0
+    }
+    pub const fn from_usize(v: usize) -> Self {
+        VAddr(v)
+    }
+}
+
+impl fmt::Binary for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Display for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::LowerHex for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Octal for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::UpperHex for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Binary for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Display for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::LowerHex for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Octal for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::UpperHex for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
 pub const LARGE_PAGE_SIZE: u64 = 1024*1024*2; // 2 MiB
@@ -30,29 +111,30 @@ pub type PT    = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
 pub fn pml4_index(addr: VAddr) -> usize {
-    (addr >> 39) & 0b111111111
+    (addr.as_usize() >> 39) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PDPT.
 #[inline]
 pub fn pdpt_index(addr: VAddr) -> usize {
-    (addr >> 30) & 0b111111111
+    (addr.as_usize() >> 30) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PD.
 #[inline]
 pub fn pd_index(addr: VAddr) -> usize {
-    (addr >> 21) & 0b111111111
+    (addr.as_usize() >> 21) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PT.
 #[inline]
 pub fn pt_index(addr: VAddr) -> usize {
-    (addr >> 12) & 0b111111111
+    (addr.as_usize() >> 12) & 0b111111111
 }
 
 /// PML4 Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
         const PML4_P       = 0b00000001,
@@ -86,13 +168,14 @@ impl PML4Entry {
     ///  * `pdpt` - The physical address of the pdpt table.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(pdpt: PAddr, flags: PML4Entry) -> PML4Entry {
-        assert!(pdpt % BASE_PAGE_SIZE == 0);
-        PML4Entry { bits: pdpt | flags.bits }
+        let pdpt_val = pdpt.as_u64();
+        assert!(pdpt_val % BASE_PAGE_SIZE == 0);
+        PML4Entry { bits: pdpt_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from_u64(self.bits & ADDRESS_MASK)
     }
 
     /// Convenience function to check if the present bit is set.
@@ -101,14 +184,9 @@ impl PML4Entry {
     }
 }
 
-impl fmt::Debug for PML4Entry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
-    }
-}
-
 /// PDPT Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PDPTEntry: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
         const PDPT_P       = 0b00000001,
@@ -149,13 +227,14 @@ impl PDPTEntry {
     ///  * `pd` - The physical address of the page directory.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(pd: PAddr, flags: PDPTEntry) -> PDPTEntry {
-        assert!(pd % BASE_PAGE_SIZE == 0);
-        PDPTEntry { bits: pd | flags.bits }
+        let pd_val = pd.as_u64();
+        assert!(pd_val % BASE_PAGE_SIZE == 0);
+        PDPTEntry { bits: pd_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from_u64(self.bits & ADDRESS_MASK)
     }
 
     /// Convenience function to check if the present bit is set.
@@ -164,14 +243,9 @@ impl PDPTEntry {
     }
 }
 
-impl fmt::Debug for PDPTEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
-    }
-}
-
 /// PD Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PDEntry: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
         const PD_P       = 0b00000001,
@@ -212,13 +286,14 @@ impl PDEntry {
     ///  * `pt` - The physical address of the page table.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(pt: PAddr, flags: PDEntry) -> PDEntry {
-        assert!(pt % BASE_PAGE_SIZE == 0);
-        PDEntry { bits: pt | flags.bits }
+        let pt_val = pt.as_u64();
+        assert!(pt_val % BASE_PAGE_SIZE == 0);
+        PDEntry { bits: pt_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from_u64(self.bits & ADDRESS_MASK)
     }
 
     /// Convenience function to check if the present bit is set.
@@ -227,14 +302,9 @@ impl PDEntry {
     }
 }
 
-impl fmt::Debug for PDEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
-    }
-}
-
 /// PT Entry bits description.
 bitflags! {
+    #[derive(Debug)]
     flags PTEntry: u64 {
         /// Present; must be 1 to map a 4-KByte page.
         const PT_P       = 0b00000001,
@@ -268,23 +338,18 @@ impl PTEntry {
     ///  * `page` - The physical address of the backing 4 KiB page.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
-        assert!(page % BASE_PAGE_SIZE == 0);
-        PTEntry{ bits: page | flags.bits }
+        let page_val = page.as_u64();
+        assert!(page_val % BASE_PAGE_SIZE == 0);
+        PTEntry{ bits: page_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from_u64(self.bits & ADDRESS_MASK)
     }
 
     /// Convenience function to check if the present bit is set.
     pub fn is_present(self) -> bool {
         self.contains(PT_P)
-    }
-}
-
-impl fmt::Debug for PTEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.bits)
     }
 }
