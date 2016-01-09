@@ -1,4 +1,15 @@
-#![feature(convert)]
+#![cfg_attr(feature = "performance-counter", feature(convert))]
+
+#[cfg(not(feature = "performance-counter"))]
+fn main() {}
+
+#[cfg(feature = "performance-counter")]
+fn main() {
+    performance_counter::main();
+}
+
+#[cfg(feature = "performance-counter")]
+mod performance_counter {
 
 extern crate phf_codegen;
 extern crate serde_json;
@@ -12,7 +23,7 @@ use std::path::Path;
 use std::collections::HashMap;
 use std::mem;
 
-use serde_json::Value;
+use self::serde_json::Value;
 
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/perfcnt/intel/description.rs"));
 
@@ -324,7 +335,7 @@ pub fn get_file_suffix(file_name: String) -> &'static str {
     }
 }
 
-fn main() {
+pub fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=x86data/perfmon_data");
 
@@ -373,4 +384,5 @@ fn main() {
         }
     }
 
+}
 }
