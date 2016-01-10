@@ -325,6 +325,9 @@ pub fn get_file_suffix(file_name: String) -> &'static str {
 }
 
 fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=x86data/perfmon_data");
+
     let mut rdr = csv::Reader::from_file("./x86data/perfmon_data/mapfile.csv").unwrap();
     let mut data_files = HashMap::new();
 
