@@ -1,4 +1,4 @@
-//!  Description of the data-structures for IA-32e paging mode.
+//! Description of the data-structures for IA-32e paging mode.
 use core::fmt;
 
 /// Represents a physical memory address
@@ -92,8 +92,8 @@ impl fmt::UpperHex for VAddr {
 }
 
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
-pub const LARGE_PAGE_SIZE: u64 = 1024*1024*2; // 2 MiB
-pub const HUGE_PAGE_SIZE: u64 = 1024*1024*1024; // 1 GiB
+pub const LARGE_PAGE_SIZE: u64 = 1024 * 1024 * 2; // 2 MiB
+pub const HUGE_PAGE_SIZE: u64 = 1024 * 1024 * 1024; // 1 GiB
 pub const CACHE_LINE_SIZE: usize = 64; // 64 Bytes
 
 /// MAXPHYADDR, which is at most 52; (use CPUID for finding system value).
@@ -104,16 +104,16 @@ const ADDRESS_MASK: u64 = ((1 << MAXPHYADDR) - 1) & !0xfff;
 
 /// A PML4 table.
 /// In practice this has only 4 entries but it still needs to be the size of a 4K page.
-pub type PML4  = [PML4Entry; 512];
+pub type PML4 = [PML4Entry; 512];
 
 /// A page directory pointer table.
-pub type PDPT  = [PDPTEntry; 512];
+pub type PDPT = [PDPTEntry; 512];
 
 /// A page directory.
-pub type PD    = [PDEntry; 512];
+pub type PD = [PDEntry; 512];
 
 /// A page table.
-pub type PT    = [PTEntry; 512];
+pub type PT = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
 pub fn pml4_index(addr: VAddr) -> usize {
@@ -166,7 +166,6 @@ bitflags! {
 
 
 impl PML4Entry {
-
     /// Creates a new PML4Entry.
     ///
     /// # Arguments
@@ -225,7 +224,6 @@ bitflags! {
 }
 
 impl PDPTEntry {
-
     /// Creates a new PDPTEntry.
     ///
     /// # Arguments
@@ -284,7 +282,6 @@ bitflags! {
 }
 
 impl PDEntry {
-
     /// Creates a new PDEntry.
     ///
     /// # Arguments
@@ -336,7 +333,6 @@ bitflags! {
 
 
 impl PTEntry {
-
     /// Creates a new PTEntry.
     ///
     /// # Arguments
@@ -346,7 +342,7 @@ impl PTEntry {
     pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
         let page_val = page.as_u64();
         assert!(page_val % BASE_PAGE_SIZE == 0);
-        PTEntry{ bits: page_val | flags.bits }
+        PTEntry { bits: page_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.

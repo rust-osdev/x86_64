@@ -1,4 +1,4 @@
-//!  MSR value list and function to read and write them.
+//! MSR value list and function to read and write them.
 
 /// Write 64 bits to msr register.
 pub unsafe fn wrmsr(msr: u32, value: u64) {

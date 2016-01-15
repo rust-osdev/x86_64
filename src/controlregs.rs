@@ -1,15 +1,13 @@
 //! Functions to read and write control registers.
 
-pub unsafe fn cr0() -> u64
-{
+pub unsafe fn cr0() -> u64 {
     let ret: u64;
     asm!("mov %cr0, $0" : "=r" (ret));
     ret
 }
 
 /// Write cr0.
-pub unsafe fn cr0_write(val: u64)
-{
+pub unsafe fn cr0_write(val: u64) {
     asm!("mov $0, %cr0" :: "r" (val) : "memory");
 }
 

@@ -13,7 +13,7 @@ const MODEL_LEN: usize = 30;
 #[derive(Default)]
 struct ModelWriter {
     buffer: [u8; MODEL_LEN],
-    index: usize
+    index: usize,
 }
 
 impl ModelWriter {
@@ -27,7 +27,7 @@ impl Write for ModelWriter {
         // TODO: There exists probably a more efficient way of doing this:
         for c in s.chars() {
             if self.index >= self.buffer.len() {
-                return Err(Error)
+                return Err(Error);
             }
             self.buffer[self.index] = c as u8;
             self.index += 1;

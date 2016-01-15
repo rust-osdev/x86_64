@@ -12,7 +12,6 @@
 /// * Only values of class INTEGER or class MEMORY are passed to the kernel.
 ///
 /// This code is inspired by the syscall.rs (https://github.com/kmcallister/syscall.rs/) project.
-
 #[macro_export]
 macro_rules! syscall {
     ($arg0:expr)
@@ -98,7 +97,14 @@ pub unsafe fn syscall5(arg0: u64, arg1: u64, arg2: u64, arg3: u64, arg4: u64, ar
 
 #[inline(always)]
 #[allow(unused_mut)]
-pub unsafe fn syscall6(arg0: u64, arg1: u64, arg2: u64, arg3: u64, arg4: u64, arg5: u64, arg6: u64) -> u64 {
+pub unsafe fn syscall6(arg0: u64,
+                       arg1: u64,
+                       arg2: u64,
+                       arg3: u64,
+                       arg4: u64,
+                       arg5: u64,
+                       arg6: u64)
+                       -> u64 {
     let mut ret: u64;
     asm!("syscall" : "={rax}" (ret)
                    : "{rax}" (arg0), "{rdi}" (arg1), "{rsi}" (arg2), "{rdx}" (arg3),

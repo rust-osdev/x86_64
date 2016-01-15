@@ -3,7 +3,7 @@ use std::fmt;
 pub enum PebsType {
     Regular,
     PebsOrRegular,
-    PebsOnly
+    PebsOnly,
 }
 
 impl fmt::Debug for PebsType {
@@ -19,7 +19,7 @@ impl fmt::Debug for PebsType {
 
 pub enum Tuple {
     One(u8),
-    Two(u8,u8)
+    Two(u8, u8),
 }
 
 impl fmt::Debug for Tuple {
@@ -34,7 +34,7 @@ impl fmt::Debug for Tuple {
 pub enum MSRIndex {
     None,
     One(u8),
-    Two(u8, u8)
+    Two(u8, u8),
 }
 
 impl fmt::Debug for MSRIndex {
@@ -68,7 +68,6 @@ impl fmt::Debug for Counter {
 
 #[derive(Debug)]
 pub struct IntelPerformanceCounterDescription {
-
     /// This field maps to the Event Select field in the IA32_PERFEVTSELx[7:0]MSRs.
     ///
     /// The set of values for this field is defined architecturally.
@@ -180,7 +179,7 @@ pub struct IntelPerformanceCounterDescription {
     /// This field lists the known bugs that apply to the events.
     ///
     /// For the latest, up to date errata refer to the following links:
-    ////
+    /// /
     /// * Haswell:
     ///   http://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/4th-gen-core-family-mobile-specification-update.pdf
     ///
@@ -199,20 +198,37 @@ pub struct IntelPerformanceCounterDescription {
 
     pub filter: Option<&'static str>,
 
-    pub extsel: bool
+    pub extsel: bool,
 }
 
 impl IntelPerformanceCounterDescription {
-
     #[allow(dead_code)]
-    fn new(event_code: Tuple, umask: Tuple, event_name: &'static str,
-           brief_description: &'static str, public_description: Option<&'static str>,
-           counter: Counter, counter_ht_off: Counter, pebs_counters: Option<Counter>,
-           sample_after_value: u64, msr_index: MSRIndex, msr_value: u64, taken_alone: bool,
-           counter_mask: u8, invert: bool, any_thread: bool, edge_detect: bool, pebs:
-           PebsType, precise_store: bool, data_la: bool, l1_hit_indication: bool,
-           errata: Option<&'static str>, offcore: bool, unit: Option<&'static str>,
-           filter: Option<&'static str>, extsel: bool) -> IntelPerformanceCounterDescription {
+    fn new(event_code: Tuple,
+           umask: Tuple,
+           event_name: &'static str,
+           brief_description: &'static str,
+           public_description: Option<&'static str>,
+           counter: Counter,
+           counter_ht_off: Counter,
+           pebs_counters: Option<Counter>,
+           sample_after_value: u64,
+           msr_index: MSRIndex,
+           msr_value: u64,
+           taken_alone: bool,
+           counter_mask: u8,
+           invert: bool,
+           any_thread: bool,
+           edge_detect: bool,
+           pebs: PebsType,
+           precise_store: bool,
+           data_la: bool,
+           l1_hit_indication: bool,
+           errata: Option<&'static str>,
+           offcore: bool,
+           unit: Option<&'static str>,
+           filter: Option<&'static str>,
+           extsel: bool)
+           -> IntelPerformanceCounterDescription {
 
         IntelPerformanceCounterDescription {
             event_code: event_code,
@@ -239,7 +255,7 @@ impl IntelPerformanceCounterDescription {
             offcore: offcore,
             unit: unit,
             filter: filter,
-            extsel: extsel
+            extsel: extsel,
         }
     }
 }

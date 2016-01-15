@@ -26,11 +26,11 @@ pub struct TaskStateSegment {
 
 impl TaskStateSegment {
     pub fn new() -> TaskStateSegment {
-        TaskStateSegment{
+        TaskStateSegment {
             reserved: 0,
-            rsp: [0,0,0],
+            rsp: [0, 0, 0],
             reserved2: 0,
-            ist: [0,0,0,0,0,0,0],
+            ist: [0, 0, 0, 0, 0, 0, 0],
             reserved3: 0,
             reserved4: 0,
             iomap_base: 0,
