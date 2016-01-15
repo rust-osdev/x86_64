@@ -18,6 +18,7 @@ macro_rules! bit {
 #[macro_use]
 extern crate raw_cpuid;
 
+#[cfg(feature = "performance-counter")]
 #[macro_use]
 extern crate phf;
 
@@ -38,6 +39,7 @@ pub mod segmentation;
 pub mod task;
 pub mod dtables;
 pub mod syscall;
+#[cfg(feature = "performance-counter")]
 pub mod perfcnt;
 pub mod cpuid {
     pub use raw_cpuid::*;
