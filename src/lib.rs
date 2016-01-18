@@ -1,4 +1,4 @@
-#![feature(no_std, core_str_ext, core_slice_ext, const_fn)]
+#![feature(const_fn)]
 #![feature(asm)]
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]

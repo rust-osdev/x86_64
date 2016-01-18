@@ -20,7 +20,7 @@ license = "MIT"
 build = "build.rs"
 
 [features]
-default = []
+default = ["performance-counter"]
 performance-counter = ["phf", "phf_codegen", "csv", "serde_json"]
 
 [[test]]
