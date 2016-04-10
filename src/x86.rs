@@ -7,7 +7,7 @@ use core::mem::size_of;
 mod x86_shared;
 
 bitflags! {
-	flags GdtAccess: u8 {
+	pub flags GdtAccess: u8 {
 		const Accessed = 1 << 0,
 		const Writable = 1 << 1,
 		const Direction = 1 << 2,

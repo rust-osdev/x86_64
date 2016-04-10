@@ -1,7 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 bitflags! {
-	flags Flags: usize {
+	pub flags Flags: usize {
 		const CarryFlag = 1 << 0,
 		const ParityFlag = 1 << 2,
 		const AdjustFlag = 1 << 4,
@@ -24,7 +24,7 @@ bitflags! {
 }
 
 bitflags! {
-	flags Cr0: usize {
+	pub flags Cr0: usize {
 		const ProtectedMode = 1 << 0,
 		const MonitorCoprocessor = 1 << 1,
 		const EmulateCoprocessor = 1 << 2,
@@ -40,7 +40,7 @@ bitflags! {
 }
 
 bitflags! {
-	flags Cr4: usize {
+	pub flags Cr4: usize {
 		const EnableVme = 1 << 0,
 		const VirtualInterrupts = 1 << 1,
 		const TimeStampDisable = 1 << 2,
@@ -62,7 +62,7 @@ bitflags! {
 }
 
 bitflags!(
-	flags Features: u64 {
+	pub flags Features: u64 {
 		const Fpu = 1 << 0,
 		const Virtual8086 = 1 << 1,
 		const DebugExtension = 1 << 2,
