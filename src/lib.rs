@@ -3,10 +3,8 @@
 #![no_std]
 #![crate_name="cpu"]
 #![crate_type="rlib"]
-#![feature(no_std)]
 #![feature(asm)]
 #![feature(associated_consts)]
-#![feature(core, core_slice_ext)]
 
 #[macro_use]
 extern crate bitflags;
