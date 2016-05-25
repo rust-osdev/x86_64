@@ -205,3 +205,10 @@ pub unsafe fn load_cs(sel: SegmentSelector) {
          lretq
          1:" :: "r" (sel.bits() as u64) : "{rax}" "memory");
 }
+
+/// Returns the current value of the code segment register.
+pub fn cs() -> SegmentSelector {
+    let segment: u16;
+    unsafe { asm!("mov %cs, $0" : "=r" (segment) ) };
+    SegmentSelector::from_raw(segment)
+}
