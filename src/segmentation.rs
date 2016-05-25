@@ -178,7 +178,7 @@ pub unsafe fn load_ds(sel: SegmentSelector) {
     asm!("movw $0, %ds " :: "r" (sel) : "memory");
 }
 
-/// Reload fs segment register.
+/// Reload es segment register.
 pub unsafe fn load_es(sel: SegmentSelector) {
     asm!("movw $0, %es " :: "r" (sel) : "memory");
 }
