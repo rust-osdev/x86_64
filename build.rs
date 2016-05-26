@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "performance-counter", feature(convert))]
-
 #[cfg(not(feature = "performance-counter"))]
 fn main() {}
 
