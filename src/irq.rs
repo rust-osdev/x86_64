@@ -25,7 +25,7 @@ impl fmt::Display for InterruptDescription {
 
 
 /// x86 External Interrupts (1-16).
-pub static EXCEPTIONS: [InterruptDescription; 15] = [InterruptDescription {
+pub static EXCEPTIONS: [InterruptDescription; 21] = [InterruptDescription {
                                                          vector: 0,
                                                          mnemonic: "#DE",
                                                          description: "Divide Error",
@@ -35,14 +35,14 @@ pub static EXCEPTIONS: [InterruptDescription; 15] = [InterruptDescription {
                                                      InterruptDescription {
                                                          vector: 1,
                                                          mnemonic: "#DB",
-                                                         description: "RESERVED",
+                                                         description: "Debug",
                                                          irqtype: "Fault/ Trap",
-                                                         source: "For Intel use only.",
+                                                         source: "Debug condition",
                                                      },
                                                      InterruptDescription {
                                                          vector: 2,
                                                          mnemonic: "NMI",
-                                                         description: "Interrupt",
+                                                         description: "Nonmaskable Interrupt",
                                                          irqtype: "Interrupt",
                                                          source: "Nonmaskable external interrupt.",
                                                      },
@@ -138,6 +138,48 @@ pub static EXCEPTIONS: [InterruptDescription; 15] = [InterruptDescription {
                                                          description: "Page Fault",
                                                          irqtype: "Fault",
                                                          source: "Any memory reference.",
+                                                     },
+                                                     InterruptDescription {
+                                                         vector: 15,
+                                                         mnemonic: "",
+                                                         description: "RESERVED",
+                                                         irqtype: "",
+                                                         source: "None.",
+                                                     },
+                                                     InterruptDescription {
+                                                         vector: 16,
+                                                         mnemonic: "#MF",
+                                                         description: "x87 FPU Floating-Point",
+                                                         irqtype: "Fault",
+                                                         source: "x87 FPU instructions.",
+                                                     },
+                                                     InterruptDescription {
+                                                         vector: 17,
+                                                         mnemonic: "#AC",
+                                                         description: "Alignment Check",
+                                                         irqtype: "Fault",
+                                                         source: "Unaligned memory access.",
+                                                     },
+                                                     InterruptDescription {
+                                                         vector: 18,
+                                                         mnemonic: "#MC",
+                                                         description: "Machine Check",
+                                                         irqtype: "Abort",
+                                                         source: "Internal machine error.",
+                                                     },
+                                                     InterruptDescription {
+                                                         vector: 19,
+                                                         mnemonic: "#XM",
+                                                         description: "SIMD Floating-Point",
+                                                         irqtype: "Fault",
+                                                         source: "SSE SIMD instructions.",
+                                                     },
+                                                     InterruptDescription {
+                                                         vector: 20,
+                                                         mnemonic: "#VE",
+                                                         description: "Virtualization",
+                                                         irqtype: "Fault",
+                                                         source: "EPT violation.",
                                                      }];
 
 
