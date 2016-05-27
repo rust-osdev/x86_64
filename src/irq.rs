@@ -1,6 +1,7 @@
 //! Interrupt description and set-up code.
 
 use core::fmt;
+use paging::VAddr;
 
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).
 #[derive(Debug)]
@@ -208,15 +209,15 @@ impl IdtEntry {
     /// Create an interrupt gate with the "Present" flag set, which is the
     /// most common case.  If you need something else, you can construct it
     /// manually.
-    pub fn interrupt_gate(gdt_code_selector: u16, handler: *const u8) -> IdtEntry {
+    pub const fn interrupt_gate(gdt_code_selector: u16, handler: VAddr) -> IdtEntry {
         IdtEntry {
-            base_lo: ((handler as u64) & 0xFFFF) as u16,
+            base_lo: ((handler.as_usize() as u64) & 0xFFFF) as u16,
             sel: gdt_code_selector,
             res0: 0,
             // Bit 7: "Present" flag set.
             // Bits 0-4: This is an interrupt gate.
             flags: 0b1000_1110,
-            base_hi: (handler as u64) >> 16,
+            base_hi: handler.as_usize() as u64 >> 16,
             res1: 0,
         }
     }
