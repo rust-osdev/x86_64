@@ -7,7 +7,7 @@
 #![crate_type = "lib"]
 
 #[macro_use]
-mod bitflags;
+extern crate bitflags;
 
 #[macro_use]
 extern crate raw_cpuid;

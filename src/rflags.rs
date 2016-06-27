@@ -2,7 +2,7 @@
 
 /// RFLAGS description.
 bitflags! {
-    flags RFlags: u64 {
+    pub flags RFlags: u64 {
         /// ID Flag (ID)
         const RFLAGS_ID   = 1 << 21,
         /// Virtual Interrupt Pending (VIP)

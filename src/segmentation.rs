@@ -6,7 +6,7 @@ use core::fmt;
 /// descriptor tables (i.e., is a index to LDT or GDT table
 /// with some additional flags).
 bitflags! {
-    flags SegmentSelector: u16 {
+    pub flags SegmentSelector: u16 {
         /// Requestor Privilege Level
         const RPL_0 = 0b00,
         const RPL_1 = 0b01,
@@ -35,7 +35,7 @@ impl SegmentSelector {
     }
 }
 
-impl fmt::Debug for SegmentSelector {
+impl fmt::Display for SegmentSelector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let r0 = match self.contains(RPL_0) {
             false => "",
@@ -73,7 +73,7 @@ impl fmt::Debug for SegmentSelector {
 
 /// Entry for GDT or LDT. Provides size and location of a segment.
 bitflags! {
-    flags SegmentDescriptor: u64 {
+    pub flags SegmentDescriptor: u64 {
         /// Descriptor type (0 = system; 1 = code or data).
         const DESC_S    = 1 << (32+12),
         /// Descriptor privilege level 0.
@@ -159,12 +159,6 @@ impl SegmentDescriptor {
         SegmentDescriptor {
             bits: limit_low | base_low << 16 | limit_high << (32 + 16) | base_high << (32 + 24),
         }
-    }
-}
-
-impl fmt::Debug for SegmentDescriptor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "SD: 0x{:x}", self.bits)
     }
 }
 

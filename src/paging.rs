@@ -140,8 +140,7 @@ pub fn pt_index(addr: VAddr) -> usize {
 
 /// PML4 Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PML4Entry: u64 {
+    pub flags PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
         const PML4_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 512-GByte region
@@ -200,8 +199,7 @@ impl PML4Entry {
 
 /// PDPT Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PDPTEntry: u64 {
+    pub flags PDPTEntry: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
         const PDPT_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 1-GByte region controlled by this entry
@@ -269,8 +267,7 @@ impl PDPTEntry {
 
 /// PD Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PDEntry: u64 {
+    pub flags PDEntry: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
         const PD_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 2-MByte region controlled by this entry
@@ -345,8 +342,7 @@ impl PDEntry {
 
 /// PT Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PTEntry: u64 {
+    pub flags PTEntry: u64 {
         /// Present; must be 1 to map a 4-KByte page.
         const PT_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 4-KByte region controlled by this entry

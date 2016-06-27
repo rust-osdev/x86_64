@@ -267,7 +267,7 @@ impl IdtEntry {
 
 bitflags!{
     // Taken from Intel Manual Section 4.7 Page-Fault Exceptions.
-    flags PageFaultError: u32 {
+    pub flags PageFaultError: u32 {
         /// 0: The fault was caused by a non-present page.
         /// 1: The fault was caused by a page-level protection violation
         const PFAULT_ERROR_P = bit!(0),
@@ -296,7 +296,7 @@ bitflags!{
     }
 }
 
-impl fmt::Debug for PageFaultError {
+impl fmt::Display for PageFaultError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let p = match self.contains(PFAULT_ERROR_P) {
             false => "The fault was caused by a non-present page.",
