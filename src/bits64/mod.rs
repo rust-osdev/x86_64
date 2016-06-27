@@ -30,7 +30,6 @@ macro_rules! check_bit_fn {
     )
 }
 
-pub mod io;
 pub mod msr;
 pub mod time;
 pub mod irq;

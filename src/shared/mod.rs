@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 pub mod control_regs;
+pub mod io;
 
 bitflags! {
     pub flags Flags: usize {
@@ -252,71 +253,4 @@ pub unsafe fn disable_interrupts() {
 #[inline(always)]
 pub unsafe fn halt() {
     asm!("hlt" :::: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn out8(port: u16, value: u8) {
-    asm!("out $0, $1" :: "{dx}"(port), "{al}"(value) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn out16(port: u16, value: u16) {
-    asm!("out $0, $1" :: "{dx}"(port), "{ax}"(value) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn out32(port: u16, value: u32) {
-    asm!("out $0, $1" :: "{dx}"(port), "{eax}"(value) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn outs8(port: u16, buf: &[u8]) {
-    asm!("rep outsb dx, [esi]" :: "{ecx}"(buf.len()), "{dx}"(port), "{esi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
-}
-
-#[inline(always)]
-pub unsafe fn outs16(port: u16, buf: &[u16]) {
-    asm!("rep outsw dx, [esi]" :: "{ecx}"(buf.len()), "{dx}"(port), "{esi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
-}
-
-#[inline(always)]
-pub unsafe fn outs32(port: u16, buf: &[u32]) {
-    asm!("rep outsd dx, [esi]" :: "{ecx}"(buf.len()), "{dx}"(port), "{esi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
-}
-
-
-#[inline(always)]
-pub unsafe fn in8(port: u16) -> u8 {
-    let r: u8;
-    asm!("in $0, $1" : "={al}"(r) : "{dx}"(port) :: "intel");
-    r
-}
-
-#[inline(always)]
-pub unsafe fn in16(port: u16) -> u16 {
-    let r: u16;
-    asm!("in $0, $1" : "={ax}"(r) : "{dx}"(port) :: "intel");
-    r
-}
-
-#[inline(always)]
-pub unsafe fn in32(port: u16) -> u32 {
-    let r: u32;
-    asm!("in $0, $1" : "={eax}"(r) : "{dx}"(port) :: "intel");
-    r
-}
-
-#[inline(always)]
-pub unsafe fn ins8(port: u16, buf: &mut [u8]) {
-    asm!("rep insb [edi], dx" :: "{ecx}"(buf.len()), "{dx}"(port), "{edi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
-}
-
-#[inline(always)]
-pub unsafe fn ins16(port: u16, buf: &mut [u16]) {
-    asm!("rep insw [edi], dx" :: "{ecx}"(buf.len()), "{dx}"(port), "{edi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
-}
-
-#[inline(always)]
-pub unsafe fn ins32(port: u16, buf: &mut [u32]) {
-    asm!("rep insd [edi], dx" :: "{ecx}"(buf.len()), "{dx}"(port), "{edi}"(buf.as_ptr()) : "ecx", "edi" : "intel");
 }
