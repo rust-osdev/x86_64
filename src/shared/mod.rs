@@ -1,7 +1,10 @@
 #![allow(non_upper_case_globals)]
 
 pub mod control_regs;
+pub mod descriptor;
 pub mod io;
+pub mod irq;
+pub mod paging;
 
 bitflags! {
     pub flags Flags: usize {
@@ -92,61 +95,6 @@ bitflags!(
 );
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Exception {
-    DivisionByZero = 0,
-    Debug = 1,
-    Nmi = 2,
-    Breakpoint = 3,
-    Overflow = 4,
-    Bounds = 5,
-    InvalidOpcode = 6,
-    NotAvailable = 7,
-    DoubleFault = 8,
-    CoprocessorSegment = 9,
-    Tss = 10,
-    NotPresent = 11,
-    StackSegment = 12,
-    GeneralProtection = 13,
-    PageFault = 14,
-    Fpu = 16,
-    Alignment = 17,
-    MachineCheck = 18,
-    Simd = 19,
-    Virtualization = 20,
-    Security = 30
-}
-
-impl Exception {
-    pub fn from_code(code: u32) -> Option<Exception> {
-        Some(match code {
-            0 => Exception::DivisionByZero,
-            1 => Exception::Debug,
-            2 => Exception::Nmi,
-            3 => Exception::Breakpoint,
-            4 => Exception::Overflow,
-            5 => Exception::Bounds,
-            6 => Exception::InvalidOpcode,
-            7 => Exception::NotAvailable,
-            8 => Exception::DoubleFault,
-            9 => Exception::CoprocessorSegment,
-            10 => Exception::Tss,
-            11 => Exception::NotPresent,
-            12 => Exception::StackSegment,
-            13 => Exception::GeneralProtection,
-            14 => Exception::PageFault,
-            16 => Exception::Fpu,
-            17 => Exception::Alignment,
-            18 => Exception::MachineCheck,
-            19 => Exception::Simd,
-            20 => Exception::Virtualization,
-            30 => Exception::Security,
-
-            _ => return None
-        })
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Msr {
     ApicBase = 0x1B
 }
@@ -176,6 +124,7 @@ pub unsafe fn read_msr(msr: Msr) -> u64 {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
 pub enum PrivilegeLevel {
     Ring0 = 0,
     Ring1 = 1,
@@ -238,16 +187,6 @@ pub unsafe fn set_cs(selector: SegmentSelector) {
           push $$1f
           lret;
           1:" :: "ri"(selector.bits() as usize) :: "volatile");
-}
-
-#[inline(always)]
-pub unsafe fn enable_interrupts() {
-    asm!("sti" :::: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn disable_interrupts() {
-    asm!("cli" :::: "volatile", "intel");
 }
 
 #[inline(always)]

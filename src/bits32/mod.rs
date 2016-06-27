@@ -1,8 +1,12 @@
-//! Data structures and functions used by Protected Mode but not IA-32e.
-
 #![allow(non_upper_case_globals)]
 
-pub use shared::*;
+pub mod irq;
+
+pub use shared::{
+    Flags,
+    PrivilegeLevel,
+};
+pub use self::irq::IdtEntry;
 
 use core::mem::size_of;
 
@@ -25,16 +29,6 @@ pub struct GdtEntry {
     access: u8,
     flags: u8,
     base3: u8,
-}
-
-#[derive(Copy, Clone)]
-#[repr(C, packed)]
-pub struct IdtEntry {
-    offset1: u16,
-    selector: u16,
-    reserved: u8,
-    flags: u8,
-    offset2: u16
 }
 
 impl GdtEntry {
@@ -63,26 +57,6 @@ impl GdtEntry {
             access: access.bits() | ((dpl as u8) << 5) | 0x80,
             limit: limit,
             flags: flags
-        }
-    }
-}
-
-impl IdtEntry {
-    pub const NULL: IdtEntry = IdtEntry {
-        offset1: 0,
-        selector: 0,
-        reserved: 0,
-        flags: 0,
-        offset2: 0
-    };
-
-    pub fn new(f: unsafe extern "C" fn(), dpl: PrivilegeLevel, block: bool) -> IdtEntry {
-        IdtEntry {
-            offset1: f as u16,
-            offset2: ((f as usize & 0xFFFF0000) >> 16) as u16,
-            selector: 8,
-            reserved: 0,
-            flags: if block { 0x8E } else { 0x8F } | ((dpl as u8) << 5)
         }
     }
 }

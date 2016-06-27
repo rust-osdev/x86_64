@@ -1,13 +1,12 @@
 //! Description of the data-structures for IA-32e paging mode.
+
 use core::fmt;
+
+use shared::paging::*;
 
 /// Represents a physical memory address
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PAddr(u64);
-
-/// Represent a virtual (linear) memory address
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct VAddr(usize);
 
 impl PAddr {
     /// Convert to `u64`
@@ -17,17 +16,6 @@ impl PAddr {
     /// Convert from `u64`
     pub const fn from_u64(v: u64) -> Self {
         PAddr(v)
-    }
-}
-
-impl VAddr {
-    /// Convert to `usize`
-    pub const fn as_usize(&self) -> usize {
-        self.0
-    }
-    /// Convert from `usize`
-    pub const fn from_usize(v: usize) -> Self {
-        VAddr(v)
     }
 }
 
@@ -56,36 +44,6 @@ impl fmt::Octal for PAddr {
 }
 
 impl fmt::UpperHex for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Binary for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Display for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::LowerHex for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Octal for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::UpperHex for VAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
