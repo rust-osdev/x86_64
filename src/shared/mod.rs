@@ -7,8 +7,7 @@ pub mod io;
 pub mod irq;
 pub mod paging;
 pub mod segmentation;
-
-use self::segmentation::SegmentSelector;
+pub mod task;
 
 bitflags! {
     pub flags Flags: usize {
@@ -134,11 +133,6 @@ pub enum PrivilegeLevel {
     Ring1 = 1,
     Ring2 = 2,
     Ring3 = 3,
-}
-
-#[inline(always)]
-pub unsafe fn set_tr(selector: SegmentSelector) {
-    asm!("ltr $0" :: "r"(selector.bits()) :: "volatile", "intel");
 }
 
 #[inline(always)]
