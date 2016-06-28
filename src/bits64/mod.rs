@@ -37,7 +37,6 @@ pub mod rflags;
 pub mod paging;
 pub mod segmentation;
 pub mod task;
-pub mod dtables;
 pub mod syscall;
 pub mod sgx;
 #[cfg(feature = "performance-counter")]

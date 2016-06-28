@@ -2,6 +2,7 @@
 
 pub mod control_regs;
 pub mod descriptor;
+pub mod dtables;
 pub mod io;
 pub mod irq;
 pub mod paging;
