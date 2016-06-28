@@ -22,6 +22,13 @@ pub mod bits32;
 pub mod bits64;
 pub mod shared;
 
+pub mod current {
+  #[cfg(target_arch="x86")]
+  pub use bits32::*;
+  #[cfg(target_arch="x86_64")]
+  pub use bits64::*;
+}
+
 mod std {
     pub use core::fmt;
     pub use core::ops;
