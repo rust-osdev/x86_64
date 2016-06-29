@@ -1,6 +1,7 @@
 //! Fields which are common to all segment-section and gate descriptors
 
 use shared::PrivilegeLevel;
+use shared::segmentation;
 
 /// System-Segment and Gate-Descriptor Types for IA32e mode.  When the `S`
 /// (descriptor type) flag in a segment descriptor is clear, the descriptor type
@@ -24,6 +25,7 @@ pub enum SystemType {
 
 /// A high-level representation of a descriptor type. One can convert to and
 /// from the `Flags` bitfield to encode/decode an actual descriptor.
+#[repr(u8)]
 pub enum Type {
     SystemDescriptor {
         /// false/0: 16-bit
@@ -31,6 +33,10 @@ pub enum Type {
         size: bool,
         ty: SystemType
     },
+    SegmentDescriptor {
+        ty: segmentation::Type,
+        accessed: bool
+    }
 }
 
 impl Type {
@@ -38,6 +44,8 @@ impl Type {
         match self {
             Type::SystemDescriptor { size, ty } =>
                 (size as u8) << 3 | (ty as u8) | FLAGS_TYPE_SYS.bits,
+            Type::SegmentDescriptor { ty, accessed } =>
+                (accessed as u8)  | ty.pack()  | FLAGS_TYPE_SYS.bits,
         }
     }
 }
@@ -59,6 +67,7 @@ bitflags!{
 
         // Is system descriptor
         const FLAGS_TYPE_SYS = 0 << 4,
+        const FLAGS_TYPE_SEG = 1 << 4,
 
         // System-Segment and Gate-Descriptor Types.
         // When the S (descriptor type) flag in a segment descriptor is clear,
@@ -81,6 +90,82 @@ bitflags!{
         const FLAGS_TYPE_SYS_NATIVE_CALL_GATE = 0b0_1100,
         const FLAGS_TYPE_SYS_NATIVE_INTERRUPT_GATE = 0b0_1110,
         const FLAGS_TYPE_SYS_NATIVE_TRAP_GATE = 0b0_1111,
+
+        // Code- and Data-Segment Descriptor Types.
+        // When the S (descriptor type) flag in a segment descriptor is set,
+        // the descriptor is for either a code or a data segment.
+
+        /// Data or code, accessed
+        const FLAGS_TYPE_SEG_ACCESSED = 0b1_0001,
+
+        const FLAGS_TYPE_DATA = 0b1_0000,
+        const FLAGS_TYPE_CODE = 0b1_1000,
+
+        // Data => permissions
+        const FLAGS_TYPE_SEG_D_WRITE = 0b1_0010,
+        const FLAGS_TYPE_SEG_D_EXPAND_DOWN = 0b1_0100,
+
+        // Code => permissions
+        const FLAGS_TYPE_SEG_C_READ = 0b1_0010,
+        const FLAGS_TYPE_SEG_D_CONFORMING = 0b1_0100,
+
+        /// Data Read-Only
+        const FLAGS_TYPE_SEG_D_RO     = FLAGS_TYPE_DATA.bits,
+        /// Data Read-Only, accessed
+        const FLAGS_TYPE_SEG_D_ROA    = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+        /// Data Read/Write
+        const FLAGS_TYPE_SEG_D_RW     = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_WRITE.bits,
+        /// Data Read/Write, accessed
+        const FLAGS_TYPE_SEG_D_RWA    = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_WRITE.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+        /// Data Read-Only, expand-down
+        const FLAGS_TYPE_SEG_D_ROEXD  = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_EXPAND_DOWN.bits,
+        /// Data Read-Only, expand-down, accessed
+        const FLAGS_TYPE_SEG_D_ROEXDA = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_EXPAND_DOWN.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+        /// Data Read/Write, expand-down
+        const FLAGS_TYPE_SEG_D_RWEXD  = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_WRITE.bits
+                                      | FLAGS_TYPE_SEG_D_EXPAND_DOWN.bits,
+        /// Data Read/Write, expand-down, accessed
+        const FLAGS_TYPE_SEG_D_RWEXDA = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_WRITE.bits
+                                      | FLAGS_TYPE_SEG_D_EXPAND_DOWN.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+
+        /// Code Execute-Only
+        const FLAGS_TYPE_SEG_C_EO     = FLAGS_TYPE_DATA.bits,
+        /// Code Execute-Only, accessed
+        const FLAGS_TYPE_SEG_C_EOA    = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+        /// Code Execute/Read
+        const FLAGS_TYPE_SEG_C_ER     = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_C_READ.bits,
+        /// Code Execute/Read, accessed
+        const FLAGS_TYPE_SEG_C_ERA    = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_C_READ.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+        /// Code Execute-Only, conforming
+        const FLAGS_TYPE_SEG_C_EOC    = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits,
+        /// Code Execute-Only, conforming, accessed
+        const FLAGS_TYPE_SEG_C_EOCA   = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
+        /// Code Execute/Read, conforming
+        const FLAGS_TYPE_SEG_C_ERC    = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_C_READ.bits
+                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits,
+        /// Code Execute/Read, conforming, accessed
+        const FLAGS_TYPE_SEG_C_ERCA   = FLAGS_TYPE_DATA.bits
+                                      | FLAGS_TYPE_SEG_C_READ.bits
+                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits
+                                      | FLAGS_TYPE_SEG_ACCESSED.bits,
     }
 }
 

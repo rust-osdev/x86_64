@@ -35,7 +35,6 @@ pub mod time;
 pub mod irq;
 pub mod rflags;
 pub mod paging;
-pub mod segmentation;
 pub mod task;
 pub mod syscall;
 pub mod sgx;

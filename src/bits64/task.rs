@@ -1,7 +1,7 @@
 //! Helpers to program the task state segment.
 //! See Intel 3a, Chapter 7, Section 7
 
-use super::segmentation;
+use shared::segmentation;
 
 pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;
 pub type TaskStateDescriptorHigh = u64;
