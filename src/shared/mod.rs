@@ -1,3 +1,12 @@
+//! Data structures and functions used by both protected mode and IA-32e.
+
+// In a few rare-cases this module includes mode-specific
+// *implementations*. This is usually because we cannot trust the LLVM inline
+// assembler to infer instruction variants from argument size, and thus we add
+// size-suffixes wherever possible.
+//
+// That said, *interfaces* must always be mode-portable
+
 #![allow(non_upper_case_globals)]
 
 bitflags! {

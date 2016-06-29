@@ -6,13 +6,13 @@
 ///   * Function needs to be executed in ring 0.
 macro_rules! encls {
     ($rax:expr, $rbx:expr)
-        => ( $crate::sgx::encls2($rax as u64, $rbx as u64) );
+        => ( $crate::bits64::sgx::encls2($rax as u64, $rbx as u64) );
 
     ($rax:expr, $rbx:expr, $rcx:expr)
-        => ( $crate::sgx::encls3($rax as u64, $rbx as u64, $rcx as u64) );
+        => ( $crate::bits64::sgx::encls3($rax as u64, $rbx as u64, $rcx as u64) );
 
     ($rax:expr, $rbx:expr, $rcx:expr, $rdx:expr)
-        => ( $crate::sgx::encls4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
+        => ( $crate::bits64::sgx::encls4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
 }
 
 /// encls with two arguments -- consider calling the encls! macro instead!
@@ -226,10 +226,10 @@ pub unsafe fn encls_ewb(pageinfo: u64, epc_page: u64, va_slot: u64) -> u32 {
 ///   * Function needs to be executed in ring 3.
 macro_rules! enclu {
     ($rax:expr, $rbx:expr, $rcx:expr)
-        => ( $crate::sgx::enclu3($rax as u64, $rbx as u64, $rcx as u64) );
+        => ( $crate::bits64::sgx::enclu3($rax as u64, $rbx as u64, $rcx as u64) );
 
     ($rax:expr, $rbx:expr, $rcx:expr, $rdx:expr)
-        => ( $crate::sgx::enclu4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
+        => ( $crate::bits64::sgx::enclu4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
 }
 
 /// enclu with three arguments -- consider calling the enclu! macro instead!

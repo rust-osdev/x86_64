@@ -15,6 +15,6 @@ pub unsafe fn flush(addr: usize) {
 /// This function is unsafe as it causes a general protection fault (GP) if the current privilege
 /// level is not 0.
 pub unsafe fn flush_all() {
-    use controlregs::{cr3, cr3_write};
+    use super::controlregs::{cr3, cr3_write};
     cr3_write(cr3())
 }

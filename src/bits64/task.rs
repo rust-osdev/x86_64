@@ -1,6 +1,6 @@
 //! Helpers to program the task state segment.
 
-use segmentation;
+use super::segmentation;
 
 pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;
 pub type TaskStateDescriptorHigh = u64;

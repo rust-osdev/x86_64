@@ -1,8 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-pub use self::x86_shared::*;
-
-mod x86_shared;
+pub use shared::*;
 
 #[inline(always)]
 pub fn get_flags() -> Flags {

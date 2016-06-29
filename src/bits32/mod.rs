@@ -1,10 +1,10 @@
+//! Data structures and functions used by Protected Mode but not IA-32e.
+
 #![allow(non_upper_case_globals)]
 
-pub use self::x86_shared::*;
+pub use shared::*;
 
 use core::mem::size_of;
-
-mod x86_shared;
 
 bitflags! {
 	pub flags GdtAccess: u8 {

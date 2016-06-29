@@ -1,7 +1,7 @@
 //! Interrupt description and set-up code.
 
 use core::fmt;
-use paging::VAddr;
+use super::paging::VAddr;
 
 /// x86 Exception description (see also Intel Vol. 3a Chapter 6).
 #[derive(Debug)]
