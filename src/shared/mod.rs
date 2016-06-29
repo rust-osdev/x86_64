@@ -6,6 +6,9 @@ pub mod dtables;
 pub mod io;
 pub mod irq;
 pub mod paging;
+pub mod segmentation;
+
+use self::segmentation::SegmentSelector;
 
 bitflags! {
     pub flags Flags: usize {
@@ -133,61 +136,9 @@ pub enum PrivilegeLevel {
     Ring3 = 3,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-#[repr(C, packed)]
-pub struct SegmentSelector {
-    data: u16
-}
-
-impl SegmentSelector {
-    #[inline(always)]
-    pub fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
-        SegmentSelector {
-            data: index << 3 | rpl as u16
-        }
-    }
-
-    pub fn bits(&self) -> u16 {
-        self.data
-    }
-}
-
 #[inline(always)]
 pub unsafe fn set_tr(selector: SegmentSelector) {
     asm!("ltr $0" :: "r"(selector.bits()) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn set_ss(selector: SegmentSelector) {
-    asm!("mov ss, $0" :: "r"(selector.bits()) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn set_ds(selector: SegmentSelector) {
-    asm!("mov ds, $0" :: "r"(selector.bits()) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn set_es(selector: SegmentSelector) {
-    asm!("mov es, $0" :: "r"(selector.bits()) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn set_gs(selector: SegmentSelector) {
-    asm!("mov gs, $0" :: "r"(selector.bits()) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn set_fs(selector: SegmentSelector) {
-    asm!("mov fs, $0" :: "r"(selector.bits()) :: "volatile", "intel");
-}
-
-#[inline(always)]
-pub unsafe fn set_cs(selector: SegmentSelector) {
-    asm!("push $0;
-          push $$1f
-          lret;
-          1:" :: "ri"(selector.bits() as usize) :: "volatile");
 }
 
 #[inline(always)]
