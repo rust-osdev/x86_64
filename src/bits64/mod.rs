@@ -33,7 +33,6 @@ macro_rules! check_bit_fn {
 pub mod msr;
 pub mod time;
 pub mod irq;
-pub mod rflags;
 pub mod paging;
 pub mod task;
 pub mod syscall;
@@ -44,5 +43,3 @@ pub mod cpuid {
     pub use raw_cpuid::*;
 }
 pub mod tlb;
-
-pub mod tobba;

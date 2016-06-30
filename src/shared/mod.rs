@@ -6,31 +6,9 @@ pub mod dtables;
 pub mod io;
 pub mod irq;
 pub mod paging;
+pub mod flags;
 pub mod segmentation;
 pub mod task;
-
-bitflags! {
-    pub flags Flags: usize {
-        const CarryFlag = 1 << 0,
-        const ParityFlag = 1 << 2,
-        const AdjustFlag = 1 << 4,
-        const ZeroFlag = 1 << 6,
-        const SignFlag = 1 << 7,
-        const TrapFlag = 1 << 8,
-        const InterruptFlag = 1 << 9,
-        const DirectionFlag = 1 << 10,
-        const OverflowFlag = 1 << 11,
-        const Iopl1 = 1 << 12,
-        const Iopl2 = 1 << 13,
-        const NestedTaskFlag = 1 << 14,
-        const ResumeFlag = 1 << 16,
-        const Virtual8086Flag = 1 << 17,
-        const AlignmentFlag = 1 << 18,
-        const VirtualInterruptFlag = 1 << 19,
-        const VirtualInterruptPending = 1 << 20,
-        const CpuIdFlag = 1 << 21
-    }
-}
 
 bitflags!(
     pub flags Features: u64 {
