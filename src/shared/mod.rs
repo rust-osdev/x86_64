@@ -5,6 +5,7 @@ pub mod descriptor;
 pub mod dtables;
 pub mod io;
 pub mod irq;
+pub mod msr;
 pub mod paging;
 pub mod flags;
 pub mod segmentation;
@@ -75,11 +76,6 @@ bitflags!(
     }
 );
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Msr {
-    ApicBase = 0x1B
-}
-
 #[inline(always)]
 pub fn cpuid(function: u32) -> (u32, u32, u32, u32) {
     unsafe {
@@ -95,13 +91,6 @@ pub fn supports() -> Features {
     Features {
         bits: ((feature_ecx as u64) << 32) | (feature_edx as u64)
     }
-}
-
-#[inline(always)]
-pub unsafe fn read_msr(msr: Msr) -> u64 {
-    let (r1, r2): (u32, u32);
-    asm!("rdmsr" : "={eax}"(r1), "={edx}"(r2) : "{ecx}"(msr as u32) :: "intel");
-    r1 as u64 | ((r2 as u64) << 32)
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
