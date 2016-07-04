@@ -10,10 +10,8 @@ pub unsafe fn wrmsr(msr: u32, value: u64) {
 /// Read 64 bits msr register.
 #[allow(unused_mut)]
 pub unsafe fn rdmsr(msr: u32) -> u64 {
-    let mut low: u32;
-    let mut high: u32;
+    let (high, low): (u32, u32);
     asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (msr) : "memory" : "volatile");
-
     ((high as u64) << 32) | (low as u64)
 }
 

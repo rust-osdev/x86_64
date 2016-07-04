@@ -1,13 +1,12 @@
 //! Description of the data-structures for IA-32e paging mode.
+
 use core::fmt;
+
+use shared::paging::*;
 
 /// Represents a physical memory address
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PAddr(u64);
-
-/// Represent a virtual (linear) memory address
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct VAddr(usize);
 
 impl PAddr {
     /// Convert to `u64`
@@ -17,17 +16,6 @@ impl PAddr {
     /// Convert from `u64`
     pub const fn from_u64(v: u64) -> Self {
         PAddr(v)
-    }
-}
-
-impl VAddr {
-    /// Convert to `usize`
-    pub const fn as_usize(&self) -> usize {
-        self.0
-    }
-    /// Convert from `usize`
-    pub const fn from_usize(v: usize) -> Self {
-        VAddr(v)
     }
 }
 
@@ -56,36 +44,6 @@ impl fmt::Octal for PAddr {
 }
 
 impl fmt::UpperHex for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Binary for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Display for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::LowerHex for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Octal for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::UpperHex for VAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
@@ -140,8 +98,7 @@ pub fn pt_index(addr: VAddr) -> usize {
 
 /// PML4 Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PML4Entry: u64 {
+    pub flags PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
         const PML4_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 512-GByte region
@@ -200,8 +157,7 @@ impl PML4Entry {
 
 /// PDPT Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PDPTEntry: u64 {
+    pub flags PDPTEntry: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
         const PDPT_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 1-GByte region controlled by this entry
@@ -269,8 +225,7 @@ impl PDPTEntry {
 
 /// PD Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PDEntry: u64 {
+    pub flags PDEntry: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
         const PD_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 2-MByte region controlled by this entry
@@ -345,8 +300,7 @@ impl PDEntry {
 
 /// PT Entry bits description.
 bitflags! {
-    #[derive(Debug)]
-    flags PTEntry: u64 {
+    pub flags PTEntry: u64 {
         /// Present; must be 1 to map a 4-KByte page.
         const PT_P       = bit!(0),
         /// Read/write; if 0, writes may not be allowed to the 4-KByte region controlled by this entry
