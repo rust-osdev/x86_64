@@ -37,7 +37,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
         asm!("pushl $0; \
               pushl $$1f; \
               lretl; \
-              1:" :: "ri" (sel.bits() as usize) : "{rax}" "memory");
+              1:" :: "ri" (sel.bits() as usize) : "rax" "memory");
     }
 
     #[cfg(target_arch="x86_64")]
@@ -47,7 +47,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
               leaq  1f(%rip), %rax; \
               pushq %rax; \
               lretq; \
-              1:" :: "ri" (sel.bits() as usize) : "{rax}" "memory");
+              1:" :: "ri" (sel.bits() as usize) : "rax" "memory");
     }
 
     inner(sel)
