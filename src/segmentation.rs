@@ -203,5 +203,5 @@ pub unsafe fn load_cs(sel: SegmentSelector) {
          lea 1f(%rip), %rax
          pushq %rax
          lretq
-         1:" :: "r" (sel.bits() as u64) : "{rax}" "memory");
+         1:" :: "r" (sel.bits() as u64) : "rax" "memory");
 }
