@@ -21,5 +21,5 @@ pub enum PrivilegeLevel {
 
 #[inline(always)]
 pub unsafe fn halt() {
-    asm!("hlt" :::: "volatile", "intel");
+    asm!("hlt" :::: "volatile");
 }
