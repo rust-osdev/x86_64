@@ -8,6 +8,7 @@ pub mod paging;
 pub mod flags;
 pub mod segmentation;
 pub mod task;
+pub mod tlb;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
