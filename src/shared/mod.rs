@@ -10,6 +10,10 @@ pub mod segmentation;
 pub mod task;
 pub mod tlb;
 
+pub mod cpuid {
+    pub use raw_cpuid::*;
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
 pub enum PrivilegeLevel {
@@ -18,6 +22,9 @@ pub enum PrivilegeLevel {
     Ring2 = 2,
     Ring3 = 3,
 }
+
+#[cfg(feature = "performance-counter")]
+pub mod perfcnt;
 
 #[inline(always)]
 pub unsafe fn halt() {

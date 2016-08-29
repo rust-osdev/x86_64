@@ -23,7 +23,7 @@ mod performance_counter {
 
     use self::serde_json::Value;
 
-    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/bits64/perfcnt/intel/description.rs"));
+    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/shared/perfcnt/intel/description.rs"));
 
     /// HACK: We need to convert parsed strings to static because we're reusing
     /// the struct definition which declare strings as static in the generated code.

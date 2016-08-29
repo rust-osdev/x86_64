@@ -36,8 +36,3 @@ pub mod paging;
 pub mod task;
 pub mod syscall;
 pub mod sgx;
-#[cfg(feature = "performance-counter")]
-pub mod perfcnt;
-pub mod cpuid {
-    pub use raw_cpuid::*;
-}
