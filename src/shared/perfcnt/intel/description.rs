@@ -47,6 +47,7 @@ impl fmt::Debug for MSRIndex {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Counter {
     /// Bit-mask containing the fixed counters
     /// usable with the corresponding performance event.
