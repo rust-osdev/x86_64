@@ -81,7 +81,17 @@ When an MSRIndex is used (indicated by the MSRIndex column), this field will con
 register whose address is given in MSRIndex column. For example, in the case of the load latency events, MSRValue defines the	
 latency threshold value to write into the MSR defined in MSRIndex (0x3F6).	
 	
-----TakenAlone----	
+----CollectPEBSRecord----
+Applies to processors that support both precise and non-precise events in Processor Event Based Sampling, such as Goldmont.	
+0: The event cannot be programmed to collect a PEBS record.  
+1: The event may be programmed to collect a PEBS record, but caution is advised.  
+For instance, PEBS collection of this event may consume limited PEBS resources whereas interrupt-based sampling may be sufficient for the usage model.  
+2: The event may programmed to collect a PEBS record, and due to the nature of the event, PEBS collection may be preferred.  For instance, 
+PEBS collection of Goldmont’s HW_INTERUPTS.RECIEVED event is recommended because the hardware interrupt being counted may lead to the masking of
+interrupts which would interfere with interrupt-based sampling.
+
+	
+	----TakenAlone----	
 This field is set for an event which can only be sampled or counted by itself, meaning that when this event is being collected,	
 the remaining programmable counters are not available to count any other events.	
 	
@@ -98,7 +108,7 @@ This field corresponds to the Any Thread (ANY) bit of IA32_PERFEVTSELx[21] MSR.
 This field corresponds to the Edge Detect (E) bit of IA32_PERFEVTSELx[18] MSR.
  	
 ----PEBS----	
-A '0' in this field means that the event cannot be programmed as a PEBS event. A '1' in this field means that the event is a 
+A '0' in this field means that the event cannot collect a PEBS record with a Precise IP.  A '1' in this field means that the event is a 
 precise event and can be programmed in one of two ways – as a regular event or as a PEBS event. And a '2' in this field means 
 that the event can only be programmed as a PEBS event. 	
 	

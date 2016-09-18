@@ -1,0 +1,26 @@
+# Performance Monitoring Events for the Sixth Generation Intel Core Processors Based on the Skylake Microarchitecture - V24
+# 9/16/2016 11:59:45 AM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+BitName	BitIndex	Type	Description	MATRIX_REG	BitsNotCombinedWith	Errata
+DEMAND_DATA_RD	0	1	TBD	0,1	Null	Null
+DEMAND_RFO	1	1	TBD	0,1	Null	Null
+DEMAND_CODE_RD	2	1	TBD	0,1	Null	Null
+OTHER	15	1	TBD	0,1	Null	Null
+ANY_RESPONSE	16	2	TBD	0,1	Null	Null
+SUPPLIER_NONE	17	3	TBD	0,1	Null	Null
+L3_HIT_M	18	3	TBD	0,1	Null	Null
+L3_HIT_E	19	3	TBD	0,1	Null	Null
+L3_HIT_S	20	3	TBD	0,1	Null	Null
+L3_HIT	18,19,20	3	TBD	0,1	Null	Null
+L4_HIT_LOCAL_L4	22	3	TBD	0,1	Null	Null
+L3_MISS_LOCAL_DRAM	26	3	TBD	0,1	Null	Null
+L3_MISS	26,27,28,29	3	TBD	0,1	Null	Null
+SPL_HIT	30	4	TBD	0,1	Null	Null
+SNOOP_NONE	31	4	TBD	0,1	Null	Null
+SNOOP_NOT_NEEDED	32	4	TBD	0,1	Null	Null
+SNOOP_MISS	33	4	TBD	0,1	Null	Null
+SNOOP_HIT_NO_FWD	34	4	TBD	0,1	Null	Null
+SNOOP_HIT_WITH_FWD	35	4	TBD	0,1	18,19,20,21	Null
+SNOOP_HITM	36	4	TBD	0,1	Null	Null
+SNOOP_NON_DRAM	37	4	TBD	0,1	Null	Null
+ANY_SNOOP	30,31,32,33,34,35,36,37	4	TBD	0,1	Null	Null

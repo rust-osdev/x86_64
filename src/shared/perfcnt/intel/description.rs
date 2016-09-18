@@ -165,6 +165,18 @@ pub struct IntelPerformanceCounterDescription {
     /// references in the system.
     pub precise_store: bool,
 
+    /// Applies to processors that support both precise and non-precise events in Processor Event Based Sampling, such as Goldmont.
+    ///   0: The event cannot be programmed to collect a PEBS record.
+    ///   1: The event may be programmed to collect a PEBS record, but caution is advised.
+    /// For instance, PEBS collection of this event may consume limited PEBS resources whereas
+    /// interrupt-based sampling may be sufficient for the usage model.
+    ///   2: The event may programmed to collect a PEBS record, and due to the nature of the event,
+    ///      PEBS collection may be preferred.  For instance, PEBS collection of Goldmont's
+    ///      HW_INTERUPTS.RECIEVED event is recommended because the hardware interrupt being
+    ///      counted may lead to the masking of interrupts which would interfere with
+    ///      interrupt-based sampling.
+    pub collect_pebs_record: Option<u64>,
+
     /// A '1' in this field means that when the event is configured as a PEBS event,
     /// the Data Linear Address facility is supported.
     ///
@@ -222,6 +234,7 @@ impl IntelPerformanceCounterDescription {
            edge_detect: bool,
            pebs: PebsType,
            precise_store: bool,
+           collect_pebs_record: Option<u64>,
            data_la: bool,
            l1_hit_indication: bool,
            errata: Option<&'static str>,
@@ -250,6 +263,7 @@ impl IntelPerformanceCounterDescription {
             edge_detect: edge_detect,
             pebs: pebs,
             precise_store: precise_store,
+            collect_pebs_record: collect_pebs_record,
             data_la: data_la,
             l1_hit_indication: l1_hit_indication,
             errata: errata,

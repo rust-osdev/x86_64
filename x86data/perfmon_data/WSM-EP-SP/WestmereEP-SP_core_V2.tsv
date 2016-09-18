@@ -1,0 +1,311 @@
+# Performance Monitoring Events for Intel Xeon Processor 3600, 5600 series Based on the Westmere-EP Microarchitecture - V2
+# 8/16/2016 3:18:00 PM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+EventCode	UMask	EventName	BriefDescription	Counter	SampleAfterValue	MSRIndex	MSRValue	CounterMask	Invert	AnyThread	EdgeDetect	PEBS
+0x14	0x1	ARITH.CYCLES_DIV_BUSY	Cycles the divider is busy	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x14	0x1	ARITH.DIV	Divide Operations executed	0,1,2,3	2000000	0	0	1	1	0	1	0
+0x14	0x2	ARITH.MUL	Multiply operations executed	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE6	0x2	BACLEAR.BAD_TARGET	BACLEAR asserted with bad target address	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE6	0x1	BACLEAR.CLEAR	BACLEAR asserted, regardless of cause 	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA7	0x1	BACLEAR_FORCE_IQ	Instruction queue forced BACLEAR	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE8	0x1	BPU_CLEARS.EARLY	Early Branch Prediciton Unit clears	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE8	0x2	BPU_CLEARS.LATE	Late Branch Prediction Unit clears	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE5	0x1	BPU_MISSED_CALL_RET	Branch prediction unit missed call or return	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE0	0x1	BR_INST_DECODED	Branch instructions decoded	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x88	0x7F	BR_INST_EXEC.ANY	Branch instructions executed	0,1,2,3	200000	0	0	0	0	0	0	0
+0x88	0x1	BR_INST_EXEC.COND	Conditional branch instructions executed	0,1,2,3	200000	0	0	0	0	0	0	0
+0x88	0x2	BR_INST_EXEC.DIRECT	Unconditional branches executed	0,1,2,3	200000	0	0	0	0	0	0	0
+0x88	0x10	BR_INST_EXEC.DIRECT_NEAR_CALL	Unconditional call branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x88	0x20	BR_INST_EXEC.INDIRECT_NEAR_CALL	Indirect call branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x88	0x4	BR_INST_EXEC.INDIRECT_NON_CALL	Indirect non call branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x88	0x30	BR_INST_EXEC.NEAR_CALLS	Call branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x88	0x7	BR_INST_EXEC.NON_CALLS	All non call branches executed	0,1,2,3	200000	0	0	0	0	0	0	0
+0x88	0x8	BR_INST_EXEC.RETURN_NEAR	Indirect return branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x88	0x40	BR_INST_EXEC.TAKEN	Taken branches executed	0,1,2,3	200000	0	0	0	0	0	0	0
+0xC4	0x4	BR_INST_RETIRED.ALL_BRANCHES	Retired branch instructions (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xC4	0x1	BR_INST_RETIRED.CONDITIONAL	Retired conditional branch instructions (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xC4	0x2	BR_INST_RETIRED.NEAR_CALL	Retired near call instructions (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0xC4	0x2	BR_INST_RETIRED.NEAR_CALL_R3	Retired near call instructions Ring 3 only(Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0x89	0x7F	BR_MISP_EXEC.ANY	Mispredicted branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x89	0x1	BR_MISP_EXEC.COND	Mispredicted conditional branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x89	0x2	BR_MISP_EXEC.DIRECT	Mispredicted unconditional branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x89	0x10	BR_MISP_EXEC.DIRECT_NEAR_CALL	Mispredicted non call branches executed	0,1,2,3	2000	0	0	0	0	0	0	0
+0x89	0x20	BR_MISP_EXEC.INDIRECT_NEAR_CALL	Mispredicted indirect call branches executed	0,1,2,3	2000	0	0	0	0	0	0	0
+0x89	0x4	BR_MISP_EXEC.INDIRECT_NON_CALL	Mispredicted indirect non call branches executed	0,1,2,3	2000	0	0	0	0	0	0	0
+0x89	0x30	BR_MISP_EXEC.NEAR_CALLS	Mispredicted call branches executed	0,1,2,3	2000	0	0	0	0	0	0	0
+0x89	0x7	BR_MISP_EXEC.NON_CALLS	Mispredicted non call branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0x89	0x8	BR_MISP_EXEC.RETURN_NEAR	Mispredicted return branches executed	0,1,2,3	2000	0	0	0	0	0	0	0
+0x89	0x40	BR_MISP_EXEC.TAKEN	Mispredicted taken branches executed	0,1,2,3	20000	0	0	0	0	0	0	0
+0xC5	0x4	BR_MISP_RETIRED.ALL_BRANCHES	Mispredicted retired branch instructions (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0xC5	0x1	BR_MISP_RETIRED.CONDITIONAL	Mispredicted conditional retired branches (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0xC5	0x2	BR_MISP_RETIRED.NEAR_CALL	Mispredicted near retired calls (Precise Event)	0,1,2,3	2000	0	0	0	0	0	0	1
+0x63	0x2	CACHE_LOCK_CYCLES.L1D	Cycles L1D locked	0,1	2000000	0	0	0	0	0	0	0
+0x63	0x1	CACHE_LOCK_CYCLES.L1D_L2	Cycles L1D and L2 locked	0,1	2000000	0	0	0	0	0	0	0
+0x0	0x0	CPU_CLK_UNHALTED.REF	Reference cycles when thread is not halted (fixed counter)	Fixed counter 3	2000000	0	0	0	0	0	0	0
+0x3C	0x1	CPU_CLK_UNHALTED.REF_P	Reference base clock (133 Mhz) cycles when thread is not halted (programmable counter)	0,1,2,3	100000	0	0	0	0	0	0	0
+0x0	0x0	CPU_CLK_UNHALTED.THREAD	Cycles when thread is not halted (fixed counter)	Fixed counter 2	2000000	0	0	0	0	0	0	0
+0x3C	0x0	CPU_CLK_UNHALTED.THREAD_P	Cycles when thread is not halted (programmable counter)	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x3C	0x0	CPU_CLK_UNHALTED.TOTAL_CYCLES	Total CPU cycles	0,1,2,3	2000000	0	0	2	1	0	0	0
+0x8	0x1	DTLB_LOAD_MISSES.ANY	DTLB load misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x8	0x20	DTLB_LOAD_MISSES.PDE_MISS	DTLB load miss caused by low part of address	0,1,2,3	200000	0	0	0	0	0	0	0
+0x8	0x10	DTLB_LOAD_MISSES.STLB_HIT	DTLB second level hit	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x8	0x2	DTLB_LOAD_MISSES.WALK_COMPLETED	DTLB load miss page walks complete	0,1,2,3	200000	0	0	0	0	0	0	0
+0x8	0x4	DTLB_LOAD_MISSES.WALK_CYCLES	DTLB load miss page walk cycles	0,1,2,3	200000	0	0	0	0	0	0	0
+0x49	0x1	DTLB_MISSES.ANY	DTLB misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x49	0x80	DTLB_MISSES.LARGE_WALK_COMPLETED	DTLB miss large page walks	0,1,2,3	200000	0	0	0	0	0	0	0
+0x49	0x10	DTLB_MISSES.STLB_HIT	DTLB first level misses but second level hit	0,1,2,3	200000	0	0	0	0	0	0	0
+0x49	0x2	DTLB_MISSES.WALK_COMPLETED	DTLB miss page walks	0,1,2,3	200000	0	0	0	0	0	0	0
+0x49	0x4	DTLB_MISSES.WALK_CYCLES	DTLB miss page walk cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x4F	0x10	EPT.WALK_CYCLES	Extended Page Table walk cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD5	0x1	ES_REG_RENAMES	ES segment renames	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xF7	0x1	FP_ASSIST.ALL	X87 Floating point assists (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0xF7	0x4	FP_ASSIST.INPUT	X87 Floating poiint assists for invalid input value (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0xF7	0x2	FP_ASSIST.OUTPUT	X87 Floating point assists for invalid output value (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0x10	0x2	FP_COMP_OPS_EXE.MMX	MMX Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x80	FP_COMP_OPS_EXE.SSE_DOUBLE_PRECISION	SSE* FP double precision Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x4	FP_COMP_OPS_EXE.SSE_FP	SSE and SSE2 FP Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x10	FP_COMP_OPS_EXE.SSE_FP_PACKED	SSE FP packed Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x20	FP_COMP_OPS_EXE.SSE_FP_SCALAR	SSE FP scalar Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x40	FP_COMP_OPS_EXE.SSE_SINGLE_PRECISION	SSE* FP single precision Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x8	FP_COMP_OPS_EXE.SSE2_INTEGER	SSE2 integer Uops	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x10	0x1	FP_COMP_OPS_EXE.X87	Computational floating-point operations executed	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xCC	0x3	FP_MMX_TRANS.ANY	All Floating Point to and from MMX transitions	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xCC	0x1	FP_MMX_TRANS.TO_FP	Transitions from MMX to Floating Point instructions	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xCC	0x2	FP_MMX_TRANS.TO_MMX	Transitions from Floating Point to MMX instructions	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x87	0xF	ILD_STALL.ANY	Any Instruction Length Decoder stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x87	0x4	ILD_STALL.IQ_FULL	Instruction Queue full stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x87	0x1	ILD_STALL.LCP	Length Change Prefix stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x87	0x2	ILD_STALL.MRU	Stall cycles due to BPU MRU bypass	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x87	0x8	ILD_STALL.REGEN	Regen stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x18	0x1	INST_DECODED.DEC0	Instructions that must be decoded by decoder 0	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x1E	0x1	INST_QUEUE_WRITE_CYCLES	Cycles instructions are written to the instruction queue	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x17	0x1	INST_QUEUE_WRITES	Instructions written to instruction queue.	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x0	0x0	INST_RETIRED.ANY	Instructions retired (fixed counter)	Fixed counter 1	2000000	0	0	0	0	0	0	0
+0xC0	0x1	INST_RETIRED.ANY_P	Instructions retired (Programmable counter and Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xC0	0x4	INST_RETIRED.MMX	Retired MMX instructions (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xC0	0x1	INST_RETIRED.TOTAL_CYCLES	Total cycles (Precise Event)	0,1,2,3	2000000	0	0	16	1	0	0	1
+0xC0	0x2	INST_RETIRED.X87	Retired floating-point operations (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0x6C	0x1	IO_TRANSACTIONS	I/O transactions	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xAE	0x1	ITLB_FLUSH	ITLB flushes	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xC8	0x20	ITLB_MISS_RETIRED	Retired instructions that missed the ITLB (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0x85	0x1	ITLB_MISSES.ANY	ITLB miss	0,1,2,3	200000	0	0	0	0	0	0	0
+0x85	0x2	ITLB_MISSES.WALK_COMPLETED	ITLB miss page walks	0,1,2,3	200000	0	0	0	0	0	0	0
+0x85	0x4	ITLB_MISSES.WALK_CYCLES	ITLB miss page walk cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x51	0x4	L1D.M_EVICT	L1D cache lines replaced in M state	0,1	2000000	0	0	0	0	0	0	0
+0x51	0x2	L1D.M_REPL	L1D cache lines allocated in the M state	0,1	2000000	0	0	0	0	0	0	0
+0x51	0x8	L1D.M_SNOOP_EVICT	L1D snoop eviction of cache lines in M state	0,1	2000000	0	0	0	0	0	0	0
+0x51	0x1	L1D.REPL	L1 data cache lines allocated	0,1	2000000	0	0	0	0	0	0	0
+0x52	0x1	L1D_CACHE_PREFETCH_LOCK_FB_HIT	L1D prefetch load lock accepted in fill buffer	0,1	2000000	0	0	0	0	0	0	0
+0x4E	0x2	L1D_PREFETCH.MISS	L1D hardware prefetch misses	0,1	200000	0	0	0	0	0	0	0
+0x4E	0x1	L1D_PREFETCH.REQUESTS	L1D hardware prefetch requests	0,1	200000	0	0	0	0	0	0	0
+0x4E	0x4	L1D_PREFETCH.TRIGGERS	L1D hardware prefetch requests triggered	0,1	200000	0	0	0	0	0	0	0
+0x28	0x4	L1D_WB_L2.E_STATE	L1 writebacks to L2 in E state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x28	0x1	L1D_WB_L2.I_STATE	L1 writebacks to L2 in I state (misses)	0,1,2,3	100000	0	0	0	0	0	0	0
+0x28	0x8	L1D_WB_L2.M_STATE	L1 writebacks to L2 in M state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x28	0xF	L1D_WB_L2.MESI	All L1 writebacks to L2	0,1,2,3	100000	0	0	0	0	0	0	0
+0x28	0x2	L1D_WB_L2.S_STATE	L1 writebacks to L2 in S state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x80	0x4	L1I.CYCLES_STALLED	L1I instruction fetch stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x80	0x1	L1I.HITS	L1I instruction fetch hits	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x80	0x2	L1I.MISSES	L1I instruction fetch misses	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x80	0x3	L1I.READS	L1I Instruction fetches	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x26	0xFF	L2_DATA_RQSTS.ANY	All L2 data requests	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x4	L2_DATA_RQSTS.DEMAND.E_STATE	L2 data demand loads in E state	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x1	L2_DATA_RQSTS.DEMAND.I_STATE	L2 data demand loads in I state (misses)	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x8	L2_DATA_RQSTS.DEMAND.M_STATE	L2 data demand loads in M state	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0xF	L2_DATA_RQSTS.DEMAND.MESI	L2 data demand requests	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x2	L2_DATA_RQSTS.DEMAND.S_STATE	L2 data demand loads in S state	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x40	L2_DATA_RQSTS.PREFETCH.E_STATE	L2 data prefetches in E state	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x10	L2_DATA_RQSTS.PREFETCH.I_STATE	L2 data prefetches in the I state (misses)	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x80	L2_DATA_RQSTS.PREFETCH.M_STATE	L2 data prefetches in M state	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0xF0	L2_DATA_RQSTS.PREFETCH.MESI	All L2 data prefetches	0,1,2,3	200000	0	0	0	0	0	0	0
+0x26	0x20	L2_DATA_RQSTS.PREFETCH.S_STATE	L2 data prefetches in the S state	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF1	0x7	L2_LINES_IN.ANY	L2 lines alloacated	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF1	0x4	L2_LINES_IN.E_STATE	L2 lines allocated in the E state	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF1	0x2	L2_LINES_IN.S_STATE	L2 lines allocated in the S state	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF2	0xF	L2_LINES_OUT.ANY	L2 lines evicted	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF2	0x1	L2_LINES_OUT.DEMAND_CLEAN	L2 lines evicted by a demand request	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF2	0x2	L2_LINES_OUT.DEMAND_DIRTY	L2 modified lines evicted by a demand request	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF2	0x4	L2_LINES_OUT.PREFETCH_CLEAN	L2 lines evicted by a prefetch request	0,1,2,3	100000	0	0	0	0	0	0	0
+0xF2	0x8	L2_LINES_OUT.PREFETCH_DIRTY	L2 modified lines evicted by a prefetch request	0,1,2,3	100000	0	0	0	0	0	0	0
+0x24	0x10	L2_RQSTS.IFETCH_HIT	L2 instruction fetch hits	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x20	L2_RQSTS.IFETCH_MISS	L2 instruction fetch misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x30	L2_RQSTS.IFETCHES	L2 instruction fetches	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x1	L2_RQSTS.LD_HIT	L2 load hits	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x2	L2_RQSTS.LD_MISS	L2 load misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x3	L2_RQSTS.LOADS	L2 requests	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0xAA	L2_RQSTS.MISS	All L2 misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x40	L2_RQSTS.PREFETCH_HIT	L2 prefetch hits	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x80	L2_RQSTS.PREFETCH_MISS	L2 prefetch misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0xC0	L2_RQSTS.PREFETCHES	All L2 prefetches	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0xFF	L2_RQSTS.REFERENCES	All L2 requests	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x4	L2_RQSTS.RFO_HIT	L2 RFO hits	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0x8	L2_RQSTS.RFO_MISS	L2 RFO misses	0,1,2,3	200000	0	0	0	0	0	0	0
+0x24	0xC	L2_RQSTS.RFOS	L2 RFO requests	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x80	L2_TRANSACTIONS.ANY	All L2 transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x20	L2_TRANSACTIONS.FILL	L2 fill transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x4	L2_TRANSACTIONS.IFETCH	L2 instruction fetch transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x10	L2_TRANSACTIONS.L1D_WB	L1D writeback to L2 transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x1	L2_TRANSACTIONS.LOAD	L2 Load transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x8	L2_TRANSACTIONS.PREFETCH	L2 prefetch transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x2	L2_TRANSACTIONS.RFO	L2 RFO transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0xF0	0x40	L2_TRANSACTIONS.WB	L2 writeback to LLC transactions	0,1,2,3	200000	0	0	0	0	0	0	0
+0x27	0x40	L2_WRITE.LOCK.E_STATE	L2 demand lock RFOs in E state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0xE0	L2_WRITE.LOCK.HIT	All demand L2 lock RFOs that hit the cache	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0x10	L2_WRITE.LOCK.I_STATE	L2 demand lock RFOs in I state (misses)	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0x80	L2_WRITE.LOCK.M_STATE	L2 demand lock RFOs in M state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0xF0	L2_WRITE.LOCK.MESI	All demand L2 lock RFOs	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0x20	L2_WRITE.LOCK.S_STATE	L2 demand lock RFOs in S state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0xE	L2_WRITE.RFO.HIT	All L2 demand store RFOs that hit the cache	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0x1	L2_WRITE.RFO.I_STATE	L2 demand store RFOs in I state (misses)	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0x8	L2_WRITE.RFO.M_STATE	L2 demand store RFOs in M state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0xF	L2_WRITE.RFO.MESI	All L2 demand store RFOs	0,1,2,3	100000	0	0	0	0	0	0	0
+0x27	0x2	L2_WRITE.RFO.S_STATE	L2 demand store RFOs in S state	0,1,2,3	100000	0	0	0	0	0	0	0
+0x82	0x1	LARGE_ITLB.HIT	Large ITLB hit	0,1,2,3	200000	0	0	0	0	0	0	0
+0x3	0x2	LOAD_BLOCK.OVERLAP_STORE	Loads that partially overlap an earlier store	0,1,2,3	200000	0	0	0	0	0	0	0
+0x13	0x7	LOAD_DISPATCH.ANY	All loads dispatched	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x13	0x4	LOAD_DISPATCH.MOB	Loads dispatched from the MOB	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x13	0x1	LOAD_DISPATCH.RS	Loads dispatched that bypass the MOB	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x13	0x2	LOAD_DISPATCH.RS_DELAYED	Loads dispatched from stage 305	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x4C	0x1	LOAD_HIT_PRE	Load operations conflicting with software prefetches	0,1	200000	0	0	0	0	0	0	0
+0x2E	0x41	LONGEST_LAT_CACHE.MISS	Longest latency cache miss	0,1,2,3	100000	0	0	0	0	0	0	0
+0x2E	0x4F	LONGEST_LAT_CACHE.REFERENCE	Longest latency cache reference	0,1,2,3	200000	0	0	0	0	0	0	0
+0xA8	0x1	LSD.ACTIVE	Cycles when uops were delivered by the LSD	0,1,2,3	2000000	0	0	1	0	0	0	0
+0xA8	0x1	LSD.INACTIVE	Cycles no uops were delivered by the LSD	0,1,2,3	2000000	0	0	1	1	0	0	0
+0x20	0x1	LSD_OVERFLOW	Loops that can't stream from the instruction queue	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xC3	0x1	MACHINE_CLEARS.CYCLES	Cycles machine clear asserted	0,1,2,3	20000	0	0	0	0	0	0	0
+0xC3	0x2	MACHINE_CLEARS.MEM_ORDER	Execution pipeline restart due to Memory ordering conflicts	0,1,2,3	20000	0	0	0	0	0	0	0
+0xC3	0x4	MACHINE_CLEARS.SMC	Self-Modifying Code detected	0,1,2,3	20000	0	0	0	0	0	0	0
+0xD0	0x1	MACRO_INSTS.DECODED	Instructions decoded	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA6	0x1	MACRO_INSTS.FUSIONS_DECODED	Macro-fused instructions decoded	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xB	0x1	MEM_INST_RETIRED.LOADS	Instructions retired which contains a load (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xB	0x2	MEM_INST_RETIRED.STORES	Instructions retired which contains a store (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xCB	0x80	MEM_LOAD_RETIRED.DTLB_MISS	Retired loads that miss the DTLB (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xCB	0x40	MEM_LOAD_RETIRED.HIT_LFB	Retired loads that miss L1D and hit an previously allocated LFB (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xCB	0x1	MEM_LOAD_RETIRED.L1D_HIT	Retired loads that hit the L1 data cache (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xCB	0x2	MEM_LOAD_RETIRED.L2_HIT	Retired loads that hit the L2 cache (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xCB	0x10	MEM_LOAD_RETIRED.LLC_MISS	Retired loads that miss the LLC cache (Precise Event)	0,1,2,3	10000	0	0	0	0	0	0	1
+0xCB	0x4	MEM_LOAD_RETIRED.LLC_UNSHARED_HIT	Retired loads that hit valid versions in the LLC cache (Precise Event)	0,1,2,3	40000	0	0	0	0	0	0	1
+0xCB	0x8	MEM_LOAD_RETIRED.OTHER_CORE_L2_HIT_HITM	Retired loads that hit sibling core's L2 in modified or unmodified states (Precise Event)	0,1,2,3	40000	0	0	0	0	0	0	1
+0xC	0x1	MEM_STORE_RETIRED.DTLB_MISS	Retired stores that miss the DTLB (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xF	0x10	MEM_UNCORE_RETIRED.LOCAL_DRAM	Load instructions retired with a data source of local DRAM or locally homed remote hitm (Precise Event)	0,1,2,3	10000	0	0	0	0	0	0	1
+0xF	0x2	MEM_UNCORE_RETIRED.OTHER_CORE_L2_HITM	Load instructions retired that HIT modified data in sibling core (Precise Event)	0,1,2,3	40000	0	0	0	0	0	0	1
+0xF	0x8	MEM_UNCORE_RETIRED.REMOTE_CACHE_LOCAL_HOME_HIT	Load instructions retired remote cache HIT data source (Precise Event)	0,1,2,3	20000	0	0	0	0	0	0	1
+0xF	0x20	MEM_UNCORE_RETIRED.REMOTE_DRAM	Load instructions retired remote DRAM and remote home-remote cache HITM (Precise Event)	0,1,2,3	10000	0	0	0	0	0	0	1
+0xF	0x80	MEM_UNCORE_RETIRED.UNCACHEABLE	Load instructions retired IO (Precise Event)	0,1,2,3	4000	0	0	0	0	0	0	1
+0xB0	0x80	OFFCORE_REQUESTS.ANY	All offcore requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x8	OFFCORE_REQUESTS.ANY.READ	Offcore read requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x10	OFFCORE_REQUESTS.ANY.RFO	Offcore RFO requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x2	OFFCORE_REQUESTS.DEMAND.READ_CODE	Offcore demand code read requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x1	OFFCORE_REQUESTS.DEMAND.READ_DATA	Offcore demand data read requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x4	OFFCORE_REQUESTS.DEMAND.RFO	Offcore demand RFO requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x40	OFFCORE_REQUESTS.L1D_WRITEBACK	Offcore L1 data cache writebacks	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB0	0x20	OFFCORE_REQUESTS.UNCACHED_MEM	Offcore uncached memory accesses	0,1,2,3	100000	0	0	0	0	0	0	0
+0x60	0x8	OFFCORE_REQUESTS_OUTSTANDING.ANY.READ	Outstanding offcore reads	0	2000000	0	0	0	0	0	0	0
+0x60	0x8	OFFCORE_REQUESTS_OUTSTANDING.ANY.READ_NOT_EMPTY	Cycles offcore reads busy	0	2000000	0	0	1	0	0	0	0
+0x60	0x2	OFFCORE_REQUESTS_OUTSTANDING.DEMAND.READ_CODE	Outstanding offcore demand code reads	0	2000000	0	0	0	0	0	0	0
+0x60	0x2	OFFCORE_REQUESTS_OUTSTANDING.DEMAND.READ_CODE_NOT_EMPTY	Cycles offcore demand code read busy	0	2000000	0	0	1	0	0	0	0
+0x60	0x1	OFFCORE_REQUESTS_OUTSTANDING.DEMAND.READ_DATA	Outstanding offcore demand data reads	0	2000000	0	0	0	0	0	0	0
+0x60	0x1	OFFCORE_REQUESTS_OUTSTANDING.DEMAND.READ_DATA_NOT_EMPTY	Cycles offcore demand data read busy	0	2000000	0	0	1	0	0	0	0
+0x60	0x4	OFFCORE_REQUESTS_OUTSTANDING.DEMAND.RFO	Outstanding offcore demand RFOs	0	2000000	0	0	0	0	0	0	0
+0x60	0x4	OFFCORE_REQUESTS_OUTSTANDING.DEMAND.RFO_NOT_EMPTY	Cycles offcore demand RFOs busy	0	2000000	0	0	1	0	0	0	0
+0xB2	0x1	OFFCORE_REQUESTS_SQ_FULL	Offcore requests blocked due to Super Queue full	0,1,2,3	100000	0	0	0	0	0	0	0
+0x7	0x1	PARTIAL_ADDRESS_ALIAS	False dependencies due to partial address aliasing	0,1,2,3	200000	0	0	0	0	0	0	0
+0xD2	0xF	RAT_STALLS.ANY	All RAT stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD2	0x1	RAT_STALLS.FLAGS	Flag stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD2	0x2	RAT_STALLS.REGISTERS	Partial register stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD2	0x4	RAT_STALLS.ROB_READ_PORT	ROB read port stalls cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD2	0x8	RAT_STALLS.SCOREBOARD	Scoreboard stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x1	RESOURCE_STALLS.ANY	Resource related stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x20	RESOURCE_STALLS.FPCW	FPU control word write stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x2	RESOURCE_STALLS.LOAD	Load buffer stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x40	RESOURCE_STALLS.MXCSR	MXCSR rename stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x80	RESOURCE_STALLS.OTHER	Other Resource related stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x10	RESOURCE_STALLS.ROB_FULL	ROB full stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x4	RESOURCE_STALLS.RS_FULL	Reservation Station full stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xA2	0x8	RESOURCE_STALLS.STORE	Store buffer stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x4	0x7	SB_DRAIN.ANY	All Store buffer stall cycles	0,1,2,3	200000	0	0	0	0	0	0	0
+0xD4	0x1	SEG_RENAME_STALLS	Segment rename stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0x12	0x4	SIMD_INT_128.PACK	128 bit SIMD integer pack operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0x12	0x20	SIMD_INT_128.PACKED_ARITH	128 bit SIMD integer arithmetic operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0x12	0x10	SIMD_INT_128.PACKED_LOGICAL	128 bit SIMD integer logical operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0x12	0x1	SIMD_INT_128.PACKED_MPY	128 bit SIMD integer multiply operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0x12	0x2	SIMD_INT_128.PACKED_SHIFT	128 bit SIMD integer shift operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0x12	0x40	SIMD_INT_128.SHUFFLE_MOVE	128 bit SIMD integer shuffle/move operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0x12	0x8	SIMD_INT_128.UNPACK	128 bit SIMD integer unpack operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x4	SIMD_INT_64.PACK	SIMD integer 64 bit pack operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x20	SIMD_INT_64.PACKED_ARITH	SIMD integer 64 bit arithmetic operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x10	SIMD_INT_64.PACKED_LOGICAL	SIMD integer 64 bit logical operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x1	SIMD_INT_64.PACKED_MPY	SIMD integer 64 bit packed multiply operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x2	SIMD_INT_64.PACKED_SHIFT	SIMD integer 64 bit shift operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x40	SIMD_INT_64.SHUFFLE_MOVE	SIMD integer 64 bit shuffle/move operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xFD	0x8	SIMD_INT_64.UNPACK	SIMD integer 64 bit unpack operations	0,1,2,3	200000	0	0	0	0	0	0	0
+0xB8	0x1	SNOOP_RESPONSE.HIT	Thread responded HIT to snoop	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB8	0x2	SNOOP_RESPONSE.HITE	Thread responded HITE to snoop	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB8	0x4	SNOOP_RESPONSE.HITM	Thread responded HITM to snoop	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB4	0x4	SNOOPQ_REQUESTS.CODE	Snoop code requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB4	0x1	SNOOPQ_REQUESTS.DATA	Snoop data requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB4	0x2	SNOOPQ_REQUESTS.INVALIDATE	Snoop invalidate requests	0,1,2,3	100000	0	0	0	0	0	0	0
+0xB3	0x4	SNOOPQ_REQUESTS_OUTSTANDING.CODE	Outstanding snoop code requests	0	2000000	0	0	0	0	0	0	0
+0xB3	0x4	SNOOPQ_REQUESTS_OUTSTANDING.CODE_NOT_EMPTY	Cycles snoop code requests queued	0	2000000	0	0	1	0	0	0	0
+0xB3	0x1	SNOOPQ_REQUESTS_OUTSTANDING.DATA	Outstanding snoop data requests	0	2000000	0	0	0	0	0	0	0
+0xB3	0x1	SNOOPQ_REQUESTS_OUTSTANDING.DATA_NOT_EMPTY	Cycles snoop data requests queued	0	2000000	0	0	1	0	0	0	0
+0xB3	0x2	SNOOPQ_REQUESTS_OUTSTANDING.INVALIDATE	Outstanding snoop invalidate requests	0	2000000	0	0	0	0	0	0	0
+0xB3	0x2	SNOOPQ_REQUESTS_OUTSTANDING.INVALIDATE_NOT_EMPTY	Cycles snoop invalidate requests queued	0	2000000	0	0	1	0	0	0	0
+0xF6	0x1	SQ_FULL_STALL_CYCLES	Super Queue full stall cycles	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xF4	0x4	SQ_MISC.LRU_HINTS	Super Queue LRU hints sent to LLC	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xF4	0x10	SQ_MISC.SPLIT_LOCK	Super Queue lock splits across a cache line	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xC7	0x4	SSEX_UOPS_RETIRED.PACKED_DOUBLE	SIMD Packed-Double Uops retired (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xC7	0x1	SSEX_UOPS_RETIRED.PACKED_SINGLE	SIMD Packed-Single Uops retired (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xC7	0x8	SSEX_UOPS_RETIRED.SCALAR_DOUBLE	SIMD Scalar-Double Uops retired (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xC7	0x2	SSEX_UOPS_RETIRED.SCALAR_SINGLE	SIMD Scalar-Single Uops retired (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0xC7	0x10	SSEX_UOPS_RETIRED.VECTOR_INTEGER	SIMD Vector Integer Uops retired (Precise Event)	0,1,2,3	200000	0	0	0	0	0	0	1
+0x6	0x4	STORE_BLOCKS.AT_RET	Loads delayed with at-Retirement block code	0,1,2,3	200000	0	0	0	0	0	0	0
+0x6	0x8	STORE_BLOCKS.L1D_BLOCK	Cacheable loads delayed with L1D block code	0,1,2,3	200000	0	0	0	0	0	0	0
+0x19	0x1	TWO_UOP_INSTS_DECODED	Two Uop instructions decoded	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xDB	0x1	UOP_UNFUSION	Uop unfusions due to FP exceptions	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD1	0x4	UOPS_DECODED.ESP_FOLDING	Stack pointer instructions decoded	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD1	0x8	UOPS_DECODED.ESP_SYNC	Stack pointer sync operations	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xD1	0x2	UOPS_DECODED.MS_CYCLES_ACTIVE	Uops decoded by Microcode Sequencer	0,1,2,3	2000000	0	0	1	0	0	0	0
+0xD1	0x1	UOPS_DECODED.STALL_CYCLES	Cycles no Uops are decoded	0,1,2,3	2000000	0	0	1	1	0	0	0
+0xB1	0x3F	UOPS_EXECUTED.CORE_ACTIVE_CYCLES	Cycles Uops executed on any port (core count)	0,1,2,3	2000000	0	0	1	0	1	0	0
+0xB1	0x1F	UOPS_EXECUTED.CORE_ACTIVE_CYCLES_NO_PORT5	Cycles Uops executed on ports 0-4 (core count)	0,1,2,3	2000000	0	0	1	0	1	0	0
+0xB1	0x3F	UOPS_EXECUTED.CORE_STALL_COUNT	Uops executed on any port (core count)	0,1,2,3	2000000	0	0	1	1	1	1	0
+0xB1	0x1F	UOPS_EXECUTED.CORE_STALL_COUNT_NO_PORT5	Uops executed on ports 0-4 (core count)	0,1,2,3	2000000	0	0	1	1	1	1	0
+0xB1	0x3F	UOPS_EXECUTED.CORE_STALL_CYCLES	Cycles no Uops issued on any port (core count)	0,1,2,3	2000000	0	0	1	1	1	0	0
+0xB1	0x1F	UOPS_EXECUTED.CORE_STALL_CYCLES_NO_PORT5	Cycles no Uops issued on ports 0-4 (core count)	0,1,2,3	2000000	0	0	1	1	1	0	0
+0xB1	0x1	UOPS_EXECUTED.PORT0	Uops executed on port 0	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xB1	0x40	UOPS_EXECUTED.PORT015	Uops issued on ports 0, 1 or 5	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xB1	0x40	UOPS_EXECUTED.PORT015_STALL_CYCLES	Cycles no Uops issued on ports 0, 1 or 5	0,1,2,3	2000000	0	0	1	1	0	0	0
+0xB1	0x2	UOPS_EXECUTED.PORT1	Uops executed on port 1	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xB1	0x4	UOPS_EXECUTED.PORT2_CORE	Uops executed on port 2 (core count)	0,1,2,3	2000000	0	0	0	0	1	0	0
+0xB1	0x80	UOPS_EXECUTED.PORT234_CORE	Uops issued on ports 2, 3 or 4	0,1,2,3	2000000	0	0	0	0	1	0	0
+0xB1	0x8	UOPS_EXECUTED.PORT3_CORE	Uops executed on port 3 (core count)	0,1,2,3	2000000	0	0	0	0	1	0	0
+0xB1	0x10	UOPS_EXECUTED.PORT4_CORE	Uops executed on port 4 (core count)	0,1,2,3	2000000	0	0	0	0	1	0	0
+0xB1	0x20	UOPS_EXECUTED.PORT5	Uops executed on port 5	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE	0x1	UOPS_ISSUED.ANY	Uops issued	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE	0x1	UOPS_ISSUED.CORE_STALL_CYCLES	Cycles no Uops were issued on any thread	0,1,2,3	2000000	0	0	1	1	1	0	0
+0xE	0x1	UOPS_ISSUED.CYCLES_ALL_THREADS	Cycles Uops were issued on either thread	0,1,2,3	2000000	0	0	1	0	1	0	0
+0xE	0x2	UOPS_ISSUED.FUSED	Fused Uops issued	0,1,2,3	2000000	0	0	0	0	0	0	0
+0xE	0x1	UOPS_ISSUED.STALL_CYCLES	Cycles no Uops were issued	0,1,2,3	2000000	0	0	1	1	0	0	0
+0xC2	0x1	UOPS_RETIRED.ACTIVE_CYCLES	Cycles Uops are being retired	0,1,2,3	2000000	0	0	1	0	0	0	1
+0xC2	0x1	UOPS_RETIRED.ANY	Uops retired (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xC2	0x4	UOPS_RETIRED.MACRO_FUSED	Macro-fused Uops retired (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xC2	0x2	UOPS_RETIRED.RETIRE_SLOTS	Retirement slots used (Precise Event)	0,1,2,3	2000000	0	0	0	0	0	0	1
+0xC2	0x1	UOPS_RETIRED.STALL_CYCLES	Cycles Uops are not retiring (Precise Event)	0,1,2,3	2000000	0	0	1	1	0	0	1
+0xC2	0x1	UOPS_RETIRED.TOTAL_CYCLES	Total cycles using precise uop retired event (Precise Event)	0,1,2,3	2000000	0	0	16	1	0	0	1
+0xC0	0x1	INST_RETIRED.TOTAL_CYCLES_PS	Total cycles (Precise Event)	0,1,2,3	2000000	0	0	16	1	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_0	Memory instructions retired above 0 clocks (Precise Event)	3	2000000	0x3F6	0x0	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_1024	Memory instructions retired above 1024 clocks (Precise Event)	3	100	0x3F6	0x400	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_128	Memory instructions retired above 128 clocks (Precise Event)	3	1000	0x3F6	0x80	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_16	Memory instructions retired above 16 clocks (Precise Event)	3	10000	0x3F6	0x10	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_16384	Memory instructions retired above 16384 clocks (Precise Event)	3	5	0x3F6	0x4000	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_2048	Memory instructions retired above 2048 clocks (Precise Event)	3	50	0x3F6	0x800	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_256	Memory instructions retired above 256 clocks (Precise Event)	3	500	0x3F6	0x100	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_32	Memory instructions retired above 32 clocks (Precise Event)	3	5000	0x3F6	0x20	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_32768	Memory instructions retired above 32768 clocks (Precise Event)	3	3	0x3F6	0x8000	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_4	Memory instructions retired above 4 clocks (Precise Event)	3	50000	0x3F6	0x4	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_4096	Memory instructions retired above 4096 clocks (Precise Event)	3	20	0x3F6	0x1000	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_512	Memory instructions retired above 512 clocks (Precise Event)	3	200	0x3F6	0x200	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_64	Memory instructions retired above 64 clocks (Precise Event)	3	2000	0x3F6	0x40	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_8	Memory instructions retired above 8 clocks (Precise Event)	3	20000	0x3F6	0x8	0	0	0	0	2
+0xB	0x10	MEM_INST_RETIRED.LATENCY_ABOVE_THRESHOLD_8192	Memory instructions retired above 8192 clocks (Precise Event)	3	10	0x3F6	0x2000	0	0	0	0	2

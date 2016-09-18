@@ -1,0 +1,43 @@
+# Performance Monitoring Events for Intel(R) Xeon Phi Processor Family based on the Intel(R) Many Integrated Core Architecture - V8
+# 8/16/2016 1:32:30 PM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+MATRIX_REQUEST	MATRIX_RESPONSE	MATRIX_VALUE	MATRIX_REGISTER	DESCRIPTION
+DEMAND_DATA_RD	Null	0x0001	0,1	Counts demand cacheable data and L1 prefetch data reads
+DEMAND_RFO	Null	0x0002	0,1	Counts Demand cacheable data writes
+DEMAND_CODE_RD	Null	0x0004	0,1	Counts demand code reads and prefetch code reads
+PF_L2_RFO	Null	0x0020	0,1	Counts L2 data RFO prefetches (includes PREFETCHW instruction)
+PF_L2_CODE_RD	Null	0x0040	0,1	Counts L2 code HW prefetches
+PARTIAL_READS	Null	0x0080	0,1	Counts Partial reads (UC or WC and is valid only for Outstanding response type).
+PARTIAL_WRITES	Null	0x0100	1	Counts Partial writes (UC or WT or WP and should be programmed on PMC1)
+UC_CODE_READS	Null	0x0200	0,1	Counts UC code reads (valid only for Outstanding response type)
+BUS_LOCKS	Null	0x0400	0,1	Counts Bus locks and split lock requests
+FULL_STREAMING_STORES	Null	0x0800	0,1	Counts Full streaming stores (WC and should be programmed on PMC1)
+PF_SOFTWARE	Null	0x1000	0,1	Counts Software Prefetches
+PF_L1_DATA_RD	Null	0x2000	0,1	Counts L1 data HW prefetches
+PARTIAL_STREAMING_STORES	Null	0x4000	1	Counts Partial streaming stores (WC and should be programmed on PMC1)
+STREAMING_STORES	Null	0x4800	1	Counts all streaming stores (WC and should be programmed on PMC1)
+ANY_REQUEST	Null	0x8000	0,1	Counts any request
+ANY_DATA_RD	Null	0x3081	0,1	Counts Demand cacheable data and L1 prefetch data read requests
+ANY_RFO	Null	0x0022	0,1	Counts Demand cacheable data write requests
+ANY_CODE_RD	Null	0x0044	0,1	Counts Demand code reads and prefetch code read requests
+ANY_READ	Null	0x32e7	0,1	Counts any Read request
+ANY_PF_L2	Null	0x0060	0,1	Counts any Prefetch requests
+Null	ANY_RESPONSE	0x000001	0,1	accounts for any response
+Null	DDR_NEAR	0x008080	0,1	accounts for data responses from DRAM Local.
+Null	DDR_FAR	0x010100	0,1	accounts for data responses from DRAM Far.
+Null	MCDRAM_NEAR	0x008020	0,1	accounts for data responses from MCDRAM Local.
+Null	MCDRAM_FAR	0x010040	0,1	accounts for data responses from MCDRAM Far or Other tile L2 hit far.
+Null	L2_HIT_NEAR_TILE_E_F	0x080008	0,1	accounts for responses from a snoop request hit with data forwarded from its Near-other tile's L2 in E/F state.
+Null	L2_HIT_NEAR_TILE_M	0x100008	0,1	accounts for responses from a snoop request hit with data forwarded from its Near-other tile's L2 in M state.
+Null	L2_HIT_FAR_TILE_E_F	0x080040	0,1	accounts for responses from a snoop request hit with data forwarded from its Far(not in the same quadrant as the request)-other tile's L2 in E/F state. Valid only for SNC4 cluster mode.
+Null	L2_HIT_FAR_TILE_M	0x100040	0,1	accounts for responses from a snoop request hit with data forwarded from its Far(not in the same quadrant as the request)-other tile's L2 in M state.
+Null	NON_DRAM	0x200002	0,1	accounts for responses from any NON_DRAM system address. This includes MMIO transactions
+Null	OUTSTANDING	0x400000	0	outstanding, per weighted cycle, from the time of the request to when any response is received. The oustanding response should be programmed only on PMC0.
+Null	MCDRAM	0x018060	0,1	accounts for responses from MCDRAM (local and far)
+Null	DDR	0x018180	0,1	accounts for responses from DDR (local and far)
+Null	L2_HIT_THIS_TILE_M	0x000200	0,1	accounts for responses which hit its own tile's L2 with data in M state
+Null	L2_HIT_THIS_TILE_E	0x000400	0,1	accounts for responses which hit its own tile's L2 with data in E state
+Null	L2_HIT_THIS_TILE_S	0x000800	0,1	accounts for responses which hit its own tile's L2 with data in S state
+Null	L2_HIT_THIS_TILE_F	0x001000	0,1	accounts for responses which hit its own tile's L2 with data in F state
+Null	L2_HIT_NEAR_TILE	0x180018	0,1	accounts for reponses from snoop request hit with data forwarded from its Near-other tile L2 in E/F/M state
+Null	L2_HIT_FAR_TILE	0x180040	0,1	accounts for reponses from snoop request hit with data forwarded from it Far(not in the same quadrant as the request)-other tile L2 in E/F/M state. Valid only in SNC4 Cluster mode.

@@ -1,0 +1,345 @@
+[
+  {
+    "BitName": "DEMAND_DATA_RD",
+    "BitIndex": "0",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "DEMAND_RFO",
+    "BitIndex": "1",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "DEMAND_CODE_RD",
+    "BitIndex": "2",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PF_L2_RFO",
+    "BitIndex": "5",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PF_L2_CODE_RD",
+    "BitIndex": "6",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PARTIAL_READS",
+    "BitIndex": "7",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PARTIAL_WRITES",
+    "BitIndex": "8",
+    "Type": "1",
+    "MATRIX_REG": "1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "UC_CODE_READS",
+    "BitIndex": "9",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "BUS_LOCKS",
+    "BitIndex": "10",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "FULL_STREAMING_STORES",
+    "BitIndex": "11",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PF_SOFTWARE",
+    "BitIndex": "12",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PF_L1_DATA_RD",
+    "BitIndex": "13",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "PARTIAL_STREAMING_STORES",
+    "BitIndex": "14",
+    "Type": "1",
+    "MATRIX_REG": "1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "STREAMING_STORES",
+    "BitIndex": "11,14",
+    "Type": "1",
+    "MATRIX_REG": "1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_REQUEST",
+    "BitIndex": "15",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_DATA_RD",
+    "BitIndex": "0,7,12,13",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_RFO",
+    "BitIndex": "1,5",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_CODE_RD",
+    "BitIndex": "2,6",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_READ",
+    "BitIndex": "0,1,2,5,6,7,9,12,13",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_PF_L2",
+    "BitIndex": "5,6",
+    "Type": "1",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "ANY_RESPONSE",
+    "BitIndex": "16",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_OTHER_TILE_NEAR_E_F",
+    "BitIndex": "19",
+    "Type": "3",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_OTHER_TILE_MCDRAM_LOCAL",
+    "BitIndex": "21",
+    "Type": "3",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_OTHER_TILE_MCDRAM_FAR",
+    "BitIndex": "22",
+    "Type": "3",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "DDR4_LOCAL_CLUSTER",
+    "BitIndex": "23",
+    "Type": "3",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "DDR4_FAR_CLUSTER",
+    "BitIndex": "24",
+    "Type": "3",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_THIS_TILE_M",
+    "BitIndex": "25",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_THIS_TILE_E",
+    "BitIndex": "26",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_THIS_TILE_S",
+    "BitIndex": "27",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_THIS_TILE_F",
+    "BitIndex": "28",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_MISS_SNOOP_NONE",
+    "BitIndex": "31",
+    "Type": "4",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_MISS_SNOOP_NOT_NEEDED",
+    "BitIndex": "32",
+    "Type": "4",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_MISS_SNOOP_HIT_WITH_FWD",
+    "BitIndex": "35",
+    "Type": "4",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_MISS_SNOOP_HITM",
+    "BitIndex": "36",
+    "Type": "4",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_MISS_SNOOP_NON_DRAM",
+    "BitIndex": "37",
+    "Type": "4",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "DDR_NEAR",
+    "BitIndex": "23,31",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "DDR_FAR",
+    "BitIndex": "24,32",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "MCDRAM_NEAR",
+    "BitIndex": "21,31",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "MCDRAM_FAR",
+    "BitIndex": "22,32",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_NEAR_TILE_E",
+    "BitIndex": "19,35",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_NEAR_TILE_F",
+    "BitIndex": "20,35",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_NEAR_TILE_M",
+    "BitIndex": "19,36",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_FAR_TILE_E_F",
+    "BitIndex": "22,35",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_FAR_TILE_M",
+    "BitIndex": "22,36",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "NON_DRAM",
+    "BitIndex": "17,37",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "NON_CACHEABLE_TO_LOCAL",
+    "BitIndex": "21,37",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "OUTSTANDING",
+    "BitIndex": "38",
+    "Type": "2",
+    "MATRIX_REG": "0",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_NEAR_TILE",
+    "BitIndex": "19,20,35,36",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  },
+  {
+    "BitName": "L2_HIT_FAR_TILE",
+    "BitIndex": "22,35,36",
+    "Type": "2",
+    "MATRIX_REG": "0,1",
+    "BitsNotCombinedWith": "Null"
+  }
+]

@@ -1,0 +1,463 @@
+# Performance Monitoring Events for Intel(R) Xeon Phi Processor Family based on the Intel(R) Many Integrated Core Architecture - V8
+# 8/16/2016 1:32:30 PM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+Unit	EventCode	UMask	EventName	BriefDescription	Counter	Filter	Internal
+EDC_UCLK	0x00	0x00	UNC_E_U_CLOCKTICKS	UCLK count	0,1,2,3	null	0
+EDC_UCLK	0x02	0x01	UNC_E_EDC_ACCESS.HIT_CLEAN	Counts the number of read requests and streaming stores that hit in MCDRAM cache and the data in MCDRAM is clean with respect to DDR. This event is only valid in cache and hybrid memory mode.	0,1,2,3	null	0
+EDC_UCLK	0x02	0x02	UNC_E_EDC_ACCESS.HIT_DIRTY	Counts the number of read requests and streaming stores that hit in MCDRAM cache and the data in MCDRAM is dirty with respect to DDR. This event is only valid in cache and hybrid memory mode. 	0,1,2,3	null	0
+EDC_UCLK	0x02	0x04	UNC_E_EDC_ACCESS.MISS_CLEAN	Counts the number of read requests and streaming stores that miss in MCDRAM cache and the data evicted from the MCDRAM is clean with respect to DDR. This event is only valid in cache and hybrid memory mode.	0,1,2,3	null	0
+EDC_UCLK	0x02	0x08	UNC_E_EDC_ACCESS.MISS_DIRTY	Counts the number of read requests and streaming stores that miss in MCDRAM cache and the data evicted from the MCDRAM is dirty with respect to DDR. This event is only valid in cache and hybrid memory mode.	0,1,2,3	null	0
+EDC_UCLK	0x02	0x10	UNC_E_EDC_ACCESS.MISS_INVALID	Number of EDC Hits or Misses. Miss I	0,1,2,3	null	0
+EDC_ECLK	0x00	0x00	UNC_E_E_CLOCKTICKS	ECLK count	0,1,2,3	null	0
+EDC_ECLK	0x01	0x01	UNC_E_RPQ_INSERTS	Counts the number of read requests received by the MCDRAM controller. This event is valid in all three memory modes: flat, cache and hybrid. In cache and hybrid memory mode, this event counts all read requests as well as streaming stores that hit or miss in the MCDRAM cache. 	0,1,2,3	null	0
+EDC_ECLK	0x02	0x01	UNC_E_WPQ_INSERTS	Counts the number of write requests received by the MCDRAM controller. This event is valid in all three memory modes: flat, cache and hybrid. In cache and hybrid memory mode, this event counts all streaming stores, writebacks and, read requests that miss in MCDRAM cache.	0,1,2,3	null	0
+iMC_UCLK	0x00	0x00	UNC_M_U_CLOCKTICKS	UCLK count	0,1,2,3	null	0
+iMC_DCLK	0x00	0x00	UNC_M_D_CLOCKTICKS	DCLK count	0,1,2,3	null	0
+iMC_DCLK	0x03	0x01	UNC_M_CAS_COUNT.RD	CAS Reads	0,1,2,3	null	0
+iMC_DCLK	0x03	0x02	UNC_M_CAS_COUNT.WR	CAS Writes	0,1,2,3	null	0
+iMC_DCLK	0x03	0x03	UNC_M_CAS_COUNT.ALL	CAS All	0,1,2,3	null	0
+CHA	0x00	0x00	UNC_H_U_CLOCKTICKS	Uncore Clocks	0,1,2,3	null	0
+CHA	0x11	0x01	UNC_H_INGRESS_OCCUPANCY.IRQ	Ingress Occupancy. Counts number of entries in the specified Ingress queue in each cycle. - IRQ	0	null	0
+CHA	0x11	0x02	UNC_H_INGRESS_OCCUPANCY.IRQ_REJ	Ingress Occupancy. Counts number of entries in the specified Ingress queue in each cycle. - IRQ Rejected	0	null	0
+CHA	0x11	0x04	UNC_H_INGRESS_OCCUPANCY.IPQ	Ingress Occupancy. Counts number of entries in the specified Ingress queue in each cycle. - IPQ	0	null	0
+CHA	0x11	0x10	UNC_H_INGRESS_OCCUPANCY.PRQ	Ingress Occupancy. Counts number of entries in the specified Ingress queue in each cycle. - PRQ	0	null	0
+CHA	0x11	0x20	UNC_H_INGRESS_OCCUPANCY.PRQ_REJ	Ingress Occupancy. Counts number of entries in the specified Ingress queue in each cycle. - PRQ Rejected	0	null	0
+CHA	0x13	0x01	UNC_H_INGRESS_INSERTS.IRQ	Ingress Allocations. Counts number of allocations per cycle into the specified Ingress queue. - IRQ	0,1,2,3	null	0
+CHA	0x13	0x02	UNC_H_INGRESS_INSERTS.IRQ_REJ	Ingress Allocations. Counts number of allocations per cycle into the specified Ingress queue. - IRQ Rejected	0,1,2,3	null	0
+CHA	0x13	0x04	UNC_H_INGRESS_INSERTS.IPQ	Ingress Allocations. Counts number of allocations per cycle into the specified Ingress queue. - IPQ	0,1,2,3	null	0
+CHA	0x13	0x10	UNC_H_INGRESS_INSERTS.PRQ	Ingress Allocations. Counts number of allocations per cycle into the specified Ingress queue. - PRQ	0,1,2,3	null	0
+CHA	0x13	0x20	UNC_H_INGRESS_INSERTS.PRQ_REJ	Ingress Allocations. Counts number of allocations per cycle into the specified Ingress queue. - PRQ Rejected	0,1,2,3	null	0
+CHA	0x14	0x01	UNC_H_INGRESS_INT_STARVED.IRQ	Cycles with the IRQ in Internal Starvation.	0,1,2,3	null	0
+CHA	0x14	0x04	UNC_H_INGRESS_INT_STARVED.IPQ	Cycles with the IPQ in Internal Starvation.	0,1,2,3	null	0
+CHA	0x14	0x08	UNC_H_INGRESS_INT_STARVED.ISMQ	Cycles with the ISMQ in Internal Starvation.	0,1,2,3	null	0
+CHA	0x14	0x10	UNC_H_INGRESS_INT_STARVED.PRQ	tbd	0,1,2,3	null	0
+CHA	0x18	0x01	UNC_H_INGRESS_RETRY_IRQ0_REJECT.AD_REQ_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x02	UNC_H_INGRESS_RETRY_IRQ0_REJECT.AD_RSP_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x04	UNC_H_INGRESS_RETRY_IRQ0_REJECT.BL_RSP_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x08	UNC_H_INGRESS_RETRY_IRQ0_REJECT.BL_WB_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x10	UNC_H_INGRESS_RETRY_IRQ0_REJECT.BL_NCB_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x20	UNC_H_INGRESS_RETRY_IRQ0_REJECT.BL_NCS_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x40	UNC_H_INGRESS_RETRY_IRQ0_REJECT.AK_NON_UPI	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x18	0x80	UNC_H_INGRESS_RETRY_IRQ0_REJECT.IV_NON_UPI	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x19	0x01	UNC_H_INGRESS_RETRY_IRQ1_REJECT.ANY_REJECT_IRQ0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x19	0x08	UNC_H_INGRESS_RETRY_IRQ1_REJECT.SF_VICTIM	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x19	0x20	UNC_H_INGRESS_RETRY_IRQ1_REJECT.SF_WAY	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x19	0x40	UNC_H_INGRESS_RETRY_IRQ1_REJECT.ALLOW_SNP	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x19	0x80	UNC_H_INGRESS_RETRY_IRQ1_REJECT.PA_MATCH	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x01	UNC_H_INGRESS_RETRY_PRQ0_REJECT.AD_REQ_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x02	UNC_H_INGRESS_RETRY_PRQ0_REJECT.AD_RSP_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x04	UNC_H_INGRESS_RETRY_PRQ0_REJECT.BL_RSP_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x08	UNC_H_INGRESS_RETRY_PRQ0_REJECT.BL_WB_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x10	UNC_H_INGRESS_RETRY_PRQ0_REJECT.BL_NCB_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x20	UNC_H_INGRESS_RETRY_PRQ0_REJECT.BL_NCS_VN0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x40	UNC_H_INGRESS_RETRY_PRQ0_REJECT.AK_NON_UPI	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x20	0x80	UNC_H_INGRESS_RETRY_PRQ0_REJECT.IV_NON_UPI	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x21	0x01	UNC_H_INGRESS_RETRY_PRQ1_REJECT.ANY_REJECT_IRQ0	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x21	0x08	UNC_H_INGRESS_RETRY_PRQ1_REJECT.SF_VICTIM	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x21	0x20	UNC_H_INGRESS_RETRY_PRQ1_REJECT.SF_WAY	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x21	0x40	UNC_H_INGRESS_RETRY_PRQ1_REJECT.ALLOW_SNP	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x21	0x80	UNC_H_INGRESS_RETRY_PRQ1_REJECT.PA_MATCH	Ingress Request Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x01	UNC_H_INGRESS_RETRY_IPQ0_REJECT.AD_REQ_VN0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x02	UNC_H_INGRESS_RETRY_IPQ0_REJECT.AD_RSP_VN0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x04	UNC_H_INGRESS_RETRY_IPQ0_REJECT.BL_RSP_VN0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x08	UNC_H_INGRESS_RETRY_IPQ0_REJECT.BL_WB_VN0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x10	UNC_H_INGRESS_RETRY_IPQ0_REJECT.BL_NCB_VN0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x20	UNC_H_INGRESS_RETRY_IPQ0_REJECT.BL_NCS_VN0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x40	UNC_H_INGRESS_RETRY_IPQ0_REJECT.AK_NON_UPI	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x22	0x80	UNC_H_INGRESS_RETRY_IPQ0_REJECT.IV_NON_UPI	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x23	0x01	UNC_H_INGRESS_RETRY_IPQ1_REJECT.ANY_REJECT_IPQ0	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x23	0x08	UNC_H_INGRESS_RETRY_IPQ1_REJECT.SF_VICTIM	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x23	0x20	UNC_H_INGRESS_RETRY_IPQ1_REJECT.SF_WAY	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x23	0x40	UNC_H_INGRESS_RETRY_IPQ1_REJECT.ALLOW_SNP	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x23	0x80	UNC_H_INGRESS_RETRY_IPQ1_REJECT.PA_MATCH	Ingress Probe Queue Rejects	0,1,2,3	null	0
+CHA	0x24	0x01	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.AD_REQ_VN0	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x02	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.AD_RSP_VN0	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x04	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.BL_RSP_VN0	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x08	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.BL_WB_VN0	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x10	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.BL_NCB_VN0	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x20	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.BL_NCS_VN0	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x40	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.AK_NON_UPI	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x24	0x80	UNC_H_INGRESS_RETRY_ISMQ0_REJECT.IV_NON_UPI	ISMQ Rejects	0,1,2,3	null	0
+CHA	0x2A	0x01	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.AD_REQ_VN0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x02	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.AD_RSP_VN0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x04	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.BL_RSP_VN0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x08	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.BL_WB_VN0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x10	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.BL_NCB_VN0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x20	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.BL_NCS_VN0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x40	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.AK_NON_UPI	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2A	0x80	UNC_H_INGRESS_RETRY_REQ_Q0_RETRY.IV_NON_UPI	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2B	0x01	UNC_H_INGRESS_RETRY_REQ_Q1_RETRY.ANY_REJECT_IRQ0	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2B	0x08	UNC_H_INGRESS_RETRY_REQ_Q1_RETRY.SF_VICTIM	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2B	0x20	UNC_H_INGRESS_RETRY_REQ_Q1_RETRY.SF_WAY	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2B	0x40	UNC_H_INGRESS_RETRY_REQ_Q1_RETRY.ALLOW_SNP	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2B	0x80	UNC_H_INGRESS_RETRY_REQ_Q1_RETRY.PA_MATCH	REQUESTQ'' includes:  IRQ, PRQ, IPQ, RRQ, WBQ (everything except for ISMQ)	0,1,2,3	null	0
+CHA	0x2C	0x01	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.AD_REQ_VN0	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x02	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.AD_RSP_VN0	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x04	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.BL_RSP_VN0	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x08	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.BL_WB_VN0	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x10	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.BL_NCB_VN0	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x20	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.BL_NCS_VN0	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x40	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.AK_NON_UPI	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2C	0x80	UNC_H_INGRESS_RETRY_ISMQ0_RETRY.IV_NON_UPI	ISMQ Retries	0,1,2,3	null	0
+CHA	0x2E	0x01	UNC_H_INGRESS_RETRY_OTHER0_RETRY.AD_REQ_VN0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x02	UNC_H_INGRESS_RETRY_OTHER0_RETRY.AD_RSP_VN0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x04	UNC_H_INGRESS_RETRY_OTHER0_RETRY.BL_RSP_VN0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x08	UNC_H_INGRESS_RETRY_OTHER0_RETRY.BL_WB_VN0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x10	UNC_H_INGRESS_RETRY_OTHER0_RETRY.BL_NCB_VN0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x20	UNC_H_INGRESS_RETRY_OTHER0_RETRY.BL_NCS_VN0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x40	UNC_H_INGRESS_RETRY_OTHER0_RETRY.AK_NON_UPI	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2E	0x80	UNC_H_INGRESS_RETRY_OTHER0_RETRY.IV_NON_UPI	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2F	0x01	UNC_H_INGRESS_RETRY_OTHER1_RETRY.ANY_REJECT_IRQ0	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2F	0x08	UNC_H_INGRESS_RETRY_OTHER1_RETRY.SF_VICTIM	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2F	0x20	UNC_H_INGRESS_RETRY_OTHER1_RETRY.SF_WAY	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2F	0x40	UNC_H_INGRESS_RETRY_OTHER1_RETRY.ALLOW_SNP	Other Queue Retries	0,1,2,3	null	0
+CHA	0x2F	0x80	UNC_H_INGRESS_RETRY_OTHER1_RETRY.PA_MATCH	Other Queue Retries	0,1,2,3	null	0
+CHA	0x34	0x03	UNC_H_SF_LOOKUP.DATA_READ	Cache Lookups. Counts the number of times the LLC was accessed. Read transactions	0,1,2,3	null	0
+CHA	0x34	0x05	UNC_H_SF_LOOKUP.WRITE	Cache Lookups. Counts the number of times the LLC was accessed. Writeback transactions from L2 to the LLC  This includes all write transactions -- both Cachable and UC.	0,1,2,3	null	0
+CHA	0x34	0x09	UNC_H_SF_LOOKUP.REMOTE_SNOOP	Cache Lookups. Counts the number of times the LLC was accessed. Filters for only snoop requests coming from the remote socket(s) through the IPQ.	0,1,2,3	null	0
+CHA	0x34	0x11	UNC_H_SF_LOOKUP.ANY	Cache Lookups. Counts the number of times the LLC was accessed. Filters for any transaction originating from the IPQ or IRQ.  This does not include lookups originating from the ISMQ.	0,1,2,3	null	0
+CHA	0x37	0x01	UNC_H_CACHE_LINES_VICTIMIZED.M_STATE	Cache Lookups. Counts the number of times the LLC was accessed. Read transactions	0,1,2,3	null	0
+CHA	0x37	0x02	UNC_H_CACHE_LINES_VICTIMIZED.E_STATE	Cache Lookups. Counts the number of times the LLC was accessed. Writeback transactions from L2 to the LLC  This includes all write transactions -- both Cachable and UC.	0,1,2,3	null	0
+CHA	0x37	0x04	UNC_H_CACHE_LINES_VICTIMIZED.S_STATE	Cache Lookups. Counts the number of times the LLC was accessed. Filters for only snoop requests coming from the remote socket(s) through the IPQ.	0,1,2,3	null	0
+CHA	0x37	0x08	UNC_H_CACHE_LINES_VICTIMIZED.F_STATE	Cache Lookups. Counts the number of times the LLC was accessed. Filters for any transaction originating from the IPQ or IRQ.  This does not include lookups originating from the ISMQ.	0,1,2,3	null	0
+CHA	0x37	0x20	UNC_H_CACHE_LINES_VICTIMIZED.LOCAL	Lines Victimized that Match NID	0,1,2,3	null	0
+CHA	0x37	0x80	UNC_H_CACHE_LINES_VICTIMIZED.REMOTE	Lines Victimized that Does Not Match NID	0,1,2,3	null	0
+CHA	0x35	0x31	UNC_H_TOR_INSERTS.IRQ	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IRQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x32	UNC_H_TOR_INSERTS.EVICT	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -SF/LLC Evictions	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x34	UNC_H_TOR_INSERTS.PRQ	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -PRQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x38	UNC_H_TOR_INSERTS.IPQ	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IPQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x1F	UNC_H_TOR_INSERTS.HIT	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -Hit (Not a Miss)	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x2F	UNC_H_TOR_INSERTS.MISS	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -Miss	0,1,2,3	CHAFilter1	0
+CHA	0x36	0x31	UNC_H_TOR_OCCUPANCY.IRQ	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -IRQ or PRQ	0	CHAFilter1	0
+CHA	0x36	0x32	UNC_H_TOR_OCCUPANCY.EVICT	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -SF/LLC Evictions	0	CHAFilter1	0
+CHA	0x36	0x34	UNC_H_TOR_OCCUPANCY.PRQ	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -PRQ	0	CHAFilter1	0
+CHA	0x36	0x38	UNC_H_TOR_OCCUPANCY.IPQ	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -IPQ	0	CHAFilter1	0
+CHA	0x36	0x1F	UNC_H_TOR_OCCUPANCY.HIT	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -Hit (Not a Miss)	0	CHAFilter1	0
+CHA	0x36	0x2F	UNC_H_TOR_OCCUPANCY.MISS	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -Miss	0	CHAFilter1	0
+CHA	0x39	0x01	UNC_H_MISC.RSPI_WAS_FSE	Miscellaneous events in the Cbo. Silent Snoop Eviction	0,1,2,3	null	0
+CHA	0x39	0x02	UNC_H_MISC.WC_ALIASING	Miscellaneous events in the Cbo. Write Combining Aliasing	0,1,2,3	null	0
+CHA	0x39	0x08	UNC_H_MISC.RFO_HIT_S	Miscellaneous events in the Cbo. RFO HitS	0,1,2,3	null	0
+CHA	0x39	0x10	UNC_H_MISC.CV0_PREF_VIC	Miscellaneous events in the Cbo. CV0 Prefetch Victim	0,1,2,3	null	0
+CHA	0x39	0x20	UNC_H_MISC.CV0_PREF_MISS	Miscellaneous events in the Cbo. CV0 Prefetch Miss	0,1,2,3	null	0
+M2PCIe	0x10	0x01	UNC_M2P_INGRESS_CYCLES_NE.CBO_IDI	Ingress Queue Cycles Not Empty. Counts the number of cycles when the M2PCIe Ingress is not empty.CBO_IDI	0,1,2,3	null	0
+M2PCIe	0x10	0x02	UNC_M2P_INGRESS_CYCLES_NE.CBO_NCB	Ingress Queue Cycles Not Empty. Counts the number of cycles when the M2PCIe Ingress is not empty.CBO_NCB	0,1,2,3	null	0
+M2PCIe	0x10	0x04	UNC_M2P_INGRESS_CYCLES_NE.CBO_NCS	Ingress Queue Cycles Not Empty. Counts the number of cycles when the M2PCIe Ingress is not empty.CBO_NCS	0,1,2,3	null	0
+M2PCIe	0x10	0x80	UNC_M2P_INGRESS_CYCLES_NE.ALL	Ingress Queue Cycles Not Empty. Counts the number of cycles when the M2PCIe Ingress is not empty.ALL	0,1,2,3	null	0
+M2PCIe	0x23	0x01	UNC_M2P_EGRESS_CYCLES_NE.AD_0	Egress (to CMS) Cycles Not Empty. Counts the number of cycles when the M2PCIe Egress is not empty.  AD_0	0,1	null	0
+M2PCIe	0x23	0x02	UNC_M2P_EGRESS_CYCLES_NE.AK_0	Egress (to CMS) Cycles Not Empty. Counts the number of cycles when the M2PCIe Egress is not empty.  AK_0	0,1	null	0
+M2PCIe	0x23	0x04	UNC_M2P_EGRESS_CYCLES_NE.BL_0	Egress (to CMS) Cycles Not Empty. Counts the number of cycles when the M2PCIe Egress is not empty.  BL_0	0,1	null	0
+M2PCIe	0x23	0x08	UNC_M2P_EGRESS_CYCLES_NE.AD_1	Egress (to CMS) Cycles Not Empty. Counts the number of cycles when the M2PCIe Egress is not empty.  AD_1	0,1	null	0
+M2PCIe	0x23	0x10	UNC_M2P_EGRESS_CYCLES_NE.AK_1	Egress (to CMS) Cycles Not Empty. Counts the number of cycles when the M2PCIe Egress is not empty.  AK_1	0,1	null	0
+M2PCIe	0x23	0x20	UNC_M2P_EGRESS_CYCLES_NE.BL_1	Egress (to CMS) Cycles Not Empty. Counts the number of cycles when the M2PCIe Egress is not empty.  BL_1	0,1	null	0
+M2PCIe	0x24	0x01	UNC_M2P_EGRESS_INSERTS.AD_0	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. AD_0	0,1,2,3	null	0
+M2PCIe	0x24	0x02	UNC_M2P_EGRESS_INSERTS.AK_0	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. AK_0	0,1,2,3	null	0
+M2PCIe	0x24	0x04	UNC_M2P_EGRESS_INSERTS.BL_0	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. BL_0	0,1,2,3	null	0
+M2PCIe	0x24	0x08	UNC_M2P_EGRESS_INSERTS.AK_CRD_0	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. AK_CRD_0	0,1,2,3	null	0
+M2PCIe	0x24	0x10	UNC_M2P_EGRESS_INSERTS.AD_1	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. AD_1	0,1,2,3	null	0
+M2PCIe	0x24	0x20	UNC_M2P_EGRESS_INSERTS.AK_1	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. AK_1	0,1,2,3	null	0
+M2PCIe	0x24	0x40	UNC_M2P_EGRESS_INSERTS.BL_1	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. BL_1	0,1,2,3	null	0
+M2PCIe	0x24	0x80	UNC_M2P_EGRESS_INSERTS.AK_CRD_1	Egress (to CMS) Ingress. Counts the number of number of messages inserted into the  the M2PCIe Egress queue. AK_CRD_1	0,1,2,3	null	0
+M2PCIe	0x25	0x01	UNC_M2P_EGRESS_CYCLES_FULL.AD_0	Egress (to CMS) Cycles Full. Counts the number of cycles when the M2PCIe Egress is full.  AD_0	0,1,2,3	null	0
+M2PCIe	0x25	0x02	UNC_M2P_EGRESS_CYCLES_FULL.AK_0	Egress (to CMS) Cycles Full. Counts the number of cycles when the M2PCIe Egress is full.  AK_0	0,1,2,3	null	0
+M2PCIe	0x25	0x04	UNC_M2P_EGRESS_CYCLES_FULL.BL_0	Egress (to CMS) Cycles Full. Counts the number of cycles when the M2PCIe Egress is full.  BL_0	0,1,2,3	null	0
+M2PCIe	0x25	0x08	UNC_M2P_EGRESS_CYCLES_FULL.AD_1	Egress (to CMS) Cycles Full. Counts the number of cycles when the M2PCIe Egress is full.  AD_1	0,1,2,3	null	0
+M2PCIe	0x25	0x10	UNC_M2P_EGRESS_CYCLES_FULL.AK_1	Egress (to CMS) Cycles Full. Counts the number of cycles when the M2PCIe Egress is full.  AK_1	0,1,2,3	null	0
+M2PCIe	0x25	0x20	UNC_M2P_EGRESS_CYCLES_FULL.BL_1	Egress (to CMS) Cycles Full. Counts the number of cycles when the M2PCIe Egress is full.  BL_1	0,1,2,3	null	0
+CHA	0x35	0x11	UNC_C_TOR_INSERTS.IRQ_HIT	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IRQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x21	UNC_C_TOR_INSERTS.IRQ_MISS	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IRQ 	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x14	UNC_C_TOR_INSERTS.PRQ_HIT	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -PRQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x24	UNC_C_TOR_INSERTS.PRQ_MISS	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -PRQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x18	UNC_C_TOR_INSERTS.IPQ_HIT	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IPQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x28	UNC_C_TOR_INSERTS.IPQ_MISS	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IPQ	0,1,2,3	CHAFilter1	0
+CHA	0x35	0x37	UNC_C_TOR_INSERTS.LOC_ALL	Counts the number of entries successfuly inserted into the TOR that match  qualifications specified by the subevent -IRQ or PRQ	0,1,2,3	CHAFilter1	0
+CHA	0x36	0x11	UNC_H_TOR_OCCUPANCY.IRQ_HIT	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -IRQ or PRQ hit	0	CHAFilter1	0
+CHA	0x36	0x21	UNC_H_TOR_OCCUPANCY.IRQ_MISS	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -IRQ or PRQ miss	0	CHAFilter1	0
+CHA	0x36	0x14	UNC_H_TOR_OCCUPANCY.PRQ_HIT	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -PRQ hit	0	CHAFilter1	0
+CHA	0x36	0x24	UNC_H_TOR_OCCUPANCY.PRQ_MISS	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -PRQ miss	0	CHAFilter1	0
+CHA	0x36	0x18	UNC_H_TOR_OCCUPANCY.IPQ_HIT	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -IPQ hit	0	CHAFilter1	0
+CHA	0x36	0x28	UNC_H_TOR_OCCUPANCY.IPQ_MISS	For each cycle, this event accumulates the number of valid entries in the TOR that match qualifications specified by the subevent -IPQ miss	0	CHAFilter1	0
+CHA	0xC0	0x00	UNC_H_CLOCK	Uncore Clocks	0,1,2,3	null	0
+CHA	0x80	0x01	UNC_H_AG0_AD_CRD_ACQUIRED.TGR0	CMS Agent0 AD Credits Acquired For Transgress 0	0,1,2,3	null	0
+CHA	0x80	0x02	UNC_H_AG0_AD_CRD_ACQUIRED.TGR1	CMS Agent0 AD Credits Acquired For Transgress 1	0,1,2,3	null	0
+CHA	0x80	0x04	UNC_H_AG0_AD_CRD_ACQUIRED.TGR2	CMS Agent0 AD Credits Acquired For Transgress 2	0,1,2,3	null	0
+CHA	0x80	0x08	UNC_H_AG0_AD_CRD_ACQUIRED.TGR3	CMS Agent0 AD Credits Acquired For Transgress 3	0,1,2,3	null	0
+CHA	0x80	0x10	UNC_H_AG0_AD_CRD_ACQUIRED.TGR4	CMS Agent0 AD Credits Acquired For Transgress 4	0,1,2,3	null	0
+CHA	0x80	0x20	UNC_H_AG0_AD_CRD_ACQUIRED.TGR5	CMS Agent0 AD Credits Acquired For Transgress 5	0,1,2,3	null	0
+CHA	0x80	0x40	UNC_H_AG0_AD_CRD_ACQUIRED.TGR6	CMS Agent0 AD Credits Acquired For Transgress 6	0,1,2,3	null	0
+CHA	0x80	0x80	UNC_H_AG0_AD_CRD_ACQUIRED.TGR7	CMS Agent0 AD Credits Acquired For Transgress 7	0,1,2,3	null	0
+CHA	0x81	0x01	UNC_H_AG0_AD_CRD_ACQUIRED_EXT.TGR8	CMS Agent0 AD Credits Acquired For Transgress 8	0,1,2,3	null	0
+CHA	0x81	0x02	UNC_H_AG0_AD_CRD_ACQUIRED_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent0 AD Credits Acquired For Transgress 0-7	0,1,2,3	null	0
+CHA	0x82	0x01	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR0	CMS Agent0 AD Credits Occupancy For Transgress 0	0,1,2,3	null	0
+CHA	0x82	0x02	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR1	CMS Agent0 AD Credits Occupancy For Transgress 1	0,1,2,3	null	0
+CHA	0x82	0x04	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR2	CMS Agent0 AD Credits Occupancy For Transgress 2	0,1,2,3	null	0
+CHA	0x82	0x08	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR3	CMS Agent0 AD Credits Occupancy For Transgress 3	0,1,2,3	null	0
+CHA	0x82	0x10	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR4	CMS Agent0 AD Credits Occupancy For Transgress 4	0,1,2,3	null	0
+CHA	0x82	0x20	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR5	CMS Agent0 AD Credits Occupancy For Transgress 5	0,1,2,3	null	0
+CHA	0x82	0x40	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR6	CMS Agent0 AD Credits Occupancy For Transgress 6	0,1,2,3	null	0
+CHA	0x82	0x80	UNC_H_AG0_AD_CRD_OCCUPANCY.TGR7	CMS Agent0 AD Credits Occupancy For Transgress 7	0,1,2,3	null	0
+CHA	0x83	0x01	UNC_H_AG0_AD_CRD_OCCUPANCY_EXT.TGR8	CMS Agent0 AD Credits Occupancy For Transgress 8	0,1,2,3	null	0
+CHA	0x83	0x02	UNC_H_AG0_AD_CRD_OCCUPANCY_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent0 AD Credits Occupancy For Transgress 0-7	0,1,2,3	null	0
+CHA	0x84	0x01	UNC_H_AG1_AD_CRD_ACQUIRED.TGR0	CMS Agent1 AD Credits Acquired For Transgress 0	0,1,2,3	null	0
+CHA	0x84	0x02	UNC_H_AG1_AD_CRD_ACQUIRED.TGR1	CMS Agent1 AD Credits Acquired For Transgress 1	0,1,2,3	null	0
+CHA	0x84	0x04	UNC_H_AG1_AD_CRD_ACQUIRED.TGR2	CMS Agent1 AD Credits Acquired For Transgress 2	0,1,2,3	null	0
+CHA	0x84	0x08	UNC_H_AG1_AD_CRD_ACQUIRED.TGR3	CMS Agent1 AD Credits Acquired For Transgress 3	0,1,2,3	null	0
+CHA	0x84	0x10	UNC_H_AG1_AD_CRD_ACQUIRED.TGR4	CMS Agent1 AD Credits Acquired For Transgress 4	0,1,2,3	null	0
+CHA	0x84	0x20	UNC_H_AG1_AD_CRD_ACQUIRED.TGR5	CMS Agent1 AD Credits Acquired For Transgress 5	0,1,2,3	null	0
+CHA	0x84	0x40	UNC_H_AG1_AD_CRD_ACQUIRED.TGR6	CMS Agent1 AD Credits Acquired For Transgress 6	0,1,2,3	null	0
+CHA	0x84	0x80	UNC_H_AG1_AD_CRD_ACQUIRED.TGR7	CMS Agent1 AD Credits Acquired For Transgress 7	0,1,2,3	null	0
+CHA	0x85	0x01	UNC_H_AG1_AD_CRD_ACQUIRED_EXT.TGR8	CMS Agent1 AD Credits Acquired For Transgress 8	0,1,2,3	null	0
+CHA	0x85	0x02	UNC_H_AG1_AD_CRD_ACQUIRED_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent1 AD Credits Acquired For Transgress 0-7	0,1,2,3	null	0
+CHA	0x86	0x01	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR0	CMS Agent1 AD Credits Occupancy For Transgress 0	0,1,2,3	null	0
+CHA	0x86	0x02	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR1	CMS Agent1 AD Credits Occupancy For Transgress 1	0,1,2,3	null	0
+CHA	0x86	0x04	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR2	CMS Agent1 AD Credits Occupancy For Transgress 2	0,1,2,3	null	0
+CHA	0x86	0x08	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR3	CMS Agent1 AD Credits Occupancy For Transgress 3	0,1,2,3	null	0
+CHA	0x86	0x10	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR4	CMS Agent1 AD Credits Occupancy For Transgress 4	0,1,2,3	null	0
+CHA	0x86	0x20	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR5	CMS Agent1 AD Credits Occupancy For Transgress 5	0,1,2,3	null	0
+CHA	0x86	0x40	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR6	CMS Agent1 AD Credits Occupancy For Transgress 6	0,1,2,3	null	0
+CHA	0x86	0x80	UNC_H_AG1_AD_CRD_OCCUPANCY.TGR7	CMS Agent1 AD Credits Occupancy For Transgress 7	0,1,2,3	null	0
+CHA	0x87	0x01	UNC_H_AG1_AD_CRD_OCCUPANCY_EXT.TGR8	CMS Agent1 AD Credits Occupancy For Transgress 8	0,1,2,3	null	0
+CHA	0x87	0x02	UNC_H_AG1_AD_CRD_OCCUPANCY_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent1 AD Credits Occupancy For Transgress 0-7	0,1,2,3	null	0
+CHA	0x88	0x01	UNC_H_AG0_BL_CRD_ACQUIRED.TGR0	CMS Agent0 BL Credits Acquired For Transgress 0	0,1,2,3	null	0
+CHA	0x88	0x02	UNC_H_AG0_BL_CRD_ACQUIRED.TGR1	CMS Agent0 BL Credits Acquired For Transgress 1	0,1,2,3	null	0
+CHA	0x88	0x04	UNC_H_AG0_BL_CRD_ACQUIRED.TGR2	CMS Agent0 BL Credits Acquired For Transgress 2	0,1,2,3	null	0
+CHA	0x88	0x08	UNC_H_AG0_BL_CRD_ACQUIRED.TGR3	CMS Agent0 BL Credits Acquired For Transgress 3	0,1,2,3	null	0
+CHA	0x88	0x10	UNC_H_AG0_BL_CRD_ACQUIRED.TGR4	CMS Agent0 BL Credits Acquired For Transgress 4	0,1,2,3	null	0
+CHA	0x88	0x20	UNC_H_AG0_BL_CRD_ACQUIRED.TGR5	CMS Agent0 BL Credits Acquired For Transgress 5	0,1,2,3	null	0
+CHA	0x88	0x40	UNC_H_AG0_BL_CRD_ACQUIRED.TGR6	CMS Agent0 BL Credits Acquired For Transgress 6	0,1,2,3	null	0
+CHA	0x88	0x80	UNC_H_AG0_BL_CRD_ACQUIRED.TGR7	CMS Agent0 BL Credits Acquired For Transgress 7	0,1,2,3	null	0
+CHA	0x89	0x01	UNC_H_AG0_BL_CRD_ACQUIRED_EXT.TGR8	CMS Agent0 BL Credits Acquired For Transgress 8	0,1,2,3	null	0
+CHA	0x89	0x02	UNC_H_AG0_BL_CRD_ACQUIRED_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent0 BL Credits Acquired For Transgress 0-7	0,1,2,3	null	0
+CHA	0x8A	0x01	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR0	CMS Agent0 BL Credits Occupancy For Transgress 0	0,1,2,3	null	0
+CHA	0x8A	0x02	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR1	CMS Agent0 BL Credits Occupancy For Transgress 1	0,1,2,3	null	0
+CHA	0x8A	0x04	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR2	CMS Agent0 BL Credits Occupancy For Transgress 2	0,1,2,3	null	0
+CHA	0x8A	0x08	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR3	CMS Agent0 BL Credits Occupancy For Transgress 3	0,1,2,3	null	0
+CHA	0x8A	0x10	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR4	CMS Agent0 BL Credits Occupancy For Transgress 4	0,1,2,3	null	0
+CHA	0x8A	0x20	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR5	CMS Agent0 BL Credits Occupancy For Transgress 5	0,1,2,3	null	0
+CHA	0x8A	0x40	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR6	CMS Agent0 BL Credits Occupancy For Transgress 6	0,1,2,3	null	0
+CHA	0x8A	0x80	UNC_H_AG0_BL_CRD_OCCUPANCY.TGR7	CMS Agent0 BL Credits Occupancy For Transgress 7	0,1,2,3	null	0
+CHA	0x8B	0x01	UNC_H_AG0_BL_CRD_OCCUPANCY_EXT.TGR8	CMS Agent0 BL Credits Occupancy For Transgress 8	0,1,2,3	null	0
+CHA	0x8B	0x02	UNC_H_AG0_BL_CRD_OCCUPANCY_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent0 BL Credits Occupancy For Transgress 0-7	0,1,2,3	null	0
+CHA	0x8C	0x01	UNC_H_AG1_BL_CRD_ACQUIRED.TGR0	CMS Agent1 BL Credits Acquired For Transgress 0	0,1,2,3	null	0
+CHA	0x8C	0x02	UNC_H_AG1_BL_CRD_ACQUIRED.TGR1	CMS Agent1 BL Credits Acquired For Transgress 1	0,1,2,3	null	0
+CHA	0x8C	0x04	UNC_H_AG1_BL_CRD_ACQUIRED.TGR2	CMS Agent1 BL Credits Acquired For Transgress 2	0,1,2,3	null	0
+CHA	0x8C	0x08	UNC_H_AG1_BL_CRD_ACQUIRED.TGR3	CMS Agent1 BL Credits Acquired For Transgress 3	0,1,2,3	null	0
+CHA	0x8C	0x10	UNC_H_AG1_BL_CRD_ACQUIRED.TGR4	CMS Agent1 BL Credits Acquired For Transgress 4	0,1,2,3	null	0
+CHA	0x8C	0x20	UNC_H_AG1_BL_CRD_ACQUIRED.TGR5	CMS Agent1 BL Credits Acquired For Transgress 5	0,1,2,3	null	0
+CHA	0x8C	0x40	UNC_H_AG1_BL_CRD_ACQUIRED.TGR6	CMS Agent1 BL Credits Acquired For Transgress 6	0,1,2,3	null	0
+CHA	0x8C	0x80	UNC_H_AG1_BL_CRD_ACQUIRED.TGR7	CMS Agent1 BL Credits Acquired For Transgress 7	0,1,2,3	null	0
+CHA	0x8D	0x01	UNC_H_AG1_BL_CRD_ACQUIRED_EXT.TGR8	CMS Agent1 BL Credits Acquired For Transgress 8	0,1,2,3	null	0
+CHA	0x8D	0x02	UNC_H_AG1_BL_CRD_ACQUIRED_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent1 BL Credits Acquired For Transgress 0-7	0,1,2,3	null	0
+CHA	0x8E	0x01	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR0	CMS Agent1 BL Credits Occupancy For Transgress 0	0,1,2,3	null	0
+CHA	0x8E	0x02	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR1	CMS Agent1 BL Credits Occupancy For Transgress 1	0,1,2,3	null	0
+CHA	0x8E	0x04	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR2	CMS Agent1 BL Credits Occupancy For Transgress 2	0,1,2,3	null	0
+CHA	0x8E	0x08	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR3	CMS Agent1 BL Credits Occupancy For Transgress 3	0,1,2,3	null	0
+CHA	0x8E	0x10	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR4	CMS Agent1 BL Credits Occupancy For Transgress 4	0,1,2,3	null	0
+CHA	0x8E	0x20	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR5	CMS Agent1 BL Credits Occupancy For Transgress 5	0,1,2,3	null	0
+CHA	0x8E	0x40	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR6	CMS Agent1 BL Credits Occupancy For Transgress 6	0,1,2,3	null	0
+CHA	0x8E	0x80	UNC_H_AG1_BL_CRD_OCCUPANCY.TGR7	CMS Agent1 BL Credits Occupancy For Transgress 7	0,1,2,3	null	0
+CHA	0x8F	0x01	UNC_H_AG1_BL_CRD_OCCUPANCY_EXT.TGR8	CMS Agent1 BL Credits Occupancy For Transgress 8	0,1,2,3	null	0
+CHA	0x8F	0x02	UNC_H_AG1_BL_CRD_OCCUPANCY_EXT.ANY_OF_TGR0_THRU_TGR7	CMS Agent1 BL Credits Occupancy For Transgress 0-7	0,1,2,3	null	0
+CHA	0xD0	0x01	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR0	Stall on No AD Transgress Credits For Transgress 0	0,1,2,3	null	0
+CHA	0xD0	0x02	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR1	Stall on No AD Transgress Credits For Transgress 1	0,1,2,3	null	0
+CHA	0xD0	0x04	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR2	Stall on No AD Transgress Credits For Transgress 2	0,1,2,3	null	0
+CHA	0xD0	0x08	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR3	Stall on No AD Transgress Credits For Transgress 3	0,1,2,3	null	0
+CHA	0xD0	0x10	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR4	Stall on No AD Transgress Credits For Transgress 4	0,1,2,3	null	0
+CHA	0xD0	0x20	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR5	Stall on No AD Transgress Credits For Transgress 5	0,1,2,3	null	0
+CHA	0xD0	0x40	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR6	Stall on No AD Transgress Credits For Transgress 6	0,1,2,3	null	0
+CHA	0xD0	0x80	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD.TGR7	Stall on No AD Transgress Credits For Transgress 7	0,1,2,3	null	0
+CHA	0xD1	0x01	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD_EXT.TGR8	Stall on No AD Transgress Credits For Transgress 8	0,1,2,3	null	0
+CHA	0xD1	0x02	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_AD_EXT.ANY_OF_TGR0_THRU_TGR7	Stall on No AD Transgress Credits For Transgress 0-7	0,1,2,3	null	0
+CHA	0xD2	0x01	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR0	Stall on No AD Transgress Credits For Transgress 0	0,1,2,3	null	0
+CHA	0xD2	0x02	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR1	Stall on No AD Transgress Credits For Transgress 1	0,1,2,3	null	0
+CHA	0xD2	0x04	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR2	Stall on No AD Transgress Credits For Transgress 2	0,1,2,3	null	0
+CHA	0xD2	0x08	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR3	Stall on No AD Transgress Credits For Transgress 3	0,1,2,3	null	0
+CHA	0xD2	0x10	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR4	Stall on No AD Transgress Credits For Transgress 4	0,1,2,3	null	0
+CHA	0xD2	0x20	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR5	Stall on No AD Transgress Credits For Transgress 5	0,1,2,3	null	0
+CHA	0xD2	0x40	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR6	Stall on No AD Transgress Credits For Transgress 6	0,1,2,3	null	0
+CHA	0xD2	0x80	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD.TGR7	Stall on No AD Transgress Credits For Transgress 7	0,1,2,3	null	0
+CHA	0xD3	0x01	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD_EXT.TGR8	Stall on No AD Transgress Credits For Transgress 8	0,1,2,3	null	0
+CHA	0xD3	0x02	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_AD_EXT.ANY_OF_TGR0_THRU_TGR7	Stall on No AD Transgress Credits For Transgress 0-7	0,1,2,3	null	0
+CHA	0xD4	0x01	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR0	Stall on No AD Transgress Credits For Transgress 0	0,1,2,3	null	0
+CHA	0xD4	0x02	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR1	Stall on No AD Transgress Credits For Transgress 1	0,1,2,3	null	0
+CHA	0xD4	0x04	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR2	Stall on No AD Transgress Credits For Transgress 2	0,1,2,3	null	0
+CHA	0xD4	0x08	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR3	Stall on No AD Transgress Credits For Transgress 3	0,1,2,3	null	0
+CHA	0xD4	0x10	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR4	Stall on No AD Transgress Credits For Transgress 4	0,1,2,3	null	0
+CHA	0xD4	0x20	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR5	Stall on No AD Transgress Credits For Transgress 5	0,1,2,3	null	0
+CHA	0xD4	0x40	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR6	Stall on No AD Transgress Credits For Transgress 6	0,1,2,3	null	0
+CHA	0xD4	0x80	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL.TGR7	Stall on No AD Transgress Credits For Transgress 7	0,1,2,3	null	0
+CHA	0xD5	0x01	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL_EXT.TGR8	Stall on No AD Transgress Credits For Transgress 8	0,1,2,3	null	0
+CHA	0xD5	0x02	UNC_H_AG0_STALL_NO_CRD_EGRESS_HORZ_BL_EXT.ANY_OF_TGR0_THRU_TGR7	Stall on No AD Transgress Credits For Transgress 0-7	0,1,2,3	null	0
+CHA	0xD6	0x01	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR0	Stall on No AD Transgress Credits For Transgress 0	0,1,2,3	null	0
+CHA	0xD6	0x02	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR1	Stall on No AD Transgress Credits For Transgress 1	0,1,2,3	null	0
+CHA	0xD6	0x04	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR2	Stall on No AD Transgress Credits For Transgress 2	0,1,2,3	null	0
+CHA	0xD6	0x08	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR3	Stall on No AD Transgress Credits For Transgress 3	0,1,2,3	null	0
+CHA	0xD6	0x10	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR4	Stall on No AD Transgress Credits For Transgress 4	0,1,2,3	null	0
+CHA	0xD6	0x20	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR5	Stall on No AD Transgress Credits For Transgress 5	0,1,2,3	null	0
+CHA	0xD6	0x40	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR6	Stall on No AD Transgress Credits For Transgress 6	0,1,2,3	null	0
+CHA	0xD6	0x80	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL.TGR7	Stall on No AD Transgress Credits For Transgress 7	0,1,2,3	null	0
+CHA	0xD7	0x01	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL_EXT.TGR8	Stall on No AD Transgress Credits For Transgress 8	0,1,2,3	null	0
+CHA	0xD7	0x02	UNC_H_AG1_STALL_NO_CRD_EGRESS_HORZ_BL_EXT.ANY_OF_TGR0_THRU_TGR7	Stall on No AD Transgress Credits For Transgress 0-7	0,1,2,3	null	0
+CHA	0x90	0x01	UNC_H_EGRESS_VERT_OCCUPANCY.AD_AG0	CMS Vert Egress Occupancy AD - Agent 0	0,1,2,3	null	0
+CHA	0x90	0x02	UNC_H_EGRESS_VERT_OCCUPANCY.AK_AG0	CMS Vert Egress Occupancy AK - Agent 0	0,1,2,3	null	0
+CHA	0x90	0x04	UNC_H_EGRESS_VERT_OCCUPANCY.BL_AG0	CMS Vert Egress Occupancy BL - Agent 0	0,1,2,3	null	0
+CHA	0x90	0x08	UNC_H_EGRESS_VERT_OCCUPANCY.IV_AG0	CMS Vert Egress Occupancy IV - Agent 0	0,1,2,3	null	0
+CHA	0x90	0x10	UNC_H_EGRESS_VERT_OCCUPANCY.AD_AG1	CMS Vert Egress Occupancy AD - Agent 1	0,1,2,3	null	0
+CHA	0x90	0x20	UNC_H_EGRESS_VERT_OCCUPANCY.AK_AG1	CMS Vert Egress Occupancy AK - Agent 1	0,1,2,3	null	0
+CHA	0x90	0x40	UNC_H_EGRESS_VERT_OCCUPANCY.BL_AG1	CMS Vert Egress Occupancy BL - Agent 1	0,1,2,3	null	0
+CHA	0x91	0x01	UNC_H_EGRESS_VERT_INSERTS.AD_AG0	CMS Vert Egress Allocations AD - Agent 0	0,1,2,3	null	0
+CHA	0x91	0x02	UNC_H_EGRESS_VERT_INSERTS.AK_AG0	CMS Vert Egress Allocations AK - Agent 0	0,1,2,3	null	0
+CHA	0x91	0x04	UNC_H_EGRESS_VERT_INSERTS.BL_AG0	CMS Vert Egress Allocations BL - Agent 0	0,1,2,3	null	0
+CHA	0x91	0x08	UNC_H_EGRESS_VERT_INSERTS.IV_AG0	CMS Vert Egress Allocations IV - Agent 0	0,1,2,3	null	0
+CHA	0x91	0x10	UNC_H_EGRESS_VERT_INSERTS.AD_AG1	CMS Vert Egress Allocations AD - Agent 1	0,1,2,3	null	0
+CHA	0x91	0x20	UNC_H_EGRESS_VERT_INSERTS.AK_AG1	CMS Vert Egress Allocations AK - Agent 1	0,1,2,3	null	0
+CHA	0x91	0x40	UNC_H_EGRESS_VERT_INSERTS.BL_AG1	CMS Vert Egress Allocations BL - Agent 1	0,1,2,3	null	0
+CHA	0x92	0x01	UNC_H_EGRESS_VERT_CYCLES_FULL.AD_AG0	Cycles CMS Vertical Egress Queue Is Full AD - Agent 0	0,1,2,3	null	0
+CHA	0x92	0x02	UNC_H_EGRESS_VERT_CYCLES_FULL.AK_AG0	Cycles CMS Vertical Egress Queue Is Full AK - Agent 0	0,1,2,3	null	0
+CHA	0x92	0x04	UNC_H_EGRESS_VERT_CYCLES_FULL.BL_AG0	Cycles CMS Vertical Egress Queue Is Full BL - Agent 0	0,1,2,3	null	0
+CHA	0x92	0x08	UNC_H_EGRESS_VERT_CYCLES_FULL.IV_AG0	Cycles CMS Vertical Egress Queue Is Full IV - Agent 0	0,1,2,3	null	0
+CHA	0x92	0x10	UNC_H_EGRESS_VERT_CYCLES_FULL.AD_AG1	Cycles CMS Vertical Egress Queue Is Full AD - Agent 1	0,1,2,3	null	0
+CHA	0x92	0x20	UNC_H_EGRESS_VERT_CYCLES_FULL.AK_AG1	Cycles CMS Vertical Egress Queue Is Full AK - Agent 1	0,1,2,3	null	0
+CHA	0x92	0x40	UNC_H_EGRESS_VERT_CYCLES_FULL.BL_AG1	Cycles CMS Vertical Egress Queue Is Full BL - Agent 1	0,1,2,3	null	0
+CHA	0x93	0x01	UNC_H_EGRESS_VERT_CYCLES_NE.AD_AG0	Cycles CMS Vertical Egress Queue Is Not Empty AD - Agent 0	0,1,2,3	null	0
+CHA	0x93	0x02	UNC_H_EGRESS_VERT_CYCLES_NE.AK_AG0	Cycles CMS Vertical Egress Queue Is Not Empty AK - Agent 0	0,1,2,3	null	0
+CHA	0x93	0x04	UNC_H_EGRESS_VERT_CYCLES_NE.BL_AG0	Cycles CMS Vertical Egress Queue Is Not Empty BL - Agent 0	0,1,2,3	null	0
+CHA	0x93	0x08	UNC_H_EGRESS_VERT_CYCLES_NE.IV_AG0	Cycles CMS Vertical Egress Queue Is Not Empty IV - Agent 0	0,1,2,3	null	0
+CHA	0x93	0x10	UNC_H_EGRESS_VERT_CYCLES_NE.AD_AG1	Cycles CMS Vertical Egress Queue Is Not Empty AD - Agent 1	0,1,2,3	null	0
+CHA	0x93	0x20	UNC_H_EGRESS_VERT_CYCLES_NE.AK_AG1	Cycles CMS Vertical Egress Queue Is Not Empty AK - Agent 1	0,1,2,3	null	0
+CHA	0x93	0x40	UNC_H_EGRESS_VERT_CYCLES_NE.BL_AG1	Cycles CMS Vertical Egress Queue Is Not Empty BL - Agent 1	0,1,2,3	null	0
+CHA	0x98	0x01	UNC_H_EGRESS_VERT_NACK.AD_AG0	CMS Vertical Egress NACKs	0,1,2,3	null	0
+CHA	0x98	0x02	UNC_H_EGRESS_VERT_NACK.AK_AG0	CMS Vertical Egress NACKs Onto AK Ring	0,1,2,3	null	0
+CHA	0x98	0x04	UNC_H_EGRESS_VERT_NACK.BL_AG0	CMS Vertical Egress NACKs Onto BL Ring	0,1,2,3	null	0
+CHA	0x98	0x08	UNC_H_EGRESS_VERT_NACK.IV	CMS Vertical Egress NACKs	0,1,2,3	null	0
+CHA	0x98	0x10	UNC_H_EGRESS_VERT_NACK.AD_AG1	CMS Vertical Egress NACKs	0,1,2,3	null	0
+CHA	0x98	0x20	UNC_H_EGRESS_VERT_NACK.AK_AG1	CMS Vertical Egress NACKs	0,1,2,3	null	0
+CHA	0x98	0x40	UNC_H_EGRESS_VERT_NACK.BL_AG1	CMS Vertical Egress NACKs	0,1,2,3	null	0
+CHA	0x9A	0x01	UNC_H_EGRESS_VERT_STARVED.AD_AG0	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9A	0x02	UNC_H_EGRESS_VERT_STARVED.AK_AG0	CMS Vertical Egress Injection Starvation Onto AK Ring	0,1,2,3	null	0
+CHA	0x9A	0x04	UNC_H_EGRESS_VERT_STARVED.BL_AG0	CMS Vertical Egress Injection Starvation Onto BL Ring	0,1,2,3	null	0
+CHA	0x9A	0x08	UNC_H_EGRESS_VERT_STARVED.IV	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9A	0x10	UNC_H_EGRESS_VERT_STARVED.AD_AG1	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9A	0x20	UNC_H_EGRESS_VERT_STARVED.AK_AG1	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9A	0x40	UNC_H_EGRESS_VERT_STARVED.BL_AG1	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9C	0x01	UNC_H_EGRESS_VERT_ADS_USED.AD_AG0	CMS Vertical ADS Used	0,1,2,3	null	0
+CHA	0x9C	0x02	UNC_H_EGRESS_VERT_ADS_USED.AK_AG0	CMS Vertical ADS Used	0,1,2,3	null	0
+CHA	0x9C	0x04	UNC_H_EGRESS_VERT_ADS_USED.BL_AG0	CMS Vertical ADS Used	0,1,2,3	null	0
+CHA	0x9C	0x10	UNC_H_EGRESS_VERT_ADS_USED.AD_AG1	CMS Vertical ADS Used	0,1,2,3	null	0
+CHA	0x9C	0x20	UNC_H_EGRESS_VERT_ADS_USED.AK_AG1	CMS Vertical ADS Used	0,1,2,3	null	0
+CHA	0x9C	0x40	UNC_H_EGRESS_VERT_ADS_USED.BL_AG1	CMS Vertical ADS Used	0,1,2,3	null	0
+CHA	0x9E	0x01	UNC_H_EGRESS_VERT_BYPASS.AD_AG0	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9E	0x02	UNC_H_EGRESS_VERT_BYPASS.AK_AG0	CMS Vertical Egress Injection Starvation Onto AK Ring	0,1,2,3	null	0
+CHA	0x9E	0x04	UNC_H_EGRESS_VERT_BYPASS.BL_AG0	CMS Vertical Egress Injection Starvation Onto BL Ring	0,1,2,3	null	0
+CHA	0x9E	0x08	UNC_H_EGRESS_VERT_BYPASS.IV	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9E	0x10	UNC_H_EGRESS_VERT_BYPASS.AD_AG1	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9E	0x20	UNC_H_EGRESS_VERT_BYPASS.AK_AG1	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9E	0x40	UNC_H_EGRESS_VERT_BYPASS.BL_AG1	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x94	0x01	UNC_H_EGRESS_HORZ_OCCUPANCY.AD	CMS Horizontal Egress Occupancy AD	0,1,2,3	null	0
+CHA	0x94	0x02	UNC_H_EGRESS_HORZ_OCCUPANCY.AK	CMS Horizontal Egress Occupancy AK	0,1,2,3	null	0
+CHA	0x94	0x04	UNC_H_EGRESS_HORZ_OCCUPANCY.BL	CMS Horizontal Egress Occupancy BL	0,1,2,3	null	0
+CHA	0x94	0x08	UNC_H_EGRESS_HORZ_OCCUPANCY.IV	CMS Horizontal Egress Occupancy IV	0,1,2,3	null	0
+CHA	0x95	0x01	UNC_H_EGRESS_HORZ_INSERTS.AD	CMS Horizontal Egress Inserts AD	0,1,2,3	null	0
+CHA	0x95	0x02	UNC_H_EGRESS_HORZ_INSERTS.AK	CMS Horizontal Egress Inserts AK	0,1,2,3	null	0
+CHA	0x95	0x04	UNC_H_EGRESS_HORZ_INSERTS.BL	CMS Horizontal Egress Inserts BL	0,1,2,3	null	0
+CHA	0x95	0x08	UNC_H_EGRESS_HORZ_INSERTS.IV	CMS Horizontal Egress Inserts IV	0,1,2,3	null	0
+CHA	0x96	0x01	UNC_H_EGRESS_HORZ_CYCLES_FULL.AD	Cycles CMS Horizontal Egress Queue is Full AD	0,1,2,3	null	0
+CHA	0x96	0x02	UNC_H_EGRESS_HORZ_CYCLES_FULL.AK	Cycles CMS Horizontal Egress Queue is Full AK	0,1,2,3	null	0
+CHA	0x96	0x04	UNC_H_EGRESS_HORZ_CYCLES_FULL.BL	Cycles CMS Horizontal Egress Queue is Full BL	0,1,2,3	null	0
+CHA	0x96	0x08	UNC_H_EGRESS_HORZ_CYCLES_FULL.IV	Cycles CMS Horizontal Egress Queue is Full IV	0,1,2,3	null	0
+CHA	0x97	0x01	UNC_H_EGRESS_HORZ_CYCLES_NE.AD	Cycles CMS Horizontal Egress Queue is Not Empty AD	0,1,2,3	null	0
+CHA	0x97	0x02	UNC_H_EGRESS_HORZ_CYCLES_NE.AK	Cycles CMS Horizontal Egress Queue is Not Empty AK	0,1,2,3	null	0
+CHA	0x97	0x04	UNC_H_EGRESS_HORZ_CYCLES_NE.BL	Cycles CMS Horizontal Egress Queue is Not Empty BL	0,1,2,3	null	0
+CHA	0x97	0x08	UNC_H_EGRESS_HORZ_CYCLES_NE.IV	Cycles CMS Horizontal Egress Queue is Not Empty IV	0,1,2,3	null	0
+CHA	0x99	0x01	UNC_H_EGRESS_HORZ_NACK.AD	CMS Horizontal Egress NACKs	0,1,2,3	null	0
+CHA	0x99	0x02	UNC_H_EGRESS_HORZ_NACK.AK	CMS Horizontal Egress NACKs	0,1,2,3	null	0
+CHA	0x99	0x04	UNC_H_EGRESS_HORZ_NACK.BL	CMS Horizontal Egress NACKs	0,1,2,3	null	0
+CHA	0x99	0x08	UNC_H_EGRESS_HORZ_NACK.IV	CMS Horizontal Egress NACKs	0,1,2,3	null	0
+CHA	0x9B	0x01	UNC_H_EGRESS_HORZ_STARVED.AD	CMS Horizontal Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9B	0x02	UNC_H_EGRESS_HORZ_STARVED.AK	CMS Horizontal Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9B	0x04	UNC_H_EGRESS_HORZ_STARVED.BL	CMS Horizontal Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9B	0x08	UNC_H_EGRESS_HORZ_STARVED.IV	CMS Horizontal Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9D	0x01	UNC_H_EGRESS_HORZ_ADS_USED.AD	CMS Horizontal ADS Used	0,1,2,3	null	0
+CHA	0x9D	0x02	UNC_H_EGRESS_HORZ_ADS_USED.AK	CMS Horizontal ADS Used	0,1,2,3	null	0
+CHA	0x9D	0x04	UNC_H_EGRESS_HORZ_ADS_USED.BL	CMS Horizontal ADS Used	0,1,2,3	null	0
+CHA	0x9F	0x01	UNC_H_EGRESS_HORZ_BYPASS.AD	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0x9F	0x02	UNC_H_EGRESS_HORZ_BYPASS.AK	CMS Vertical Egress Injection Starvation Onto AK Ring	0,1,2,3	null	0
+CHA	0x9F	0x04	UNC_H_EGRESS_HORZ_BYPASS.BL	CMS Vertical Egress Injection Starvation Onto BL Ring	0,1,2,3	null	0
+CHA	0x9F	0x08	UNC_H_EGRESS_HORZ_BYPASS.IV	CMS Vertical Egress Injection Starvation	0,1,2,3	null	0
+CHA	0xA0	0x01	UNC_H_RING_BOUNCES_VERT.AD	Number of incoming messages from the Vertical ring that were bounced, by ring type.	0,1,2,3	null	0
+CHA	0xA0	0x02	UNC_H_RING_BOUNCES_VERT.AK	Number of incoming messages from the Vertical ring that were bounced, by ring type - Acknowledgements to core	0,1,2,3	null	0
+CHA	0xA0	0x04	UNC_H_RING_BOUNCES_VERT.BL	Number of incoming messages from the Vertical ring that were bounced, by ring type - Data Responses to core.	0,1,2,3	null	0
+CHA	0xA0	0x08	UNC_H_RING_BOUNCES_VERT.IV	Number of incoming messages from the Vertical ring that were bounced, by ring type - Snoops of processor's cache.	0,1,2,3	null	0
+CHA	0xA1	0x01	UNC_H_RING_BOUNCES_HORZ.AD	Number of incoming messages from the Horizontal ring that were bounced, by ring type.	0,1,2,3	null	0
+CHA	0xA1	0x02	UNC_H_RING_BOUNCES_HORZ.AK	Number of incoming messages from the Horizontal ring that were bounced, by ring type - Acknowledgements to core	0,1,2,3	null	0
+CHA	0xA1	0x04	UNC_H_RING_BOUNCES_HORZ.BL	Number of incoming messages from the Horizontal ring that were bounced, by ring type - Data Responses to core.	0,1,2,3	null	0
+CHA	0xA1	0x08	UNC_H_RING_BOUNCES_HORZ.IV	Number of incoming messages from the Horizontal ring that were bounced, by ring type - Snoops of processor's cache.	0,1,2,3	null	0
+CHA	0xA2	0x01	UNC_H_RING_SINK_STARVED_VERT.AD	tbd	0,1,2,3	null	0
+CHA	0xA2	0x02	UNC_H_RING_SINK_STARVED_VERT.AK	tbd	0,1,2,3	null	0
+CHA	0xA2	0x04	UNC_H_RING_SINK_STARVED_VERT.BL	tbd	0,1,2,3	null	0
+CHA	0xA2	0x08	UNC_H_RING_SINK_STARVED_VERT.IV	tbd	0,1,2,3	null	0
+CHA	0xA3	0x01	UNC_H_RING_SINK_STARVED_HORZ.AD	tbd	0,1,2,3	null	0
+CHA	0xA3	0x02	UNC_H_RING_SINK_STARVED_HORZ.AK	tbd	0,1,2,3	null	0
+CHA	0xA3	0x04	UNC_H_RING_SINK_STARVED_HORZ.BL	tbd	0,1,2,3	null	0
+CHA	0xA3	0x08	UNC_H_RING_SINK_STARVED_HORZ.IV	tbd	0,1,2,3	null	0
+CHA	0xA4	0x00	UNC_H_RING_SRC_THRTL	tbd	0,1,2,3	null	0
+CHA	0xA5	0x00	UNC_H_FAST_ASSERTED.VERT	tbd	0,1,2,3	null	0
+CHA	0xA5	0x01	UNC_H_FAST_ASSERTED.HORZ	tbd	0,1,2,3	null	0
+CHA	0xA6	0x01	UNC_H_VERT_RING_AD_IN_USE.UP_EVEN	Counts the number of cycles that the Vertical AD ring is being used at this ring stop - Up and Even	0,1,2,3	null	0
+CHA	0xA6	0x02	UNC_H_VERT_RING_AD_IN_USE.UP_ODD	Counts the number of cycles that the Vertical AD ring is being used at this ring stop - Up and Odd	0,1,2,3	null	0
+CHA	0xA6	0x04	UNC_H_VERT_RING_AD_IN_USE.DN_EVEN	Counts the number of cycles that the Vertical AD ring is being used at this ring stop - Down and Even	0,1,2,3	null	0
+CHA	0xA6	0x08	UNC_H_VERT_RING_AD_IN_USE.DN_ODD	Counts the number of cycles that the Vertical AD ring is being used at this ring stop - Down and Odd	0,1,2,3	null	0
+CHA	0xA7	0x01	UNC_H_HORZ_RING_AD_IN_USE.LEFT_EVEN	Counts the number of cycles that the Horizontal AD ring is being used at this ring stop - Left and Even	0,1,2,3	null	0
+CHA	0xA7	0x02	UNC_H_HORZ_RING_AD_IN_USE.LEFT_ODD	Counts the number of cycles that the Horizontal AD ring is being used at this ring stop - Left and Odd	0,1,2,3	null	0
+CHA	0xA7	0x04	UNC_H_HORZ_RING_AD_IN_USE.RIGHT_EVEN	Counts the number of cycles that the Horizontal AD ring is being used at this ring stop - Right and Even	0,1,2,3	null	0
+CHA	0xA7	0x08	UNC_H_HORZ_RING_AD_IN_USE.RIGHT_ODD	Counts the number of cycles that the Horizontal AD ring is being used at this ring stop - Right and Odd	0,1,2,3	null	0
+CHA	0xA8	0x01	UNC_H_VERT_RING_AK_IN_USE.UP_EVEN	Counts the number of cycles that the Vertical AK ring is being used at this ring stop - Up and Even	0,1,2,3	null	0
+CHA	0xA8	0x02	UNC_H_VERT_RING_AK_IN_USE.UP_ODD	Counts the number of cycles that the Vertical AK ring is being used at this ring stop - Up and Odd	0,1,2,3	null	0
+CHA	0xA8	0x04	UNC_H_VERT_RING_AK_IN_USE.DN_EVEN	Counts the number of cycles that the Vertical AK ring is being used at this ring stop - Down and Even	0,1,2,3	null	0
+CHA	0xA8	0x08	UNC_H_VERT_RING_AK_IN_USE.DN_ODD	Counts the number of cycles that the Vertical AK ring is being used at this ring stop - Down and Odd	0,1,2,3	null	0
+CHA	0xA9	0x01	UNC_H_HORZ_RING_AK_IN_USE.LEFT_EVEN	Counts the number of cycles that the Horizontal AK ring is being used at this ring stop - Left and Even	0,1,2,3	null	0
+CHA	0xA9	0x02	UNC_H_HORZ_RING_AK_IN_USE.LEFT_ODD	Counts the number of cycles that the Horizontal AK ring is being used at this ring stop - Left and Odd	0,1,2,3	null	0
+CHA	0xA9	0x04	UNC_H_HORZ_RING_AK_IN_USE.RIGHT_EVEN	Counts the number of cycles that the Horizontal AK ring is being used at this ring stop - Right and Even	0,1,2,3	null	0
+CHA	0xA9	0x08	UNC_H_HORZ_RING_AK_IN_USE.RIGHT_ODD	Counts the number of cycles that the Horizontal AK ring is being used at this ring stop - Right and Odd	0,1,2,3	null	0
+CHA	0xAA	0x01	UNC_H_VERT_RING_BL_IN_USE.UP_EVEN	Counts the number of cycles that the Vertical BL ring is being used at this ring stop - Up and Even	0,1,2,3	null	0
+CHA	0xAA	0x02	UNC_H_VERT_RING_BL_IN_USE.UP_ODD	Counts the number of cycles that the Vertical BL ring is being used at this ring stop - Up and Odd	0,1,2,3	null	0
+CHA	0xAA	0x04	UNC_H_VERT_RING_BL_IN_USE.DN_EVEN	Counts the number of cycles that the Vertical BL ring is being used at this ring stop - Down and Even	0,1,2,3	null	0
+CHA	0xAA	0x08	UNC_H_VERT_RING_BL_IN_USE.DN_ODD	Counts the number of cycles that the Vertical BL ring is being used at this ring stop - Down and Odd	0,1,2,3	null	0
+CHA	0xAB	0x01	UNC_H_HORZ_RING_BL_IN_USE.LEFT_EVEN	Counts the number of cycles that the Horizontal BL ring is being used at this ring stop - Left and Even	0,1,2,3	null	0
+CHA	0xAB	0x02	UNC_H_HORZ_RING_BL_IN_USE.LEFT_ODD	Counts the number of cycles that the Horizontal BL ring is being used at this ring stop - Left and Odd	0,1,2,3	null	0
+CHA	0xAB	0x04	UNC_H_HORZ_RING_BL_IN_USE.RIGHT_EVEN	Counts the number of cycles that the Horizontal BL ring is being used at this ring stop - Right and Even	0,1,2,3	null	0
+CHA	0xAB	0x08	UNC_H_HORZ_RING_BL_IN_USE.RIGHT_ODD	Counts the number of cycles that the Horizontal BL ring is being used at this ring stop - Right and Odd	0,1,2,3	null	0
+CHA	0xAC	0x01	UNC_H_VERT_RING_IV_IN_USE.UP	Counts the number of cycles that the Vertical IV ring is being used at this ring stop - Up	0,1,2,3	null	0
+CHA	0xAC	0x04	UNC_H_VERT_RING_IV_IN_USE.DN	Counts the number of cycles that the Vertical IV ring is being used at this ring stop - Down	0,1,2,3	null	0
+CHA	0xAD	0x01	UNC_H_HORZ_RING_IV_IN_USE.LEFT	Counts the number of cycles that the Horizontal IV ring is being used at this ring stop - Left	0,1,2,3	null	0
+CHA	0xAD	0x04	UNC_H_HORZ_RING_IV_IN_USE.RIGHT	Counts the number of cycles that the Horizontal IV ring is being used at this ring stop - Right	0,1,2,3	null	0
+CHA	0xAE	0x01	UNC_H_EGRESS_ORDERING.IV_SNP_GO_UP	Counts number of cycles IV was blocked in the TGR Egress due to SNP/GO Ordering requirements	0,1,2,3	null	0
+CHA	0xAE	0x04	UNC_H_EGRESS_ORDERING.IV_SNP_GO_DN	Counts number of cycles IV was blocked in the TGR Egress due to SNP/GO Ordering requirements	0,1,2,3	null	0
+CHA	0xB0	0x01	UNC_H_TG_INGRESS_OCCUPANCY.AD_BNC	Transgress Ingress Occupancy. Occupancy event for the Ingress buffers in the CMS  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB0	0x02	UNC_H_TG_INGRESS_OCCUPANCY.AK_BNC	Transgress Ingress Occupancy. Occupancy event for the Ingress buffers in the CMS  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB0	0x04	UNC_H_TG_INGRESS_OCCUPANCY.BL_BNC	Transgress Ingress Occupancy. Occupancy event for the Ingress buffers in the CMS  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB0	0x08	UNC_H_TG_INGRESS_OCCUPANCY.IV_BNC	Transgress Ingress Occupancy. Occupancy event for the Ingress buffers in the CMS  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB0	0x10	UNC_H_TG_INGRESS_OCCUPANCY.AD_CRD	Transgress Ingress Occupancy. Occupancy event for the Ingress buffers in the CMS  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB0	0x40	UNC_H_TG_INGRESS_OCCUPANCY.BL_CRD	Transgress Ingress Occupancy. Occupancy event for the Ingress buffers in the CMS  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB1	0x01	UNC_H_TG_INGRESS_INSERTS.AD_BNC	Transgress Ingress Allocations. Number of allocations into the CMS Ingress  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB1	0x02	UNC_H_TG_INGRESS_INSERTS.AK_BNC	Transgress Ingress Allocations. Number of allocations into the CMS Ingress  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB1	0x04	UNC_H_TG_INGRESS_INSERTS.BL_BNC	Transgress Ingress Allocations. Number of allocations into the CMS Ingress  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB1	0x08	UNC_H_TG_INGRESS_INSERTS.IV_BNC	Transgress Ingress Allocations. Number of allocations into the CMS Ingress  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB1	0x10	UNC_H_TG_INGRESS_INSERTS.AD_CRD	Transgress Ingress Allocations. Number of allocations into the CMS Ingress  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB1	0x40	UNC_H_TG_INGRESS_INSERTS.BL_CRD	Transgress Ingress Allocations. Number of allocations into the CMS Ingress  The Ingress is used to queue up requests received from the mesh	0,1,2,3	null	0
+CHA	0xB2	0x01	UNC_H_TG_INGRESS_BYPASS.AD_BNC	Transgress Ingress Bypass. Number of packets bypassing the CMS Ingress .	0,1,2,3	null	0
+CHA	0xB2	0x02	UNC_H_TG_INGRESS_BYPASS.AK_BNC	Transgress Ingress Bypass. Number of packets bypassing the CMS Ingress .	0,1,2,3	null	0
+CHA	0xB2	0x04	UNC_H_TG_INGRESS_BYPASS.BL_BNC	Transgress Ingress Bypass. Number of packets bypassing the CMS Ingress .	0,1,2,3	null	0
+CHA	0xB2	0x08	UNC_H_TG_INGRESS_BYPASS.IV_BNC	Transgress Ingress Bypass. Number of packets bypassing the CMS Ingress .	0,1,2,3	null	0
+CHA	0xB2	0x10	UNC_H_TG_INGRESS_BYPASS.AD_CRD	Transgress Ingress Bypass. Number of packets bypassing the CMS Ingress .	0,1,2,3	null	0
+CHA	0xB2	0x40	UNC_H_TG_INGRESS_BYPASS.BL_CRD	Transgress Ingress Bypass. Number of packets bypassing the CMS Ingress .	0,1,2,3	null	0
+CHA	0xB3	0x01	UNC_H_TG_INGRESS_CRD_STARVED.AD_BNC	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB3	0x02	UNC_H_TG_INGRESS_CRD_STARVED.AK_BNC	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB3	0x04	UNC_H_TG_INGRESS_CRD_STARVED.BL_BNC	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB3	0x08	UNC_H_TG_INGRESS_CRD_STARVED.IV_BNC	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB3	0x10	UNC_H_TG_INGRESS_CRD_STARVED.AD_CRD	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB3	0x40	UNC_H_TG_INGRESS_CRD_STARVED.BL_CRD	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB3	0x80	UNC_H_TG_INGRESS_CRD_STARVED.IFV	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, the Ingress is unable to forward to the Egress due to a lack of credit.	0,1,2,3	null	0
+CHA	0xB4	0x01	UNC_H_TG_INGRESS_BUSY_STARVED.AD_BNC	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, because a message from the other queue has higher priority	0,1,2,3	null	0
+CHA	0xB4	0x04	UNC_H_TG_INGRESS_BUSY_STARVED.BL_BNC	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, because a message from the other queue has higher priority	0,1,2,3	null	0
+CHA	0xB4	0x10	UNC_H_TG_INGRESS_BUSY_STARVED.AD_CRD	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, because a message from the other queue has higher priority	0,1,2,3	null	0
+CHA	0xB4	0x40	UNC_H_TG_INGRESS_BUSY_STARVED.BL_CRD	Transgress Injection Starvation. Counts cycles under injection starvation mode.  This starvation is triggered when the CMS Ingress cannot send a transaction onto the mesh for a long period of time.  In this case, because a message from the other queue has higher priority	0,1,2,3	null	0

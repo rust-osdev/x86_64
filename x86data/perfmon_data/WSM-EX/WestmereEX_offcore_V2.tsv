@@ -1,0 +1,274 @@
+# Performance Monitoring Events for Intel Xeon Processor E7 Family Based on the Westmere-EX Microarchitecture - V2
+# 8/16/2016 3:16:30 PM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+EventCode	UMask	EventName	BriefDescription	Counter	SampleAfterValue	MSRIndex	MSRValue	CounterMask	Invert	AnyThread	EdgeDetect	PEBS
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.ANY_CACHE_DRAM	Offcore data reads satisfied by any cache or DRAM	2	100000	0x1A6	0x7F11	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.ANY_DRAM	Offcore data reads satisfied by any DRAM	2	100000	0x1A6	0x6011	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.ANY_LLC_MISS	Offcore data reads that missed the LLC	2	100000	0x1A6	0xF811	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.ANY_LOCATION	All offcore data reads	2	100000	0x1A6	0xFF11	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.IO_CSR_MMIO	Offcore data reads satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8011	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.LLC_HIT_NO_OTHER_CORE	Offcore data reads satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x111	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.LLC_HIT_OTHER_CORE_HIT	Offcore data reads satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x211	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.LLC_HIT_OTHER_CORE_HITM	Offcore data reads satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x411	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.LOCAL_CACHE	Offcore data reads satisfied by the LLC	2	100000	0x1A6	0x711	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.LOCAL_CACHE_DRAM	Offcore data reads satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4711	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.LOCAL_DRAM	Offcore data reads satisfied by the local DRAM	2	100000	0x1A6	0x4011	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.REMOTE_CACHE	Offcore data reads satisfied by a remote cache	2	100000	0x1A6	0x1811	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.REMOTE_CACHE_DRAM	Offcore data reads satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3811	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.REMOTE_CACHE_HIT	Offcore data reads that HIT in a remote cache	2	100000	0x1A6	0x1011	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.REMOTE_CACHE_HITM	Offcore data reads that HITM in a remote cache	2	100000	0x1A6	0x811	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_DATA.REMOTE_DRAM	Offcore data reads satisfied by a remote DRAM	2	100000	0x1A6	0x2011	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.ANY_CACHE_DRAM	Offcore code reads satisfied by any cache or DRAM	2	100000	0x1A6	0x7F44	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.ANY_DRAM	Offcore code reads satisfied by any DRAM	2	100000	0x1A6	0x6044	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.ANY_LLC_MISS	Offcore code reads that missed the LLC	2	100000	0x1A6	0xF844	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.ANY_LOCATION	All offcore code reads	2	100000	0x1A6	0xFF44	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.IO_CSR_MMIO	Offcore code reads satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8044	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.LLC_HIT_NO_OTHER_CORE	Offcore code reads satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x144	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.LLC_HIT_OTHER_CORE_HIT	Offcore code reads satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x244	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.LLC_HIT_OTHER_CORE_HITM	Offcore code reads satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x444	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.LOCAL_CACHE	Offcore code reads satisfied by the LLC	2	100000	0x1A6	0x744	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.LOCAL_CACHE_DRAM	Offcore code reads satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4744	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.LOCAL_DRAM	Offcore code reads satisfied by the local DRAM	2	100000	0x1A6	0x4044	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.REMOTE_CACHE	Offcore code reads satisfied by a remote cache	2	100000	0x1A6	0x1844	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.REMOTE_CACHE_DRAM	Offcore code reads satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3844	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.REMOTE_CACHE_HIT	Offcore code reads that HIT in a remote cache	2	100000	0x1A6	0x1044	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.REMOTE_CACHE_HITM	Offcore code reads that HITM in a remote cache	2	100000	0x1A6	0x844	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_IFETCH.REMOTE_DRAM	Offcore code reads satisfied by a remote DRAM	2	100000	0x1A6	0x2044	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.ANY_CACHE_DRAM	Offcore requests satisfied by any cache or DRAM	2	100000	0x1A6	0x7FFF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.ANY_DRAM	Offcore requests satisfied by any DRAM	2	100000	0x1A6	0x60FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.ANY_LLC_MISS	Offcore requests that missed the LLC	2	100000	0x1A6	0xF8FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.ANY_LOCATION	All offcore requests	2	100000	0x1A6	0xFFFF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.IO_CSR_MMIO	Offcore requests satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x80FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.LLC_HIT_NO_OTHER_CORE	Offcore requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x1FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.LLC_HIT_OTHER_CORE_HIT	Offcore requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x2FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.LLC_HIT_OTHER_CORE_HITM	Offcore requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x4FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.LOCAL_CACHE	Offcore requests satisfied by the LLC	2	100000	0x1A6	0x7FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.LOCAL_CACHE_DRAM	Offcore requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x47FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.LOCAL_DRAM	Offcore requests satisfied by the local DRAM	2	100000	0x1A6	0x40FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.REMOTE_CACHE	Offcore requests satisfied by a remote cache	2	100000	0x1A6	0x18FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.REMOTE_CACHE_DRAM	Offcore requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x38FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.REMOTE_CACHE_HIT	Offcore requests that HIT in a remote cache	2	100000	0x1A6	0x10FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.REMOTE_CACHE_HITM	Offcore requests that HITM in a remote cache	2	100000	0x1A6	0x8FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_REQUEST.REMOTE_DRAM	Offcore requests satisfied by a remote DRAM	2	100000	0x1A6	0x20FF	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.ANY_CACHE_DRAM	Offcore RFO requests satisfied by any cache or DRAM	2	100000	0x1A6	0x7F22	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.ANY_DRAM	Offcore RFO requests satisfied by any DRAM	2	100000	0x1A6	0x6022	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.ANY_LLC_MISS	Offcore RFO requests that missed the LLC	2	100000	0x1A6	0xF822	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.ANY_LOCATION	All offcore RFO requests	2	100000	0x1A6	0xFF22	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.IO_CSR_MMIO	Offcore RFO requests satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8022	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.LLC_HIT_NO_OTHER_CORE	Offcore RFO requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x122	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.LLC_HIT_OTHER_CORE_HIT	Offcore RFO requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x222	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.LLC_HIT_OTHER_CORE_HITM	Offcore RFO requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x422	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.LOCAL_CACHE	Offcore RFO requests satisfied by the LLC	2	100000	0x1A6	0x722	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.LOCAL_CACHE_DRAM	Offcore RFO requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4722	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.LOCAL_DRAM	Offcore RFO requests satisfied by the local DRAM	2	100000	0x1A6	0x4022	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.REMOTE_CACHE	Offcore RFO requests satisfied by a remote cache	2	100000	0x1A6	0x1822	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.REMOTE_CACHE_DRAM	Offcore RFO requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3822	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.REMOTE_CACHE_HIT	Offcore RFO requests that HIT in a remote cache	2	100000	0x1A6	0x1022	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.REMOTE_CACHE_HITM	Offcore RFO requests that HITM in a remote cache	2	100000	0x1A6	0x822	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.ANY_RFO.REMOTE_DRAM	Offcore RFO requests satisfied by a remote DRAM	2	100000	0x1A6	0x2022	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.ANY_CACHE_DRAM	Offcore writebacks to any cache or DRAM.	2	100000	0x1A6	0x7F08	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.ANY_DRAM	Offcore writebacks to any DRAM	2	100000	0x1A6	0x6008	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.ANY_LLC_MISS	Offcore writebacks that missed the LLC	2	100000	0x1A6	0xF808	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.ANY_LOCATION	All offcore writebacks	2	100000	0x1A6	0xFF08	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.IO_CSR_MMIO	Offcore writebacks to the IO, CSR, MMIO unit.	2	100000	0x1A6	0x8008	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.LLC_HIT_NO_OTHER_CORE	Offcore writebacks to the LLC and not found in a sibling core	2	100000	0x1A6	0x108	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.LLC_HIT_OTHER_CORE_HITM	Offcore writebacks to the LLC  and HITM in a sibling core	2	100000	0x1A6	0x408	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.LOCAL_CACHE	Offcore writebacks to the LLC	2	100000	0x1A6	0x708	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.LOCAL_CACHE_DRAM	Offcore writebacks to the LLC or local DRAM	2	100000	0x1A6	0x4708	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.LOCAL_DRAM	Offcore writebacks to the local DRAM	2	100000	0x1A6	0x4008	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.REMOTE_CACHE	Offcore writebacks to a remote cache	2	100000	0x1A6	0x1808	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.REMOTE_CACHE_DRAM	Offcore writebacks to a remote cache or remote DRAM	2	100000	0x1A6	0x3808	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.REMOTE_CACHE_HIT	Offcore writebacks that HIT in a remote cache	2	100000	0x1A6	0x1008	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.REMOTE_CACHE_HITM	Offcore writebacks that HITM in a remote cache	2	100000	0x1A6	0x808	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.COREWB.REMOTE_DRAM	Offcore writebacks to a remote DRAM	2	100000	0x1A6	0x2008	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.ANY_CACHE_DRAM	Offcore code or data read requests satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F77	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.ANY_DRAM	Offcore code or data read requests satisfied by any DRAM	2	100000	0x1A6	0x6077	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.ANY_LLC_MISS	Offcore code or data read requests that missed the LLC	2	100000	0x1A6	0xF877	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.ANY_LOCATION	All offcore code or data read requests	2	100000	0x1A6	0xFF77	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.IO_CSR_MMIO	Offcore code or data read requests satisfied by the IO, CSR, MMIO unit.	2	100000	0x1A6	0x8077	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.LLC_HIT_NO_OTHER_CORE	Offcore code or data read requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x177	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.LLC_HIT_OTHER_CORE_HIT	Offcore code or data read requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x277	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.LLC_HIT_OTHER_CORE_HITM	Offcore code or data read requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x477	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.LOCAL_CACHE	Offcore code or data read requests satisfied by the LLC	2	100000	0x1A6	0x777	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.LOCAL_CACHE_DRAM	Offcore code or data read requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4777	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.LOCAL_DRAM	Offcore code or data read requests satisfied by the local DRAM	2	100000	0x1A6	0x4077	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.REMOTE_CACHE	Offcore code or data read requests satisfied by a remote cache	2	100000	0x1A6	0x1877	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.REMOTE_CACHE_DRAM	Offcore code or data read requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3877	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.REMOTE_CACHE_HIT	Offcore code or data read requests that HIT in a remote cache	2	100000	0x1A6	0x1077	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.REMOTE_CACHE_HITM	Offcore code or data read requests that HITM in a remote cache	2	100000	0x1A6	0x877	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IFETCH.REMOTE_DRAM	Offcore code or data read requests satisfied by a remote DRAM	2	100000	0x1A6	0x2077	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.ANY_CACHE_DRAM	Offcore request = all data, response = any cache_dram	2	100000	0x1A6	0x7F33	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.ANY_DRAM	Offcore request = all data, response = any DRAM	2	100000	0x1A6	0x6033	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.ANY_LLC_MISS	Offcore request = all data, response = any LLC miss	2	100000	0x1A6	0xF833	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.ANY_LOCATION	Offcore request = all data, response = any location	2	100000	0x1A6	0xFF33	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.IO_CSR_MMIO	Offcore data reads, RFO's and prefetches satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8033	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.LLC_HIT_NO_OTHER_CORE	Offcore data reads, RFO's and prefetches statisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x133	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.LLC_HIT_OTHER_CORE_HIT	Offcore data reads, RFO's and prefetches satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x233	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.LLC_HIT_OTHER_CORE_HITM	Offcore data reads, RFO's and prefetches satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x433	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.LOCAL_CACHE	Offcore request = all data, response = local cache	2	100000	0x1A6	0x733	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.LOCAL_CACHE_DRAM	Offcore request = all data, response = local cache or dram	2	100000	0x1A6	0x4733	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.LOCAL_DRAM	Offcore data reads, RFO's and prefetches statisfied by the local DRAM.	2	100000	0x1A6	0x4033	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.REMOTE_CACHE	Offcore request = all data, response = remote cache	2	100000	0x1A6	0x1833	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.REMOTE_CACHE_DRAM	Offcore request = all data, response = remote cache or dram	2	100000	0x1A6	0x3833	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.REMOTE_CACHE_HIT	Offcore data reads, RFO's and prefetches that HIT in a remote cache 	2	100000	0x1A6	0x1033	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.REMOTE_CACHE_HITM	Offcore data reads, RFO's and prefetches that HITM in a remote cache	2	100000	0x1A6	0x833	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DATA_IN.REMOTE_DRAM	Offcore data reads, RFO's and prefetches statisfied by the remote DRAM	2	100000	0x1A6	0x2033	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.ANY_CACHE_DRAM	Offcore demand data requests satisfied by any cache or DRAM	2	100000	0x1A6	0x7F03	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.ANY_DRAM	Offcore demand data requests satisfied by any DRAM	2	100000	0x1A6	0x6003	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.ANY_LLC_MISS	Offcore demand data requests that missed the LLC	2	100000	0x1A6	0xF803	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.ANY_LOCATION	All offcore demand data requests	2	100000	0x1A6	0xFF03	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.IO_CSR_MMIO	Offcore demand data requests satisfied by the IO, CSR, MMIO unit.	2	100000	0x1A6	0x8003	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.LLC_HIT_NO_OTHER_CORE	Offcore demand data requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x103	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.LLC_HIT_OTHER_CORE_HIT	Offcore demand data requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x203	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.LLC_HIT_OTHER_CORE_HITM	Offcore demand data requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x403	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.LOCAL_CACHE	Offcore demand data requests satisfied by the LLC	2	100000	0x1A6	0x703	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.LOCAL_CACHE_DRAM	Offcore demand data requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4703	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.LOCAL_DRAM	Offcore demand data requests satisfied by the local DRAM	2	100000	0x1A6	0x4003	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.REMOTE_CACHE	Offcore demand data requests satisfied by a remote cache	2	100000	0x1A6	0x1803	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.REMOTE_CACHE_DRAM	Offcore demand data requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3803	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.REMOTE_CACHE_HIT	Offcore demand data requests that HIT in a remote cache	2	100000	0x1A6	0x1003	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.REMOTE_CACHE_HITM	Offcore demand data requests that HITM in a remote cache	2	100000	0x1A6	0x803	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA.REMOTE_DRAM	Offcore demand data requests satisfied by a remote DRAM	2	100000	0x1A6	0x2003	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.ANY_CACHE_DRAM	Offcore demand data reads satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F01	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.ANY_DRAM	Offcore demand data reads satisfied by any DRAM	2	100000	0x1A6	0x6001	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.ANY_LLC_MISS	Offcore demand data reads that missed the LLC	2	100000	0x1A6	0xF801	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.ANY_LOCATION	All offcore demand data reads	2	100000	0x1A6	0xFF01	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.IO_CSR_MMIO	Offcore demand data reads satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8001	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.LLC_HIT_NO_OTHER_CORE	Offcore demand data reads satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x101	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.LLC_HIT_OTHER_CORE_HIT	Offcore demand data reads satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x201	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.LLC_HIT_OTHER_CORE_HITM	Offcore demand data reads satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x401	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.LOCAL_CACHE	Offcore demand data reads satisfied by the LLC	2	100000	0x1A6	0x701	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.LOCAL_CACHE_DRAM	Offcore demand data reads satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4701	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.LOCAL_DRAM	Offcore demand data reads satisfied by the local DRAM	2	100000	0x1A6	0x4001	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.REMOTE_CACHE	Offcore demand data reads satisfied by a remote cache	2	100000	0x1A6	0x1801	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.REMOTE_CACHE_DRAM	Offcore demand data reads satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3801	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.REMOTE_CACHE_HIT	Offcore demand data reads that HIT in a remote cache	2	100000	0x1A6	0x1001	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.REMOTE_CACHE_HITM	Offcore demand data reads that HITM in a remote cache	2	100000	0x1A6	0x801	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_DATA_RD.REMOTE_DRAM	Offcore demand data reads satisfied by a remote DRAM	2	100000	0x1A6	0x2001	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.ANY_CACHE_DRAM	Offcore demand code reads satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F04	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.ANY_DRAM	Offcore demand code reads satisfied by any DRAM	2	100000	0x1A6	0x6004	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.ANY_LLC_MISS	Offcore demand code reads that missed the LLC	2	100000	0x1A6	0xF804	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.ANY_LOCATION	All offcore demand code reads	2	100000	0x1A6	0xFF04	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.IO_CSR_MMIO	Offcore demand code reads satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8004	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.LLC_HIT_NO_OTHER_CORE	Offcore demand code reads satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x104	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.LLC_HIT_OTHER_CORE_HIT	Offcore demand code reads satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x204	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.LLC_HIT_OTHER_CORE_HITM	Offcore demand code reads satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x404	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.LOCAL_CACHE	Offcore demand code reads satisfied by the LLC	2	100000	0x1A6	0x704	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.LOCAL_CACHE_DRAM	Offcore demand code reads satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4704	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.LOCAL_DRAM	Offcore demand code reads satisfied by the local DRAM	2	100000	0x1A6	0x4004	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.REMOTE_CACHE	Offcore demand code reads satisfied by a remote cache	2	100000	0x1A6	0x1804	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.REMOTE_CACHE_DRAM	Offcore demand code reads satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3804	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.REMOTE_CACHE_HIT	Offcore demand code reads that HIT in a remote cache	2	100000	0x1A6	0x1004	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.REMOTE_CACHE_HITM	Offcore demand code reads that HITM in a remote cache	2	100000	0x1A6	0x804	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_IFETCH.REMOTE_DRAM	Offcore demand code reads satisfied by a remote DRAM	2	100000	0x1A6	0x2004	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.ANY_CACHE_DRAM	Offcore demand RFO requests satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F02	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.ANY_DRAM	Offcore demand RFO requests satisfied by any DRAM	2	100000	0x1A6	0x6002	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.ANY_LLC_MISS	Offcore demand RFO requests that missed the LLC	2	100000	0x1A6	0xF802	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.ANY_LOCATION	All offcore demand RFO requests	2	100000	0x1A6	0xFF02	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.IO_CSR_MMIO	Offcore demand RFO requests satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8002	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.LLC_HIT_NO_OTHER_CORE	Offcore demand RFO requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x102	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.LLC_HIT_OTHER_CORE_HIT	Offcore demand RFO requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x202	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.LLC_HIT_OTHER_CORE_HITM	Offcore demand RFO requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x402	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.LOCAL_CACHE	Offcore demand RFO requests satisfied by the LLC	2	100000	0x1A6	0x702	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.LOCAL_CACHE_DRAM	Offcore demand RFO requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4702	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.LOCAL_DRAM	Offcore demand RFO requests satisfied by the local DRAM	2	100000	0x1A6	0x4002	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.REMOTE_CACHE	Offcore demand RFO requests satisfied by a remote cache	2	100000	0x1A6	0x1802	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.REMOTE_CACHE_DRAM	Offcore demand RFO requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3802	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.REMOTE_CACHE_HIT	Offcore demand RFO requests that HIT in a remote cache	2	100000	0x1A6	0x1002	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.REMOTE_CACHE_HITM	Offcore demand RFO requests that HITM in a remote cache	2	100000	0x1A6	0x802	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.DEMAND_RFO.REMOTE_DRAM	Offcore demand RFO requests satisfied by a remote DRAM	2	100000	0x1A6	0x2002	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.ANY_CACHE_DRAM	Offcore other requests satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F80	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.ANY_DRAM	Offcore other requests satisfied by any DRAM	2	100000	0x1A6	0x6080	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.ANY_LLC_MISS	Offcore other requests that missed the LLC	2	100000	0x1A6	0xF880	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.ANY_LOCATION	All offcore other requests	2	100000	0x1A6	0xFF80	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.IO_CSR_MMIO	Offcore other requests satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8080	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.LLC_HIT_NO_OTHER_CORE	Offcore other requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x180	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.LLC_HIT_OTHER_CORE_HIT	Offcore other requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x280	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.LLC_HIT_OTHER_CORE_HITM	Offcore other requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x480	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.LOCAL_CACHE	Offcore other requests satisfied by the LLC	2	100000	0x1A6	0x780	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.LOCAL_CACHE_DRAM	Offcore other requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4780	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.REMOTE_CACHE	Offcore other requests satisfied by a remote cache	2	100000	0x1A6	0x1880	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.REMOTE_CACHE_DRAM	Offcore other requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3880	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.REMOTE_CACHE_HIT	Offcore other requests that HIT in a remote cache	2	100000	0x1A6	0x1080	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.REMOTE_CACHE_HITM	Offcore other requests that HITM in a remote cache	2	100000	0x1A6	0x880	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.OTHER.REMOTE_DRAM	Offcore other requests satisfied by a remote DRAM	2	100000	0x1A6	0x2080	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.ANY_CACHE_DRAM	Offcore prefetch data requests satisfied by any cache or DRAM	2	100000	0x1A6	0x7F30	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.ANY_DRAM	Offcore prefetch data requests satisfied by any DRAM	2	100000	0x1A6	0x6030	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.ANY_LLC_MISS	Offcore prefetch data requests that missed the LLC	2	100000	0x1A6	0xF830	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.ANY_LOCATION	All offcore prefetch data requests	2	100000	0x1A6	0xFF30	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.IO_CSR_MMIO	Offcore prefetch data requests satisfied by the IO, CSR, MMIO unit.	2	100000	0x1A6	0x8030	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.LLC_HIT_NO_OTHER_CORE	Offcore prefetch data requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x130	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.LLC_HIT_OTHER_CORE_HIT	Offcore prefetch data requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x230	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.LLC_HIT_OTHER_CORE_HITM	Offcore prefetch data requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x430	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.LOCAL_CACHE	Offcore prefetch data requests satisfied by the LLC	2	100000	0x1A6	0x730	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.LOCAL_CACHE_DRAM	Offcore prefetch data requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4730	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.LOCAL_DRAM	Offcore prefetch data requests satisfied by the local DRAM	2	100000	0x1A6	0x4030	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.REMOTE_CACHE	Offcore prefetch data requests satisfied by a remote cache	2	100000	0x1A6	0x1830	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.REMOTE_CACHE_DRAM	Offcore prefetch data requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3830	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.REMOTE_CACHE_HIT	Offcore prefetch data requests that HIT in a remote cache	2	100000	0x1A6	0x1030	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.REMOTE_CACHE_HITM	Offcore prefetch data requests that HITM in a remote cache	2	100000	0x1A6	0x830	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA.REMOTE_DRAM	Offcore prefetch data requests satisfied by a remote DRAM	2	100000	0x1A6	0x2030	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.ANY_CACHE_DRAM	Offcore prefetch data reads satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F10	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.ANY_DRAM	Offcore prefetch data reads satisfied by any DRAM	2	100000	0x1A6	0x6010	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.ANY_LLC_MISS	Offcore prefetch data reads that missed the LLC	2	100000	0x1A6	0xF810	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.ANY_LOCATION	All offcore prefetch data reads	2	100000	0x1A6	0xFF10	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.IO_CSR_MMIO	Offcore prefetch data reads satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8010	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.LLC_HIT_NO_OTHER_CORE	Offcore prefetch data reads satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x110	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.LLC_HIT_OTHER_CORE_HIT	Offcore prefetch data reads satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x210	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.LLC_HIT_OTHER_CORE_HITM	Offcore prefetch data reads satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x410	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.LOCAL_CACHE	Offcore prefetch data reads satisfied by the LLC	2	100000	0x1A6	0x710	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.LOCAL_CACHE_DRAM	Offcore prefetch data reads satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4710	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.LOCAL_DRAM	Offcore prefetch data reads satisfied by the local DRAM	2	100000	0x1A6	0x4010	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.REMOTE_CACHE	Offcore prefetch data reads satisfied by a remote cache	2	100000	0x1A6	0x1810	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.REMOTE_CACHE_DRAM	Offcore prefetch data reads satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3810	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.REMOTE_CACHE_HIT	Offcore prefetch data reads that HIT in a remote cache	2	100000	0x1A6	0x1010	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.REMOTE_CACHE_HITM	Offcore prefetch data reads that HITM in a remote cache	2	100000	0x1A6	0x810	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_DATA_RD.REMOTE_DRAM	Offcore prefetch data reads satisfied by a remote DRAM	2	100000	0x1A6	0x2010	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.ANY_CACHE_DRAM	Offcore prefetch code reads satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F40	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.ANY_DRAM	Offcore prefetch code reads satisfied by any DRAM	2	100000	0x1A6	0x6040	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.ANY_LLC_MISS	Offcore prefetch code reads that missed the LLC	2	100000	0x1A6	0xF840	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.ANY_LOCATION	All offcore prefetch code reads	2	100000	0x1A6	0xFF40	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.IO_CSR_MMIO	Offcore prefetch code reads satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8040	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.LLC_HIT_NO_OTHER_CORE	Offcore prefetch code reads satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x140	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.LLC_HIT_OTHER_CORE_HIT	Offcore prefetch code reads satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x240	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.LLC_HIT_OTHER_CORE_HITM	Offcore prefetch code reads satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x440	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.LOCAL_CACHE	Offcore prefetch code reads satisfied by the LLC	2	100000	0x1A6	0x740	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.LOCAL_CACHE_DRAM	Offcore prefetch code reads satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4740	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.LOCAL_DRAM	Offcore prefetch code reads satisfied by the local DRAM	2	100000	0x1A6	0x4040	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.REMOTE_CACHE	Offcore prefetch code reads satisfied by a remote cache	2	100000	0x1A6	0x1840	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.REMOTE_CACHE_DRAM	Offcore prefetch code reads satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3840	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.REMOTE_CACHE_HIT	Offcore prefetch code reads that HIT in a remote cache	2	100000	0x1A6	0x1040	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.REMOTE_CACHE_HITM	Offcore prefetch code reads that HITM in a remote cache	2	100000	0x1A6	0x840	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_IFETCH.REMOTE_DRAM	Offcore prefetch code reads satisfied by a remote DRAM	2	100000	0x1A6	0x2040	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.ANY_CACHE_DRAM	Offcore prefetch RFO requests satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F20	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.ANY_DRAM	Offcore prefetch RFO requests satisfied by any DRAM	2	100000	0x1A6	0x6020	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.ANY_LLC_MISS	Offcore prefetch RFO requests that missed the LLC	2	100000	0x1A6	0xF820	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.ANY_LOCATION	All offcore prefetch RFO requests	2	100000	0x1A6	0xFF20	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.IO_CSR_MMIO	Offcore prefetch RFO requests satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8020	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.LLC_HIT_NO_OTHER_CORE	Offcore prefetch RFO requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x120	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.LLC_HIT_OTHER_CORE_HIT	Offcore prefetch RFO requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x220	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.LLC_HIT_OTHER_CORE_HITM	Offcore prefetch RFO requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x420	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.LOCAL_CACHE	Offcore prefetch RFO requests satisfied by the LLC	2	100000	0x1A6	0x720	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.LOCAL_CACHE_DRAM	Offcore prefetch RFO requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4720	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.LOCAL_DRAM	Offcore prefetch RFO requests satisfied by the local DRAM	2	100000	0x1A6	0x4020	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.REMOTE_CACHE	Offcore prefetch RFO requests satisfied by a remote cache	2	100000	0x1A6	0x1820	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.REMOTE_CACHE_DRAM	Offcore prefetch RFO requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3820	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.REMOTE_CACHE_HIT	Offcore prefetch RFO requests that HIT in a remote cache	2	100000	0x1A6	0x1020	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.REMOTE_CACHE_HITM	Offcore prefetch RFO requests that HITM in a remote cache	2	100000	0x1A6	0x820	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PF_RFO.REMOTE_DRAM	Offcore prefetch RFO requests satisfied by a remote DRAM	2	100000	0x1A6	0x2020	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.ANY_CACHE_DRAM	Offcore prefetch requests satisfied by any cache or DRAM.	2	100000	0x1A6	0x7F70	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.ANY_DRAM	Offcore prefetch requests satisfied by any DRAM	2	100000	0x1A6	0x6070	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.ANY_LLC_MISS	Offcore prefetch requests that missed the LLC	2	100000	0x1A6	0xF870	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.ANY_LOCATION	All offcore prefetch requests	2	100000	0x1A6	0xFF70	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.IO_CSR_MMIO	Offcore prefetch requests satisfied by the IO, CSR, MMIO unit	2	100000	0x1A6	0x8070	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.LLC_HIT_NO_OTHER_CORE	Offcore prefetch requests satisfied by the LLC and not found in a sibling core	2	100000	0x1A6	0x170	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.LLC_HIT_OTHER_CORE_HIT	Offcore prefetch requests satisfied by the LLC and HIT in a sibling core	2	100000	0x1A6	0x270	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.LLC_HIT_OTHER_CORE_HITM	Offcore prefetch requests satisfied by the LLC  and HITM in a sibling core	2	100000	0x1A6	0x470	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.LOCAL_CACHE	Offcore prefetch requests satisfied by the LLC	2	100000	0x1A6	0x770	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.LOCAL_CACHE_DRAM	Offcore prefetch requests satisfied by the LLC or local DRAM	2	100000	0x1A6	0x4770	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.LOCAL_DRAM	Offcore prefetch requests satisfied by the local DRAM	2	100000	0x1A6	0x4070	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.REMOTE_CACHE	Offcore prefetch requests satisfied by a remote cache	2	100000	0x1A6	0x1870	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.REMOTE_CACHE_DRAM	Offcore prefetch requests satisfied by a remote cache or remote DRAM	2	100000	0x1A6	0x3870	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.REMOTE_CACHE_HIT	Offcore prefetch requests that HIT in a remote cache	2	100000	0x1A6	0x1070	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.REMOTE_CACHE_HITM	Offcore prefetch requests that HITM in a remote cache	2	100000	0x1A6	0x870	0	0	0	0	0
+0xB7	0x1	OFFCORE_RESPONSE_0.PREFETCH.REMOTE_DRAM	Offcore prefetch requests satisfied by a remote DRAM	2	100000	0x1A6	0x2070	0	0	0	0	0

@@ -1,0 +1,79 @@
+# Performance Monitoring Events for Intel(R) Xeon Phi Processor Family based on the Intel(R) Many Integrated Core Architecture - V8
+# 8/16/2016 1:32:30 PM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+EventCode	UMask	EventName	BriefDescription	Counter	PEBScounters	SampleAfterValue	MSRIndex	MSRValue	CounterMask	Invert	AnyThread	EdgeDetect	PEBS	Data_LA	Errata
+0xC4	0x00	BR_INST_RETIRED.ALL_BRANCHES	Counts the number of branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0x7E	BR_INST_RETIRED.JCC	Counts the number of branch instructions retired that were conditional jumps.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xFE	BR_INST_RETIRED.TAKEN_JCC	Counts the number of branch instructions retired that were conditional jumps and predicted taken.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xF9	BR_INST_RETIRED.CALL	Counts the number of near CALL branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xFD	BR_INST_RETIRED.REL_CALL	Counts the number of near relative CALL branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xFB	BR_INST_RETIRED.IND_CALL	Counts the number of near indirect CALL branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xF7	BR_INST_RETIRED.RETURN	Counts the number of near RET branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xEB	BR_INST_RETIRED.NON_RETURN_IND	Counts the number of branch instructions retired that were near indirect CALL or near indirect JMP.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC4	0xBF	BR_INST_RETIRED.FAR_BRANCH	Counts the number of far branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0x00	BR_MISP_RETIRED.ALL_BRANCHES	Counts the number of mispredicted branch instructions retired	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0x7E	BR_MISP_RETIRED.JCC	Counts the number of mispredicted branch instructions retired that were conditional jumps.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0xFE	BR_MISP_RETIRED.TAKEN_JCC	Counts the number of mispredicted branch instructions retired that were conditional jumps and predicted taken.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0xFB	BR_MISP_RETIRED.IND_CALL	Counts the number of mispredicted near indirect CALL branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0xF7	BR_MISP_RETIRED.RETURN	Counts the number of mispredicted near RET branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0xEB	BR_MISP_RETIRED.NON_RETURN_IND	Counts the number of mispredicted branch instructions retired that were near indirect CALL or near indirect JMP.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC2	0x01	UOPS_RETIRED.MS	Counts the number of micro-ops retired that are from the complex flows issued by the micro-sequencer (MS).	0,1	0	2000003	0	0	0	0	0	0	0	0	null
+0xC2	0x10	UOPS_RETIRED.ALL	Counts the number of micro-ops retired	0,1	0	2000003	0	0	0	0	0	0	0	0	null
+0xC2	0x20	UOPS_RETIRED.SCALAR_SIMD	Counts the number of scalar SSE, AVX, AVX2, AVX-512 micro-ops retired. More specifically, it counts scalar SSE, AVX, AVX2, AVX-512 micro-ops except for loads (memory-to-register mov-type micro ops), division, sqrt.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xC2	0x40	UOPS_RETIRED.PACKED_SIMD	Counts the number of vector SSE, AVX, AVX2, AVX-512 micro-ops retired. More specifically, it counts packed SSE, AVX, AVX2, AVX-512 micro-ops (both floating point and integer) except for loads (memory-to-register mov-type micro-ops), packed byte and word multiplies.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xC3	0x01	MACHINE_CLEARS.SMC	Counts the number of times that the machine clears due to program modifying data within 1K of a recently fetched code page	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xC3	0x02	MACHINE_CLEARS.MEMORY_ORDERING	Counts the number of times the machine clears due to memory ordering hazards	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xC3	0x04	MACHINE_CLEARS.FP_ASSIST	Counts the number of floating operations retired that required microcode assists	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xC3	0x08	MACHINE_CLEARS.ALL	Counts all nukes	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCA	0x01	NO_ALLOC_CYCLES.ROB_FULL	Counts the number of core cycles when no micro-ops are allocated and the ROB is full	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCA	0x04	NO_ALLOC_CYCLES.MISPREDICTS	Counts the number of core cycles when no micro-ops are allocated and the alloc pipe is stalled waiting for a mispredicted branch to retire.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCA	0x20	NO_ALLOC_CYCLES.RAT_STALL	Counts the number of core cycles when no micro-ops are allocated and a RATstall (caused by reservation station full) is asserted.  	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCA	0x90	NO_ALLOC_CYCLES.NOT_DELIVERED	Counts the number of core cycles when no micro-ops are allocated, the IQ is empty, and no other condition is blocking allocation.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCA	0x7F	NO_ALLOC_CYCLES.ALL	Counts the total number of core cycles when no micro-ops are allocated for any reason.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCB	0x01	RS_FULL_STALL.MEC	Counts the number of core cycles when allocation pipeline is stalled and is waiting for a free MEC reservation station entry.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xCB	0x1F	RS_FULL_STALL.ALL	Counts the total number of core cycles the Alloc pipeline is stalled when any one of the reservation stations is full. 	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xC0	0x00	INST_RETIRED.ANY_P	Counts the total number of instructions retired	0,1	0	2000003	0	0	0	0	0	0	0	0	null
+0xCD	0x01	CYCLES_DIV_BUSY.ALL	Cycles the number of core cycles when divider is busy.  Does not imply a stall waiting for the divider.  	0,1	0	2000003	0	0	0	0	0	0	0	0	null
+0x00	0x01	INST_RETIRED.ANY	Fixed Counter: Counts the number of instructions retired	Fixed counter 1	0	2000003	0	0	0	0	0	0	0	0	null
+0x3C	0x00	CPU_CLK_UNHALTED.THREAD_P	Counts the number of unhalted core clock cycles	0,1	0	2000003	0	0	0	0	0	0	0	0	null
+0x3C	0x01	CPU_CLK_UNHALTED.REF	Counts the number of unhalted reference clock cycles	0,1	0	2000003	0	0	0	0	0	0	0	0	null
+0x00	0x02	CPU_CLK_UNHALTED.THREAD	Fixed Counter: Counts the number of unhalted core clock cycles	Fixed counter 2	0	2000003	0	0	0	0	0	0	0	0	null
+0x00	0x03	CPU_CLK_UNHALTED.REF_TSC	Fixed Counter: Counts the number of unhalted reference clock cycles	Fixed counter 3	0	2000003	0	0	0	0	0	0	0	0	null
+0x30	0x00	L2_REQUESTS_REJECT.ALL	Counts the number of MEC requests from the L2Q that reference a cache line (cacheable requests) exlcuding SW prefetches filling only to L2 cache and L1 evictions (automatically exlcudes L2HWP, UC, WC) that were rejected - Multiple repeated rejects should be counted multiple times	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x31	0x00	CORE_REJECT_L2Q.ALL	Counts the number of MEC requests that were not accepted into the L2Q because of any L2  queue reject condition. There is no concept of at-ret here. It might include requests due to instructions in the speculative path.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x2E	0x4F	L2_REQUESTS.REFERENCE	Counts the total number of L2 cache references.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x2E	0x41	L2_REQUESTS.MISS	Counts the number of L2 cache misses	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x80	0x03	ICACHE.ACCESSES	Counts all instruction fetches, including uncacheable fetches.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x80	0x01	ICACHE.HIT	Counts all instruction fetches that hit the instruction cache.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x80	0x02	ICACHE.MISSES	Counts all instruction fetches that miss the instruction cache or produce memory requests. An instruction fetch miss is counted only once and not once for every cycle it is outstanding.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x86	0x04	FETCH_STALL.ICACHE_FILL_PENDING_CYCLES	Counts the number of core cycles the fetch stalls because of an icache miss. This is a cummulative count of core cycles the fetch stalled for all icache misses. 	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xE6	0x01	BACLEARS.ALL	Counts the number of times the front end resteers for any branch as a result of another branch handling mechanism in the front end.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xE6	0x08	BACLEARS.RETURN	Counts the number of times the front end resteers for RET branches as a result of another branch handling mechanism in the front end.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xE6	0x10	BACLEARS.COND	Counts the number of times the front end resteers for conditional branches as a result of another branch handling mechanism in the front end.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xE7	0x01	MS_DECODED.MS_ENTRY	Counts the number of times the MSROM starts a flow of uops.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x03	0x01	RECYCLEQ.LD_BLOCK_ST_FORWARD	Counts the number of occurences a retired load gets blocked because its address partially overlaps with a store 	0,1	0	200003	0	0	0	0	0	0	1	1	null
+0x03	0x02	RECYCLEQ.LD_BLOCK_STD_NOTREADY	Counts the number of occurences a retired load gets blocked because its address overlaps with a store whose data is not ready	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x03	0x04	RECYCLEQ.ST_SPLITS	Counts the number of occurences a retired store that is a cache line split. Each split should be counted only once.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x03	0x08	RECYCLEQ.LD_SPLITS	Counts the number of occurences a retired load that is a cache line split. Each split should be counted only once.	0,1	0	200003	0	0	0	0	0	0	1	1	null
+0x03	0x10	RECYCLEQ.LOCK	Counts all the retired locked loads. It does not include stores because we would double count if we count stores	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x03	0x20	RECYCLEQ.STA_FULL	Counts the store micro-ops retired that were pushed in the rehad queue because the store address buffer is full	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x03	0x40	RECYCLEQ.ANY_LD	Counts any retired load that was pushed into the recycle queue for any reason.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x03	0x80	RECYCLEQ.ANY_ST	Counts any retired store that was pushed into the recycle queue for any reason.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x04	0x01	MEM_UOPS_RETIRED.L1_MISS_LOADS	Counts the number of load micro-ops retired that miss in L1 D cache	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x04	0x02	MEM_UOPS_RETIRED.L2_HIT_LOADS	Counts the number of load micro-ops retired that hit in the L2	0,1	0	200003	0	0	0	0	0	0	1	1	null
+0x04	0x04	MEM_UOPS_RETIRED.L2_MISS_LOADS	Counts the number of load micro-ops retired that miss in the L2	0,1	0	100007	0	0	0	0	0	0	1	1	null
+0x04	0x08	MEM_UOPS_RETIRED.DTLB_MISS_LOADS	Counts the number of load micro-ops retired that cause a DTLB miss	0,1	0	200003	0	0	0	0	0	0	1	1	null
+0x04	0x10	MEM_UOPS_RETIRED.UTLB_MISS_LOADS	Counts the number of load micro-ops retired that caused micro TLB miss	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x04	0x20	MEM_UOPS_RETIRED.HITM	Counts the loads retired that get the data from the other core in the same tile in M state	0,1	0	200003	0	0	0	0	0	0	1	1	null
+0x04	0x40	MEM_UOPS_RETIRED.ALL_LOADS	Counts all the load micro-ops retired	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x04	0x80	MEM_UOPS_RETIRED.ALL_STORES	Counts all the store micro-ops retired	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x05	0x01	PAGE_WALKS.D_SIDE_WALKS	Counts the total D-side page walks that are completed or started. The page walks started in the speculative path will also be counted	0,1	0	100003	0	0	0	0	0	1	0	0	null
+0x05	0x01	PAGE_WALKS.D_SIDE_CYCLES	Counts the total number of core cycles for all the D-side page walks. The cycles for page walks started in speculative path will also be included.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x05	0x02	PAGE_WALKS.I_SIDE_WALKS	Counts the total I-side page walks that are completed.	0,1	0	100003	0	0	0	0	0	1	0	0	null
+0x05	0x02	PAGE_WALKS.I_SIDE_CYCLES	Counts the total number of core cycles for all the I-side page walks. The cycles for page walks started in speculative path will also be included.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0x05	0x03	PAGE_WALKS.WALKS	Counts the total page walks that are completed (I-side and D-side)	0,1	0	100003	0	0	0	0	0	1	0	0	null
+0x05	0x03	PAGE_WALKS.CYCLES	Counts the total number of core cycles for all the page walks. The cycles for page walks started in speculative path will also be included.	0,1	0	200003	0	0	0	0	0	0	0	0	null
+0xB7	0x01,0x02	OFFCORE_RESPONSE	Counts the matrix events specified by MSR_OFFCORE_RESPx	0,1	0	100007	0	0	0	0	0	0	0	0	null
+0xC5	0xF9	BR_MISP_RETIRED.CALL	Counts the number of mispredicted near CALL branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0xFD	BR_MISP_RETIRED.REL_CALL	Counts the number of mispredicted near relative CALL branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null
+0xC5	0xBF	BR_MISP_RETIRED.FAR_BRANCH	Counts the number of mispredicted far branch instructions retired.	0,1	0	200003	0	0	0	0	0	0	1	0	null

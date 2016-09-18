@@ -1,0 +1,86 @@
+# Performance Monitoring Events for Intel Atom Processors Based on the Goldmont Microarchitecture - V8
+# 8/16/2016 1:31:03 PM
+# Copyright (c) 2007 - 2016 Intel Corporation. All rights reserved.
+EventCode	UMask	EventName	BriefDescription	Counter	PEBScounters	SampleAfterValue	MSRIndex	MSRValue	CollectPEBSRecord	CounterMask	Invert	AnyThread	EdgeDetect	PEBS	Data_LA	Errata
+0xC4	0x00	BR_INST_RETIRED.ALL_BRANCHES	Retired branch instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0x7E	BR_INST_RETIRED.JCC	Retired conditional branch instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xFE	BR_INST_RETIRED.TAKEN_JCC	Retired conditional branch instructions that were taken (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xF9	BR_INST_RETIRED.CALL	Retired near call instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xFD	BR_INST_RETIRED.REL_CALL	Retired near relative call instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xFB	BR_INST_RETIRED.IND_CALL	Retired near indirect call instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xF7	BR_INST_RETIRED.RETURN	Retired near return instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xEB	BR_INST_RETIRED.NON_RETURN_IND	Retired instructions of near indirect Jmp or call (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC4	0xBF	BR_INST_RETIRED.FAR_BRANCH	Retired far branch instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC5	0x00	BR_MISP_RETIRED.ALL_BRANCHES	Retired mispredicted branch instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC5	0x7E	BR_MISP_RETIRED.JCC	Retired mispredicted conditional branch instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC5	0xFE	BR_MISP_RETIRED.TAKEN_JCC	Retired mispredicted conditional branch instructions that were taken (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC5	0xFB	BR_MISP_RETIRED.IND_CALL	Retired mispredicted near indirect call instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC5	0xF7	BR_MISP_RETIRED.RETURN	Retired mispredicted near return instructions (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC5	0xEB	BR_MISP_RETIRED.NON_RETURN_IND	Retired mispredicted instructions of near indirect Jmp or near indirect call. (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xC2	0x00	UOPS_RETIRED.ANY	Uops retired (Precise event capable)	0,1,2,3	0	2000003	0	0	2	0	0	0	0	2	0	null
+0xC2	0x01	UOPS_RETIRED.MS	MS uops retired (Precise event capable)	0,1,2,3	0	2000003	0	0	2	0	0	0	0	2	0	null
+0xC3	0x01	MACHINE_CLEARS.SMC	Self-Modifying Code detected	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xC3	0x02	MACHINE_CLEARS.MEMORY_ORDERING	Machine clears due to memory ordering issue	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xC3	0x04	MACHINE_CLEARS.FP_ASSIST	Machine clears due to FP assists	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xC3	0x08	MACHINE_CLEARS.DISAMBIGUATION	Machine clears due to memory disambiguation	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xC3	0x00	MACHINE_CLEARS.ALL	All machine clears	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xCA	0x01	ISSUE_SLOTS_NOT_CONSUMED.RESOURCE_FULL	Unfilled issue slots per cycle because of a full resource in the backend	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xCA	0x02	ISSUE_SLOTS_NOT_CONSUMED.RECOVERY	Unfilled issue slots per cycle to recover	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xCA	0x00	ISSUE_SLOTS_NOT_CONSUMED.ANY	Unfilled issue slots per cycle	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xCB	0x01	HW_INTERRUPTS.RECEIVED	Hardware interrupts received (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	0	0	null
+0xCB	0x04	HW_INTERRUPTS.PENDING_AND_MASKED	Cycles pending interrupts are masked (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	0	0	null
+0xC0	0x00	INST_RETIRED.ANY_P	Instructions retired (Precise event capable)	0,1,2,3	0	2000003	0	0	1	0	0	0	0	2	0	null
+0x9C	0x00	UOPS_NOT_DELIVERED.ANY	Uops requested but not-delivered to the back-end per cycle	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x0E	0x00	UOPS_ISSUED.ANY	Uops issued to the back end per cycle	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xCD	0x00	CYCLES_DIV_BUSY.ALL	Cycles a divider is busy	0,1,2,3	0	2000003	0	0	1	0	0	0	0	0	0	null
+0xCD	0x01	CYCLES_DIV_BUSY.IDIV	Cycles the integer divide unit is busy	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xCD	0x02	CYCLES_DIV_BUSY.FPDIV	Cycles the FP divide unit is busy	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x00	0x01	INST_RETIRED.ANY	Instructions retired (Fixed event)	Fixed counter 1	0	2000003	0	0	0	0	0	0	0	0	0	null
+0x00	0x02	CPU_CLK_UNHALTED.CORE	Core cycles when core is not halted  (Fixed event)	Fixed counter 2	0	2000003	0	0	0	0	0	0	0	0	0	null
+0x00	0x03	CPU_CLK_UNHALTED.REF_TSC	Reference cycles when core is not halted  (Fixed event)	Fixed counter 3	0	2000003	0	0	0	0	0	0	0	0	0	null
+0x3C	0x00	CPU_CLK_UNHALTED.CORE_P	Core cycles when core is not halted	0,1,2,3	0	2000003	0	0	1	0	0	0	0	0	0	null
+0x3C	0x01	CPU_CLK_UNHALTED.REF	Reference cycles when core is not halted	0,1,2,3	0	2000003	0	0	1	0	0	0	0	0	0	null
+0x30	0x00	L2_REJECT_XQ.ALL	Requests rejected by the XQ	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x31	0x00	CORE_REJECT_L2Q.ALL	Requests rejected by the L2Q 	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x2E	0x4F	LONGEST_LAT_CACHE.REFERENCE	L2 cache requests	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x2E	0x41	LONGEST_LAT_CACHE.MISS	L2 cache request misses	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x80	0x01	ICACHE.HIT	References per ICache line that are available in the ICache (hit). This event counts differently than Intel processors based on Silvermont microarchitecture	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x80	0x02	ICACHE.MISSES	References per ICache line that are not available in the ICache (miss). This event counts differently than Intel processors based on Silvermont microarchitecture	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x80	0x03	ICACHE.ACCESSES	References per ICache line. This event counts differently than Intel processors based on Silvermont microarchitecture	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x81	0x04	ITLB.MISS	ITLB misses	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x86	0x02	FETCH_STALL.ICACHE_FILL_PENDING_CYCLES	Cycles where code-fetch is stalled and an ICache miss is outstanding.  This is not the same as an ICache Miss.	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xE6	0x01	BACLEARS.ALL	BACLEARs asserted for any branch type	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xE6	0x08	BACLEARS.RETURN	BACLEARs asserted for return branch	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xE6	0x10	BACLEARS.COND	BACLEARs asserted for conditional branch	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xE7	0x01	MS_DECODED.MS_ENTRY	MS decode starts	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0xE9	0x01	DECODE_RESTRICTION.PREDECODE_WRONG	Decode restrictions due to predicting wrong instruction length	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x03	0x10	LD_BLOCKS.ALL_BLOCK	Loads blocked (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0x03	0x08	LD_BLOCKS.UTLB_MISS	Loads blocked because address in not in the UTLB (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0x03	0x02	LD_BLOCKS.STORE_FORWARD	Loads blocked due to store forward restriction (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0x03	0x01	LD_BLOCKS.DATA_UNKNOWN	Loads blocked due to store data not ready (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0x03	0x04	LD_BLOCKS.4K_ALIAS	Loads blocked because address has 4k partial address false dependence (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x81	MEM_UOPS_RETIRED.ALL_LOADS	Load uops retired (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x82	MEM_UOPS_RETIRED.ALL_STORES	Store uops retired (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x83	MEM_UOPS_RETIRED.ALL	Memory uops retired (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x11	MEM_UOPS_RETIRED.DTLB_MISS_LOADS	Load uops retired that missed the DTLB (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x12	MEM_UOPS_RETIRED.DTLB_MISS_STORES	Store uops retired that missed the DTLB (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x13	MEM_UOPS_RETIRED.DTLB_MISS	Memory uops retired that missed the DTLB (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x21	MEM_UOPS_RETIRED.LOCK_LOADS	Locked load uops retired (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x41	MEM_UOPS_RETIRED.SPLIT_LOADS	Load uops retired that split a cache-line (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x42	MEM_UOPS_RETIRED.SPLIT_STORES	Stores uops retired that split a cache-line (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD0	0x43	MEM_UOPS_RETIRED.SPLIT	Memory uops retired that split a cache-line (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x01	MEM_LOAD_UOPS_RETIRED.L1_HIT	Load uops retired that hit L1 data cache (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x08	MEM_LOAD_UOPS_RETIRED.L1_MISS	Load uops retired that missed L1 data cache (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x02	MEM_LOAD_UOPS_RETIRED.L2_HIT	Load uops retired that hit L2 (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x10	MEM_LOAD_UOPS_RETIRED.L2_MISS	Load uops retired that missed L2 (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x20	MEM_LOAD_UOPS_RETIRED.HITM	Memory uop retired where cross core or cross module HITM occurred (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x40	MEM_LOAD_UOPS_RETIRED.WCB_HIT	Loads retired that hit WCB (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xD1	0x80	MEM_LOAD_UOPS_RETIRED.DRAM_HIT	Loads retired that came from DRAM (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0x05	0x01	PAGE_WALKS.D_SIDE_CYCLES	Duration of D-side page-walks in cycles	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x05	0x02	PAGE_WALKS.I_SIDE_CYCLES	Duration of I-side pagewalks in cycles	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x05	0x03	PAGE_WALKS.CYCLES	Duration of page-walks in cycles	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x51	0x01	DL1.DIRTY_EVICTION	L1 Cache evictions for dirty data	0,1,2,3	0	200003	0	0	1	0	0	0	0	0	0	null
+0x13	0x02	MISALIGN_MEM_REF.LOAD_PAGE_SPLIT	Load uops that split a page (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0x13	0x04	MISALIGN_MEM_REF.STORE_PAGE_SPLIT	Store uops that split a page (Precise event capable)	0,1,2,3	0	200003	0	0	2	0	0	0	0	2	0	null
+0xB7	0x01,0x02	OFFCORE_RESPONSE	Requires MSR_OFFCORE_RESP[0,1] to specify request type and response. (duplicated for both MSRs)	0,1,2,3	0	100007	0	0	1	0	0	0	0	0	0	null
+0xC4	0x80	BR_INST_RETIRED.ALL_TAKEN_BRANCHES	Retired taken branch instructions (Precise event capable)	0,1,2,3	0	200003	0	0	1	0	0	0	0	2	0	null

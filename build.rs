@@ -154,6 +154,7 @@ mod performance_counter {
                 let mut unit = None;
                 let mut filter = None;
                 let mut extsel = false;
+                let mut collect_pebs_record = None;
 
                 let mut do_insert: bool = false;
 
@@ -244,6 +245,7 @@ mod performance_counter {
                         "Unit" => unit = parse_null_string(value_str),
                         "Filter" => filter = parse_null_string(value_str),
                         "ExtSel" => extsel = parse_bool(value_str),
+                        "CollectPEBSRecord" => collect_pebs_record = Some(parse_number(value_str)),
                         "ELLC" => {/* Ignored due to missing documentation. */ },
                         _ => panic!("Unknown member: {} in file {}", key, input),
                     };
@@ -268,6 +270,7 @@ mod performance_counter {
                     edge_detect,
                     pebs,
                     precise_store,
+                    collect_pebs_record,
                     data_la,
                     l1_hit_indication,
                     errata,
