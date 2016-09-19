@@ -92,14 +92,17 @@ mod performance_counter {
     fn parse_counters(value_str: &str) -> Counter {
         if value_str.to_lowercase().starts_with("fixed counter") {
             let mask: u64 = parse_counter_values(&value_str["fixed counter".len()..]);
+            assert!(mask <= u8::max_value() as u64);
             Counter::Fixed(mask as u8)
         }
         else if value_str.to_lowercase().starts_with("fixed") {
             let mask: u64 = parse_counter_values(&value_str["fixed".len()..]);
+            assert!(mask <= u8::max_value() as u64);
             Counter::Fixed(mask as u8)
         }
         else {
             let mask: u64 = parse_counter_values(value_str);
+            assert!(mask <= u8::max_value() as u64);
             Counter::Programmable(mask as u8)
         }
     }
@@ -163,7 +166,7 @@ mod performance_counter {
                         panic!("Not a string");
                     }
 
-                    println!("key = {} value = {}", key, value.as_string().unwrap());
+                    //println!("key = {} value = {}", key, value.as_string().unwrap());
                     let value_string = value.as_string().unwrap();
                     let value_str = string_to_static_str(value_string).trim();
                     let split_str_parts: Vec<&str> = value_string.split(",").map(|x| x.trim()).collect();
@@ -184,16 +187,30 @@ mod performance_counter {
                         "EventCode" => {
                             let split_parts: Vec<u64> = parse_hex_numbers(split_str_parts);
                             match split_parts.len() {
-                                1 => event_code = Tuple::One(split_parts[0] as u8),
-                                2 => event_code = Tuple::Two(split_parts[0] as u8, split_parts[1] as u8),
+                                1 => {
+                                    assert!(split_parts[0] <= u8::max_value() as u64);
+                                    event_code = Tuple::One(split_parts[0] as u8)
+                                },
+                                2 => {
+                                    assert!(split_parts[0] <= u8::max_value() as u64);
+                                    assert!(split_parts[1] <= u8::max_value() as u64);
+                                    event_code = Tuple::Two(split_parts[0] as u8, split_parts[1] as u8)
+                                },
                                 _ => panic!("More than two event codes?")
                             }
                         },
                         "UMask" => {
                             let split_parts: Vec<u64> = parse_hex_numbers(split_str_parts);
                             match split_parts.len() {
-                                1 => umask = Tuple::One(split_parts[0] as u8),
-                                2 => umask = Tuple::Two(split_parts[0] as u8, split_parts[1] as u8),
+                                1 => {
+                                    assert!(split_parts[0] <= u8::max_value() as u64);
+                                    umask = Tuple::One(split_parts[0] as u8)
+                                },
+                                2 => {
+                                    assert!(split_parts[0] <= u8::max_value() as u64);
+                                    assert!(split_parts[1] <= u8::max_value() as u64);
+                                    umask = Tuple::Two(split_parts[0] as u8, split_parts[1] as u8)
+                                },
                                 _ => panic!("More than two event codes?")
                             }
                         },
@@ -216,17 +233,20 @@ mod performance_counter {
                                 .map(|x| x.trim())
                                 .map(|x| parse_number(x))
                                 .collect();
+                                println!("{:?}", split_parts);
 
                                 msr_index = match split_parts.len() {
                                     1 => {
                                         if split_parts[0] != 0 {
-                                            MSRIndex::One(split_parts[0] as u8)
+                                            MSRIndex::One(split_parts[0])
                                         }
                                         else {
                                             MSRIndex::None
                                         }
                                     },
-                                    2 => MSRIndex::Two(split_parts[0] as u8, split_parts[1] as u8),
+                                    2 => {
+                                        MSRIndex::Two(split_parts[0], split_parts[1])
+                                    },
                                     _ => panic!("More than two MSR indexes?")
                                 }
                         },

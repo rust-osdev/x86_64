@@ -33,8 +33,8 @@ impl fmt::Debug for Tuple {
 
 pub enum MSRIndex {
     None,
-    One(u8),
-    Two(u8, u8),
+    One(u64),
+    Two(u64, u64),
 }
 
 impl fmt::Debug for MSRIndex {
