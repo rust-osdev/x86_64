@@ -138,7 +138,7 @@ mod performance_counter {
                 let mut brief_description = "";
                 let mut public_description = None;
                 let mut counter = Counter::Fixed(0);
-                let mut counter_ht_off = Counter::Fixed(0);
+                let mut counter_ht_off = None;
                 let mut pebs_counters = None;
                 let mut sample_after_value = 0;
                 let mut msr_index = MSRIndex::None;
@@ -224,7 +224,7 @@ mod performance_counter {
                             }
                         },
                         "Counter" => counter = parse_counters(value_str),
-                        "CounterHTOff" => counter_ht_off = parse_counters(value_str),
+                        "CounterHTOff" => counter_ht_off = Some(parse_counters(value_str)),
                         "PEBScounters" => pebs_counters = Some(parse_counters(value_str)),
                         "SampleAfterValue" => sample_after_value = parse_number(value_str),
                         "MSRIndex" => {
@@ -271,7 +271,7 @@ mod performance_counter {
                     };
                 }
 
-                let ipcd = IntelPerformanceCounterDescription::new(
+                let ipcd = EventDescription::new(
                     event_code,
                     umask,
                     event_name,
@@ -311,7 +311,7 @@ mod performance_counter {
         }
 
 
-        write!(file, "pub const {}: phf::Map<&'static str, IntelPerformanceCounterDescription> = ", variable).unwrap();
+        write!(file, "pub const {}: phf::Map<&'static str, EventDescription> = ", variable).unwrap();
         builder.build(file).unwrap();
         write!(file, ";\n").unwrap();
     }
@@ -357,8 +357,8 @@ mod performance_counter {
     }
 
     pub fn main() {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:rerun-if-changed=x86data/perfmon_data");
+        //println!("cargo:rerun-if-changed=build.rs");
+        //println!("cargo:rerun-if-changed=x86data/perfmon_data");
 
         let mut rdr = csv::Reader::from_file("./x86data/perfmon_data/mapfile.csv").unwrap();
         let mut data_files = HashMap::new();
@@ -387,7 +387,7 @@ mod performance_counter {
             builder.entry(family_model.as_str(), format!("{}", variable_upper.as_str()).as_str());
         }
 
-        write!(&mut filewriter, "pub static {}: phf::Map<&'static str, phf::Map<&'static str, IntelPerformanceCounterDescription>> = ", "COUNTER_MAP").unwrap();
+        write!(&mut filewriter, "pub static {}: phf::Map<&'static str, phf::Map<&'static str, EventDescription>> = ", "COUNTER_MAP").unwrap();
         builder.build(&mut filewriter).unwrap();
         write!(&mut filewriter, ";\n").unwrap();
 
@@ -404,6 +404,5 @@ mod performance_counter {
                                            variable_upper, &mut filewriter);
             }
         }
-
     }
 }

@@ -3,10 +3,6 @@
 /// from the data in `x86data/perfmon_data`.
 
 use phf;
-use super::description::IntelPerformanceCounterDescription;
-use super::description::Counter;
-use super::description::PebsType;
-use super::description::Tuple;
-use super::description::MSRIndex;
+use super::description::{EventDescription, Counter, PebsType, Tuple, MSRIndex};
 
 include!(concat!(env!("OUT_DIR"), "/counters.rs"));

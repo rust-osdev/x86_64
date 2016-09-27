@@ -68,7 +68,7 @@ impl fmt::Debug for Counter {
 }
 
 #[derive(Debug)]
-pub struct IntelPerformanceCounterDescription {
+pub struct EventDescription {
     /// This field maps to the Event Select field in the IA32_PERFEVTSELx[7:0]MSRs.
     ///
     /// The set of values for this field is defined architecturally.
@@ -103,7 +103,7 @@ pub struct IntelPerformanceCounterDescription {
     /// the programmable counters of the second thread, making a total of eight
     /// programmable counters available. The additional counters will be
     /// numbered 4,5,6,7. Fixed counter behavior remains unaffected.
-    pub counter_ht_off: Counter,
+    pub counter_ht_off: Option<Counter>,
 
     /// This field is only relevant to PEBS events.
     ///
@@ -214,7 +214,7 @@ pub struct IntelPerformanceCounterDescription {
     pub extsel: bool,
 }
 
-impl IntelPerformanceCounterDescription {
+impl EventDescription {
     #[allow(dead_code)]
     fn new(event_code: Tuple,
            umask: Tuple,
@@ -222,7 +222,7 @@ impl IntelPerformanceCounterDescription {
            brief_description: &'static str,
            public_description: Option<&'static str>,
            counter: Counter,
-           counter_ht_off: Counter,
+           counter_ht_off: Option<Counter>,
            pebs_counters: Option<Counter>,
            sample_after_value: u64,
            msr_index: MSRIndex,
@@ -242,9 +242,9 @@ impl IntelPerformanceCounterDescription {
            unit: Option<&'static str>,
            filter: Option<&'static str>,
            extsel: bool)
-           -> IntelPerformanceCounterDescription {
+           -> EventDescription {
 
-        IntelPerformanceCounterDescription {
+        EventDescription {
             event_code: event_code,
             umask: umask,
             event_name: event_name,
