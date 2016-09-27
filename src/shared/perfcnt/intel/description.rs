@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Eq, PartialEq)]
 pub enum PebsType {
     Regular,
     PebsOrRegular,
@@ -17,6 +18,7 @@ impl fmt::Debug for PebsType {
     }
 }
 
+#[derive(Eq, PartialEq)]
 pub enum Tuple {
     One(u8),
     Two(u8, u8),
@@ -31,6 +33,7 @@ impl fmt::Debug for Tuple {
     }
 }
 
+#[derive(Eq, PartialEq)]
 pub enum MSRIndex {
     None,
     One(u64),
@@ -47,7 +50,7 @@ impl fmt::Debug for MSRIndex {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Counter {
     /// Bit-mask containing the fixed counters
     /// usable with the corresponding performance event.
@@ -272,5 +275,11 @@ impl EventDescription {
             filter: filter,
             extsel: extsel,
         }
+    }
+}
+
+impl fmt::Display for EventDescription {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.event_name)
     }
 }
