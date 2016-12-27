@@ -23,9 +23,6 @@ pub enum PrivilegeLevel {
     Ring3 = 3,
 }
 
-#[cfg(feature = "performance-counter")]
-pub mod perfcnt;
-
 #[inline(always)]
 pub unsafe fn halt() {
     asm!("hlt" :::: "volatile");

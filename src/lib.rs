@@ -12,9 +12,6 @@ extern crate bitflags;
 #[macro_use]
 extern crate raw_cpuid;
 
-#[cfg(feature = "performance-counter")]
-#[macro_use]
-extern crate phf;
 
 #[cfg(target_arch="x86")]
 pub mod bits32;

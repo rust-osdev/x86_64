@@ -18,26 +18,11 @@ documentation = "https://docs.rs/x86_64"
 readme = "README.md"
 keywords = ["amd64", "x86", "x86_64", "no_std"]
 license = "MIT"
-build = "build.rs"
-
-[features]
-default = ["performance-counter"]
-performance-counter = ["phf", "phf_codegen", "csv", "serde_json"]
 
 [[test]]
 name = "no_std_build"
 harness = false
 
-[build-dependencies]
-phf_codegen = { version = "0.7.7", optional = true }
-csv = { version = "0.14.3", optional = true }
-serde_json = { version = "0.6.0", optional = true }
-
 [dependencies]
 bitflags = "0.7"
 raw-cpuid = "2.*"
-
-[dependencies.phf]
-version = "0.7.7"
-optional = true
-features = ["core"]
