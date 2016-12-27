@@ -63,30 +63,11 @@ impl From<usize> for VirtualAddress {
     }
 }
 
-impl<T> From<*const T> for VirtualAddress {
-    fn from(pointer: *const T) -> Self {
-        VirtualAddress(pointer as usize)
+impl From<u64> for VirtualAddress {
+    fn from(value: u64) -> Self {
+        VirtualAddress(value as usize)
     }
 }
-
-impl<T> From<*mut T> for VirtualAddress {
-    fn from(pointer: *mut T) -> Self {
-        VirtualAddress(pointer as usize)
-    }
-}
-
-impl<'a, T> From<&'a T> for VirtualAddress {
-    fn from(pointer: &T) -> Self {
-        VirtualAddress::from(pointer as *const _)
-    }
-}
-
-impl<'a, T> From<&'a mut T> for VirtualAddress {
-    fn from(pointer: &mut T) -> Self {
-        VirtualAddress::from(pointer as *mut _)
-    }
-}
-
 
 impl VirtualAddress {
     /// Convert to `usize`
