@@ -3,59 +3,47 @@
 use core::mem::size_of;
 
 use irq::IdtEntry;
-use segmentation::SegmentDescriptor;
+use VirtualAddress;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.
 #[derive(Debug)]
 #[repr(C, packed)]
-pub struct DescriptorTablePointer<Entry> {
+pub struct DescriptorTablePointer {
     /// Size of the DT.
     pub limit: u16,
-    /// Pointer to the memory region containing the DT.
-    pub base: *const Entry,
+    /// Address of the memory region containing the DT.
+    pub base: VirtualAddress,
 }
 
-impl<T> DescriptorTablePointer<T> {
-    fn new(slice: &[T]) -> Self {
+impl DescriptorTablePointer {
+    fn new<T>(slice: &[T]) -> Self {
         let len = slice.len() * size_of::<T>();
         assert!(len < 0x10000);
         DescriptorTablePointer {
-            base: slice.as_ptr(),
+            base: VirtualAddress::from(slice.as_ptr() as usize),
             limit: len as u16,
         }
     }
 }
 
-impl DescriptorTablePointer<SegmentDescriptor> {
-    pub fn new_gdtp(gdt: &[SegmentDescriptor]) -> Self {
-        let mut p = Self::new(gdt);
-        p.limit -= 1;
-        p
-    }
-    pub fn new_ldtp(ldt: &[SegmentDescriptor]) -> Self {
-        Self::new(ldt)
-    }
-}
-
-impl DescriptorTablePointer<IdtEntry> {
+impl DescriptorTablePointer {
     pub fn new_idtp(idt: &[IdtEntry]) -> Self {
         Self::new(idt)
     }
 }
 
-
 /// Load GDT table.
-pub unsafe fn lgdt(gdt: &DescriptorTablePointer<SegmentDescriptor>) {
+pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
     asm!("lgdt ($0)" :: "r" (gdt) : "memory");
 }
 
 /// Load LDT table.
-pub unsafe fn lldt(ldt: &DescriptorTablePointer<SegmentDescriptor>) {
+pub unsafe fn lldt(ldt: &DescriptorTablePointer) {
     asm!("lldt ($0)" :: "r" (ldt) : "memory");
 }
 
 /// Load IDT table.
-pub unsafe fn lidt(idt: &DescriptorTablePointer<IdtEntry>) {
+pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     asm!("lidt ($0)" :: "r" (idt) : "memory");
 }
