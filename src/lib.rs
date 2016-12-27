@@ -6,11 +6,15 @@
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]
 
+pub use address::{VirtualAddress, PhysicalAddress};
+
 #[macro_use]
 extern crate bitflags;
 
 #[macro_use]
 extern crate raw_cpuid;
+
+pub mod address;
 
 macro_rules! bit {
     ( $x:expr ) => {

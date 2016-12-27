@@ -3,7 +3,7 @@
 use core::fmt;
 
 use descriptor::*;
-use paging::VAddr;
+use VirtualAddress;
 use PrivilegeLevel;
 
 /// An interrupt gate descriptor.
@@ -49,7 +49,7 @@ impl IdtEntry {
     ///
     /// The "Present" flag set, which is the most common case.  If you need
     /// something else, you can construct it manually.
-    pub const fn new(handler: VAddr,
+    pub const fn new(handler: VirtualAddress,
                      gdt_code_selector: u16,
                      dpl: PrivilegeLevel,
                      block: bool)

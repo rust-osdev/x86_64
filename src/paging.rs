@@ -1,51 +1,6 @@
 //! Description of the data-structures for IA-32e paging mode.
 
-use core::fmt;
-
-/// Represents a physical memory address
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct PAddr(u64);
-
-impl PAddr {
-    /// Convert to `u64`
-    pub const fn as_u64(&self) -> u64 {
-        self.0
-    }
-    /// Convert from `u64`
-    pub const fn from_u64(v: u64) -> Self {
-        PAddr(v)
-    }
-}
-
-impl fmt::Binary for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Display for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::LowerHex for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Octal for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::UpperHex for PAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
+use {VirtualAddress, PhysicalAddress};
 
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
 pub const LARGE_PAGE_SIZE: u64 = 1024 * 1024 * 2; // 2 MiB
@@ -72,25 +27,25 @@ pub type PD = [PDEntry; 512];
 pub type PT = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
-pub fn pml4_index(addr: VAddr) -> usize {
+pub fn pml4_index(addr: VirtualAddress) -> usize {
     (addr.as_usize() >> 39) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PDPT.
 #[inline]
-pub fn pdpt_index(addr: VAddr) -> usize {
+pub fn pdpt_index(addr: VirtualAddress) -> usize {
     (addr.as_usize() >> 30) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PD.
 #[inline]
-pub fn pd_index(addr: VAddr) -> usize {
+pub fn pd_index(addr: VirtualAddress) -> usize {
     (addr.as_usize() >> 21) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PT.
 #[inline]
-pub fn pt_index(addr: VAddr) -> usize {
+pub fn pt_index(addr: VirtualAddress) -> usize {
     (addr.as_usize() >> 12) & 0b111111111
 }
 
@@ -127,15 +82,15 @@ impl PML4Entry {
     ///
     ///  * `pdpt` - The physical address of the pdpt table.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(pdpt: PAddr, flags: PML4Entry) -> PML4Entry {
+    pub fn new(pdpt: PhysicalAddress, flags: PML4Entry) -> PML4Entry {
         let pdpt_val = pdpt.as_u64();
         assert!(pdpt_val % BASE_PAGE_SIZE == 0);
         PML4Entry { bits: pdpt_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from_u64(self.bits & ADDRESS_MASK)
+    pub fn get_address(self) -> PhysicalAddress {
+        PhysicalAddress::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Is page present?", is_present, PML4_P);
@@ -193,15 +148,15 @@ impl PDPTEntry {
     ///
     ///  * `pd` - The physical address of the page directory.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(pd: PAddr, flags: PDPTEntry) -> PDPTEntry {
+    pub fn new(pd: PhysicalAddress, flags: PDPTEntry) -> PDPTEntry {
         let pd_val = pd.as_u64();
         assert!(pd_val % BASE_PAGE_SIZE == 0);
         PDPTEntry { bits: pd_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from_u64(self.bits & ADDRESS_MASK)
+    pub fn get_address(self) -> PhysicalAddress {
+        PhysicalAddress::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Is page present?", is_present, PDPT_P);
@@ -261,15 +216,15 @@ impl PDEntry {
     ///
     ///  * `pt` - The physical address of the page table.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(pt: PAddr, flags: PDEntry) -> PDEntry {
+    pub fn new(pt: PhysicalAddress, flags: PDEntry) -> PDEntry {
         let pt_val = pt.as_u64();
         assert!(pt_val % BASE_PAGE_SIZE == 0);
         PDEntry { bits: pt_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from_u64(self.bits & ADDRESS_MASK)
+    pub fn get_address(self) -> PhysicalAddress {
+        PhysicalAddress::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Present; must be 1 to map a 2-MByte page or reference a page table.",
@@ -329,15 +284,15 @@ impl PTEntry {
     ///
     ///  * `page` - The physical address of the backing 4 KiB page.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
+    pub fn new(page: PhysicalAddress, flags: PTEntry) -> PTEntry {
         let page_val = page.as_u64();
         assert!(page_val % BASE_PAGE_SIZE == 0);
         PTEntry { bits: page_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from_u64(self.bits & ADDRESS_MASK)
+    pub fn get_address(self) -> PhysicalAddress {
+        PhysicalAddress::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Present; must be 1 to map a 4-KByte page or reference a page table.",
@@ -358,49 +313,4 @@ impl PTEntry {
                 is_global, PT_G);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 4-KByte region.",
                 is_instruction_fetching_disabled, PT_XD);
-}
-
-/// Represent a virtual (linear) memory address
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct VAddr(usize);
-
-impl VAddr {
-    /// Convert to `usize`
-    pub const fn as_usize(&self) -> usize {
-        self.0
-    }
-    /// Convert from `usize`
-    pub const fn from_usize(v: usize) -> Self {
-        VAddr(v)
-    }
-}
-
-impl fmt::Binary for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Display for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::LowerHex for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Octal for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::UpperHex for VAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
 }
