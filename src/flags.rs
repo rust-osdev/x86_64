@@ -1,6 +1,6 @@
 //! Processor state stored in the FLAGS, EFLAGS, or RFLAGS register.
 
-use shared::PrivilegeLevel;
+use PrivilegeLevel;
 
 /// The RFLAGS register. All variants are backwards compatable so only one
 /// bitflags struct needed.

@@ -6,13 +6,13 @@
 ///   * Function needs to be executed in ring 0.
 macro_rules! encls {
     ($rax:expr, $rbx:expr)
-        => ( $crate::bits64::sgx::encls2($rax as u64, $rbx as u64) );
+        => ( $crate::sgx::encls2($rax as u64, $rbx as u64) );
 
     ($rax:expr, $rbx:expr, $rcx:expr)
-        => ( $crate::bits64::sgx::encls3($rax as u64, $rbx as u64, $rcx as u64) );
+        => ( $crate::sgx::encls3($rax as u64, $rbx as u64, $rcx as u64) );
 
     ($rax:expr, $rbx:expr, $rcx:expr, $rdx:expr)
-        => ( $crate::bits64::sgx::encls4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
+        => ( $crate::sgx::encls4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
 }
 
 /// encls with two arguments -- consider calling the encls! macro instead!
@@ -58,7 +58,7 @@ enum EnclsCommand {
     EPA = 0x0A,
     EREMOVE = 0x03,
     ETRACK = 0x0C,
-    EWB = 0x0B
+    EWB = 0x0B,
 }
 
 
@@ -226,10 +226,10 @@ pub unsafe fn encls_ewb(pageinfo: u64, epc_page: u64, va_slot: u64) -> u32 {
 ///   * Function needs to be executed in ring 3.
 macro_rules! enclu {
     ($rax:expr, $rbx:expr, $rcx:expr)
-        => ( $crate::bits64::sgx::enclu3($rax as u64, $rbx as u64, $rcx as u64) );
+        => ( $crate::sgx::enclu3($rax as u64, $rbx as u64, $rcx as u64) );
 
     ($rax:expr, $rbx:expr, $rcx:expr, $rdx:expr)
-        => ( $crate::bits64::sgx::enclu4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
+        => ( $crate::sgx::enclu4($rax as u64, $rbx as u64, $rcx as u64, $rdx as u64) );
 }
 
 /// enclu with three arguments -- consider calling the enclu! macro instead!
@@ -282,7 +282,10 @@ pub unsafe fn enclu_eaccept(secinfo: u64, epc_page: u64) -> u32 {
 ///
 /// Returns an error code.
 ///
-pub unsafe fn enclu_eacceptcopy(secinfo: u64, destination_epc_page: u64, source_epc_page: u64) -> u32 {
+pub unsafe fn enclu_eacceptcopy(secinfo: u64,
+                                destination_epc_page: u64,
+                                source_epc_page: u64)
+                                -> u32 {
     enclu!(EncluCommand::EACCEPTCOPY as u64, secinfo, destination_epc_page, source_epc_page).0
 }
 
@@ -295,7 +298,7 @@ pub unsafe fn enclu_eacceptcopy(secinfo: u64, destination_epc_page: u64, source_
 ///
 /// Returns content of RBX.CSSA and Address of IP following EENTER.
 ///
-pub unsafe fn enclu_eenter(tcs: u64, aep: u64) -> (u32, u64)  {
+pub unsafe fn enclu_eenter(tcs: u64, aep: u64) -> (u32, u64) {
     enclu!(EncluCommand::EENTER as u64, tcs, aep)
 }
 

@@ -1,7 +1,7 @@
 use core::fmt;
 
-use shared::descriptor;
-use shared::PrivilegeLevel;
+use descriptor;
+use PrivilegeLevel;
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
@@ -208,9 +208,12 @@ impl SegmentDescriptor {
         limit2_flags: Flags::BLANK,
     };
 
-    pub fn new(base: u32, limit: u32,
-               ty: Type, accessed: bool, dpl: PrivilegeLevel) -> SegmentDescriptor
-    {
+    pub fn new(base: u32,
+               limit: u32,
+               ty: Type,
+               accessed: bool,
+               dpl: PrivilegeLevel)
+               -> SegmentDescriptor {
         let fine_grained = limit < 0x100000;
         let (limit1, limit2) = if fine_grained {
             ((limit & 0xFFFF) as u16, ((limit & 0xF0000) >> 16) as u8)
@@ -222,18 +225,20 @@ impl SegmentDescriptor {
         };
         let ty1 = descriptor::Type::SegmentDescriptor {
             ty: ty,
-            accessed: accessed
+            accessed: accessed,
         };
         SegmentDescriptor {
             base1: base as u16,
             base2: ((base as usize & 0xFF0000) >> 16) as u8,
             base3: ((base as usize & 0xFF000000) >> 24) as u8,
-            access: descriptor::Flags::from_type(ty1)
-                |   descriptor::Flags::from_priv(dpl),
+            access: descriptor::Flags::from_type(ty1) | descriptor::Flags::from_priv(dpl),
             limit1: limit1,
-            limit2_flags: FLAGS_DB
-                | if fine_grained { FLAGS_G } else { Flags::empty() }
-                | Flags::from_limit2(limit2),
+            limit2_flags: FLAGS_DB |
+                          if fine_grained {
+                FLAGS_G
+            } else {
+                Flags::empty()
+            } | Flags::from_limit2(limit2),
         }
     }
 }

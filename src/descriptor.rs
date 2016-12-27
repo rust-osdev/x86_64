@@ -1,7 +1,7 @@
 //! Fields which are common to all segment-section and gate descriptors
 
-use shared::PrivilegeLevel;
-use shared::segmentation;
+use PrivilegeLevel;
+use segmentation;
 
 /// System-Segment and Gate-Descriptor Types for IA32e mode.  When the `S`
 /// (descriptor type) flag in a segment descriptor is clear, the descriptor type
@@ -31,21 +31,23 @@ pub enum Type {
         /// false/0: 16-bit
         /// true/1: native (32- or 64-bit)
         size: bool,
-        ty: SystemType
+        ty: SystemType,
     },
     SegmentDescriptor {
         ty: segmentation::Type,
-        accessed: bool
-    }
+        accessed: bool,
+    },
 }
 
 impl Type {
     pub fn pack(self) -> u8 {
         match self {
-            Type::SystemDescriptor { size, ty } =>
-                (size as u8) << 3 | (ty as u8) | FLAGS_TYPE_SYS.bits,
-            Type::SegmentDescriptor { ty, accessed } =>
-                (accessed as u8)  | ty.pack()  | FLAGS_TYPE_SYS.bits,
+            Type::SystemDescriptor { size, ty } => {
+                (size as u8) << 3 | (ty as u8) | FLAGS_TYPE_SYS.bits
+            }
+            Type::SegmentDescriptor { ty, accessed } => {
+                (accessed as u8) | ty.pack() | FLAGS_TYPE_SYS.bits
+            }
         }
     }
 }

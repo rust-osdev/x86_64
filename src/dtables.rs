@@ -2,8 +2,8 @@
 
 use core::mem::size_of;
 
-use current::irq::IdtEntry;
-use shared::segmentation::SegmentDescriptor;
+use irq::IdtEntry;
+use segmentation::SegmentDescriptor;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.

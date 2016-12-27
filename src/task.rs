@@ -1,7 +1,7 @@
 //! Helpers to program the task state segment.
 //! See Intel 3a, Chapter 7, Section 7
 
-use shared::segmentation;
+use segmentation;
 
 pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;
 pub type TaskStateDescriptorHigh = u64;
@@ -37,4 +37,9 @@ impl TaskStateSegment {
             iomap_base: 0,
         }
     }
+}
+
+/// Load the task state register.
+pub unsafe fn load_tr(sel: segmentation::SegmentSelector) {
+    asm!("ltr $0" :: "r" (sel));
 }
