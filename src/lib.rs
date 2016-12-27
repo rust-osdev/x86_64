@@ -78,10 +78,3 @@ pub enum PrivilegeLevel {
 pub unsafe fn halt() {
     asm!("hlt" :::: "volatile");
 }
-
-
-mod std {
-    pub use core::fmt;
-    pub use core::ops;
-    pub use core::option;
-}
