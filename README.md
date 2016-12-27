@@ -1,5 +1,7 @@
 # x86_64 library
 
+[![docs.rs](https://img.shields.io/badge/docs.rs-documentation-green.svg)](https://docs.rs/x86_64)
+
 Fork of [gz/rust-x86](https://github.com/gz/rust-x86).
 
 Library to program x86_64 hardware. Contains x86_64 specific data structure descriptions, data-tables, as well as convenience function to call assembly instructions typically not exposed in higher level languages.
