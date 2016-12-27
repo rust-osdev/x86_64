@@ -12,18 +12,13 @@ extern crate bitflags;
 #[macro_use]
 extern crate raw_cpuid;
 
-
-#[cfg(target_arch="x86")]
-pub mod bits32;
 #[cfg(target_arch="x86_64")]
 pub mod bits64;
 pub mod shared;
 
 pub mod current {
-  #[cfg(target_arch="x86")]
-  pub use bits32::*;
-  #[cfg(target_arch="x86_64")]
-  pub use bits64::*;
+    #[cfg(target_arch="x86_64")]
+    pub use bits64::*;
 }
 
 mod std {
