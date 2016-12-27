@@ -1,5 +1,7 @@
 #![cfg(target_arch="x86_64")]
 
+#![warn(missing_docs)]
+
 #![feature(const_fn)]
 #![feature(asm)]
 #![feature(associated_consts)]
