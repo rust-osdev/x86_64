@@ -3,9 +3,6 @@
 
 use segmentation;
 
-pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;
-pub type TaskStateDescriptorHigh = u64;
-
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
 /// but is used for finding kernel level stack
