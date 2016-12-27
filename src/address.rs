@@ -10,6 +10,12 @@ impl From<u64> for PhysicalAddress {
     }
 }
 
+impl From<usize> for PhysicalAddress {
+    fn from(value: usize) -> Self {
+        PhysicalAddress(value as u64)
+    }
+}
+
 impl PhysicalAddress {
     /// Convert to `u64`
     pub const fn as_u64(&self) -> u64 {
@@ -54,6 +60,12 @@ pub struct VirtualAddress(usize);
 impl From<usize> for VirtualAddress {
     fn from(value: usize) -> Self {
         VirtualAddress(value)
+    }
+}
+
+impl From<u64> for VirtualAddress {
+    fn from(value: u64) -> Self {
+        VirtualAddress(value as usize)
     }
 }
 
