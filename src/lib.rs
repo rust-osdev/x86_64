@@ -14,6 +14,8 @@ extern crate bitflags;
 #[macro_use]
 extern crate raw_cpuid;
 
+extern crate bit_field;
+
 pub mod address;
 
 macro_rules! bit {
