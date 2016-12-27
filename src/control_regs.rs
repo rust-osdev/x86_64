@@ -1,6 +1,8 @@
 //! Functions to read and write control registers.
 //! See AMD64 Vol. 2 Section 3.1.1
 
+use {VirtualAddress, PhysicalAddress};
+
 bitflags! {
     pub flags Cr0: usize {
         const CR0_ENABLE_PAGING = 1 << 31,
@@ -66,18 +68,18 @@ pub unsafe fn cr0_update<F>(f: F)
     cr0_write(value);
 }
 
-/// Contains page-fault linear address.
-pub fn cr2() -> usize {
+/// Contains page-fault virtual address.
+pub fn cr2() -> VirtualAddress {
     let ret: usize;
     unsafe { asm!("mov %cr2, $0" : "=r" (ret)) };
-    ret
+    VirtualAddress::from(ret)
 }
 
 /// Contains page-table root pointer.
-pub fn cr3() -> usize {
-    let ret: usize;
+pub fn cr3() -> PhysicalAddress {
+    let ret: u64;
     unsafe { asm!("mov %cr3, $0" : "=r" (ret)) };
-    ret
+    PhysicalAddress::from(ret)
 }
 
 /// Switch page-table PML4 pointer (level 4 page table).
@@ -85,8 +87,8 @@ pub fn cr3() -> usize {
 /// # Safety
 /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
 /// changing the page mapping.
-pub unsafe fn cr3_write(val: usize) {
-    asm!("mov $0, %cr3" :: "r" (val) : "memory");
+pub unsafe fn cr3_write(val: PhysicalAddress) {
+    asm!("mov $0, %cr3" :: "r" (val.as_u64()) : "memory");
 }
 
 /// Contains various flags to control operations in protected mode.
