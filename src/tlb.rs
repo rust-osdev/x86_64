@@ -1,7 +1,9 @@
 //! Functions to flush the translation lookaside buffer (TLB).
 
+use VirtualAddress;
+
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
-pub fn flush(addr: usize) {
+pub fn flush(addr: VirtualAddress) {
     unsafe { asm!("invlpg ($0)" :: "r" (addr) : "memory") };
 }
 
