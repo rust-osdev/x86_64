@@ -1,73 +1,119 @@
 //! Interrupt description and set-up code.
 
-use core::fmt;
-
-use descriptor::*;
 use VirtualAddress;
-use PrivilegeLevel;
+use segmentation::{self, SegmentSelector};
+use core::fmt;
+use bit_field::BitField;
 
-/// An interrupt gate descriptor.
+/// An Interrupt Descriptor Table entry.
 ///
-/// See Intel manual 3a for details, specifically section "6.14.1 64-Bit Mode
-/// IDT" and "Table 3-2. System-Segment and Gate-Descriptor Types".
+/// See AMD64 Vol 2, Section 4.8.4 for details.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
 pub struct IdtEntry {
-    /// Lower 16 bits of ISR.
-    pub base_lo: u16,
+    /// Lower 16 bits of ISR pointer.
+    pub pointer_low: u16,
     /// Segment selector.
-    pub selector: u16,
-    /// This must always be zero.
-    pub reserved0: u8,
-    /// Flags.
-    pub flags: Flags,
-    /// The upper 48 bits of ISR (the last 16 bits must be zero).
-    pub base_hi: u64,
+    pub selector: SegmentSelector,
+    // Flags and IST index.
+    pub options: IdtEntryOptions,
+    /// Bits 16-31 of ISR pointer.
+    pub pointer_middle: u16,
+    /// Bits 32-63 of ISR pointer.
+    pub pointer_high: u32,
     /// Must be zero.
-    pub reserved1: u16,
+    reserved: u32,
 }
 
 impl IdtEntry {
     /// A "missing" IdtEntry.
     ///
     /// If the CPU tries to invoke a missing interrupt, it will instead
-    /// send a General Protection fault (13), with the interrupt number and
-    /// some other data stored in the error code.
-    pub const MISSING: IdtEntry = IdtEntry {
-        base_lo: 0,
-        selector: 0,
-        reserved0: 0,
-        flags: Flags::BLANK,
-        base_hi: 0,
-        reserved1: 0,
-    };
+    /// send a Segment-Not-Present Exception (11), with the segment descriptor as error code.
+    pub fn missing() -> IdtEntry {
+        IdtEntry {
+            selector: SegmentSelector::new(0, ::PrivilegeLevel::Ring0),
+            pointer_low: 0,
+            pointer_middle: 0,
+            pointer_high: 0,
+            options: IdtEntryOptions::minimal(),
+            reserved: 0,
+        }
+    }
 
     /// Create a new IdtEntry pointing at `handler`, which must be a function
     /// with interrupt calling conventions.  (This must be currently defined in
     /// assembly language.)  The `gdt_code_selector` value must be the offset of
     /// code segment entry in the GDT.
     ///
-    /// The "Present" flag set, which is the most common case.  If you need
-    /// something else, you can construct it manually.
-    pub const fn new(handler: VirtualAddress,
-                     gdt_code_selector: u16,
-                     dpl: PrivilegeLevel,
-                     block: bool)
-                     -> IdtEntry {
+    /// This function sets the "Present" flag, which is the most common case. It also
+    /// sets the GDT selector to the currently active code segment. All defaults can
+    /// be overwritten through the provided methods.
+    pub fn new(handler: VirtualAddress) -> IdtEntry {
+        let pointer = handler.as_usize();
+        let selector = segmentation::cs();
+        let options = IdtEntryOptions::new();
+
         IdtEntry {
-            base_lo: ((handler.as_usize() as u64) & 0xFFFF) as u16,
-            base_hi: handler.as_usize() as u64 >> 16,
-            selector: gdt_code_selector,
-            reserved0: 0,
-            // Nice bitflags operations don't work in const fn, hence these
-            // ad-hoc methods.
-            flags: Flags::from_priv(dpl)
-                .const_or(FLAGS_TYPE_SYS_NATIVE_INTERRUPT_GATE
-                          .const_mux(FLAGS_TYPE_SYS_NATIVE_TRAP_GATE,
-                                     block))
-                .const_or(FLAGS_PRESENT),
-            reserved1: 0,
+            selector: selector,
+            pointer_low: pointer as u16,
+            pointer_middle: (pointer >> 16) as u16,
+            pointer_high: (pointer >> 32) as u32,
+            options: options,
+            reserved: 0,
         }
+    }
+}
+
+/// Describes options of an IDT entry.
+#[derive(Debug, Clone, Copy)]
+pub struct IdtEntryOptions(u16);
+
+impl IdtEntryOptions {
+    /// A minimal set of flags. Only the bits to define a interrupt gate are set.
+    fn minimal() -> Self {
+        let mut options = 0;
+        options.set_range(9..12, 0b111); // 'must-be-one' bits
+        IdtEntryOptions(options)
+    }
+
+    /// A default set of options that includes the `present` bit and disables interrupts (trap gate).
+    fn new() -> Self {
+        let mut options = Self::minimal();
+        options.set_present(true).disable_interrupts(true);
+        options
+    }
+
+    /// Update the `present` bit.
+    pub fn set_present(&mut self, present: bool) -> &mut Self {
+        self.0.set_bit(15, present);
+        self
+    }
+
+    /// Control if interrupts should be disabled when the handler function is called.
+    pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {
+        self.0.set_bit(8, !disable);
+        self
+    }
+
+    /// Set the minimal privilege level required to invoke this interrupt.
+    #[allow(dead_code)]
+    pub fn set_privilege_level(&mut self, dpl: u8) -> &mut Self {
+        self.0.set_range(13..15, dpl.into());
+        self
+    }
+
+    /// Set the IST index. If `None` is passed, the stack switching mechanism is disabled. If
+    /// `Some(i)` is passed, the CPU will switch to the i-th stack in the IST of the loaded TSS
+    /// (index starts at 0).
+    #[allow(dead_code)]
+    pub fn set_stack_index(&mut self, index: Option<u8>) -> &mut Self {
+        let value = match index {
+            Some(i) => (i + 1).into(), // the IST index field starts at index 1
+            None => 0,
+        };
+        self.0.set_range(0..3, value);
+        self
     }
 }
 
@@ -328,7 +374,7 @@ pub unsafe fn disable() {
 }
 
 /// Generate a software interrupt.
-/// This is a macro argument needs to be an immediate.
+/// This is a macro because the argument needs to be an immediate.
 #[macro_export]
 macro_rules! int {
     ( $x:expr ) => {
