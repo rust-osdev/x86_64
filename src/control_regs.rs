@@ -1,5 +1,5 @@
 //! Functions to read and write control registers.
-//! See Intel Vol. 3a Section 2.5, especially Figure 2.6.
+//! See AMD64 Vol. 2 Section 3.1.1
 
 bitflags! {
     pub flags Cr0: usize {
@@ -39,46 +39,67 @@ bitflags! {
     }
 }
 
-
-/// Read cr0
-pub unsafe fn cr0() -> Cr0 {
+/// Read CR0
+pub fn cr0() -> Cr0 {
     let ret: usize;
-    asm!("mov %cr0, $0" : "=r" (ret));
+    unsafe { asm!("mov %cr0, $0" : "=r" (ret)) };
     Cr0::from_bits_truncate(ret)
 }
 
-/// Write cr0.
+/// Write CR0.
+///
+/// # Safety
+/// Changing the CR0 register is unsafe, because e.g. disabling paging would violate memory safety.
 pub unsafe fn cr0_write(val: Cr0) {
-    asm!("mov $0, %cr0" :: "r" (val.bits) : "memory");
+    asm!("mov $0, %cr0" :: "r" (val.bits()) : "memory");
+}
+
+/// Update CR0.
+///
+/// # Safety
+/// Changing the CR0 register is unsafe, because e.g. disabling paging would violate memory safety.
+pub unsafe fn cr0_update<F>(f: F)
+    where F: FnOnce(&mut Cr0)
+{
+    let mut value = cr0();
+    f(&mut value);
+    cr0_write(value);
 }
 
 /// Contains page-fault linear address.
-pub unsafe fn cr2() -> usize {
+pub fn cr2() -> usize {
     let ret: usize;
-    asm!("mov %cr2, $0" : "=r" (ret));
+    unsafe { asm!("mov %cr2, $0" : "=r" (ret)) };
     ret
 }
 
 /// Contains page-table root pointer.
-pub unsafe fn cr3() -> usize {
+pub fn cr3() -> usize {
     let ret: usize;
-    asm!("mov %cr3, $0" : "=r" (ret));
+    unsafe { asm!("mov %cr3, $0" : "=r" (ret)) };
     ret
 }
 
-/// Switch page-table PML4 pointer.
+/// Switch page-table PML4 pointer (level 4 page table).
+///
+/// # Safety
+/// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+/// changing the page mapping.
 pub unsafe fn cr3_write(val: usize) {
     asm!("mov $0, %cr3" :: "r" (val) : "memory");
 }
 
 /// Contains various flags to control operations in protected mode.
-pub unsafe fn cr4() -> Cr4 {
+pub fn cr4() -> Cr4 {
     let ret: usize;
-    asm!("mov %cr4, $0" : "=r" (ret));
+    unsafe { asm!("mov %cr4, $0" : "=r" (ret)) };
     Cr4::from_bits_truncate(ret)
 }
 
 /// Write cr4.
+///
+/// # Safety
+/// It's not clear if it's always memory safe to change the CR4 register.
 pub unsafe fn cr4_write(val: Cr4) {
     asm!("mov $0, %cr4" :: "r" (val.bits) : "memory");
 }
