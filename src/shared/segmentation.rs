@@ -18,9 +18,9 @@ bitflags! {
         const RPL_3 = 0b11,
 
         /// Table Indicator (TI) 0 means GDT is used.
-        const TI_GDT = 0 << 3,
+        const TI_GDT = 0 << 2,
         /// Table Indicator (TI) 1 means LDT is used.
-        const TI_LDT = 1 << 3,
+        const TI_LDT = 1 << 2,
     }
 }
 
