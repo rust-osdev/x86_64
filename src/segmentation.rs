@@ -106,27 +106,27 @@ impl fmt::Display for SegmentSelector {
 
 /// Reload stack segment register.
 pub unsafe fn load_ss(sel: SegmentSelector) {
-    asm!("movw $0, %ss " :: "r" (sel) : "memory");
+    asm!("movw $0, %ss " :: "r" (sel.bits()) : "memory");
 }
 
 /// Reload data segment register.
 pub unsafe fn load_ds(sel: SegmentSelector) {
-    asm!("movw $0, %ds " :: "r" (sel) : "memory");
+    asm!("movw $0, %ds " :: "r" (sel.bits()) : "memory");
 }
 
 /// Reload es segment register.
 pub unsafe fn load_es(sel: SegmentSelector) {
-    asm!("movw $0, %es " :: "r" (sel) : "memory");
+    asm!("movw $0, %es " :: "r" (sel.bits()) : "memory");
 }
 
 /// Reload fs segment register.
 pub unsafe fn load_fs(sel: SegmentSelector) {
-    asm!("movw $0, %fs " :: "r" (sel) : "memory");
+    asm!("movw $0, %fs " :: "r" (sel.bits()) : "memory");
 }
 
 /// Reload gs segment register.
 pub unsafe fn load_gs(sel: SegmentSelector) {
-    asm!("movw $0, %gs " :: "r" (sel) : "memory");
+    asm!("movw $0, %gs " :: "r" (sel.bits()) : "memory");
 }
 
 /// Returns the current value of the code segment register.
