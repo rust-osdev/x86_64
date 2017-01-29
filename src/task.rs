@@ -38,5 +38,5 @@ impl TaskStateSegment {
 
 /// Load the task state register.
 pub unsafe fn load_tr(sel: segmentation::SegmentSelector) {
-    asm!("ltr $0" :: "r" (sel));
+    asm!("ltr $0" :: "r" (sel.bits()));
 }
