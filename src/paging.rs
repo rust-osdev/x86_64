@@ -136,7 +136,7 @@ bitflags! {
         /// Indirectly determines the memory type used to access the 1-GByte page referenced by this entry.
         const PDPT_PAT     = bit!(12),
         /// If IA32_EFER.NXE = 1, execute-disable
-        /// If 1, instruction fetches are not allowed from the 512-GByte region.
+        /// If 1, instruction fetches are not allowed from the 1-GByte region.
         const PDPT_XD      = bit!(63),
     }
 }
@@ -172,7 +172,7 @@ impl PDPTEntry {
                 is_accessed, PDPT_A);
     check_flag!(doc = "Indirectly determines the memory type used to access the 1-GByte page referenced by this entry. if not PDPT_PS this is ignored.",
                 is_pat, PDPT_PAT);
-    check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
+    check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 1-GByte region.",
                 is_instruction_fetching_disabled, PDPT_XD);
 }
 
@@ -204,7 +204,7 @@ bitflags! {
         /// if not PD_PS this is ignored.
         const PD_PAT     = bit!(12),
         /// If IA32_EFER.NXE = 1, execute-disable
-        /// If 1, instruction fetches are not allowed from the 512-GByte region.
+        /// If 1, instruction fetches are not allowed from the 2-MByte region.
         const PD_XD      = bit!(63),
     }
 }
@@ -271,7 +271,7 @@ bitflags! {
         /// Global; if CR4.PGE = 1, determines whether the translation is global (see Section 4.10); ignored otherwise
         const PT_G       = bit!(8),
         /// If IA32_EFER.NXE = 1, execute-disable
-        /// If 1, instruction fetches are not allowed from the 512-GByte region.
+        /// If 1, instruction fetches are not allowed from the 4-KByte region.
         const PT_XD      = bit!(63),
     }
 }
