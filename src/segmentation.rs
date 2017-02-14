@@ -1,4 +1,6 @@
 use core::fmt;
+use core::iter::{Chain, IntoIterator, Iterator, Once, once};
+use core::option::IntoIter;
 
 use PrivilegeLevel;
 
@@ -175,6 +177,71 @@ impl Type {
         match self {
             Type::Data(d) => d.bits | 0b0_000,
             Type::Code(c) => c.bits | 0b1_000,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct GdtEntry(u64);
+
+impl GdtEntry {
+    pub fn null() -> GdtEntry {
+        GdtEntry(0)
+    }
+}
+
+enum Descriptor {
+    UserSegment(GdtEntry),
+    SystemSegment(GdtEntry, GdtEntry),
+}
+
+pub struct GdtDescriptor(Descriptor);
+
+impl GdtDescriptor {
+    pub fn user_segment(typ: Type, present: bool, long_mode: bool) -> GdtDescriptor {
+        use bit_field::BitField;
+
+        let mut flags = 0;
+
+        flags.set_bit(44, true); // User segment bit.
+        flags.set_range(40..44, typ.pack().into()); // Type bits.
+        flags.set_bit(47, present);
+        flags.set_bit(53, long_mode);
+
+        GdtDescriptor(Descriptor::UserSegment(GdtEntry(flags)))
+    }
+
+    pub fn tss_system_segment(tss: &'static ::task::TaskStateSegment) -> GdtDescriptor {
+        use bit_field::BitField;
+
+        let ptr = tss as *const _ as u64;
+
+        let mut low = 0;
+        // present
+        low.set_bit(47, true);
+        // base
+        low.set_range(16..40, ptr.get_range(0..24));
+        low.set_range(56..64, ptr.get_range(24..32));
+        // limit (the -1 is needed because the bound is inclusive)
+        low.set_range(0..16, (::core::mem::size_of::<::task::TaskStateSegment>() - 1) as u64);
+        // type (0b1001 = available 64-bit TSS)
+        low.set_range(40..44, 0b1001);
+
+        let mut high = 0;
+        high.set_range(0..32, ptr.get_range(32..64));
+
+        GdtDescriptor(Descriptor::SystemSegment(GdtEntry(low), GdtEntry(high)))
+    }
+}
+
+impl IntoIterator for GdtDescriptor {
+    type Item = GdtEntry;
+    type IntoIter = Chain<Once<GdtEntry>, IntoIter<GdtEntry>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self.0 {
+            Descriptor::UserSegment(u) => once(u).chain(None),
+            Descriptor::SystemSegment(s1, s2) => once(s1).chain(Some(s2)),
         }
     }
 }
