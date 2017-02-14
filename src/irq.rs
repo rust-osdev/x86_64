@@ -43,8 +43,7 @@ impl IdtEntry {
 
     /// Create a new IdtEntry pointing at `handler`, which must be a function
     /// with interrupt calling conventions.  (This must be currently defined in
-    /// assembly language.)  The `gdt_code_selector` value must be the offset of
-    /// code segment entry in the GDT.
+    /// assembly language.)
     ///
     /// This function sets the "Present" flag, which is the most common case. It also
     /// sets the GDT selector to the currently active code segment. All defaults can
