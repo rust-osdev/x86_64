@@ -71,7 +71,7 @@ impl fmt::Debug for Counter {
 }
 
 #[derive(Debug)]
-pub struct EventDescription {
+pub struct EventDescription<'a> {
     /// This field maps to the Event Select field in the IA32_PERFEVTSELx[7:0]MSRs.
     ///
     /// The set of values for this field is defined architecturally.
@@ -86,13 +86,13 @@ pub struct EventDescription {
     pub umask: Tuple,
 
     /// It is a string of characters to identify the programming of an event.
-    pub event_name: &'static str,
+    pub event_name: &'a str,
 
     /// This field contains a description of what is being counted by a particular event.
-    pub brief_description: &'static str,
+    pub brief_description: &'a str,
 
     /// In some cases, this field will contain a more detailed description of what is counted by an event.
-    pub public_description: Option<&'static str>,
+    pub public_description: Option<&'a str>,
 
     /// This field lists the fixed (PERF_FIXED_CTRX) or programmable (IA32_PMCX)
     /// counters that can be used to count the event.
@@ -204,48 +204,47 @@ pub struct EventDescription {
     ///
     /// * SandyBridge:
     ///   https://www-ssl.intel.com/content/dam/www/public/us/en/documents/specification-updates/2nd-gen-core-family-mobile-specification-update.pdf
-    pub errata: Option<&'static str>,
+    pub errata: Option<&'a str>,
 
     /// There is only 1 file for core and offcore events in this format.
     /// This field is set to 1 for offcore events and 0 for core events.
     pub offcore: bool,
 
-    pub unit: Option<&'static str>,
+    pub unit: Option<&'a str>,
 
-    pub filter: Option<&'static str>,
+    pub filter: Option<&'a str>,
 
     pub extsel: bool,
 }
 
-impl EventDescription {
-    #[allow(dead_code)]
-    fn new(event_code: Tuple,
-           umask: Tuple,
-           event_name: &'static str,
-           brief_description: &'static str,
-           public_description: Option<&'static str>,
-           counter: Counter,
-           counter_ht_off: Option<Counter>,
-           pebs_counters: Option<Counter>,
-           sample_after_value: u64,
-           msr_index: MSRIndex,
-           msr_value: u64,
-           taken_alone: bool,
-           counter_mask: u8,
-           invert: bool,
-           any_thread: bool,
-           edge_detect: bool,
-           pebs: PebsType,
-           precise_store: bool,
-           collect_pebs_record: Option<u64>,
-           data_la: bool,
-           l1_hit_indication: bool,
-           errata: Option<&'static str>,
-           offcore: bool,
-           unit: Option<&'static str>,
-           filter: Option<&'static str>,
-           extsel: bool)
-           -> EventDescription {
+impl<'a> EventDescription<'a> {
+    pub fn new(event_code: Tuple,
+               umask: Tuple,
+               event_name: &'a str,
+               brief_description: &'a str,
+               public_description: Option<&'a str>,
+               counter: Counter,
+               counter_ht_off: Option<Counter>,
+               pebs_counters: Option<Counter>,
+               sample_after_value: u64,
+               msr_index: MSRIndex,
+               msr_value: u64,
+               taken_alone: bool,
+               counter_mask: u8,
+               invert: bool,
+               any_thread: bool,
+               edge_detect: bool,
+               pebs: PebsType,
+               precise_store: bool,
+               collect_pebs_record: Option<u64>,
+               data_la: bool,
+               l1_hit_indication: bool,
+               errata: Option<&'a str>,
+               offcore: bool,
+               unit: Option<&'a str>,
+               filter: Option<&'a str>,
+               extsel: bool)
+               -> EventDescription<'a> {
 
         EventDescription {
             event_code: event_code,
@@ -278,7 +277,7 @@ impl EventDescription {
     }
 }
 
-impl fmt::Display for EventDescription {
+impl<'a> fmt::Display for EventDescription<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.event_name)
     }

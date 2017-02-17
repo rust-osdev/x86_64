@@ -23,7 +23,8 @@ mod performance_counter {
 
     use self::serde_json::Value;
 
-    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/shared/perfcnt/intel/description.rs"));
+    include!(concat!(env!("CARGO_MANIFEST_DIR"),
+                     "/src/shared/perfcnt/intel/description.rs"));
 
     /// HACK: We need to convert parsed strings to static because we're reusing
     /// the struct definition which declare strings as static in the generated code.
@@ -49,42 +50,44 @@ mod performance_counter {
                 assert!(x.starts_with("0x"));
                 match u64::from_str_radix(&x[2..], 16) {
                     Ok(u) => u,
-                    Err(e) => panic!("{}: Can not parse {}", e, x)
+                    Err(e) => panic!("{}: Can not parse {}", e, x),
                 }
-            }).collect()
+            })
+            .collect()
     }
 
     fn parse_number(value_str: &str) -> u64 {
         if value_str.len() > 2 && value_str[..2].starts_with("0x") {
             match u64::from_str_radix(&value_str[2..], 16) {
                 Ok(u) => u,
-                Err(e) => panic!("{}: Can not parse {}", e, value_str)
+                Err(e) => panic!("{}: Can not parse {}", e, value_str),
             }
-        }
-        else {
+        } else {
             match u64::from_str_radix(&value_str, 10) {
                 Ok(u) => u,
-                Err(e) => panic!("{}: Can not parse {}", e, value_str)
+                Err(e) => panic!("{}: Can not parse {}", e, value_str),
             }
         }
     }
 
     fn parse_counter_values(value_str: &str) -> u64 {
-        value_str.split(",").map(|x| x.trim())
+        value_str.split(",")
+            .map(|x| x.trim())
             .filter(|x| x.len() > 0)
-            .map(|x| {
-                match u64::from_str_radix(&x, 10) {
-                    Ok(u) => u,
-                    Err(e) => panic!("{}: Can not parse {} in {}", e, x, value_str)
-                }
-            }).fold(0, |acc, c| { assert!(c < 8); acc | 1 << c })
+            .map(|x| match u64::from_str_radix(&x, 10) {
+                Ok(u) => u,
+                Err(e) => panic!("{}: Can not parse {} in {}", e, x, value_str),
+            })
+            .fold(0, |acc, c| {
+                assert!(c < 8);
+                acc | 1 << c
+            })
     }
 
     fn parse_null_string(value_str: &str) -> Option<&str> {
         if value_str != "null" {
             Some(value_str)
-        }
-        else {
+        } else {
             None
         }
     }
@@ -94,13 +97,11 @@ mod performance_counter {
             let mask: u64 = parse_counter_values(&value_str["fixed counter".len()..]);
             assert!(mask <= u8::max_value() as u64);
             Counter::Fixed(mask as u8)
-        }
-        else if value_str.to_lowercase().starts_with("fixed") {
+        } else if value_str.to_lowercase().starts_with("fixed") {
             let mask: u64 = parse_counter_values(&value_str["fixed".len()..]);
             assert!(mask <= u8::max_value() as u64);
             Counter::Fixed(mask as u8)
-        }
-        else {
+        } else {
             let mask: u64 = parse_counter_values(value_str);
             assert!(mask <= u8::max_value() as u64);
             Counter::Programmable(mask as u8)
@@ -169,7 +170,8 @@ mod performance_counter {
                     //println!("key = {} value = {}", key, value.as_string().unwrap());
                     let value_string = value.as_string().unwrap();
                     let value_str = string_to_static_str(value_string).trim();
-                    let split_str_parts: Vec<&str> = value_string.split(",").map(|x| x.trim()).collect();
+                    let split_str_parts: Vec<&str> =
+                        value_string.split(",").map(|x| x.trim()).collect();
 
                     match key.as_str() {
                         "EventName" => {
@@ -177,8 +179,7 @@ mod performance_counter {
                                 all_events.insert(value_str, 0);
                                 assert!(all_events.contains_key(value_str));
                                 do_insert = true;
-                            }
-                            else {
+                            } else {
                                 do_insert = false;
                                 println!("WARN: Key {} already exists.", value_str);
                             }
@@ -190,66 +191,62 @@ mod performance_counter {
                                 1 => {
                                     assert!(split_parts[0] <= u8::max_value() as u64);
                                     event_code = Tuple::One(split_parts[0] as u8)
-                                },
+                                }
                                 2 => {
                                     assert!(split_parts[0] <= u8::max_value() as u64);
                                     assert!(split_parts[1] <= u8::max_value() as u64);
-                                    event_code = Tuple::Two(split_parts[0] as u8, split_parts[1] as u8)
-                                },
-                                _ => panic!("More than two event codes?")
+                                    event_code = Tuple::Two(split_parts[0] as u8,
+                                                            split_parts[1] as u8)
+                                }
+                                _ => panic!("More than two event codes?"),
                             }
-                        },
+                        }
                         "UMask" => {
                             let split_parts: Vec<u64> = parse_hex_numbers(split_str_parts);
                             match split_parts.len() {
                                 1 => {
                                     assert!(split_parts[0] <= u8::max_value() as u64);
                                     umask = Tuple::One(split_parts[0] as u8)
-                                },
+                                }
                                 2 => {
                                     assert!(split_parts[0] <= u8::max_value() as u64);
                                     assert!(split_parts[1] <= u8::max_value() as u64);
                                     umask = Tuple::Two(split_parts[0] as u8, split_parts[1] as u8)
-                                },
-                                _ => panic!("More than two event codes?")
+                                }
+                                _ => panic!("More than two event codes?"),
                             }
-                        },
+                        }
                         "BriefDescription" => brief_description = value_str,
                         "PublicDescription" => {
                             if brief_description != value_str && value_str != "tbd" {
                                 public_description = Some(value_str);
-                            }
-                            else {
+                            } else {
                                 public_description = None;
                             }
-                        },
+                        }
                         "Counter" => counter = parse_counters(value_str),
                         "CounterHTOff" => counter_ht_off = Some(parse_counters(value_str)),
                         "PEBScounters" => pebs_counters = Some(parse_counters(value_str)),
                         "SampleAfterValue" => sample_after_value = parse_number(value_str),
                         "MSRIndex" => {
-                            let split_parts: Vec<u64> = value_str
-                                .split(",")
+                            let split_parts: Vec<u64> = value_str.split(",")
                                 .map(|x| x.trim())
                                 .map(|x| parse_number(x))
                                 .collect();
-                                println!("{:?}", split_parts);
+                            println!("{:?}", split_parts);
 
-                                msr_index = match split_parts.len() {
-                                    1 => {
-                                        if split_parts[0] != 0 {
-                                            MSRIndex::One(split_parts[0])
-                                        }
-                                        else {
-                                            MSRIndex::None
-                                        }
-                                    },
-                                    2 => {
-                                        MSRIndex::Two(split_parts[0], split_parts[1])
-                                    },
-                                    _ => panic!("More than two MSR indexes?")
+                            msr_index = match split_parts.len() {
+                                1 => {
+                                    if split_parts[0] != 0 {
+                                        MSRIndex::One(split_parts[0])
+                                    } else {
+                                        MSRIndex::None
+                                    }
                                 }
-                        },
+                                2 => MSRIndex::Two(split_parts[0], split_parts[1]),
+                                _ => panic!("More than two MSR indexes?"),
+                            }
+                        }
                         "MSRValue" => msr_value = parse_number(value_str),
                         "TakenAlone" => taken_alone = parse_bool(value_str),
                         "CounterMask" => counter_mask = parse_number(value_str) as u8,
@@ -266,52 +263,52 @@ mod performance_counter {
                         "Filter" => filter = parse_null_string(value_str),
                         "ExtSel" => extsel = parse_bool(value_str),
                         "CollectPEBSRecord" => collect_pebs_record = Some(parse_number(value_str)),
-                        "ELLC" => {/* Ignored due to missing documentation. */ },
+                        "ELLC" => { /* Ignored due to missing documentation. */ }
                         _ => panic!("Unknown member: {} in file {}", key, input),
                     };
                 }
 
-                let ipcd = EventDescription::new(
-                    event_code,
-                    umask,
-                    event_name,
-                    brief_description,
-                    public_description,
-                    counter,
-                    counter_ht_off,
-                    pebs_counters,
-                    sample_after_value,
-                    msr_index,
-                    msr_value,
-                    taken_alone,
-                    counter_mask,
-                    invert,
-                    any_thread,
-                    edge_detect,
-                    pebs,
-                    precise_store,
-                    collect_pebs_record,
-                    data_la,
-                    l1_hit_indication,
-                    errata,
-                    offcore,
-                    unit,
-                    filter,
-                    extsel
-                );
+                let ipcd = EventDescription::new(event_code,
+                                                 umask,
+                                                 event_name,
+                                                 brief_description,
+                                                 public_description,
+                                                 counter,
+                                                 counter_ht_off,
+                                                 pebs_counters,
+                                                 sample_after_value,
+                                                 msr_index,
+                                                 msr_value,
+                                                 taken_alone,
+                                                 counter_mask,
+                                                 invert,
+                                                 any_thread,
+                                                 edge_detect,
+                                                 pebs,
+                                                 precise_store,
+                                                 collect_pebs_record,
+                                                 data_la,
+                                                 l1_hit_indication,
+                                                 errata,
+                                                 offcore,
+                                                 unit,
+                                                 filter,
+                                                 extsel);
 
                 //println!("{:?}", ipcd.event_name);
                 if do_insert == true {
                     builder.entry(ipcd.event_name, format!("{:?}", ipcd).as_str());
                 }
             }
-        }
-        else {
+        } else {
             panic!("JSON data is not an array.");
         }
 
 
-        write!(file, "pub const {}: phf::Map<&'static str, EventDescription> = ", variable).unwrap();
+        write!(file,
+               "pub const {}: phf::Map<&'static str, EventDescription<'static>> = ",
+               variable)
+            .unwrap();
         builder.build(file).unwrap();
         write!(file, ";\n").unwrap();
     }
@@ -341,17 +338,13 @@ mod performance_counter {
     pub fn get_file_suffix(file_name: String) -> &'static str {
         if file_name.contains("_core_") {
             "core"
-        }
-        else if file_name.contains("_uncore_") {
+        } else if file_name.contains("_uncore_") {
             "uncore"
-        }
-        else if file_name.contains("_matrix_") {
+        } else if file_name.contains("_matrix_") {
             "matrix"
-        }
-        else if file_name.contains("_FP_ARITH_INST_") {
+        } else if file_name.contains("_FP_ARITH_INST_") {
             "fparith"
-        }
-        else {
+        } else {
             panic!("Unknown suffix {}", file_name);
         }
     }
@@ -365,12 +358,14 @@ mod performance_counter {
 
         // Parse CSV
         for record in rdr.decode() {
-            let (family_model, version, file_name, event_type): (String, String, String, String) = record.unwrap();
+            let (family_model, version, file_name, event_type): (String, String, String, String) =
+                record.unwrap();
             // TODO: Parse offcore counter descriptions.
             if !data_files.contains_key(&file_name) {
                 let suffix = get_file_suffix(file_name.clone());
                 if suffix == "core" || suffix == "uncore" {
-                    data_files.insert(file_name.clone(), (family_model + "-" + suffix, version, event_type));
+                    data_files.insert(file_name.clone(),
+                                      (family_model + "-" + suffix, version, event_type));
                 }
             }
         }
@@ -384,10 +379,15 @@ mod performance_counter {
             let (ref family_model, _, _): (String, String, String) = *data;
             let path = Path::new(file.as_str());
             let (_, ref variable_upper) = make_file_name(&path);
-            builder.entry(family_model.as_str(), format!("{}", variable_upper.as_str()).as_str());
+            builder.entry(family_model.as_str(),
+                          format!("{}", variable_upper.as_str()).as_str());
         }
 
-        write!(&mut filewriter, "pub static {}: phf::Map<&'static str, phf::Map<&'static str, EventDescription>> = ", "COUNTER_MAP").unwrap();
+        write!(&mut filewriter,
+               "pub static {}: phf::Map<&'static str, phf::Map<&'static str, \
+                EventDescription<'static>>> = ",
+               "COUNTER_MAP")
+            .unwrap();
         builder.build(&mut filewriter).unwrap();
         write!(&mut filewriter, ";\n").unwrap();
 
@@ -395,13 +395,19 @@ mod performance_counter {
         for (file, data) in &data_files {
             let suffix = get_file_suffix(file.clone());
             if suffix == "core" || suffix == "uncore" {
-                let (ref family_model, ref version, ref event_type): (String, String, String) = *data;
-                println!("Processing {:?} {} {} {}", file, family_model, version, event_type);
+                let (ref family_model, ref version, ref event_type): (String, String, String) =
+                    *data;
+                println!("Processing {:?} {} {} {}",
+                         file,
+                         family_model,
+                         version,
+                         event_type);
 
                 let path = Path::new(file.as_str());
                 let (_, ref variable_upper) = make_file_name(&path);
                 parse_performance_counters(format!("x86data/perfmon_data{}", file).as_str(),
-                                           variable_upper, &mut filewriter);
+                                           variable_upper,
+                                           &mut filewriter);
             }
         }
     }

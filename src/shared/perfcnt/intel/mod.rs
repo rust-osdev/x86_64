@@ -60,12 +60,12 @@ macro_rules! get_counters {
 }
 
 /// Return all core performance counters for the running micro-architecture.
-pub fn core_counters() -> Option<&'static phf::Map<&'static str, EventDescription>> {
+pub fn core_counters() -> Option<&'static phf::Map<&'static str, EventDescription<'static>>> {
     get_counters!("{}-{}-{:X}{:X}-core")
 }
 
 /// Return all uncore performance counters for the running micro-architecture.
-pub fn uncore_counters() -> Option<&'static phf::Map<&'static str, EventDescription>> {
+pub fn uncore_counters() -> Option<&'static phf::Map<&'static str, EventDescription<'static>>> {
     get_counters!("{}-{}-{:X}{:X}-uncore")
 }
 
