@@ -60,14 +60,14 @@ pub unsafe fn cr2() -> usize {
 }
 
 /// Contains page-table root pointer.
-pub unsafe fn cr3() -> usize {
-    let ret: usize;
+pub unsafe fn cr3() -> u64 {
+    let ret: u64;
     asm!("mov %cr3, $0" : "=r" (ret));
     ret
 }
 
 /// Switch page-table PML4 pointer.
-pub unsafe fn cr3_write(val: usize) {
+pub unsafe fn cr3_write(val: u64) {
     asm!("mov $0, %cr3" :: "r" (val) : "memory");
 }
 
