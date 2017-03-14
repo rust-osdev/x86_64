@@ -23,7 +23,6 @@ pub mod tss;
 pub mod syscall;
 pub mod sgx;
 pub mod control_regs;
-pub mod io;
 pub mod msr;
 pub mod flags;
 pub mod segmentation;
