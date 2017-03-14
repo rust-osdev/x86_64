@@ -77,8 +77,3 @@ pub enum PrivilegeLevel {
     Ring2 = 2,
     Ring3 = 3,
 }
-
-#[inline(always)]
-pub unsafe fn halt() {
-    asm!("hlt" :::: "volatile");
-}

@@ -51,3 +51,9 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
 pub unsafe fn load_tss(sel: segmentation::SegmentSelector) {
     asm!("ltr $0" :: "r" (sel.bits()));
 }
+
+/// Halts the CPU by executing the `hlt` instruction.
+#[inline(always)]
+pub unsafe fn halt() {
+    asm!("hlt" :::: "volatile");
+}
