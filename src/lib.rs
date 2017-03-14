@@ -14,7 +14,6 @@ pub use address::{VirtualAddress, PhysicalAddress};
 
 #[macro_use] extern crate bitflags;
 extern crate bit_field;
-extern crate raw_cpuid;
 
 pub mod instructions;
 pub mod idt;
@@ -25,10 +24,6 @@ pub mod msr;
 pub mod flags;
 pub mod segmentation;
 pub mod tlb;
-
-pub mod cpuid {
-    pub use raw_cpuid::*;
-}
 
 mod address;
 
