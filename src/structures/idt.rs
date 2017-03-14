@@ -401,7 +401,7 @@ impl Idt {
 
     /// Loads the IDT in the CPU using the `lidt` command.
     pub fn load(&'static self) {
-        use instructions::{DescriptorTablePointer, lidt};
+        use instructions::tables::{DescriptorTablePointer, lidt};
         use core::mem::size_of;
 
         let ptr = DescriptorTablePointer {
@@ -511,13 +511,13 @@ impl<F> IdtEntry<F> {
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use segmentation;
+        use instructions::segmentation;
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
         self.pointer_high = (addr >> 32) as u32;
 
-        self.gdt_selector = segmentation::cs().bits();
+        self.gdt_selector = segmentation::cs().0;
 
         self.options.set_present(true);
         &mut self.options

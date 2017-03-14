@@ -1,5 +1,4 @@
-//! Helpers to program the task state segment.
-//! See Intel 3a, Chapter 7, Section 7
+//! Provides a type for the task state segment structure.
 
 use VirtualAddress;
 

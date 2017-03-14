@@ -9,6 +9,6 @@ pub fn flush(addr: VirtualAddress) {
 
 /// Invalidate the TLB completely by reloading the CR3 register.
 pub fn flush_all() {
-    use control_regs::{cr3, cr3_write};
+    use registers::control::{cr3, cr3_write};
     unsafe { cr3_write(cr3()) }
 }
