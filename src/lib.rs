@@ -20,7 +20,6 @@ pub mod instructions;
 pub mod idt;
 pub mod paging;
 pub mod tss;
-pub mod syscall;
 pub mod sgx;
 pub mod control_regs;
 pub mod msr;
