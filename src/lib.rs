@@ -1,6 +1,9 @@
+//! This crate provides x86_64 specific functions and data structures,
+//! and access to various system registers.
+
 #![cfg(target_arch="x86_64")]
 
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 #![feature(const_fn)]
 #![feature(asm)]
@@ -53,6 +56,9 @@ pub enum PrivilegeLevel {
 }
 
 impl PrivilegeLevel {
+    /// Creates a `PrivilegeLevel` from a numeric value. The value must be in the range 0..4.
+    ///
+    /// This function panics if the passed value is >3.
     pub fn from_u16(value: u16) -> PrivilegeLevel {
         match value {
             0 => PrivilegeLevel::Ring0,

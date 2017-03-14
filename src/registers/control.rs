@@ -1,9 +1,12 @@
 //! Functions to read and write control registers.
 //! See AMD64 Vol. 2 Section 3.1.1
 
+#![allow(missing_docs)]
+
 use {VirtualAddress, PhysicalAddress};
 
 bitflags! {
+    /// Provides operating-mode controls and some processor-feature controls.
     pub flags Cr0: usize {
         const ENABLE_PAGING = 1 << 31,
         const CACHE_DISABLE = 1 << 30,
@@ -20,6 +23,8 @@ bitflags! {
 }
 
 bitflags! {
+    /// This register contains additional controls for various operating-mode features.
+    #[allow(missing_docs)]
     pub flags Cr4: usize {
         const ENABLE_SMAP = 1 << 21,
         const ENABLE_SMEP = 1 << 20,

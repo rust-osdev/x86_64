@@ -1,3 +1,5 @@
+//! Types for the Global Descriptor Table and segment selectors.
+
 use core::fmt;
 use PrivilegeLevel;
 use bit_field::BitField;
@@ -19,10 +21,12 @@ impl SegmentSelector {
         SegmentSelector(index << 3 | (rpl as u16))
     }
 
+    /// Returns the GDT index.
     pub fn index(&self) -> u16 {
         self.0 >> 3
     }
 
+    /// Returns the requested privilege level.
     pub fn rpl(&self) -> PrivilegeLevel {
         PrivilegeLevel::from_u16(self.0.get_bits(0..2))
     }

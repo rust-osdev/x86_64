@@ -263,18 +263,6 @@ pub struct Idt {
     /// The page-fault error code is described by the
     /// [`PageFaultErrorCode`](struct.PageFaultErrorCode.html) struct.
     ///
-    /// <details><summary>The error code has the following format:</summary>
-    ///
-    /// Bit | Name | Meaning
-    /// --- | ---- | -------
-    /// 0   | P    | If this bit is cleared to 0, the page fault was caused by a not-present page. If this bit is set to 1, the page fault was caused by a page-protection violation.
-    /// 1   | R/W  | If this bit is cleared to 0, the access that caused the page fault is a memory read. If this bit is set to 1, the memory access that caused the page fault was a write. This bit does not necessarily indicate the cause of the page fault was a read or write violation.
-    /// 2   | U/S  | If this bit is cleared to 0, an access in supervisor mode (CPL=0, 1, or 2) caused the page fault. If this bit is set to 1, an access in user mode (CPL=3) caused the page fault. This bit does not necessarily indicate the cause of the page fault was a privilege violation.
-    /// 3   | RSV  | If this bit is set to 1, the page fault is a result of the processor reading a 1 from a reserved field within a page-translation-table entry. This type of page fault occurs only when CR4.PSE=1 or CR4.PAE=1. If this bit is cleared to 0, the page fault was not caused by the processor reading a 1 from a reserved field.
-    /// 4   | I/D  | If this bit is set to 1, it indicates that the access that caused the page fault was an instruction fetch. Otherwise, this bit is cleared to 0. This bit is only defined if no-execute feature is enabled (EFER.NXE=1 && CR4.PAE=1).
-    ///
-    /// </details>
-    ///
     /// The vector number of the `#PF` exception is 14.
     pub page_fault: IdtEntry<PageFaultHandlerFunc>,
 
@@ -622,10 +610,26 @@ pub struct ExceptionStackFrame {
 bitflags! {
     /// Describes an page fault error code.
     pub flags PageFaultErrorCode: u64 {
+        /// If this flag is set, the page fault was caused by a page-protection violation,
+        /// else the page fault was caused by a not-present page.
         const PROTECTION_VIOLATION = 1 << 0,
+
+        /// If this flag is set, the memory access that caused the page fault was a write.
+        /// Else the access that caused the page fault is a memory read. This bit does not
+        /// necessarily indicate the cause of the page fault was a read or write violation.
         const CAUSED_BY_WRITE = 1 << 1,
+
+        /// If this flag is set, an access in user mode (CPL=3) caused the page fault. Else
+        /// an access in supervisor mode (CPL=0, 1, or 2) caused the page fault. This bit
+        /// does not necessarily indicate the cause of the page fault was a privilege violation.
         const USER_MODE = 1 << 2,
+
+        /// If this flag is set, the page fault is a result of the processor reading a 1 from
+        /// a reserved field within a page-translation-table entry.
         const MALFORMED_TABLE = 1 << 3,
+
+        /// If this flag is set, it indicates that the access that caused the page fault was an
+        /// instruction fetch.
         const INSTRUCTION_FETCH = 1 << 4,
     }
 }

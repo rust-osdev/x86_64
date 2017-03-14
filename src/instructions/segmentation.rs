@@ -1,3 +1,5 @@
+//! Provides functions to read and write segment registers.
+
 use structures::gdt::SegmentSelector;
 
 /// Reload code segment register.
