@@ -5,6 +5,7 @@
 #![feature(const_fn)]
 #![feature(asm)]
 #![feature(associated_consts)]
+#![feature(abi_x86_interrupt)]
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]
 
