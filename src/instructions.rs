@@ -1,3 +1,5 @@
+//! Low level functions for special x86 instructions.
+
 use segmentation;
 
 /// Enable Interrupts.
