@@ -55,7 +55,7 @@ pub mod instructions;
 pub mod time;
 pub mod idt;
 pub mod paging;
-pub mod task;
+pub mod tss;
 pub mod syscall;
 pub mod sgx;
 pub mod control_regs;
