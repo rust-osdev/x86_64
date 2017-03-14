@@ -25,7 +25,5 @@ harness = false
 
 [dependencies]
 bitflags = "0.7"
-bit_field = "0.6.0"
-
-[target.'cfg(target_arch = "x86_64")'.dependencies]
-raw-cpuid = "2.*"
+bit_field = "0.7.0"
+raw-cpuid = "2"
