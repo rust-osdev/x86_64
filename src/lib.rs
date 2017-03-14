@@ -19,7 +19,7 @@ extern crate raw_cpuid;
 
 extern crate bit_field;
 
-pub mod address;
+mod address;
 
 macro_rules! bit {
     ( $x:expr ) => {
