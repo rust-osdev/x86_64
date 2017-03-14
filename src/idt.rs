@@ -13,6 +13,7 @@ use core::marker::PhantomData;
 use core::mem;
 use core::ops::{Index, IndexMut};
 use bit_field::BitField;
+use PrivilegeLevel;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -573,8 +574,8 @@ impl EntryOptions {
     /// or 3, the default is 0. If CPL < DPL, a general protection fault occurs.
     ///
     /// This function panics for a DPL > 3.
-    pub fn set_privilege_level(&mut self, dpl: u16) -> &mut Self {
-        self.0.set_bits(13..15, dpl);
+    pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {
+        self.0.set_bits(13..15, dpl as u16);
         self
     }
 
