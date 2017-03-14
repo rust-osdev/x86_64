@@ -70,23 +70,23 @@ impl SegmentSelector {
 
 impl fmt::Display for SegmentSelector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let r0 = match self.contains(RPL_0) {
+        let r0 = match self.contains(SegmentSelector::RPL_0) {
             false => "",
             true => "Ring 0 segment selector.",
         };
-        let r1 = match self.contains(RPL_1) {
+        let r1 = match self.contains(SegmentSelector::RPL_1) {
             false => "",
             true => "Ring 1 segment selector.",
         };
-        let r2 = match self.contains(RPL_2) {
+        let r2 = match self.contains(SegmentSelector::RPL_2) {
             false => "",
             true => "Ring 2 segment selector.",
         };
-        let r3 = match self.contains(RPL_3) {
+        let r3 = match self.contains(SegmentSelector::RPL_3) {
             false => "",
             true => "Ring 3 segment selector.",
         };
-        let tbl = match self.contains(TI_LDT) {
+        let tbl = match self.contains(SegmentSelector::TI_LDT) {
             false => "GDT Table",
             true => "LDT Table",
         };

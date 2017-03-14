@@ -93,19 +93,25 @@ impl PML4Entry {
         PhysicalAddress::from(self.bits & ADDRESS_MASK)
     }
 
-    check_flag!(doc = "Is page present?", is_present, PML4_P);
+    check_flag!(doc = "Is page present?", is_present, PML4Entry::PML4_P);
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 512-GByte region, controlled by this entry (see Section 4.6)",
-                is_writeable, PML4_RW);
+                is_writeable,
+                PML4Entry::PML4_RW);
     check_flag!(doc = "User/supervisor; if 0, user-mode accesses are not allowed to the 512-GByte region controlled by this entry.",
-                is_user_mode_allowed, PML4_US);
+                is_user_mode_allowed,
+                PML4Entry::PML4_US);
     check_flag!(doc = "Page-level write-through; indirectly determines the memory type used to access the page-directory-pointer table referenced by this entry.",
-                is_page_write_through, PML4_PWT);
+                is_page_write_through,
+                PML4Entry::PML4_PWT);
     check_flag!(doc = "Page-level cache disable; indirectly determines the memory type used to access the page-directory-pointer table referenced by this entry.",
-                is_page_level_cache_disabled, PML4_PCD);
+                is_page_level_cache_disabled,
+                PML4Entry::PML4_PCD);
     check_flag!(doc = "Accessed; indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PML4_A);
+                is_accessed,
+                PML4Entry::PML4_A);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
-                is_instruction_fetching_disabled, PML4_XD);
+                is_instruction_fetching_disabled,
+                PML4Entry::PML4_XD);
 }
 
 /// PDPT Entry bits description.
@@ -159,21 +165,28 @@ impl PDPTEntry {
         PhysicalAddress::from(self.bits & ADDRESS_MASK)
     }
 
-    check_flag!(doc = "Is page present?", is_present, PDPT_P);
+    check_flag!(doc = "Is page present?", is_present, PDPTEntry::PDPT_P);
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 1-GByte region controlled by this entry.",
-                is_writeable, PDPT_RW);
+                is_writeable,
+                PDPTEntry::PDPT_RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 1-GByte region controlled by this entry.",
-                is_user_mode_allowed, PDPT_US);
+                is_user_mode_allowed,
+                PDPTEntry::PDPT_US);
     check_flag!(doc = "Page-level write-through.",
-                is_page_write_through, PDPT_PWT);
+                is_page_write_through,
+                PDPTEntry::PDPT_PWT);
     check_flag!(doc = "Page-level cache disable.",
-                is_page_level_cache_disabled, PDPT_PCD);
+                is_page_level_cache_disabled,
+                PDPTEntry::PDPT_PCD);
     check_flag!(doc = "Accessed; indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PDPT_A);
+                is_accessed,
+                PDPTEntry::PDPT_A);
     check_flag!(doc = "Indirectly determines the memory type used to access the 1-GByte page referenced by this entry. if not PDPT_PS this is ignored.",
-                is_pat, PDPT_PAT);
+                is_pat,
+                PDPTEntry::PDPT_PAT);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 1-GByte region.",
-                is_instruction_fetching_disabled, PDPT_XD);
+                is_instruction_fetching_disabled,
+                PDPTEntry::PDPT_XD);
 }
 
 /// PD Entry bits description.
@@ -228,27 +241,38 @@ impl PDEntry {
     }
 
     check_flag!(doc = "Present; must be 1 to map a 2-MByte page or reference a page table.",
-                is_present, PD_P);
+                is_present,
+                PDEntry::PD_P);
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 2-MByte region controlled by this entry",
-                is_writeable, PD_RW);
+                is_writeable,
+                PDEntry::PD_RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 2-MByte region controlled by this entry.",
-                is_user_mode_allowed, PD_US);
+                is_user_mode_allowed,
+                PDEntry::PD_US);
     check_flag!(doc = "Page-level write-through.",
-                is_page_write_through, PD_PWT);
+                is_page_write_through,
+                PDEntry::PD_PWT);
     check_flag!(doc = "Page-level cache disable.",
-                is_page_level_cache_disabled, PD_PCD);
+                is_page_level_cache_disabled,
+                PDEntry::PD_PCD);
     check_flag!(doc = "Accessed; if PD_PS set indicates whether software has accessed the 2-MByte page else indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PD_A);
+                is_accessed,
+                PDEntry::PD_A);
     check_flag!(doc = "Dirty; if PD_PS set indicates whether software has written to the 2-MByte page referenced by this entry else ignored.",
-                is_dirty, PD_D);
+                is_dirty,
+                PDEntry::PD_D);
     check_flag!(doc = "Page size; if set this entry maps a 2-MByte page; otherwise, this entry references a page directory.",
-                is_page, PD_PS);
+                is_page,
+                PDEntry::PD_PS);
     check_flag!(doc = "Global; if PD_PS && CR4.PGE = 1, determines whether the translation is global; ignored otherwise if not PD_PS this is ignored.",
-                is_global, PD_G);
+                is_global,
+                PDEntry::PD_G);
     check_flag!(doc = "Indirectly determines the memory type used to access the 2-MByte page referenced by this entry. if not PD_PS this is ignored.",
-                is_pat, PD_PAT);
+                is_pat,
+                PDEntry::PD_PAT);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 2-Mbyte region.",
-                is_instruction_fetching_disabled, PD_XD);
+                is_instruction_fetching_disabled,
+                PDEntry::PD_XD);
 }
 
 /// PT Entry bits description.
@@ -296,21 +320,30 @@ impl PTEntry {
     }
 
     check_flag!(doc = "Present; must be 1 to map a 4-KByte page or reference a page table.",
-                is_present, PT_P);
+                is_present,
+                PTEntry::PT_P);
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 4-KByte region controlled by this entry",
-                is_writeable, PT_RW);
+                is_writeable,
+                PTEntry::PT_RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 4-KByte region controlled by this entry.",
-                is_user_mode_allowed, PT_US);
+                is_user_mode_allowed,
+                PTEntry::PT_US);
     check_flag!(doc = "Page-level write-through.",
-                is_page_write_through, PT_PWT);
+                is_page_write_through,
+                PTEntry::PT_PWT);
     check_flag!(doc = "Page-level cache disable.",
-                is_page_level_cache_disabled, PT_PCD);
+                is_page_level_cache_disabled,
+                PTEntry::PT_PCD);
     check_flag!(doc = "Accessed; if PT_PS set indicates whether software has accessed the 4-KByte page else indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PT_A);
+                is_accessed,
+                PTEntry::PT_A);
     check_flag!(doc = "Dirty; if PD_PS set indicates whether software has written to the 4-KByte page referenced by this entry else ignored.",
-                is_dirty, PT_D);
+                is_dirty,
+                PTEntry::PT_D);
     check_flag!(doc = "Global; if PT_PS && CR4.PGE = 1, determines whether the translation is global; ignored otherwise if not PT_PS this is ignored.",
-                is_global, PT_G);
+                is_global,
+                PTEntry::PT_G);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 4-KByte region.",
-                is_instruction_fetching_disabled, PT_XD);
+                is_instruction_fetching_disabled,
+                PTEntry::PT_XD);
 }

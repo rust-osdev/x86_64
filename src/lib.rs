@@ -28,7 +28,7 @@ macro_rules! bit {
 }
 
 macro_rules! check_flag {
-    ($doc:meta, $fun:ident, $flag:ident) => (
+    ($doc:meta, $fun:ident, $flag:path) => (
         #[$doc]
         pub fn $fun(&self) -> bool {
             self.contains($flag)
