@@ -17,7 +17,6 @@ extern crate bit_field;
 extern crate raw_cpuid;
 
 pub mod instructions;
-pub mod time;
 pub mod idt;
 pub mod paging;
 pub mod tss;
