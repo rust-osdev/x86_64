@@ -1,8 +1,8 @@
 //! Processor state stored in the FLAGS, EFLAGS, or RFLAGS register.
 
-/// The RFLAGS register. All variants are backwards compatable so only one
-/// bitflags struct needed.
 bitflags! {
+    /// The RFLAGS register. All variants are backwards compatable so only one
+    /// bitflags struct needed.
     pub flags Flags: usize {
         /// ID Flag (ID)
         const ID = 1 << 21,
@@ -49,12 +49,14 @@ bitflags! {
     }
 }
 
+/// Returns the current value of the RFLAGS register.
 pub fn flags() -> Flags {
     let r: usize;
     unsafe { asm!("pushfq; popq $0" : "=r"(r) :: "memory") };
     Flags::from_bits_truncate(r)
 }
 
+/// Writes the RFLAGS register.
 pub fn set_flags(val: Flags) {
     unsafe { asm!("pushq $0; popfq" :: "r"(val.bits()) : "memory" "flags") };
 }
