@@ -1,55 +1,20 @@
 #![cfg(target_arch="x86_64")]
 
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 
 #![feature(const_fn)]
 #![feature(asm)]
 #![feature(associated_consts)]
 #![feature(abi_x86_interrupt)]
-#![no_std]
 #![cfg_attr(test, allow(unused_features))]
+
+#![no_std]
 
 pub use address::{VirtualAddress, PhysicalAddress};
 
-#[macro_use]
-extern crate bitflags;
-
-#[macro_use]
-extern crate raw_cpuid;
-
+#[macro_use] extern crate bitflags;
 extern crate bit_field;
-
-mod address;
-
-macro_rules! bit {
-    ( $x:expr ) => {
-        1 << $x
-    };
-}
-
-macro_rules! check_flag {
-    ($doc:meta, $fun:ident, $flag:path) => (
-        #[$doc]
-        pub fn $fun(&self) -> bool {
-            self.contains($flag)
-        }
-    )
-}
-
-macro_rules! is_bit_set {
-    ($field:expr, $bit:expr) => (
-        $field & (1 << $bit) > 0
-    )
-}
-
-macro_rules! check_bit_fn {
-    ($doc:meta, $fun:ident, $field:ident, $bit:expr) => (
-        #[$doc]
-        pub fn $fun(&self) -> bool {
-            is_bit_set!(self.$field, $bit)
-        }
-    )
-}
+extern crate raw_cpuid;
 
 pub mod instructions;
 pub mod time;
@@ -68,6 +33,8 @@ pub mod tlb;
 pub mod cpuid {
     pub use raw_cpuid::*;
 }
+
+mod address;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]

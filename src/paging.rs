@@ -2,6 +2,21 @@
 
 use {VirtualAddress, PhysicalAddress};
 
+macro_rules! bit {
+    ( $x:expr ) => {
+        1 << $x
+    };
+}
+
+macro_rules! check_flag {
+    ($doc:meta, $fun:ident, $flag:path) => (
+        #[$doc]
+        pub fn $fun(&self) -> bool {
+            self.contains($flag)
+        }
+    )
+}
+
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
 pub const LARGE_PAGE_SIZE: u64 = 1024 * 1024 * 2; // 2 MiB
 pub const HUGE_PAGE_SIZE: u64 = 1024 * 1024 * 1024; // 1 GiB
