@@ -59,7 +59,6 @@ pub mod task;
 pub mod syscall;
 pub mod sgx;
 pub mod control_regs;
-pub mod dtables;
 pub mod io;
 pub mod msr;
 pub mod flags;
