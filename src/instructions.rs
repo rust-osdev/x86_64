@@ -2,13 +2,13 @@
 
 use segmentation;
 
-/// Enable Interrupts.
-pub unsafe fn enable() {
+/// Enable hardware interrupts using the `sti` instruction.
+pub unsafe fn enable_interrupts() {
     asm!("sti");
 }
 
-/// Disable Interrupts.
-pub unsafe fn disable() {
+/// Disable hardware interrupts using the `cli` instruction.
+pub unsafe fn disable_interrupts() {
     asm!("cli");
 }
 
@@ -59,6 +59,8 @@ pub unsafe fn load_tss(sel: segmentation::SegmentSelector) {
 pub unsafe fn halt() {
     asm!("hlt" :::: "volatile");
 }
+
+/// Read time stamp counters
 
 /// Read the time stamp counter using the `RDTSC` instruction.
 ///
