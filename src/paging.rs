@@ -28,25 +28,25 @@ pub type PT = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
 pub fn pml4_index(addr: VirtualAddress) -> usize {
-    (addr.as_usize() >> 39) & 0b111111111
+    (addr.0 >> 39) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PDPT.
 #[inline]
 pub fn pdpt_index(addr: VirtualAddress) -> usize {
-    (addr.as_usize() >> 30) & 0b111111111
+    (addr.0 >> 30) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PD.
 #[inline]
 pub fn pd_index(addr: VirtualAddress) -> usize {
-    (addr.as_usize() >> 21) & 0b111111111
+    (addr.0 >> 21) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PT.
 #[inline]
 pub fn pt_index(addr: VirtualAddress) -> usize {
-    (addr.as_usize() >> 12) & 0b111111111
+    (addr.0 >> 12) & 0b111111111
 }
 
 /// PML4 Entry bits description.
@@ -83,14 +83,14 @@ impl PML4Entry {
     ///  * `pdpt` - The physical address of the pdpt table.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(pdpt: PhysicalAddress, flags: PML4Entry) -> PML4Entry {
-        let pdpt_val = pdpt.as_u64();
+        let pdpt_val = pdpt.0;
         assert!(pdpt_val % BASE_PAGE_SIZE == 0);
         PML4Entry { bits: pdpt_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PhysicalAddress {
-        PhysicalAddress::from(self.bits & ADDRESS_MASK)
+        PhysicalAddress(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Is page present?", is_present, PML4Entry::PML4_P);
@@ -155,14 +155,14 @@ impl PDPTEntry {
     ///  * `pd` - The physical address of the page directory.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(pd: PhysicalAddress, flags: PDPTEntry) -> PDPTEntry {
-        let pd_val = pd.as_u64();
+        let pd_val = pd.0;
         assert!(pd_val % BASE_PAGE_SIZE == 0);
         PDPTEntry { bits: pd_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PhysicalAddress {
-        PhysicalAddress::from(self.bits & ADDRESS_MASK)
+        PhysicalAddress(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Is page present?", is_present, PDPTEntry::PDPT_P);
@@ -230,14 +230,14 @@ impl PDEntry {
     ///  * `pt` - The physical address of the page table.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(pt: PhysicalAddress, flags: PDEntry) -> PDEntry {
-        let pt_val = pt.as_u64();
+        let pt_val = pt.0;
         assert!(pt_val % BASE_PAGE_SIZE == 0);
         PDEntry { bits: pt_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PhysicalAddress {
-        PhysicalAddress::from(self.bits & ADDRESS_MASK)
+        PhysicalAddress(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Present; must be 1 to map a 2-MByte page or reference a page table.",
@@ -309,14 +309,14 @@ impl PTEntry {
     ///  * `page` - The physical address of the backing 4 KiB page.
     ///  * `flags`- Additional flags for the entry.
     pub fn new(page: PhysicalAddress, flags: PTEntry) -> PTEntry {
-        let page_val = page.as_u64();
+        let page_val = page.0;
         assert!(page_val % BASE_PAGE_SIZE == 0);
         PTEntry { bits: page_val | flags.bits }
     }
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PhysicalAddress {
-        PhysicalAddress::from(self.bits & ADDRESS_MASK)
+        PhysicalAddress(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Present; must be 1 to map a 4-KByte page or reference a page table.",

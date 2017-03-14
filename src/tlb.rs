@@ -4,7 +4,7 @@ use VirtualAddress;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 pub fn flush(addr: VirtualAddress) {
-    unsafe { asm!("invlpg ($0)" :: "r" (addr.as_usize()) : "memory") };
+    unsafe { asm!("invlpg ($0)" :: "r" (addr.0) : "memory") };
 }
 
 /// Invalidate the TLB completely by reloading the CR3 register.
