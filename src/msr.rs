@@ -1,20 +1,6 @@
 //! MSR value list and function to read and write them.
 
-/// Write 64 bits to msr register.
-pub unsafe fn wrmsr(msr: u32, value: u64) {
-    let low = value as u32;
-    let high = (value >> 32) as u32;
-    asm!("wrmsr" :: "{ecx}" (msr), "{eax}" (low), "{edx}" (high) : "memory" : "volatile" );
-}
-
-/// Read 64 bits msr register.
-#[allow(unused_mut)]
-pub unsafe fn rdmsr(msr: u32) -> u64 {
-    let (high, low): (u32, u32);
-    asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (msr) : "memory" : "volatile");
-    ((high as u64) << 32) | (low as u64)
-}
-
+pub use instructions::{rdmsr, wrmsr};
 
 // What follows is a long list of all MSR register taken from Intel's manual.
 // Some of the register values appear duplicated as they may be
