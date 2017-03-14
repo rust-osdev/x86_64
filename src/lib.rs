@@ -51,7 +51,7 @@ macro_rules! check_bit_fn {
 }
 
 pub mod time;
-pub mod irq;
+pub mod idt;
 pub mod paging;
 pub mod task;
 pub mod syscall;
