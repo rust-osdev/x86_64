@@ -1,4 +1,4 @@
-
+use segmentation;
 
 /// Enable Interrupts.
 pub unsafe fn enable() {
@@ -32,7 +32,22 @@ pub struct DescriptorTablePointer {
     pub base: u64,
 }
 
+/// Load GDT table.
+pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
+    asm!("lgdt ($0)" :: "r" (gdt) : "memory");
+}
+
+/// Load LDT table.
+pub unsafe fn lldt(ldt: &DescriptorTablePointer) {
+    asm!("lldt ($0)" :: "r" (ldt) : "memory");
+}
+
 /// Load IDT table.
 pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     asm!("lidt ($0)" :: "r" (idt) : "memory");
+}
+
+/// Load the task state register.
+pub unsafe fn load_tss(sel: segmentation::SegmentSelector) {
+    asm!("ltr $0" :: "r" (sel.bits()));
 }
