@@ -20,8 +20,6 @@ pub mod instructions;
 pub mod registers;
 pub mod structures;
 
-pub mod paging;
-
 mod address;
 
 /// Represents a protection ring level.
