@@ -11,9 +11,9 @@ authors = [
   "Rex Lunae <rexlunae@gmail.com>"
 ]
 
-description = "Library to program x86_64 hardware. Contains x86_64 specific data structure descriptions, data-tables, as well as convenience function to call assembly instructions. This is a fork of the `x86` crate, specialized for x86_64."
+description = "Provides x86_64 specific functions and data structures, and access to various system registers."
 
-repository = "https://github.com/phil-opp/rust-x86_64"
+repository = "https://github.com/phil-opp/x86_64"
 documentation = "https://docs.rs/x86_64"
 readme = "README.md"
 keywords = ["amd64", "x86", "x86_64", "no_std"]
