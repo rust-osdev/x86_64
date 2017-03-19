@@ -25,7 +25,3 @@ harness = false
 
 [dependencies]
 bit_field = "0.7.0"
-
-[dependencies.bitflags]
-git = "https://github.com/tamird/bitflags.git"
-branch = "associated-constants"

@@ -15,9 +15,10 @@
 
 pub use address::{VirtualAddress, PhysicalAddress};
 
-#[macro_use]
-extern crate bitflags;
 extern crate bit_field;
+
+#[macro_use]
+mod bitflags;
 
 pub mod instructions;
 pub mod registers;
