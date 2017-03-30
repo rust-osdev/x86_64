@@ -6,17 +6,6 @@ pub mod tables;
 pub mod tlb;
 pub mod segmentation;
 
-/// Generate a software interrupt.
-/// This is a macro because the argument needs to be an immediate.
-#[macro_export]
-macro_rules! int {
-    ( $x:expr ) => {
-        {
-            asm!("int $0" :: "N" ($x));
-        }
-    };
-}
-
 /// Halts the CPU by executing the `hlt` instruction.
 #[inline(always)]
 pub unsafe fn halt() {
