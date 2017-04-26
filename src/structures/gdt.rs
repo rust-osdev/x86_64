@@ -40,7 +40,7 @@ impl SegmentSelector {
 pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
     
     /// Simple constructor that creates an empty descriptor of the given type.
-    fn base() -> Self;
+    fn new() -> Self;
 
     /// Returns the access byte with the dpl set.
     fn set_dpl(&self, dpl: PrivilegeLevel) -> Self {
@@ -56,6 +56,8 @@ pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
 
 bitflags! {
     pub flags GdtCodeEntryAccess: u8 {
+        /// Not present.
+        const NOTPRESENT = 0,
 
         /// The accessed flag is set by the processor on first use.
         const ACCESSED = 1 << 0,
@@ -93,13 +95,15 @@ impl From<GdtCodeEntryAccess> for u8 {
 }
 
 impl GdtEntryAccess for GdtCodeEntryAccess {
-    fn base() -> Self {
+    fn new() -> Self {
         Self::_EXECUTABLE | Self::_NONSYSTEM | Self::PRESENT
     }
 }
 
 bitflags! {
     pub flags GdtDataEntryAccess: u8 {
+        /// Not present.
+        const NOTPRESENT = 0,
 
         /// The accessed flag is set by the processor on first use.
         const ACCESSED = 1 << 0,
@@ -110,7 +114,7 @@ bitflags! {
         /// Limit grows down from base.
         const DIRECTION = 1 << 2,
 
-        /// Must be set to 1 to be valid.
+        /// Must be set to 1 to be a regular segment.
         const _NONSYSTEM = 1 << 4,
 
 
@@ -133,7 +137,7 @@ impl From<GdtDataEntryAccess> for u8 {
 
 
 impl GdtEntryAccess for GdtDataEntryAccess {
-    fn base() -> Self {
+    fn new() -> Self {
         Self::_NONSYSTEM | Self::PRESENT
     }
 }
@@ -155,6 +159,8 @@ pub enum GdtSystemTypes {
 
 bitflags! {
     pub flags GdtSystemEntryAccess: u8 {
+        /// Not present.
+        const NOTPRESENT = 0,
 
         /// Must be set to 0 to be valid for system entries.
         const _NONSYSTEM = 1 << 4,
@@ -182,7 +188,7 @@ impl From<GdtSystemEntryAccess> for u8 {
 impl GdtEntryAccess for GdtSystemEntryAccess {
 
     /// Type will default to UPPERBITS.  The type should always be set.
-    fn base() -> Self {
+    fn new() -> Self {
         Self::PRESENT
     }
 }
@@ -200,7 +206,7 @@ impl GdtSystemEntryAccess {
 ///
 bitflags! {
     pub flags GdtFlags: u8 {
-        const BASE = 0,
+        const NEW = 0,
 
         /// This flag is available for user definition.
         const AVAILABLE = 1 << 4,
@@ -240,8 +246,8 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
             limit: 0,
             base0: 0,
             base1: 0,
-            access: A::base(),
-            limit_flags: GdtFlags::BASE,
+            access: A::new(),
+            limit_flags: GdtFlags::NEW,
             base2: 0,
             phantom: PhantomData
         }
