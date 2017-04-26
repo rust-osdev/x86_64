@@ -142,13 +142,14 @@ impl GdtEntryAccess for GdtDataEntryAccess {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
 pub enum GdtSystemTypes {
-    UPPERBITS =     0,  /// In long mode, some entries are continuations of the entries below them, allowing 64-bit base addresses.
+    /// Long mode extended base address for previous entry.
+    UpperBits =     0,
     LDT =           0b0010,
     TSS64 =         0b1001,
-    TSS64_BUSY =    0b1011,
-    CALL_GATE64 =   0b1100,
-    INT_GATE64 =    0b1110,
-    TRAP_GATE64 =   0b1111,
+    TSS64Busy =     0b1011,
+    CallGate64 =    0b1100,
+    IntGate64 =     0b1110,
+    TrapGate64 =    0b1111,
 
 }
 
@@ -189,7 +190,7 @@ impl GdtEntryAccess for GdtSystemEntryAccess {
 impl GdtSystemEntryAccess {
 
     /// Sets the type of the GDT entry to the specified type and returns the modified value.
-    fn set_type(&self, segment_type: GdtSystemTypes) -> Self {
+    pub fn set_type(&self, segment_type: GdtSystemTypes) -> Self {
         let t: *const u8 = unsafe { transmute(self) };
         Self::from(segment_type as u8 & (0b11110000 & unsafe {*t}))
     }
@@ -223,6 +224,14 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
             base2: 0,
             phantom: PhantomData
         }
+    }
+
+    /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
+    /// it will be necessary to set the high bits in the following 8-byte field.
+    pub fn set_base(&mut self, base_addr: u32) {
+        self.base0 = (base_addr & 0xffff) as u16;
+        self.base1 = (base_addr & 0xff0000 >> 16) as u8;
+        self.base2 = (base_addr & 0xff000000 >> 24) as u8;
     }
 
 }
