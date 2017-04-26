@@ -2,8 +2,6 @@
 
 use core::fmt;
 use core::marker::PhantomData;
-use core::mem;
-use core::ops::{Index, IndexMut};
 use core::convert::{From,Into};
 use core::intrinsics::transmute;
 use PrivilegeLevel;
@@ -40,6 +38,8 @@ impl SegmentSelector {
 
 /// A generic access byte trait.
 pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
+    
+    /// Simple constructor that creates an empty descriptor of the given type.
     fn base() -> Self;
 
     /// Returns the access byte with the dpl set.
