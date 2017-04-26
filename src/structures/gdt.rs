@@ -187,7 +187,7 @@ impl From<GdtSystemEntryAccess> for u8 {
 
 impl GdtEntryAccess for GdtSystemEntryAccess {
 
-    /// Type will default to UPPERBITS.  The type should always be set.
+    /// Type will default to UPPERBITS.
     fn new() -> Self {
         Self::PRESENT
     }
