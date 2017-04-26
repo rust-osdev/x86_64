@@ -71,7 +71,7 @@ bitflags! {
         const _EXECUTABLE = 1 << 3,
 
         /// Must be set to 1 to be valid.
-        const _REQUIRED = 1 << 4,
+        const _NONSYSTEM = 1 << 4,
 
 
         /// Should be set if the segment is valid.
@@ -94,7 +94,7 @@ impl From<GdtCodeEntryAccess> for u8 {
 
 impl GdtEntryAccess for GdtCodeEntryAccess {
     fn base() -> Self {
-        Self::_EXECUTABLE | Self::_REQUIRED | Self::PRESENT
+        Self::_EXECUTABLE | Self::_NONSYSTEM | Self::PRESENT
     }
 }
 
@@ -104,15 +104,14 @@ bitflags! {
         /// The accessed flag is set by the processor on first use.
         const ACCESSED = 1 << 0,
 
-        /// For code segments, this controls read access.  For data segments, it controls write
-        /// access.
+        /// Controls write access.
         const WRITE = 1 << 1,
 
         /// Limit grows down from base.
         const DIRECTION = 1 << 2,
 
         /// Must be set to 1 to be valid.
-        const _REQUIRED = 1 << 4,
+        const _NONSYSTEM = 1 << 4,
 
 
         /// Should be set if the segment is valid.
@@ -135,10 +134,66 @@ impl From<GdtDataEntryAccess> for u8 {
 
 impl GdtEntryAccess for GdtDataEntryAccess {
     fn base() -> Self {
-        Self::_REQUIRED | Self::PRESENT
+        Self::_NONSYSTEM | Self::PRESENT
     }
 }
 
+/// Various system gdt entries
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
+pub enum GdtSystemTypes {
+    UPPERBITS =     0,  /// In long mode, some entries are continuations of the entries below them, allowing 64-bit base addresses.
+    LDT =           0b0010,
+    TSS64 =         0b1001,
+    TSS64_BUSY =    0b1011,
+    CALL_GATE64 =   0b1100,
+    INT_GATE64 =    0b1110,
+    TRAP_GATE64 =   0b1111,
+
+}
+
+bitflags! {
+    pub flags GdtSystemEntryAccess: u8 {
+
+        /// Must be set to 0 to be valid for system entries.
+        const _NONSYSTEM = 1 << 4,
+
+
+        /// Should be set if the segment is valid.
+        const PRESENT = 1 << 7,
+
+    }
+}
+
+
+impl From<u8> for GdtSystemEntryAccess {
+    fn from(b: u8) -> Self {
+        unsafe { transmute::<u8, Self>(b) }
+    }
+}
+
+impl From<GdtSystemEntryAccess> for u8 {
+    fn from(b: GdtSystemEntryAccess) -> Self {
+        unsafe { transmute::<GdtSystemEntryAccess, Self>(b) }
+    }
+}
+
+impl GdtEntryAccess for GdtSystemEntryAccess {
+
+    /// Type will default to UPPERBITS.  The type should always be set.
+    fn base() -> Self {
+        Self::PRESENT
+    }
+}
+
+impl GdtSystemEntryAccess {
+
+    /// Sets the type of the GDT entry to the specified type and returns the modified value.
+    fn set_type(&self, segment_type: GdtSystemTypes) -> Self {
+        let t: *const u8 = unsafe { transmute(self) };
+        Self::from(segment_type as u8 & (0b11110000 & unsafe {*t}))
+    }
+}
 
 /// A Global Descriptor Table entry.
 ///
