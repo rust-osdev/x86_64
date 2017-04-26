@@ -157,7 +157,7 @@ pub struct GdtEntry<F, A: GdtEntryAccess> {
 
 impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
-    fn missing() -> Self {
+    pub fn missing() -> Self {
         GdtEntry {
             limit: 0,
             base0: 0,
