@@ -196,6 +196,27 @@ impl GdtSystemEntryAccess {
     }
 }
 
+/// Flag set for flag byte.
+///
+bitflags! {
+    pub flags GdtFlags: u8 {
+        const BASE = 0,
+
+        /// This flag is available for user definition.
+        const AVAILABLE = 1 << 4,
+
+
+        /// Segment is a 64-bit code segment.
+        const LONG_MODE = 1 << 5,
+
+        /// If the code or data in the segment is 16 or 32 bit.
+        const DB = 1 << 6,
+
+        /// The granularity bit.
+        const GRANULARITY = 1 << 7,
+    }
+}
+
 /// A Global Descriptor Table entry.
 ///
 #[derive(Debug, Clone, Copy)]
@@ -205,7 +226,7 @@ pub struct GdtEntry<F, A: GdtEntryAccess> {
     base0: u16,
     base1: u8,
     access: A,
-    limit_flags: u8,
+    limit_flags: GdtFlags,
     base2: u8,
     phantom: PhantomData<F>,
 }
@@ -220,7 +241,7 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
             base0: 0,
             base1: 0,
             access: A::base(),
-            limit_flags: 0,
+            limit_flags: GdtFlags::BASE,
             base2: 0,
             phantom: PhantomData
         }
