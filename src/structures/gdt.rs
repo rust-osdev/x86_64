@@ -4,8 +4,9 @@ use core::fmt;
 use core::marker::PhantomData;
 use core::mem;
 use core::ops::{Index, IndexMut};
-//use PrivilegeLevel;
-use {PrivilegeLevel, VirtualAddress};
+use core::convert::{From,Into};
+use core::intrinsics::transmute;
+use PrivilegeLevel;
 use bit_field::BitField;
 
 
@@ -33,12 +34,24 @@ impl SegmentSelector {
 
     /// Returns the requested privilege level.
     pub fn rpl(&self) -> PrivilegeLevel {
-        PrivilegeLevel::from_u16(self.0.get_bits(0..2))
+        PrivilegeLevel::from_uint(self.0.get_bits(0..2) as u8)
     }
 }
 
-pub trait GdtEntryAccess {
-    fn missing() -> Self;
+/// A generic access byte trait.
+pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
+    fn base() -> Self;
+
+    /// Returns the access byte with the dpl set.
+    fn set_dpl(&self, dpl: PrivilegeLevel) -> Self {
+        let t: *const u8 = unsafe { transmute(self) };
+        Self::from(dpl.get_bits() << 5 & (0b10011111 & unsafe {*t}))
+    }
+
+    /// Returns the dpl of the access byte.
+    fn get_dpl(self) -> PrivilegeLevel {
+        PrivilegeLevel::from_uint((self.into() & 0b01100000) >> 5)
+    }
 }
 
 bitflags! {
@@ -67,8 +80,20 @@ bitflags! {
     }
 }
 
+impl From<u8> for GdtCodeEntryAccess {
+    fn from(b: u8) -> Self {
+        unsafe { transmute::<u8, Self>(b) }
+    }
+}
+
+impl From<GdtCodeEntryAccess> for u8 {
+    fn from(b: GdtCodeEntryAccess) -> Self {
+        unsafe { transmute::<GdtCodeEntryAccess, Self>(b) }
+    }
+}
+
 impl GdtEntryAccess for GdtCodeEntryAccess {
-    fn missing() -> Self {
+    fn base() -> Self {
         Self::_EXECUTABLE | Self::_REQUIRED | Self::PRESENT
     }
 }
@@ -95,9 +120,21 @@ bitflags! {
 
     }
 }
+impl From<u8> for GdtDataEntryAccess {
+    fn from(b: u8) -> Self {
+        unsafe { transmute::<u8, Self>(b) }
+    }
+}
+
+impl From<GdtDataEntryAccess> for u8 {
+    fn from(b: GdtDataEntryAccess) -> Self {
+        unsafe { transmute::<GdtDataEntryAccess, Self>(b) }
+    }
+}
+
 
 impl GdtEntryAccess for GdtDataEntryAccess {
-    fn missing() -> Self {
+    fn base() -> Self {
         Self::_REQUIRED | Self::PRESENT
     }
 }
@@ -125,7 +162,7 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
             limit: 0,
             base0: 0,
             base1: 0,
-            access: A::missing(),
+            access: A::base(),
             limit_flags: 0,
             base2: 0,
             phantom: PhantomData
