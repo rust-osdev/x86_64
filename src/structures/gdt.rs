@@ -190,7 +190,7 @@ impl GdtEntryAccess for GdtSystemEntryAccess {
 /// Various constructors for different types of system segments.
 ///
 impl GdtSystemEntryAccess {
-    /// Type will default to UpperBits.
+    /// Returns a new LDT segment entry.
     fn new_LDT() -> Self {
         Self::PRESENT | Self::LDT
     }
@@ -252,6 +252,11 @@ pub struct GdtEntry<F, A: GdtEntryAccess> {
     phantom: PhantomData<F>,
 }
 
+/// A 16-byte GDT entry, for system tables requiring larger base addresses.
+///
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
+pub struct GdtDoubleEntry<F, A: GdtEntryAccess>(GdtEntry<F, A>, GdtEntry<F, GdtSystemEntryAccess>);
 
 impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
@@ -276,6 +281,16 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
         self.base2 = (base_addr & 0xff000000 >> 24) as u8;
     }
 
+}
+
+impl<F, A: GdtEntryAccess> GdtDoubleEntry<F, A> {
+    pub fn set_base(&mut self, base_addr: u64) {
+        let base0 = (base_addr & 0xffffffff) as u32;
+        let base1 = ((base_addr & 0xffffffff00000000) >> 32) as u32;
+
+        self.0.set_base(base0);
+        self.1.set_base(base1);
+    }
 }
 
 impl fmt::Debug for SegmentSelector {
