@@ -142,21 +142,6 @@ impl GdtEntryAccess for GdtDataEntryAccess {
     }
 }
 
-/// Various system gdt entries
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[repr(u8)]
-pub enum GdtSystemTypes {
-    /// Long mode extended base address for previous entry.
-    UpperBits =     0,
-    LDT =           0b0010,
-    TSS64 =         0b1001,
-    TSS64Busy =     0b1011,
-    CallGate64 =    0b1100,
-    IntGate64 =     0b1110,
-    TrapGate64 =    0b1111,
-
-}
-
 bitflags! {
     pub flags GdtSystemEntryAccess: u8 {
         /// Not present.
@@ -168,6 +153,15 @@ bitflags! {
 
         /// Should be set if the segment is valid.
         const PRESENT = 1 << 7,
+
+        /// Long mode extended base address for previous entry.
+        const UpperBits =     0,
+        const LDT =           0b0010,
+        const TSS64 =         0b1001,
+        const TSS64Busy =     0b1011,
+        const CallGate64 =    0b1100,
+        const IntGate64 =     0b1110,
+        const TrapGate64 =    0b1111,
 
     }
 }
@@ -187,18 +181,39 @@ impl From<GdtSystemEntryAccess> for u8 {
 
 impl GdtEntryAccess for GdtSystemEntryAccess {
 
-    /// Type will default to UPPERBITS.
+    /// Type will default to UpperBits.
     fn new() -> Self {
-        Self::PRESENT
+        Self::PRESENT | Self::UpperBits
     }
 }
 
+/// Various constructors for different types of system segments.
+///
 impl GdtSystemEntryAccess {
-
-    /// Sets the type of the GDT entry to the specified type and returns the modified value.
-    pub fn set_type(&self, segment_type: GdtSystemTypes) -> Self {
-        let t: *const u8 = unsafe { transmute(self) };
-        Self::from(segment_type as u8 & (0b11110000 & unsafe {*t}))
+    /// Type will default to UpperBits.
+    fn new_LDT() -> Self {
+        Self::PRESENT | Self::LDT
+    }
+    /// Returns a TSS64 Entry
+    fn new_TSS64() -> Self {
+        Self::PRESENT | Self::TSS64
+    }
+    /// Returns a TSS64 Entry, marked busy.  Usually, you wouldn't actually initialize something
+    /// this way.
+    fn new_TSS64Busy() -> Self {
+        Self::PRESENT | Self::TSS64Busy
+    }
+    /// For a call gate
+    fn new_CallGate64() -> Self {
+        Self::PRESENT | Self::CallGate64
+    }
+    /// For an interrupt gate
+    fn new_IntGate64() -> Self {
+        Self::PRESENT | Self::IntGate64
+    }
+    /// For a trap gate
+    fn new_TrapGate64() -> Self {
+        Self::PRESENT | Self::TrapGate64
     }
 }
 
