@@ -13,6 +13,7 @@ use bit_field::BitField;
 /// with some additional flags).
 ///
 /// See Intel 3a, Section 3.4.2 "Segment Selectors"
+#[derive(Clone, Copy)]
 pub struct SegmentSelector(pub u16);
 
 impl SegmentSelector {
@@ -181,15 +182,20 @@ impl From<GdtSystemEntryAccess> for u8 {
 
 impl GdtEntryAccess for GdtSystemEntryAccess {
 
-    /// Type will default to UpperBits.
+    /// Type will default to UpperBits.  UpperBits entries are not marked present, so this amounts
+    /// to a full 32-bits of 0.
     fn new() -> Self {
-        Self::PRESENT | Self::UpperBits
+        Self::UpperBits
     }
 }
 
 /// Various constructors for different types of system segments.
 ///
 impl GdtSystemEntryAccess {
+    /// Returns a new LDT segment entry.
+    fn new_UpperBits() -> Self {
+        Self::new()
+    }
     /// Returns a new LDT segment entry.
     fn new_LDT() -> Self {
         Self::PRESENT | Self::LDT
@@ -252,12 +258,6 @@ pub struct GdtEntry<F, A: GdtEntryAccess> {
     phantom: PhantomData<F>,
 }
 
-/// A 16-byte GDT entry, for system tables requiring larger base addresses.
-///
-#[derive(Debug, Clone, Copy)]
-#[repr(C, packed)]
-pub struct GdtDoubleEntry<F, A: GdtEntryAccess>(GdtEntry<F, A>, GdtEntry<F, GdtSystemEntryAccess>);
-
 impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
     /// Creates an empty GdtEntry
@@ -275,7 +275,7 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
     /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
     /// it will be necessary to set the high bits in the following 8-byte field.
-    pub fn set_base(&mut self, base_addr: u32) {
+    pub fn set_offset(&mut self, base_addr: u32) {
         self.base0 = (base_addr & 0xffff) as u16;
         self.base1 = (base_addr & 0xff0000 >> 16) as u8;
         self.base2 = (base_addr & 0xff000000 >> 24) as u8;
@@ -283,15 +283,93 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
 }
 
-impl<F, A: GdtEntryAccess> GdtDoubleEntry<F, A> {
-    pub fn set_base(&mut self, base_addr: u64) {
-        let base0 = (base_addr & 0xffffffff) as u32;
-        let base1 = ((base_addr & 0xffffffff00000000) >> 32) as u32;
-
-        self.0.set_base(base0);
-        self.1.set_base(base1);
-    }
+/// A Global Descriptor Table entry for a call gate.
+///
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
+pub struct GdtCallGate64<F> {
+    offset0: u16,
+    segment: SegmentSelector,
+    _res0: u8,
+    access: GdtSystemEntryAccess,
+    limit_flags: GdtFlags,
+    offset1: u16,
+    offset2: u32,
+    _res1: u8,
+    _access_fake: GdtSystemEntryAccess,
+    _res2: u16,
+    phantom: PhantomData<F>,
 }
+
+
+impl<F> GdtCallGate64<F> {
+
+    /// Creates an empty GdtEntry
+    pub fn missing() -> Self {
+        GdtCallGate64 {
+            offset0: 0,
+            offset1: 0,
+            offset2: 0,
+            segment: SegmentSelector::new(0, PrivilegeLevel::Ring0),
+            _res0: 0,
+            _res1: 0,
+            _res2: 0,
+            access: GdtSystemEntryAccess::new_CallGate64(),
+            _access_fake: GdtSystemEntryAccess::new_UpperBits(),
+            limit_flags: GdtFlags::NEW,
+            phantom: PhantomData
+        }
+    }
+
+    /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
+    /// it will be necessary to set the high bits in the following 8-byte field.
+    pub fn set_offset(&mut self, offset_addr: u64) {
+        self.offset0 = (offset_addr & 0xffff) as u16;
+        self.offset1 = (offset_addr & 0xffff0000 >> 16) as u16;
+        self.offset2 = (offset_addr & 0xffffffff00000000 >> 32) as u32;
+    }
+
+    pub fn set_segment(&mut self, segment: SegmentSelector) {
+        self.segment = segment.clone();
+    }
+
+}
+
+/// A Global Descriptor Table entry for a call gate.
+///
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
+pub struct GdtUpperBits<F> {
+    upper_bits: u32,
+    _res0: u8,
+    access: GdtSystemEntryAccess,
+    _res1: u16,
+    phantom: PhantomData<F>,
+}
+
+
+impl<F> GdtUpperBits<F> {
+
+    /// Creates an empty GdtEntry
+    pub fn missing() -> Self {
+        GdtUpperBits {
+            upper_bits: 0,
+            _res0: 0,
+            _res1: 0,
+            access: GdtSystemEntryAccess::new_CallGate64(),
+            phantom: PhantomData
+        }
+    }
+
+    /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
+    /// it will be necessary to set the high bits in the following 8-byte field.
+    pub fn set_upper(&mut self, upper_bits: u32) {
+        self.upper_bits = upper_bits;
+    }
+
+
+}
+
 
 impl fmt::Debug for SegmentSelector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
