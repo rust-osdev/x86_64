@@ -20,10 +20,12 @@ impl SegmentSelector {
     /// Creates a new SegmentSelector
     ///
     /// # Arguments
-    ///  * `index`: index in GDT or LDT array.
+    ///  * `index`: index within in the GDT or LDT.  If 0, doesn't
+    ///  actually select a segment, but indicates an invalid selector.
     ///  * `rpl`: the requested privilege level
-    pub const fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
-        SegmentSelector(index << 3 | (rpl as u16))
+    ///  * `local`: If true, the request is for the LDT.
+    pub const fn new(index: u16, rpl: PrivilegeLevel, local: bool) -> SegmentSelector {
+        SegmentSelector(index << 3 | (rpl as u16) | (local as u16) << 2)
     }
 
     /// Returns the GDT index.
@@ -292,7 +294,6 @@ pub struct GdtCallGate64<F> {
     segment: SegmentSelector,
     _res0: u8,
     access: GdtSystemEntryAccess,
-    limit_flags: GdtFlags,
     offset1: u16,
     offset2: u32,
     _res1: u8,
@@ -310,13 +311,12 @@ impl<F> GdtCallGate64<F> {
             offset0: 0,
             offset1: 0,
             offset2: 0,
-            segment: SegmentSelector::new(0, PrivilegeLevel::Ring0),
+            segment: SegmentSelector::new(0, PrivilegeLevel::Ring0, false),
             _res0: 0,
             _res1: 0,
             _res2: 0,
             access: GdtSystemEntryAccess::new_CallGate64(),
             _access_fake: GdtSystemEntryAccess::new_UpperBits(),
-            limit_flags: GdtFlags::NEW,
             phantom: PhantomData
         }
     }
@@ -334,6 +334,72 @@ impl<F> GdtCallGate64<F> {
     }
 
 }
+
+/// A Global Descriptor Table entry for a interrupt and trap gates.  From the GDT's perspective,
+/// they have exactly the same format, and only differ by type (one bit).
+///
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
+pub struct GdtIntTrapGate64<F> {
+    offset0: u16,
+    segment: SegmentSelector,
+    ist: u8,    // Low three bits only
+    access: GdtSystemEntryAccess,
+    offset1: u16,
+    offset2: u32,
+    _res0: u32,
+    phantom: PhantomData<F>,
+}
+
+
+impl<F> GdtIntTrapGate64<F> {
+
+    /// Creates an empty GdtEntry
+    pub fn missing() -> Self {
+        GdtIntTrapGate64 {
+            offset0: 0,
+            offset1: 0,
+            offset2: 0,
+            segment: SegmentSelector::new(0, PrivilegeLevel::Ring0, false),
+            _res0: 0,
+            access: GdtSystemEntryAccess::new_IntGate64(),
+            ist: 0,
+            phantom: PhantomData
+        }
+    }
+
+    /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
+    /// it will be necessary to set the high bits in the following 8-byte field.
+    pub fn set_offset(&mut self, offset_addr: u64) {
+        self.offset0 = (offset_addr & 0xffff) as u16;
+        self.offset1 = (offset_addr & 0xffff0000 >> 16) as u16;
+        self.offset2 = (offset_addr & 0xffffffff00000000 >> 32) as u32;
+    }
+
+    /// The segment to switch to.
+    pub fn set_segment(&mut self, segment: SegmentSelector) {
+        self.segment = segment.clone();
+    }
+
+    /// The IST entry for the new stack.
+    pub fn set_ist(&mut self, ist: u8) {
+
+        self.ist = ist & 0b111;
+    }
+
+    /// Sets the gate as a trap gate instead of an interrupt gate.
+    pub fn set_trap(&mut self) {
+        let current_dpl = self.access.get_dpl();
+        self.access = GdtSystemEntryAccess::new_TrapGate64().set_dpl(current_dpl)
+    }
+
+    /// Sets the gate as an interrupt gate instead of a trap gate.
+    pub fn set_int(&mut self) {
+        let current_dpl = self.access.get_dpl();
+        self.access = GdtSystemEntryAccess::new_IntGate64().set_dpl(current_dpl)
+    }
+}
+
 
 /// A Global Descriptor Table entry for a call gate.
 ///
