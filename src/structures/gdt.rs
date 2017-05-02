@@ -195,7 +195,8 @@ impl GdtEntryAccess for GdtSystemEntryAccess {
 /// Various constructors for different types of system segments.
 ///
 impl GdtSystemEntryAccess {
-    /// Returns a new LDT segment entry.
+    /// Returns a new Upper Bits segment entry by itself.  There are only a few cases where this
+    /// should be used outside this module.
     fn new_UpperBits() -> Self {
         Self::new()
     }
