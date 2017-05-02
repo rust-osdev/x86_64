@@ -39,6 +39,15 @@ impl SegmentSelector {
     }
 }
 
+impl fmt::Debug for SegmentSelector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = f.debug_struct("SegmentSelector");
+        s.field("index", &self.index());
+        s.field("rpl", &self.rpl());
+        s.finish()
+    }
+}
+
 /// A generic access byte trait.
 pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
     
@@ -308,6 +317,9 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
         let mut granularity = GdtFlags::NEW;
         let mut limit = full_limit;
+
+        // In order to make a segment larger than 1MB, the GDT uses the granularity flag to set the
+        // resolution to 4KB instead of 1 byte.
         if limit > 0xfffff {
             limit = limit >> 12;
             granularity = GdtFlags::GRANULARITY;
@@ -510,11 +522,3 @@ impl<F> GdtUpperBits<F> {
 }
 
 
-impl fmt::Debug for SegmentSelector {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut s = f.debug_struct("SegmentSelector");
-        s.field("index", &self.index());
-        s.field("rpl", &self.rpl());
-        s.finish()
-    }
-}
