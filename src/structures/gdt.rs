@@ -85,6 +85,7 @@ bitflags! {
     }
 }
 
+
 impl From<u8> for GdtCodeEntryAccess {
     fn from(b: u8) -> Self {
         unsafe { transmute::<u8, Self>(b) }
@@ -231,6 +232,9 @@ bitflags! {
     pub flags GdtFlags: u8 {
         const NEW = 0,
 
+        const ACCESS_BITS = 0xf,
+        const FLAGS_BITS = 0xf0,
+
         /// This flag is available for user definition.
         const AVAILABLE = 1 << 4,
 
@@ -245,6 +249,20 @@ bitflags! {
         const GRANULARITY = 1 << 7,
     }
 }
+
+/*impl From<u8> for GdtFlags {
+    fn from(b: u8) -> Self {
+        unsafe { transmute::<u8, Self>(b) }
+    }
+}
+
+impl From<GdtFlags> for u8 {
+    fn from(b: GdtFlags) -> u8 {
+        unsafe { transmute::<GdtFlags, u8>(b) }
+    }
+}*/
+
+
 
 /// A Global Descriptor Table entry.
 ///
@@ -277,10 +295,16 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 
     /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
     /// it will be necessary to set the high bits in the following 8-byte field.
-    pub fn set_offset(&mut self, base_addr: u32) {
+    pub fn set_base(&mut self, base_addr: u32) {
         self.base0 = (base_addr & 0xffff) as u16;
         self.base1 = (base_addr & 0xff0000 >> 16) as u8;
         self.base2 = (base_addr & 0xff000000 >> 24) as u8;
+    }
+
+    /// The limit has to be in the low 20 bits.
+    pub fn set_limit(&mut self, limit: u32) {
+        self.limit = (limit & 0xffff) as u16;
+        self.limit_flags = unsafe { ((self.limit_flags & GdtFlags::FLAGS_BITS) | (GdtFlags::ACCESS_BITS & transmute::<u8, GdtFlags>((limit >> 16) as u8))) }
     }
 
 }
@@ -400,6 +424,43 @@ impl<F> GdtIntTrapGate64<F> {
     }
 }
 
+
+/// A Global Descriptor Table entry for a TSS.
+///
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
+pub struct GdtTSS64<F> {
+    base_entry: GdtEntry<F, GdtSystemEntryAccess>,
+    base_extended: u32,
+    _res: u32,
+    phantom: PhantomData<F>,
+}
+
+
+impl<F> GdtTSS64<F> {
+
+    /// Creates an empty GdtEntry
+    pub fn missing() -> Self {
+        GdtTSS64 {
+            base_entry: GdtEntry::missing(),
+            base_extended: 0,
+            _res: 0,
+            phantom: PhantomData
+        }
+    }
+
+    /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
+    /// it will be necessary to set the high bits in the following 8-byte field.
+    pub fn set_base(&mut self, base_addr: u64) {
+        self.base_entry.set_base((base_addr & 0xffffffff) as u32);
+        self.base_extended = ((base_addr & 0xffffffff00000000) >> 32) as u32;
+    }
+
+    pub fn set_limit(&mut self, limit: u32) {
+        self.base_entry.set_limit(limit)
+    }
+
+}
 
 /// A Global Descriptor Table entry for a call gate.
 ///
