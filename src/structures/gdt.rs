@@ -251,7 +251,7 @@ bitflags! {
     }
 }
 
-/*impl From<u8> for GdtFlags {
+impl From<u8> for GdtFlags {
     fn from(b: u8) -> Self {
         unsafe { transmute::<u8, Self>(b) }
     }
@@ -261,7 +261,7 @@ impl From<GdtFlags> for u8 {
     fn from(b: GdtFlags) -> u8 {
         unsafe { transmute::<GdtFlags, u8>(b) }
     }
-}*/
+}
 
 
 
@@ -313,7 +313,7 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
             granularity = GdtFlags::GRANULARITY;
         }
         self.limit = (limit & 0xffff) as u16;
-        self.limit_flags = granularity | ((self.limit_flags & GdtFlags::FLAGS_BITS) | (GdtFlags::ACCESS_BITS & unsafe { transmute::<u8, GdtFlags>((limit >> 16) as u8) } ))
+        self.limit_flags = granularity | ((self.limit_flags & GdtFlags::FLAGS_BITS) | (GdtFlags::ACCESS_BITS & ((limit >> 16) as u8).into() ))
     }
 
     pub fn set_long_mode(&mut self) {
