@@ -301,12 +301,23 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
         self.base2 = (base_addr & 0xff000000 >> 24) as u8;
     }
 
-    /// The limit has to be in the low 20 bits.
-    pub fn set_limit(&mut self, limit: u32) {
+    /// The limit has to be in the low 20 bits.  If the limit is above 1MB, sets granularity bit
+    /// and shifts the size down by 12 bits.
+    pub fn set_limit(&mut self, full_limit: u32) {
+
+        let mut granularity = GdtFlags::NEW;
+        let mut limit = full_limit;
+        if limit > 0xfffff {
+            limit = limit >> 12;
+            granularity = GdtFlags::GRANULARITY;
+        }
         self.limit = (limit & 0xffff) as u16;
-        self.limit_flags = unsafe { ((self.limit_flags & GdtFlags::FLAGS_BITS) | (GdtFlags::ACCESS_BITS & transmute::<u8, GdtFlags>((limit >> 16) as u8))) }
+        self.limit_flags = granularity | ((self.limit_flags & GdtFlags::FLAGS_BITS) | (GdtFlags::ACCESS_BITS & unsafe { transmute::<u8, GdtFlags>((limit >> 16) as u8) } ))
     }
 
+    pub fn set_long_mode(&mut self) {
+        self.limit_flags = self.limit_flags | GdtFlags::LONG_MODE;
+    }
 }
 
 /// A Global Descriptor Table entry for a call gate.
