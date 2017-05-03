@@ -59,6 +59,13 @@ impl fmt::Display for SegmentSelector {
     }
 }
 
+impl fmt::Binary for SegmentSelector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:b}",  self.0)
+    }
+}
+
+
 /// A generic access byte trait.
 pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
     
