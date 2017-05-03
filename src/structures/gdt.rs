@@ -278,17 +278,16 @@ impl From<GdtFlags> for u8 {
 ///
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
-pub struct GdtEntry<F, A: GdtEntryAccess> {
+pub struct GdtEntry<A: GdtEntryAccess> {
     limit: u16,
     base0: u16,
     base1: u8,
     access: A,
     limit_flags: GdtFlags,
     base2: u8,
-    phantom: PhantomData<F>,
 }
 
-impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
+impl<A: GdtEntryAccess> GdtEntry<A> {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -299,7 +298,6 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
             access: A::new(),
             limit_flags: GdtFlags::NEW,
             base2: 0,
-            phantom: PhantomData
         }
     }
 
@@ -337,7 +335,7 @@ impl<F, A: GdtEntryAccess> GdtEntry<F, A> {
 ///
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
-pub struct GdtCallGate64<F> {
+pub struct GdtCallGate64 {
     offset0: u16,
     segment: SegmentSelector,
     _res0: u8,
@@ -347,11 +345,10 @@ pub struct GdtCallGate64<F> {
     _res1: u8,
     _access_fake: GdtSystemEntryAccess,
     _res2: u16,
-    phantom: PhantomData<F>,
 }
 
 
-impl<F> GdtCallGate64<F> {
+impl GdtCallGate64 {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -365,7 +362,6 @@ impl<F> GdtCallGate64<F> {
             _res2: 0,
             access: GdtSystemEntryAccess::new_CallGate64(),
             _access_fake: GdtSystemEntryAccess::new_UpperBits(),
-            phantom: PhantomData
         }
     }
 
@@ -388,7 +384,7 @@ impl<F> GdtCallGate64<F> {
 ///
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
-pub struct GdtIntTrapGate64<F> {
+pub struct GdtIntTrapGate64 {
     offset0: u16,
     segment: SegmentSelector,
     ist: u8,    // Low three bits only
@@ -396,11 +392,10 @@ pub struct GdtIntTrapGate64<F> {
     offset1: u16,
     offset2: u32,
     _res0: u32,
-    phantom: PhantomData<F>,
 }
 
 
-impl<F> GdtIntTrapGate64<F> {
+impl GdtIntTrapGate64 {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -412,7 +407,6 @@ impl<F> GdtIntTrapGate64<F> {
             _res0: 0,
             access: GdtSystemEntryAccess::new_IntGate64(),
             ist: 0,
-            phantom: PhantomData
         }
     }
 
@@ -453,15 +447,14 @@ impl<F> GdtIntTrapGate64<F> {
 ///
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
-pub struct GdtTSS64<F> {
-    base_entry: GdtEntry<F, GdtSystemEntryAccess>,
+pub struct GdtTSS64 {
+    base_entry: GdtEntry<GdtSystemEntryAccess>,
     base_extended: u32,
     _res: u32,
-    phantom: PhantomData<F>,
 }
 
 
-impl<F> GdtTSS64<F> {
+impl GdtTSS64 {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -469,7 +462,6 @@ impl<F> GdtTSS64<F> {
             base_entry: GdtEntry::missing(),
             base_extended: 0,
             _res: 0,
-            phantom: PhantomData
         }
     }
 
@@ -490,16 +482,15 @@ impl<F> GdtTSS64<F> {
 ///
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
-pub struct GdtUpperBits<F> {
+pub struct GdtUpperBits {
     upper_bits: u32,
     _res0: u8,
     access: GdtSystemEntryAccess,
     _res1: u16,
-    phantom: PhantomData<F>,
 }
 
 
-impl<F> GdtUpperBits<F> {
+impl GdtUpperBits {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -508,7 +499,6 @@ impl<F> GdtUpperBits<F> {
             _res0: 0,
             _res1: 0,
             access: GdtSystemEntryAccess::new_CallGate64(),
-            phantom: PhantomData
         }
     }
 
