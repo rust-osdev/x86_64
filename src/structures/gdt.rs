@@ -37,6 +37,10 @@ impl SegmentSelector {
     pub fn rpl(&self) -> PrivilegeLevel {
         PrivilegeLevel::from_uint(self.0.get_bits(0..2) as u8)
     }
+
+    pub fn local(&self) -> bool {
+        (self.0 & 0b100) > 0
+    }
 }
 
 impl fmt::Debug for SegmentSelector {
