@@ -53,6 +53,12 @@ impl fmt::Debug for SegmentSelector {
     }
 }
 
+impl fmt::Display for SegmentSelector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "<{}, local: {}, rpl: {}>", self.index(), self.local(), self.rpl() as u8)
+    }
+}
+
 /// A generic access byte trait.
 pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
     
