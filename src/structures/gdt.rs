@@ -26,7 +26,7 @@ impl SegmentSelector {
     ///  * `rpl`: the requested privilege level
     ///  * `local`: If true, the request is for the LDT.
     pub const fn new(index: u16, rpl: PrivilegeLevel, local: bool) -> SegmentSelector {
-        SegmentSelector(index << 3 | (rpl as u16) | (local as u16) << 2)
+        SegmentSelector((index << 3) | (rpl as u16) | ((local as u16) << 2))
     }
 
     /// Returns the GDT index.
@@ -561,18 +561,29 @@ pub trait Gdt: Sized {
     }
 }
 
+/// The segment descriptor number is equal to the byte offset within the GDT, or the byte offset +
+/// 0b100 within the LDT, minus the rpl.  To set the rpl, call the macro, and then use the .rpl()
+/// method.  To get a descriptor for an LDT entry, use the .local() method on the result of the
+/// macro.
+#[macro_export]
+macro_rules! segment_of {
+    ($ty:ty, $field:ident) => {
+        SegmentSelector(unsafe { &(*(0 as *const $ty)).$field as *const _ as u16 })
+    }
+}
+
 /// A minimal GDT suitable for use with the syscall/sysret pair possessing a single TSS.  Can be
 /// embedded at the top of a larger GDT if additional entries are needed.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
 pub struct GdtSyscall {
-    invl: u64,                                  // selector 0 isn't valid, but still takes up space.
-    r0_64cs: GdtEntry<GdtCodeAccess>,      // Ring 0 64-bit CS
-    r0_64ss: GdtEntry<GdtDataAccess>,      // Ring 0 64-bit DS/SS
-    r3_32cs: GdtEntry<GdtCodeAccess>,      // Ring 3 32-bit CS
-    r3_64ss: GdtEntry<GdtDataAccess>,      // Ring 3 64-bit SS
-    r3_64cs: GdtEntry<GdtCodeAccess>,      // Ring 3 64-bit CS
-    tss: GdtTSS64,                              // TSS
+    invl: u64,                              // selector 0 isn't valid, but still takes up space.
+    pub r0_64cs: GdtEntry<GdtCodeAccess>,       // Ring 0 64-bit CS
+    pub r0_64ss: GdtEntry<GdtDataAccess>,       // Ring 0 64-bit DS/SS
+    pub r3_32cs: GdtEntry<GdtCodeAccess>,       // Ring 3 32-bit CS
+    pub r3_64ss: GdtEntry<GdtDataAccess>,       // Ring 3 64-bit SS
+    pub r3_64cs: GdtEntry<GdtCodeAccess>,       // Ring 3 64-bit CS
+    pub tss: GdtTSS64,                          // TSS
 }
 
 impl GdtSyscall {
