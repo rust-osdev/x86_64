@@ -69,7 +69,7 @@ impl fmt::Binary for SegmentSelector {
 
 
 /// A generic access byte trait.
-pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
+pub trait GdtAccess : Sized + Into<u8> + From<u8> {
     
     /// Simple constructor that creates an empty descriptor of the given type.
     fn new() -> Self;
@@ -87,7 +87,7 @@ pub trait GdtEntryAccess : Sized + Into<u8> + From<u8> {
 }
 
 bitflags! {
-    pub flags GdtCodeEntryAccess: u8 {
+    pub flags GdtCodeAccess: u8 {
         /// Not present.
         const NOTPRESENT = 0,
 
@@ -115,26 +115,26 @@ bitflags! {
 }
 
 
-impl From<u8> for GdtCodeEntryAccess {
+impl From<u8> for GdtCodeAccess {
     fn from(b: u8) -> Self {
         unsafe { transmute::<u8, Self>(b) }
     }
 }
 
-impl From<GdtCodeEntryAccess> for u8 {
-    fn from(b: GdtCodeEntryAccess) -> Self {
-        unsafe { transmute::<GdtCodeEntryAccess, Self>(b) }
+impl From<GdtCodeAccess> for u8 {
+    fn from(b: GdtCodeAccess) -> Self {
+        unsafe { transmute::<GdtCodeAccess, Self>(b) }
     }
 }
 
-impl GdtEntryAccess for GdtCodeEntryAccess {
+impl GdtAccess for GdtCodeAccess {
     fn new() -> Self {
         Self::_EXECUTABLE | Self::_NONSYSTEM | Self::PRESENT
     }
 }
 
 bitflags! {
-    pub flags GdtDataEntryAccess: u8 {
+    pub flags GdtDataAccess: u8 {
         /// Not present.
         const NOTPRESENT = 0,
 
@@ -156,27 +156,27 @@ bitflags! {
 
     }
 }
-impl From<u8> for GdtDataEntryAccess {
+impl From<u8> for GdtDataAccess {
     fn from(b: u8) -> Self {
         unsafe { transmute::<u8, Self>(b) }
     }
 }
 
-impl From<GdtDataEntryAccess> for u8 {
-    fn from(b: GdtDataEntryAccess) -> Self {
-        unsafe { transmute::<GdtDataEntryAccess, Self>(b) }
+impl From<GdtDataAccess> for u8 {
+    fn from(b: GdtDataAccess) -> Self {
+        unsafe { transmute::<GdtDataAccess, Self>(b) }
     }
 }
 
 
-impl GdtEntryAccess for GdtDataEntryAccess {
+impl GdtAccess for GdtDataAccess {
     fn new() -> Self {
         Self::_NONSYSTEM | Self::PRESENT
     }
 }
 
 bitflags! {
-    pub flags GdtSystemEntryAccess: u8 {
+    pub flags GdtSystemAccess: u8 {
         /// Not present.
         const NOTPRESENT = 0,
 
@@ -200,19 +200,19 @@ bitflags! {
 }
 
 
-impl From<u8> for GdtSystemEntryAccess {
+impl From<u8> for GdtSystemAccess {
     fn from(b: u8) -> Self {
         unsafe { transmute::<u8, Self>(b) }
     }
 }
 
-impl From<GdtSystemEntryAccess> for u8 {
-    fn from(b: GdtSystemEntryAccess) -> Self {
-        unsafe { transmute::<GdtSystemEntryAccess, Self>(b) }
+impl From<GdtSystemAccess> for u8 {
+    fn from(b: GdtSystemAccess) -> Self {
+        unsafe { transmute::<GdtSystemAccess, Self>(b) }
     }
 }
 
-impl GdtEntryAccess for GdtSystemEntryAccess {
+impl GdtAccess for GdtSystemAccess {
 
     /// Type will default to UpperBits.  UpperBits entries are not marked present, so this amounts
     /// to a full 32-bits of 0.
@@ -223,7 +223,7 @@ impl GdtEntryAccess for GdtSystemEntryAccess {
 
 /// Various constructors for different types of system segments.
 ///
-impl GdtSystemEntryAccess {
+impl GdtSystemAccess {
     /// Returns a new Upper Bits segment entry by itself.  There are only a few cases where this
     /// should be used outside this module.
     pub fn new_upper_bits() -> Self {
@@ -298,7 +298,7 @@ impl From<GdtFlags> for u8 {
 ///
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
-pub struct GdtEntry<A: GdtEntryAccess> {
+pub struct GdtEntry<A: GdtAccess> {
     limit: u16,
     base0: u16,
     base1: u8,
@@ -307,7 +307,7 @@ pub struct GdtEntry<A: GdtEntryAccess> {
     base2: u8,
 }
 
-impl<A: GdtEntryAccess + Clone> GdtEntry<A> {
+impl<A: GdtAccess + Clone> GdtEntry<A> {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -374,11 +374,11 @@ pub struct GdtCallGate64 {
     offset0: u16,
     segment: SegmentSelector,
     _res0: u8,
-    access: GdtSystemEntryAccess,
+    access: GdtSystemAccess,
     offset1: u16,
     offset2: u32,
     _res1: u8,
-    _access_fake: GdtSystemEntryAccess,
+    _access_fake: GdtSystemAccess,
     _res2: u16,
 }
 
@@ -395,8 +395,8 @@ impl GdtCallGate64 {
             _res0: 0,
             _res1: 0,
             _res2: 0,
-            access: GdtSystemEntryAccess::new_call_gate64(),
-            _access_fake: GdtSystemEntryAccess::new_upper_bits(),
+            access: GdtSystemAccess::new_call_gate64(),
+            _access_fake: GdtSystemAccess::new_upper_bits(),
         }
     }
 
@@ -424,7 +424,7 @@ pub struct GdtIntTrapGate64 {
     offset0: u16,
     segment: SegmentSelector,
     ist: u8,    // Low three bits only
-    access: GdtSystemEntryAccess,
+    access: GdtSystemAccess,
     offset1: u16,
     offset2: u32,
     _res0: u32,
@@ -441,7 +441,7 @@ impl GdtIntTrapGate64 {
             offset2: 0,
             segment: SegmentSelector::new(0, PrivilegeLevel::Ring0, false),
             _res0: 0,
-            access: GdtSystemEntryAccess::new_int_gate64(),
+            access: GdtSystemAccess::new_int_gate64(),
             ist: 0,
         }
     }
@@ -468,13 +468,13 @@ impl GdtIntTrapGate64 {
     /// Sets the gate as a trap gate instead of an interrupt gate.
     pub fn set_trap(&mut self) {
         let current_dpl = self.access.get_dpl();
-        self.access = GdtSystemEntryAccess::new_trap_gate64().set_dpl(current_dpl)
+        self.access = GdtSystemAccess::new_trap_gate64().set_dpl(current_dpl)
     }
 
     /// Sets the gate as an interrupt gate instead of a trap gate.
     pub fn set_int(&mut self) {
         let current_dpl = self.access.get_dpl();
-        self.access = GdtSystemEntryAccess::new_int_gate64().set_dpl(current_dpl)
+        self.access = GdtSystemAccess::new_int_gate64().set_dpl(current_dpl)
     }
 }
 
@@ -484,7 +484,7 @@ impl GdtIntTrapGate64 {
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
 pub struct GdtTSS64 {
-    base_entry: GdtEntry<GdtSystemEntryAccess>,
+    base_entry: GdtEntry<GdtSystemAccess>,
     base_extended: u32,
     _res: u32,
 }
@@ -522,7 +522,7 @@ impl GdtTSS64 {
 pub struct GdtUpperBits {
     upper_bits: u32,
     _res0: u8,
-    access: GdtSystemEntryAccess,
+    access: GdtSystemAccess,
     _res1: u16,
 }
 
@@ -534,7 +534,7 @@ impl GdtUpperBits {
             upper_bits: 0,
             _res0: 0,
             _res1: 0,
-            access: GdtSystemEntryAccess::new_call_gate64(),
+            access: GdtSystemAccess::new_call_gate64(),
         }
     }
 
@@ -567,11 +567,11 @@ pub trait Gdt: Sized {
 #[repr(C, packed)]
 pub struct GdtSyscall {
     invl: u64,                                  // selector 0 isn't valid, but still takes up space.
-    r0_64cs: GdtEntry<GdtCodeEntryAccess>,      // Ring 0 64-bit CS
-    r0_64ss: GdtEntry<GdtDataEntryAccess>,      // Ring 0 64-bit DS/SS
-    r3_32cs: GdtEntry<GdtCodeEntryAccess>,      // Ring 3 32-bit CS
-    r3_64ss: GdtEntry<GdtDataEntryAccess>,      // Ring 3 64-bit SS
-    r3_64cs: GdtEntry<GdtCodeEntryAccess>,      // Ring 3 64-bit CS
+    r0_64cs: GdtEntry<GdtCodeAccess>,      // Ring 0 64-bit CS
+    r0_64ss: GdtEntry<GdtDataAccess>,      // Ring 0 64-bit DS/SS
+    r3_32cs: GdtEntry<GdtCodeAccess>,      // Ring 3 32-bit CS
+    r3_64ss: GdtEntry<GdtDataAccess>,      // Ring 3 64-bit SS
+    r3_64cs: GdtEntry<GdtCodeAccess>,      // Ring 3 64-bit CS
     tss: GdtTSS64,                              // TSS
 }
 
@@ -579,8 +579,8 @@ impl GdtSyscall {
 
     /// Initializes a new basic GDT suitable for syscall/sysret operations.
     pub fn new() -> Self {
-        let mut code_seg32 = GdtEntry::<GdtCodeEntryAccess>::missing();
-        let mut data_seg32 = GdtEntry::<GdtDataEntryAccess>::missing();
+        let mut code_seg32 = GdtEntry::<GdtCodeAccess>::missing();
+        let mut data_seg32 = GdtEntry::<GdtDataAccess>::missing();
 
         code_seg32.set_limit(0xffffffff);
         data_seg32.set_limit(0xffffffff);
