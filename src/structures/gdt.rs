@@ -510,7 +510,9 @@ pub struct GdtUpperBits {
     _res1: u16,
 }
 
-/// A minimum-sized Gdt entry.
+/// A minimum-sized Gdt entry.  Entries may be one or two of these in size.
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
 pub struct GdtFiller (u8,u8,u8,u8,u8,u8,u8,u8);
 
 impl GdtUpperBits {
