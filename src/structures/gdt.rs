@@ -305,7 +305,7 @@ pub struct GdtEntry<A: GdtEntryAccess> {
     base2: u8,
 }
 
-impl<A: GdtEntryAccess> GdtEntry<A> {
+impl<A: GdtEntryAccess + Clone> GdtEntry<A> {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
@@ -347,6 +347,20 @@ impl<A: GdtEntryAccess> GdtEntry<A> {
     /// Set the long mode bit on the segment.
     pub fn set_long_mode(&mut self) {
         self.limit_flags = self.limit_flags | GdtFlags::LONG_MODE;
+    }
+
+    /// Returns a new segment descriptor entry like the original with the dpl set as specified.
+    pub fn set_dpl(&self, dpl: PrivilegeLevel) -> Self {
+        let mut new_entry = self.clone();
+
+        new_entry.access = self.access.clone();
+        new_entry.access.set_dpl(dpl);
+        new_entry
+    }
+
+    /// Returns the dpl of the segment descriptor entry.
+    pub fn get_dpl(self) -> PrivilegeLevel {
+        self.access.get_dpl()
     }
 }
 
@@ -510,11 +524,6 @@ pub struct GdtUpperBits {
     _res1: u16,
 }
 
-/// A minimum-sized Gdt entry.  Entries may be one or two of these in size.
-#[derive(Debug, Clone, Copy)]
-#[repr(C, packed)]
-pub struct GdtFiller (u8,u8,u8,u8,u8,u8,u8,u8);
-
 impl GdtUpperBits {
 
     /// Creates an empty GdtEntry
@@ -536,4 +545,46 @@ impl GdtUpperBits {
 
 }
 
+/// A minimal GDT suitable for use with the syscall/sysret pair possessing a single TSS.  Can be
+/// embedded at the top of a larger GDT if additional entries are needed.
+#[derive(Debug, Clone, Copy)]
+#[repr(C, packed)]
+pub struct GdtSyscall {
+    invl: u64,                                  // selector 0 isn't valid, but still takes up space.
+    r0_64cs: GdtEntry<GdtCodeEntryAccess>,      // Ring 0 64-bit CS
+    r0_64ss: GdtEntry<GdtDataEntryAccess>,      // Ring 0 64-bit DS/SS
+    r3_32cs: GdtEntry<GdtCodeEntryAccess>,      // Ring 3 32-bit CS
+    r3_64ss: GdtEntry<GdtDataEntryAccess>,      // Ring 3 64-bit SS
+    r3_64cs: GdtEntry<GdtCodeEntryAccess>,      // Ring 3 64-bit CS
+    tss: GdtTSS64,                              // TSS
+}
+
+impl GdtSyscall {
+
+    /// Initializes a new basic GDT suitable for syscall/sysret operations.
+    pub fn new() -> Self {
+        let mut code_seg32 = GdtEntry::<GdtCodeEntryAccess>::missing();
+        let mut data_seg32 = GdtEntry::<GdtDataEntryAccess>::missing();
+
+        code_seg32.set_limit(0xffffffff);
+        data_seg32.set_limit(0xffffffff);
+
+        let mut code_seg64 = code_seg32.clone();
+        let mut data_seg64 = data_seg32.clone();
+        code_seg64.set_long_mode();
+        data_seg64.set_long_mode();
+
+        let gdt = GdtSyscall {
+            invl: 0,
+            r0_64cs: code_seg64.clone(),
+            r0_64ss: data_seg64.clone(),
+            r3_32cs: code_seg32.set_dpl(PrivilegeLevel::Ring3),
+            r3_64ss: data_seg32.set_dpl(PrivilegeLevel::Ring3),
+            r3_64cs: code_seg64.set_dpl(PrivilegeLevel::Ring3),
+            tss: GdtTSS64::missing(),
+        };
+
+        gdt
+    }
+}
 
