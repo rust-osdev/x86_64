@@ -3,9 +3,11 @@
 use core::fmt;
 use core::convert::{From,Into};
 use core::intrinsics::transmute;
+use core::mem::size_of;
 use PrivilegeLevel;
 use bit_field::BitField;
 
+use instructions::tables::{lgdt,DescriptorTablePointer};
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
@@ -545,6 +547,20 @@ impl GdtUpperBits {
 
 }
 
+/// Some generic functions for particular GDT structures.
+pub trait Gdt: Sized {
+
+    /// Loads the gdtr to point to the gdt.
+    fn load(&'static self) {
+        let ptr = DescriptorTablePointer {
+            base: self as *const _ as u64,
+            limit: (size_of::<Self>() - 1) as u16,
+        };
+
+        unsafe { lgdt(&ptr) };
+    }
+}
+
 /// A minimal GDT suitable for use with the syscall/sysret pair possessing a single TSS.  Can be
 /// embedded at the top of a larger GDT if additional entries are needed.
 #[derive(Debug, Clone, Copy)]
@@ -562,7 +578,7 @@ pub struct GdtSyscall {
 impl GdtSyscall {
 
     /// Initializes a new basic GDT suitable for syscall/sysret operations.
-    pub fn new() -> Self {
+    fn new() -> Self {
         let mut code_seg32 = GdtEntry::<GdtCodeEntryAccess>::missing();
         let mut data_seg32 = GdtEntry::<GdtDataEntryAccess>::missing();
 
@@ -587,4 +603,6 @@ impl GdtSyscall {
         gdt
     }
 }
+
+impl Gdt for GdtSyscall {}
 
