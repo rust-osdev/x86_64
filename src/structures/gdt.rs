@@ -1,7 +1,6 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
 use core::fmt;
-use core::marker::PhantomData;
 use core::convert::{From,Into};
 use core::intrinsics::transmute;
 use PrivilegeLevel;
@@ -38,6 +37,7 @@ impl SegmentSelector {
         PrivilegeLevel::from_uint(self.0.get_bits(0..2) as u8)
     }
 
+    /// Returns true if the selector is for the LDT.  Otherwise returns false for GDT.
     pub fn local(&self) -> bool {
         (self.0 & 0b100) > 0
     }
@@ -186,13 +186,13 @@ bitflags! {
         const PRESENT = 1 << 7,
 
         /// Long mode extended base address for previous entry.
-        const UpperBits =     0,
+        const UPPERBITS =     0,
         const LDT =           0b0010,
         const TSS64 =         0b1001,
-        const TSS64Busy =     0b1011,
-        const CallGate64 =    0b1100,
-        const IntGate64 =     0b1110,
-        const TrapGate64 =    0b1111,
+        const TSS64_BUSY =    0b1011,
+        const CALLGATE64 =    0b1100,
+        const INTGATE64 =     0b1110,
+        const TRAPGATE64 =    0b1111,
 
     }
 }
@@ -215,7 +215,7 @@ impl GdtEntryAccess for GdtSystemEntryAccess {
     /// Type will default to UpperBits.  UpperBits entries are not marked present, so this amounts
     /// to a full 32-bits of 0.
     fn new() -> Self {
-        Self::UpperBits
+        Self::UPPERBITS
     }
 }
 
@@ -224,33 +224,33 @@ impl GdtEntryAccess for GdtSystemEntryAccess {
 impl GdtSystemEntryAccess {
     /// Returns a new Upper Bits segment entry by itself.  There are only a few cases where this
     /// should be used outside this module.
-    fn new_UpperBits() -> Self {
+    pub fn new_upper_bits() -> Self {
         Self::new()
     }
     /// Returns a new LDT segment entry.
-    fn new_LDT() -> Self {
+    pub fn new_ldt() -> Self {
         Self::PRESENT | Self::LDT
     }
     /// Returns a TSS64 Entry
-    fn new_TSS64() -> Self {
+    pub fn new_tss64() -> Self {
         Self::PRESENT | Self::TSS64
     }
     /// Returns a TSS64 Entry, marked busy.  Usually, you wouldn't actually initialize something
     /// this way.
-    fn new_TSS64Busy() -> Self {
-        Self::PRESENT | Self::TSS64Busy
+    pub fn new_tss64_busy() -> Self {
+        Self::PRESENT | Self::TSS64_BUSY
     }
     /// For a call gate
-    fn new_CallGate64() -> Self {
-        Self::PRESENT | Self::CallGate64
+    pub fn new_call_gate64() -> Self {
+        Self::PRESENT | Self::CALLGATE64
     }
     /// For an interrupt gate
-    fn new_IntGate64() -> Self {
-        Self::PRESENT | Self::IntGate64
+    pub fn new_int_gate64() -> Self {
+        Self::PRESENT | Self::INTGATE64
     }
     /// For a trap gate
-    fn new_TrapGate64() -> Self {
-        Self::PRESENT | Self::TrapGate64
+    pub fn new_trap_gate64() -> Self {
+        Self::PRESENT | Self::TRAPGATE64
     }
 }
 
@@ -344,6 +344,7 @@ impl<A: GdtEntryAccess> GdtEntry<A> {
         self.limit_flags = granularity | ((self.limit_flags & GdtFlags::FLAGS_BITS) | (GdtFlags::ACCESS_BITS & ((limit >> 16) as u8).into() ))
     }
 
+    /// Set the long mode bit on the segment.
     pub fn set_long_mode(&mut self) {
         self.limit_flags = self.limit_flags | GdtFlags::LONG_MODE;
     }
@@ -378,8 +379,8 @@ impl GdtCallGate64 {
             _res0: 0,
             _res1: 0,
             _res2: 0,
-            access: GdtSystemEntryAccess::new_CallGate64(),
-            _access_fake: GdtSystemEntryAccess::new_UpperBits(),
+            access: GdtSystemEntryAccess::new_call_gate64(),
+            _access_fake: GdtSystemEntryAccess::new_upper_bits(),
         }
     }
 
@@ -391,6 +392,7 @@ impl GdtCallGate64 {
         self.offset2 = (offset_addr & 0xffffffff00000000 >> 32) as u32;
     }
 
+    /// Sets the segment selector of the gate.
     pub fn set_segment(&mut self, segment: SegmentSelector) {
         self.segment = segment.clone();
     }
@@ -423,7 +425,7 @@ impl GdtIntTrapGate64 {
             offset2: 0,
             segment: SegmentSelector::new(0, PrivilegeLevel::Ring0, false),
             _res0: 0,
-            access: GdtSystemEntryAccess::new_IntGate64(),
+            access: GdtSystemEntryAccess::new_int_gate64(),
             ist: 0,
         }
     }
@@ -450,13 +452,13 @@ impl GdtIntTrapGate64 {
     /// Sets the gate as a trap gate instead of an interrupt gate.
     pub fn set_trap(&mut self) {
         let current_dpl = self.access.get_dpl();
-        self.access = GdtSystemEntryAccess::new_TrapGate64().set_dpl(current_dpl)
+        self.access = GdtSystemEntryAccess::new_trap_gate64().set_dpl(current_dpl)
     }
 
     /// Sets the gate as an interrupt gate instead of a trap gate.
     pub fn set_int(&mut self) {
         let current_dpl = self.access.get_dpl();
-        self.access = GdtSystemEntryAccess::new_IntGate64().set_dpl(current_dpl)
+        self.access = GdtSystemEntryAccess::new_int_gate64().set_dpl(current_dpl)
     }
 }
 
@@ -490,6 +492,7 @@ impl GdtTSS64 {
         self.base_extended = ((base_addr & 0xffffffff00000000) >> 32) as u32;
     }
 
+    /// Sets the limit for the TSS.
     pub fn set_limit(&mut self, limit: u32) {
         self.base_entry.set_limit(limit)
     }
@@ -507,6 +510,8 @@ pub struct GdtUpperBits {
     _res1: u16,
 }
 
+/// A minimum-sized Gdt entry.
+pub struct GdtFiller (u8,u8,u8,u8,u8,u8,u8,u8);
 
 impl GdtUpperBits {
 
@@ -516,7 +521,7 @@ impl GdtUpperBits {
             upper_bits: 0,
             _res0: 0,
             _res1: 0,
-            access: GdtSystemEntryAccess::new_CallGate64(),
+            access: GdtSystemEntryAccess::new_call_gate64(),
         }
     }
 
