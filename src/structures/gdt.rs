@@ -578,7 +578,7 @@ pub struct GdtSyscall {
 impl GdtSyscall {
 
     /// Initializes a new basic GDT suitable for syscall/sysret operations.
-    fn new() -> Self {
+    pub fn new() -> Self {
         let mut code_seg32 = GdtEntry::<GdtCodeEntryAccess>::missing();
         let mut data_seg32 = GdtEntry::<GdtDataEntryAccess>::missing();
 
