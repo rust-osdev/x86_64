@@ -60,7 +60,7 @@ impl PrivilegeLevel {
     /// Creates a `PrivilegeLevel` from a numeric value. The value must be in the range 0..4.
     ///
     /// This function panics if the passed value is >3.
-    pub fn from_u16(value: u16) -> PrivilegeLevel {
+    pub fn from_uint(value: u8) -> Self {
         match value {
             0 => PrivilegeLevel::Ring0,
             1 => PrivilegeLevel::Ring1,
@@ -69,4 +69,10 @@ impl PrivilegeLevel {
             i => panic!("{} is not a valid privilege level", i),
         }
     }
+
+    /// Returns the raw numeric value of the privilege level.
+    pub fn get_bits(self) -> u8 {
+        return self as u8 & 0b11
+    }
 }
+
