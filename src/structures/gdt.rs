@@ -373,25 +373,25 @@ impl<A: GdtAccess + Clone> GdtEntry<A> {
 impl fmt::Binary for GdtEntry<GdtDataAccess> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let b = self as *const _ as *const u64;
-        write!(f, "{:b}",  unsafe {*b})
+        write!(f, "{:016b}",  unsafe {*b})
     }
 }
 impl fmt::LowerHex for GdtEntry<GdtDataAccess> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let b = self as *const _ as *const u64;
-        write!(f, "{:x}",  unsafe {*b})
+        write!(f, "{:016x}",  unsafe {*b})
     }
 }
 impl fmt::Binary for GdtEntry<GdtCodeAccess> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let b = self as *const _ as *const u64;
-        write!(f, "{:b}",  unsafe {*b})
+        write!(f, "{:016b}",  unsafe {*b})
     }
 }
 impl fmt::LowerHex for GdtEntry<GdtCodeAccess> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let b = self as *const _ as *const u64;
-        write!(f, "{:x}",  unsafe {*b})
+        write!(f, "{:016x}",  unsafe {*b})
     }
 }
 
@@ -544,6 +544,23 @@ impl GdtTSS64 {
     }
 
 }
+
+
+impl fmt::Binary for GdtTSS64 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let b0 = self as *const _ as *const u64;
+        let b1 = ((self as *const _) as u64 + 8) as *const u64;
+        write!(f, "{:064b}{:064b}",  unsafe {*b1}, unsafe {*b0})
+    }
+}
+impl fmt::LowerHex for GdtTSS64 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let b0 = self as *const _ as *const u64;
+        let b1 = ((self as *const _) as u64 + 8) as *const u64;
+        write!(f, "{:016x}{:016x}",  unsafe {*b1}, unsafe {*b0})
+    }
+}
+
 
 /// A Global Descriptor Table entry for a call gate.
 ///
