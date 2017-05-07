@@ -646,9 +646,6 @@ impl GdtSyscall {
 
         data_seg32.access.set_write();
 
-        code_seg32.set_limit(0xffffffff);
-        data_seg32.set_limit(0xffffffff);
-
         let mut code_seg64 = code_seg32.clone();
         let mut data_seg64 = data_seg32.clone();
         code_seg64.set_long_mode();
@@ -669,7 +666,7 @@ impl GdtSyscall {
 
     /// Loads the MSRs for the system calls.
     pub fn syscall_setup(&self, entry_point: extern "C" fn()) {
-
+        
     }
 }
 
