@@ -107,7 +107,6 @@ bitflags! {
         /// Must be set to 1 to be valid.
         const _NONSYSTEM = 1 << 4,
 
-
         /// Should be set if the segment is valid.
         const PRESENT = 1 << 7,
 
@@ -153,7 +152,6 @@ bitflags! {
 
         /// Should be set if the segment is valid.
         const PRESENT = 1 << 7,
-
     }
 }
 impl From<u8> for GdtDataAccess {
@@ -172,6 +170,12 @@ impl From<GdtDataAccess> for u8 {
 impl GdtAccess for GdtDataAccess {
     fn new() -> Self {
         Self::_NONSYSTEM | Self::PRESENT
+    }
+}
+
+impl GdtDataAccess {
+    fn set_write(&mut self) {
+        *self = GdtDataAccess::WRITE | *self;
     }
 }
 
@@ -325,8 +329,8 @@ impl<A: GdtAccess + Clone> GdtEntry<A> {
     /// it will be necessary to set the high bits in the following 8-byte field.
     pub fn set_base(&mut self, base_addr: u32) {
         self.base0 = (base_addr & 0xffff) as u16;
-        self.base1 = (base_addr & 0xff0000 >> 16) as u8;
-        self.base2 = (base_addr & 0xff000000 >> 24) as u8;
+        self.base1 = ((base_addr & 0xff0000) >> 16) as u8;
+        self.base2 = ((base_addr & 0xff000000) >> 24) as u8;
     }
 
     /// The limit has to be in the low 20 bits.  If the limit is above 1MB, sets granularity bit
@@ -365,6 +369,32 @@ impl<A: GdtAccess + Clone> GdtEntry<A> {
         self.access.get_dpl()
     }
 }
+
+impl fmt::Binary for GdtEntry<GdtDataAccess> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let b = self as *const _ as *const u64;
+        write!(f, "{:b}",  unsafe {*b})
+    }
+}
+impl fmt::LowerHex for GdtEntry<GdtDataAccess> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let b = self as *const _ as *const u64;
+        write!(f, "{:x}",  unsafe {*b})
+    }
+}
+impl fmt::Binary for GdtEntry<GdtCodeAccess> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let b = self as *const _ as *const u64;
+        write!(f, "{:b}",  unsafe {*b})
+    }
+}
+impl fmt::LowerHex for GdtEntry<GdtCodeAccess> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let b = self as *const _ as *const u64;
+        write!(f, "{:x}",  unsafe {*b})
+    }
+}
+
 
 /// A Global Descriptor Table entry for a call gate.
 ///
@@ -501,6 +531,15 @@ impl GdtTSS64 {
         }
     }
 
+    /// Creates a new GDT entry.
+    pub fn new() -> Self {
+        GdtTSS64 {
+            base_entry: GdtEntry::new(),
+            base_extended: 0,
+            _res: 0,
+        }
+    }
+
     /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
     /// it will be necessary to set the high bits in the following 8-byte field.
     pub fn set_base(&mut self, base_addr: u64) {
@@ -593,6 +632,8 @@ impl GdtSyscall {
         let mut code_seg32 = GdtEntry::<GdtCodeAccess>::missing();
         let mut data_seg32 = GdtEntry::<GdtDataAccess>::missing();
 
+        data_seg32.access.set_write();
+
         code_seg32.set_limit(0xffffffff);
         data_seg32.set_limit(0xffffffff);
 
@@ -608,10 +649,15 @@ impl GdtSyscall {
             r3_32cs: code_seg32.set_dpl(PrivilegeLevel::Ring3),
             r3_64ss: data_seg32.set_dpl(PrivilegeLevel::Ring3),
             r3_64cs: code_seg64.set_dpl(PrivilegeLevel::Ring3),
-            tss: GdtTSS64::missing(),
+            tss: GdtTSS64::new(),
         };
 
         gdt
+    }
+
+    /// Loads the MSRs for the system calls.
+    pub fn syscall_setup(&self, entry_point: extern "C" fn()) {
+
     }
 }
 
