@@ -3119,6 +3119,9 @@ pub const IA32_STAR: u32 = 0xc0000081;
 /// IA-32e Mode System Call Target Address (R/W)  See Table 35-2.
 pub const IA32_LSTAR: u32 = 0xc0000082;
 
+/// IA-32e Mode System Call Target Address (R/W) for compatibility mode.  See Table 35-2.
+pub const IA32_CSTAR: u32 = 0xc0000083;
+
 /// System Call Flag Mask (R/W)  See Table 35-2.
 pub const IA32_FMASK: u32 = 0xc0000084;
 
