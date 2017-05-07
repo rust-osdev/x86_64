@@ -8,6 +8,7 @@ use PrivilegeLevel;
 use bit_field::BitField;
 
 use instructions::tables::{lgdt,DescriptorTablePointer};
+use registers::msr;
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
@@ -42,6 +43,10 @@ impl SegmentSelector {
     /// Returns true if the selector is for the LDT.  Otherwise returns false for GDT.
     pub fn local(&self) -> bool {
         (self.0 & 0b100) > 0
+    }
+
+    pub fn as_int(self) -> u16 {
+        self.0
     }
 }
 
@@ -665,8 +670,25 @@ impl GdtSyscall {
     }
 
     /// Loads the MSRs for the system calls.
-    pub fn syscall_setup(&self, entry_point: extern "C" fn()) {
-        
+    pub fn syscall_setup(&self, entry_point: extern "C" fn(), rflags_mask: u64) {
+        // The STAR defines segment entries for the syscall as follows:
+        //    bits[47:32]:      cs
+        //    bits[47:32] + 8:  ss
+        //    bits[63:48]:      32-bit cs
+        //    bits[63:48] + 8:  ss
+        //    bits[63:48] + 16: 64-bit cs
+
+        let star = ((segment_of!(GdtSyscall, r0_64cs).as_int() as u64) << 16) | ((segment_of!(GdtSyscall, r3_32cs).as_int() as u64) << 32);
+        unsafe {
+
+            msr::wrmsr(msr::IA32_STAR, star);
+            msr::wrmsr(msr::IA32_LSTAR, entry_point as u64);
+            msr::wrmsr(msr::IA32_FMASK, rflags_mask as u64);
+
+            // Set syscall enable bit
+            msr::wrmsr(msr::IA32_EFER, msr::rdmsr(msr::IA32_EFER) | 1);
+
+        }
     }
 }
 
