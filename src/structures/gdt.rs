@@ -531,15 +531,6 @@ impl GdtTSS64 {
         }
     }
 
-    /// Creates a new GDT entry.
-    pub fn new() -> Self {
-        GdtTSS64 {
-            base_entry: GdtEntry::new(),
-            base_extended: 0,
-            _res: 0,
-        }
-    }
-
     /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
     /// it will be necessary to set the high bits in the following 8-byte field.
     pub fn set_base(&mut self, base_addr: u64) {
@@ -649,7 +640,7 @@ impl GdtSyscall {
             r3_32cs: code_seg32.set_dpl(PrivilegeLevel::Ring3),
             r3_64ss: data_seg32.set_dpl(PrivilegeLevel::Ring3),
             r3_64cs: code_seg64.set_dpl(PrivilegeLevel::Ring3),
-            tss: GdtTSS64::new(),
+            tss: GdtTSS64::missing(),
         };
 
         gdt
