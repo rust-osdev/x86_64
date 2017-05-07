@@ -524,11 +524,15 @@ impl GdtTSS64 {
 
     /// Creates an empty GdtEntry
     pub fn missing() -> Self {
-        GdtTSS64 {
+        let mut tss = GdtTSS64 {
             base_entry: GdtEntry::missing(),
             base_extended: 0,
             _res: 0,
-        }
+        };
+
+        tss.base_entry.access = GdtSystemAccess::new_tss64();
+
+        tss
     }
 
     /// Sets the base address for the segment.  Only sets the low 32 bits.  For system segments
