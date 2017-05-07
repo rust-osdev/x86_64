@@ -670,7 +670,7 @@ impl GdtSyscall {
     }
 
     /// Loads the MSRs for the system calls.
-    pub fn syscall_setup(&self, entry_point: extern "C" fn(), compat_entry_point: extern "C" fn(), rflags_mask: u64) {
+    pub fn syscall_setup(&self, entry_point: extern "C" fn(), rflags_mask: u64) {
         // The STAR defines segment entries for the syscall as follows:
         //    bits[47:32]:      cs
         //    bits[47:32] + 8:  ss
@@ -683,7 +683,6 @@ impl GdtSyscall {
 
             msr::wrmsr(msr::IA32_STAR, star);
             msr::wrmsr(msr::IA32_LSTAR, entry_point as u64);
-            msr::wrmsr(msr::IA32_CSTAR, compat_entry_point as u64);
             msr::wrmsr(msr::IA32_FMASK, rflags_mask as u64);
 
             // Set syscall enable bit
