@@ -10,6 +10,50 @@ use bit_field::BitField;
 use instructions::tables::{lgdt,DescriptorTablePointer};
 use registers::msr;
 
+/// Basic useage:
+///
+///
+/// use core::mem::size_of;
+///
+/// use self::x86_64::structures::gdt::{SegmentSelector,GdtSyscall,Gdt};
+/// use self::x86_64::structures::tss::{TaskStateSegment};
+/// use self::x86_64::instructions::segmentation::{set_cs, load_ds, load_ss, load_es, load_fs, load_gs};
+/// use self::x86_64::instructions::tables::{load_tss};
+/// use self::x86_64::PrivilegeLevel;
+///
+/// lazy_static! {
+///
+///    static ref TSS: TaskStateSegment = {
+///        TaskStateSegment::new()
+///    };
+/// }
+///
+/// lazy_static! {
+///     static ref GDT: GdtSyscall = {
+///         let mut gdt = GdtSyscall::new();
+///
+///         gdt.tss.set_base(&TSS as *const _ as u64);
+///         gdt.tss.set_limit(size_of::<TaskStateSegment> as u32);
+///
+///         gdt
+///     };
+/// }
+///
+///
+/// pub fn init() {
+///     GDT.load();
+///     unsafe {
+///         set_cs(segment_of!(GdtSyscall, r0_64cs));
+///         load_ds(segment_of!(GdtSyscall, r0_64ss));
+///         load_es(segment_of!(GdtSyscall, r0_64ss));
+///         load_fs(segment_of!(GdtSyscall, r0_64ss));
+///         load_gs(segment_of!(GdtSyscall, r0_64ss));
+///         load_ss(segment_of!(GdtSyscall, r0_64ss));
+///         load_tss(segment_of!(GdtSyscall, tss));
+///     }
+/// }
+
+
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
 /// with some additional flags).
