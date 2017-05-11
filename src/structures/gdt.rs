@@ -39,9 +39,15 @@ use registers::msr;
 ///     };
 /// }
 ///
+/// #[naked]
+/// pub extern "C" fn syscall {
+///     asm!{"call something_else"}
+/// }
 ///
 /// pub fn init() {
 ///     GDT.load();
+///
+///     // Set the various segment registers
 ///     unsafe {
 ///         set_cs(segment_of!(GdtSyscall, r0_64cs));
 ///         load_ds(segment_of!(GdtSyscall, r0_64ss));
@@ -51,8 +57,10 @@ use registers::msr;
 ///         load_ss(segment_of!(GdtSyscall, r0_64ss));
 ///         load_tss(segment_of!(GdtSyscall, tss));
 ///     }
+///
+///    // Set up the syscall registers.
+///    GDT.syscall_setup(syscall, 0);
 /// }
-
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
