@@ -742,6 +742,15 @@ impl GdtSyscall {
 
         }
     }
+
+
+    /// Loads the compatibility syscall registers, for 32-bit code to call the syscall instruction.
+    /// Only works on AMD processors.  Intel does not support syscall in 32-bit code.
+    pub fn syscall_amd_compat_setup(&self, entry_point: extern "C" fn(), rflags_mask: u64) {
+        unsafe {
+            msr::wrmsr(msr::IA32_CSTAR, entry_point as u64);
+        }
+    }
 }
 
 impl Gdt for GdtSyscall {}
