@@ -15,9 +15,7 @@ use x86::shared::control_regs::*;
 use x86::shared::paging::*;
 use x86::bits64::paging::*;
 
-#[naked]
-#[no_mangle]
-unsafe extern "C" fn use_the_port() {
+unsafe fn use_the_port() {
     asm!("inb $0, %al" :: "i"(0x01) :: "volatile");
 }
 
@@ -50,7 +48,13 @@ fn io_example() {
             }
         }
     }
-    let mut anon_mmap2 = Mmap::anonymous((1 << 20), Protection::ReadWrite).unwrap(); // Map 1 MiB
+
+    let mut stack_mmap = Mmap::anonymous(65536, Protection::ReadWrite).unwrap();
+    let stack_size = stack_mmap.len();
+    let stack_memory = unsafe { stack_mmap.as_mut_slice() };
+    let stack_base = VAddr::from_usize(stack_memory.as_mut_ptr() as usize);
+    static STACK_BASE_T: PAddr = PAddr::from_u64(0x2000000);
+    println!("Stack base {:x} with size {:x}", stack_base, stack_size);
 
     // Initialize the KVM system
     let sys = System::initialize().unwrap();
@@ -66,7 +70,8 @@ fn io_example() {
 
     // Map the page table memory
     vm.set_user_memory_region(0, page_table_memory, 0).unwrap();
-
+    // Map stack space
+    vm.set_user_memory_region(STACK_BASE_T.as_u64(), stack_memory, 0).unwrap();
 
     /*let code_phys: PAddr = PAddr::from_u64(PAGE_TABLE_P.as_u64() + page_table_memory_limit as u64 +
                                            1);
@@ -174,6 +179,8 @@ fn io_example() {
     //println!("regs.rip = 0x{:x}", unsafe { *(regs.rip as *const u64) }); // but is at: 0x40cd60
     //regs.rip = 0x40cd60;
     regs.rflags = 0x246;
+    regs.rsp = STACK_BASE_T.as_u64() + stack_size as u64;
+    regs.rbp = regs.rsp;
     vcpu.set_regs(&regs).unwrap();
 
     // Actually run the VCPU
