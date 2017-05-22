@@ -21,7 +21,7 @@ license = "MIT"
 build = "build.rs"
 
 [features]
-default = ["performance-counter"]
+#default = ["performance-counter"]
 performance-counter = ["phf", "phf_codegen", "csv", "serde_json"]
 
 [[test]]
@@ -54,5 +54,6 @@ features = ["core"]
 #path = "../utest/x86-64-qemu"
 
 [dev-dependencies]
-kvm = "0.2" # { path = "../kvm/" }
 memmap = "0.2.1"
+kvm = { git = "https://github.com/gz/kvm.git" }
+klogger = { git = "https://github.com/gz/rust-klogger.git" }

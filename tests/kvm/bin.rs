@@ -1,10 +1,13 @@
 #![feature(linkage, naked_functions, asm, const_fn)]
-// In this example we will construct a single CPU x86 VM which will execute
-// "inb 0x01" at ring 0
+// Execute using: RUSTFLAGS="-C soft-float -C relocation-model=static -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 
 extern crate kvm;
 extern crate memmap;
 extern crate x86;
+extern crate core;
+
+#[macro_use]
+extern crate klogger;
 
 use kvm::{Capability, Exit, IoDirection, Segment, System, Vcpu, VirtualMachine};
 use memmap::{Mmap, Protection};
@@ -16,6 +19,7 @@ use x86::shared::paging::*;
 use x86::bits64::paging::*;
 
 unsafe fn use_the_port() {
+    log!("1");
     asm!("inb $0, %al" :: "i"(0x01) :: "volatile");
 }
 
@@ -72,18 +76,6 @@ fn io_example() {
     vm.set_user_memory_region(0, page_table_memory, 0).unwrap();
     // Map stack space
     vm.set_user_memory_region(STACK_BASE_T.as_u64(), stack_memory, 0).unwrap();
-
-    /*let code_phys: PAddr = PAddr::from_u64(PAGE_TABLE_P.as_u64() + page_table_memory_limit as u64 +
-                                           1);
-    let code_memory = unsafe { anon_mmap2.as_mut_slice() };
-    code_memory[0x0] = 0xe4;
-    code_memory[0x1] = 0x01;
-    // Map the code
-    println!("Code is at {:x}", code_phys);
-    //0x555555554000
-    let code_phys = PAddr::from_u64(0x8000000000);
-    vm.set_user_memory_region(code_phys.as_u64(), code_memory, 0).unwrap();*/
-
 
     // Map the process
     let f = File::open("/proc/self/maps").unwrap();
@@ -184,11 +176,43 @@ fn io_example() {
     vcpu.set_regs(&regs).unwrap();
 
     // Actually run the VCPU
-    let run = unsafe { vcpu.run() }.unwrap();
+
+    let mut ios_completes = 50;
+    let mut new_regs = kvm::Regs::default();
+    while ios_completes > 0 {
+        {
+            let (run, mut regs) = unsafe { vcpu.run_regs() }.unwrap();
+            if run.exit_reason == Exit::Io {
+                let io = unsafe { *run.io() };
+                match io.direction {
+
+                    IoDirection::In => {
+                        if io.port == 0x3fd {
+                            regs.rax = 0x20; // Mark serial line as ready to write
+                        } else {
+                            println!("IO on unknown port: {}", io.port);
+                        }
+                    }
+                    IoDirection::Out => {
+                        if io.port == 0x3f8 {
+                            println!("got char {:#?}", regs.rax as u8 as char);
+                        }
+                        //println!("IOOut dont know what to do");
+                    }
+                }
+                new_regs = regs;
+            }
+        }
+        vcpu.set_regs(&new_regs).unwrap();
+
+        ios_completes = ios_completes - 1;
+    }
 
     // Ensure that the exit reason we get back indicates that the I/O
     // instruction was executed
-    println!("run {:?}", run);
+    /*let regs = vcpu.get_regs().unwrap();
+    println!("vcpu.rip: {:x}", regs.rip);
+
     assert!(run.exit_reason == Exit::Io);
     let io = unsafe { *run.io() };
     assert!(io.direction == IoDirection::In);
@@ -196,6 +220,5 @@ fn io_example() {
     assert!(io.port == 0x1);
     unsafe {
         println!("{:#?}", *run.io());
-    }
-
+    }*/
 }
