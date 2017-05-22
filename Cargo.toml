@@ -1,5 +1,4 @@
 [package]
-
 name = "x86"
 version = "0.9.0"
 authors = [
@@ -29,6 +28,10 @@ performance-counter = ["phf", "phf_codegen", "csv", "serde_json"]
 name = "no_std_build"
 harness = false
 
+[[test]]
+name = "kvm"
+path = "tests/kvm/bin.rs"
+
 [build-dependencies]
 phf_codegen = { version = "0.7.7", optional = true }
 csv = { version = "0.14.3", optional = true }
@@ -42,3 +45,14 @@ raw-cpuid = "2.*"
 version = "0.7.7"
 optional = true
 features = ["core"]
+
+#[target.x86_64-utest-qemu.dev-dependencies.test]
+#path = "../utest"
+#[target.x86_64-utest-qemu.dev-dependencies.utest-macros]
+#path = "../utest/macros"
+#[target.x86_64-utest-qemu.dev-dependencies.utest-x86-64-qemu]
+#path = "../utest/x86-64-qemu"
+
+[dev-dependencies]
+kvm = "0.2" # { path = "../kvm/" }
+memmap = "0.2.1"
