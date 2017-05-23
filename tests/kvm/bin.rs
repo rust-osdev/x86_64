@@ -1,5 +1,5 @@
 #![feature(linkage, naked_functions, asm, const_fn, test, proc_macro)]
-// Execute using: RUSTFLAGS="-C soft-float -C relocation-model=static -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
+// Execute using: RUSTFLAGS="-C relocation-model=dynamic-no-pic -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 
 extern crate kvm;
 extern crate memmap;
