@@ -1,4 +1,4 @@
-#![feature(linkage, naked_functions, asm, const_fn)]
+#![feature(linkage, naked_functions, asm, const_fn, test, proc_macro)]
 // Execute using: RUSTFLAGS="-C soft-float -C relocation-model=static -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 
 extern crate kvm;
@@ -9,6 +9,10 @@ extern crate core;
 #[macro_use]
 extern crate klogger;
 
+extern crate test_macros;
+use test_macros::panics_note;
+use test_macros::kvmattrs;
+
 use kvm::{Capability, Exit, IoDirection, Segment, System, Vcpu, VirtualMachine};
 use memmap::{Mmap, Protection};
 use std::fs::File;
@@ -18,9 +22,13 @@ use x86::shared::control_regs::*;
 use x86::shared::paging::*;
 use x86::bits64::paging::*;
 
-unsafe fn use_the_port() {
+#[kvmattrs(identity_map)]
+fn use_the_port() {
+    use_the_port_setup();
     log!("1");
-    asm!("inb $0, %al" :: "i"(0x01) :: "volatile");
+    unsafe {
+        asm!("inb $0, %al" :: "i"(0x01) :: "volatile");
+    }
 }
 
 #[test]
@@ -177,35 +185,42 @@ fn io_example() {
 
     // Actually run the VCPU
 
-    let mut ios_completes = 50;
+    println!("size of run {:?}", std::mem::size_of::<kvm::Run>());
+    let mut vm_is_done = false;
     let mut new_regs = kvm::Regs::default();
-    while ios_completes > 0 {
+    while !vm_is_done {
         {
             let (run, mut regs) = unsafe { vcpu.run_regs() }.unwrap();
-            if run.exit_reason == Exit::Io {
-                let io = unsafe { *run.io() };
-                match io.direction {
-
-                    IoDirection::In => {
-                        if io.port == 0x3fd {
-                            regs.rax = 0x20; // Mark serial line as ready to write
-                        } else {
-                            println!("IO on unknown port: {}", io.port);
+            match run.exit_reason {
+                Exit::Io => {
+                    let io = unsafe { *run.io() };
+                    match io.direction {
+                        IoDirection::In => {
+                            if io.port == 0x3fd {
+                                regs.rax = 0x20; // Mark serial line as ready to write
+                            } else {
+                                println!("IO on unknown port: {}", io.port);
+                            }
                         }
-                    }
-                    IoDirection::Out => {
-                        if io.port == 0x3f8 {
-                            println!("got char {:#?}", regs.rax as u8 as char);
+                        IoDirection::Out => {
+                            if io.port == 0x3f8 {
+                                println!("got char {:#?}", regs.rax as u8 as char);
+                            }
                         }
-                        //println!("IOOut dont know what to do");
                     }
                 }
-                new_regs = regs;
+                Exit::Shutdown => {
+                    println!("Shutting down");
+                    vm_is_done = true;
+                }
+                _ => {
+                    println!("Unknown exit reason: {:?}", run.exit_reason);
+                }
             }
+
+            new_regs = regs;
         }
         vcpu.set_regs(&new_regs).unwrap();
-
-        ios_completes = ios_completes - 1;
     }
 
     // Ensure that the exit reason we get back indicates that the I/O

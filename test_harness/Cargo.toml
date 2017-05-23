@@ -1,0 +1,8 @@
+[package]
+name = "test"
+version = "0.0.1"
+authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
+
+[dependencies]
+syn = "0.11.*"
+quote = "0.3.*"
