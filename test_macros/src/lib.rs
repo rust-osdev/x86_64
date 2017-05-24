@@ -1,3 +1,4 @@
+#![feature(rustc_private, proc_macro)]
 ///! This implements the kvmargs macro to customize the execution of KVM based tests.
 ///!
 ///! One problem we have to solve here is that we need to store additional data
@@ -15,8 +16,6 @@
 ///! Obviously, this is a bit of a mess right now, my hope is that such things become
 ///! easier with better custom test harness support.
 ///!
-#![feature(rustc_private, proc_macro)]
-
 extern crate proc_macro;
 extern crate syn;
 #[macro_use]
@@ -44,7 +43,7 @@ fn generate_kvmtest_meta_data(test_ident: &syn::Ident) -> (syn::Ident, quote::To
         extern crate test;
         use self::test::KvmTestMetaData;
         #[link_section = ".kvm"]
-        #[used]
+        #[allow(non_upper_case_globals)]
         static #struct_ident: KvmTestMetaData = KvmTestMetaData { mbz: 0, meta: "test"  };
 
         /// The generated impl
@@ -63,37 +62,38 @@ fn generate_kvmtest_meta_data(test_ident: &syn::Ident) -> (syn::Ident, quote::To
 /// but I'm not sure how to do that in rust...
 fn insert_meta_data_reference(struct_ident: &syn::Ident, test_block: &mut syn::Block) {
     let stmt_string = format!("assert!({}.mbz == 0);", struct_ident);
-
     let stmt = match syn::parse::stmt(stmt_string.as_str()) {
         IResult::Done(stmt_str, stmt) => stmt,
-        IResult::Error => panic!("Unable to generate reference to meta data"),
+        IResult::Error => panic!("Unable to generate reference to meta-data"),
     };
-
     test_block.stmts.insert(0, stmt);
 }
 
 
 #[proc_macro_attribute]
 pub fn kvmattrs(args: TokenStream, input: TokenStream) -> TokenStream {
-    let args = args.to_string();
+    let args_str = args.to_string();
+    println!("{}", args);
     let mut input = input.to_string();
     let mut ast = syn::parse_item(&input).unwrap();
     let ident = ast.ident.clone();
+
+    // Generate meta-data struct
     let (meta_data_ident, new_code) = generate_kvmtest_meta_data(&ident);
 
-    {
-        match &mut ast.node {
-            &mut syn::ItemKind::Fn(_, _, _, _, _, ref mut block) => {
-                let mod_test_code = insert_meta_data_reference(&meta_data_ident, block);
-                println!("{:#?}", block);
-            }
-            _ => panic!("Not a function!"),
-        };
-    }
+    // Insert reference to meta-data in test
+    match &mut ast.node {
+        &mut syn::ItemKind::Fn(_, _, _, _, _, ref mut block) => {
+            insert_meta_data_reference(&meta_data_ident, block);
+        }
+        _ => panic!("Not a function!"),
+    };
+
+    // Merge everything together:
     let mut token = quote::Tokens::new();
     ast.to_tokens(&mut token);
     token.append(new_code);
 
-    //input += new_code.to_string().as_str();
+    // Output this as replacement code for the test function
     token.to_string().parse().unwrap()
 }

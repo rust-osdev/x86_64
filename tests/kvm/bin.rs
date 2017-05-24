@@ -21,7 +21,7 @@ use x86::shared::control_regs::*;
 use x86::shared::paging::*;
 use x86::bits64::paging::*;
 
-#[kvmattrs(identity_map)]
+#[kvmattrs(identity_map, ram(0x30000000, 0x31000000))]
 fn use_the_port() {
     log!("1");
     unsafe {
