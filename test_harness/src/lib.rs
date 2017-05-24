@@ -1,5 +1,11 @@
 #![feature(used, lang_items)]
 
+#[derive(Debug)]
+pub struct KvmTestMetaData {
+    pub mbz: u64,
+    pub meta: &'static str,
+}
+
 pub fn test_start(ntests: usize) {
     println!("KVM testing: running {} tests", ntests)
 }

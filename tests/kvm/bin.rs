@@ -1,4 +1,4 @@
-#![feature(linkage, naked_functions, asm, const_fn, test, proc_macro)]
+#![feature(linkage, naked_functions, asm, const_fn, proc_macro, used)]
 // Execute using: RUSTFLAGS="-C relocation-model=dynamic-no-pic -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 
 extern crate kvm;
@@ -10,7 +10,6 @@ extern crate core;
 extern crate klogger;
 
 extern crate test_macros;
-use test_macros::panics_note;
 use test_macros::kvmattrs;
 
 use kvm::{Capability, Exit, IoDirection, Segment, System, Vcpu, VirtualMachine};
@@ -24,7 +23,6 @@ use x86::bits64::paging::*;
 
 #[kvmattrs(identity_map)]
 fn use_the_port() {
-    use_the_port_setup();
     log!("1");
     unsafe {
         asm!("inb $0, %al" :: "i"(0x01) :: "volatile");

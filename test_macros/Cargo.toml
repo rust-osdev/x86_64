@@ -5,10 +5,11 @@ authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 
 [dependencies]
 quote = "0.3.*"
+test = { path = "../test_harness" }
 
 [dependencies.syn]
-version = "0.11.*"
-features = ["full"]
+version = "0.*"
+features = ["full", "fold"]
 
 [lib]
 proc-macro = true
