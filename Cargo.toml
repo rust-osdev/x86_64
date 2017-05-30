@@ -52,8 +52,6 @@ features = ["core"]
 #path = "../utest/x86-64-qemu"
 
 [dev-dependencies]
-memmap = "0.2.1"
-kvm = { git = "https://github.com/gz/kvm.git" }
 klogger = { git = "https://github.com/gz/rust-klogger.git" }
 test = { path = "test_harness" }
 test-macros = { path = "test_macros" }

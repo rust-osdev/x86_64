@@ -25,32 +25,93 @@ extern crate syntax;
 extern crate test;
 use test::KvmTestMetaData;
 
-use syn::fold;
+use syn::*;
 use syn::parse::IResult;
+
 use std::string;
 use proc_macro::TokenStream;
 use quote::ToTokens;
 
+fn parse_kvmtest_args(args: &syn::DeriveInput) -> ((u64, u64), bool) {
+    if args.ident.as_ref() != "Dummy" {
+        panic!("Get rid of this hack!");
+    }
+
+    // If syn ever implements visitor for MetaItems, this can probably be written simpler:
+    let mut identity_map: bool = false;
+    let mut physical_memory: Vec<u64> = Vec::with_capacity(2);
+    for attr in &args.attrs {
+        match attr.value {
+            syn::MetaItem::List(ref name, ref kvmattrs) => {
+                if name.as_ref() != "kvmattrs" {
+                    panic!("Only kvmattr supported at the moment!");
+                }
+
+                for kvmattr in kvmattrs {
+                    match kvmattr {
+                        &syn::NestedMetaItem::MetaItem(ref item) => {
+                            match item {
+                                &syn::MetaItem::List(ref name, ref innerattrs) => {
+                                    match name.as_ref() {
+                                        "ram" => {
+                                            for (idx, innerattr) in innerattrs.iter().enumerate() {
+                                                match innerattr {
+                                                    &syn::NestedMetaItem::Literal(syn::Lit::Int(n, _)) =>  {
+                                                        physical_memory.push(n);
+                                                    },
+                                                    _ => panic!("Type mismatch in ram().")
+                                                }
+                                            }
+                                        }
+                                        _ => { panic!("kvmattrs: doesn't support list attribute '{}'", name.as_ref()); }
+                                    }
+                                },
+                                &syn::MetaItem::Word(ref name) => {
+                                    match name.as_ref() {
+                                        "identity_map" => identity_map = true,
+                                        _ => panic!("kvmattrs: doesn't support '{}'", name.as_ref())
+                                    }
+                                }
+                                &syn::MetaItem::NameValue(ref name, ref lit) => println!("{:?}", name.as_ref()),
+                                _ => panic!("kvmattrs: can't handle NameValue attribute...")
+                            }
+                        },
+                        _ => { panic!("Can't handle this..."); }
+                    }
+                }
+            }
+            _ => { panic!("Only list supported at the moment!"); }
+        }
+    }
+
+    if physical_memory.len() != 2 {
+        panic!("ram() takes two values (x,y)");
+    }
+
+    ((physical_memory[0], physical_memory[1]) , identity_map)
+}
+
 /// Add a additional meta-data and setup functions for a KVM based test.
-fn generate_kvmtest_meta_data(test_ident: &syn::Ident) -> (syn::Ident, quote::Tokens) {
+fn generate_kvmtest_meta_data(test_ident: &syn::Ident, args: &syn::DeriveInput) -> (syn::Ident, quote::Tokens) {
     // Create some test meta-data
     let test_name = test_ident.as_ref();
     let setup_fn_ident = syn::Ident::new(String::from(test_name) + "_setup");
     let struct_ident = syn::Ident::new(String::from(test_name) + "_kvm_meta_data");
 
+    let (physical_memory, identity_map) = parse_kvmtest_args(args);
+
     (struct_ident.clone(),
      quote! {
-        extern crate test;
-        use self::test::KvmTestMetaData;
-        #[link_section = ".kvm"]
+        #[link_section = "kvm"]
         #[allow(non_upper_case_globals)]
-        static #struct_ident: KvmTestMetaData = KvmTestMetaData { mbz: 0, meta: "test"  };
-
-        /// The generated impl
-        fn #setup_fn_ident() {
-            log!("blabla");
-        }
+        static #struct_ident: KvmTestMetaData = KvmTestMetaData {
+            mbz: 0,
+            meta: #test_name,
+            identity_map: #identity_map,
+            physical_memory: #physical_memory
+        };
     })
+
 }
 
 /// Inserts a reference to the corresponding KvmTestData struct of a test function
@@ -72,14 +133,18 @@ fn insert_meta_data_reference(struct_ident: &syn::Ident, test_block: &mut syn::B
 
 #[proc_macro_attribute]
 pub fn kvmattrs(args: TokenStream, input: TokenStream) -> TokenStream {
-    let args_str = args.to_string();
-    println!("{}", args);
-    let mut input = input.to_string();
+    let args = args.to_string();
+    let input = input.to_string();
+
     let mut ast = syn::parse_item(&input).unwrap();
-    let ident = ast.ident.clone();
+
+    // FIXME, see also https://github.com/dtolnay/syn/issues/86
+    let derive_input_hack = format!("#[kvmattrs{}] struct Dummy;", args);
+    let args_ast = syn::parse_derive_input(&derive_input_hack).unwrap();
 
     // Generate meta-data struct
-    let (meta_data_ident, new_code) = generate_kvmtest_meta_data(&ident);
+    let ident = ast.ident.clone();
+    let (meta_data_ident, new_code) = generate_kvmtest_meta_data(&ident, &args_ast);
 
     // Insert reference to meta-data in test
     match &mut ast.node {

@@ -6,3 +6,6 @@ authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 [dependencies]
 syn = "0.11.*"
 quote = "0.3.*"
+x86 = "0.*"
+memmap = "0.2.1"
+kvm = { path = "../../kvm" }
