@@ -1,6 +1,6 @@
 #![feature(linkage, naked_functions, asm, const_fn, proc_macro, used)]
+//RUSTFLAGS="-C relocation-model=dynamic-no-pic -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 
-// Execute using: RUSTFLAGS="-C relocation-model=dynamic-no-pic -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 extern crate x86;
 extern crate core;
 
