@@ -33,6 +33,14 @@ impl PageTable {
         unsafe { self.backing_memory.as_mut_slice() }
     }
 
+    fn as_slice(&mut self) -> &[u8] {
+        unsafe { self.backing_memory.as_slice() }
+    }
+
+    fn len(&mut self) -> usize {
+        self.as_slice().len()
+    }
+
     /// Constructs a simple page-table that identity maps
     /// the whole address space (guest virtual <-> guest physical).
     fn setup_identity_mapping(&mut self) {
@@ -76,6 +84,10 @@ impl Stack {
         Stack { backing_memory: stack_mmap }
     }
 
+    fn len(&self) -> usize {
+        self.backing_memory.len()
+    }
+
     fn as_mut_slice<'a>(&'a mut self) -> &'a mut [u8]{
         unsafe { self.backing_memory.as_mut_slice() }
     }
@@ -111,9 +123,101 @@ impl<'a> TestEnvironment<'a> {
     }
 
     /// Map the page table memory and stack memory
-    fn map_memory(mut self) {
+    fn create_vcpu(&'a mut self, init_fn: VAddr) -> kvm::Vcpu {
+        // Once the memory is set we can't even call length.
+        let page_table_memory_limit = self.pt.len() - 1;
+        let stack_size = self.st.len();
+
         self.vm.set_user_memory_region(0, self.pt.as_mut_slice(), 0).unwrap();
         self.vm.set_user_memory_region(STACK_BASE_T.as_u64(), self.st.as_mut_slice(), 0).unwrap();
+
+        // Map the process
+        let f = File::open("/proc/self/maps").unwrap();
+        let reader = BufReader::new(f);
+
+        for line in reader.lines() {
+            let line = line.unwrap();
+            let mut s = line.split(' ');
+            let mut s2 = s.next().unwrap().split('-');
+            let begin = usize::from_str_radix(s2.next().unwrap(), 16).unwrap();
+            let end = usize::from_str_radix(s2.next().unwrap(), 16).unwrap();
+            if end < 0x800000000000 {
+                let perm = s.next().unwrap();
+                //println!("{:#X}-{:#X} {}", begin, end, perm);
+                let slice = {
+                    let begin_ptr: *mut u8 = begin as *const u8 as _;
+                    unsafe { ::std::slice::from_raw_parts_mut(begin_ptr, end - begin) }
+                };
+                // Make sure process doesn't overlap with page table
+                //assert!(begin > page_table_memory_limit);
+                self.vm.set_user_memory_region(begin as _, slice, 0).unwrap();
+            }
+        }
+
+        let mut vcpu = Vcpu::create(&mut self.vm).unwrap();
+        // Set supported CPUID (KVM fails without doing this)
+        let mut cpuid = self.sys.get_supported_cpuid().unwrap();
+        vcpu.set_cpuid2(&mut cpuid).unwrap();
+
+        // Setup the special registers
+        let mut sregs = vcpu.get_sregs().unwrap();
+
+        // Set the code segment to have base 0, limit 4GB (flat segmentation)
+        let segment_template = Segment {
+            base: 0x0,
+            limit: 0xffffffff,
+            selector: 0,
+            _type: 0,
+            present: 0,
+            dpl: 0,
+            db: 1,
+            s: 0,
+            l: 0,
+            g: 1,
+            avl: 0,
+            ..Default::default()
+        };
+
+        sregs.cs = Segment {
+            selector: 0x8,
+            _type: 0xb,
+            present: 1,
+            db: 0,
+            s: 1,
+            l: 1,
+            ..segment_template
+        };
+        sregs.ss = Segment { ..segment_template };
+        sregs.ds = Segment { ..segment_template };
+        sregs.es = Segment { ..segment_template };
+        sregs.fs = Segment { ..segment_template };
+        sregs.gs = Segment { ..segment_template };
+
+        // We don't need to populate the GDT if we have our segments setup
+        // cr0 - protected mode on, paging enabled
+        sregs.cr0 = (CR0_PROTECTED_MODE | CR0_MONITOR_COPROCESSOR | CR0_EXTENSION_TYPE |
+                     CR0_ENABLE_PAGING | CR0_NUMERIC_ERROR | CR0_WRITE_PROTECT |
+                     CR0_ALIGNMENT_MASK | CR0_ENABLE_PAGING).bits() as u64;
+        sregs.cr3 = PAGE_TABLE_P.as_u64();
+        sregs.cr4 = (CR4_ENABLE_PSE | CR4_ENABLE_PAE | CR4_ENABLE_GLOBAL_PAGES | CR4_ENABLE_SSE |
+                     CR4_UNMASKED_SSE | CR4_ENABLE_OS_XSAVE | CR4_ENABLE_SMEP | CR4_ENABLE_VME)
+                     .bits() as u64;
+        sregs.efer = 0xd01; // XXX
+
+        // Set the special registers
+        vcpu.set_sregs(&sregs).unwrap();
+
+        let mut regs = vcpu.get_regs().unwrap();
+
+        // Set the instruction pointer to 1 MB
+        regs.rip = init_fn.as_usize() as u64;
+        regs.rflags = 0x246; // XXX
+        regs.rsp = STACK_BASE_T.as_u64() + stack_size as u64;
+        regs.rbp = regs.rsp;
+
+        vcpu.set_regs(&regs).unwrap();
+
+        vcpu
     }
 }
 
@@ -167,163 +271,9 @@ pub fn test_ignored(name: &str) {
     println!("test {} ... ignored", name);
 }
 
-
-/*
-fn io_example() {
-
-
-    // Initialize the KVM system
-    let sys = System::initialize().unwrap();
-
-    // Create a Virtual Machine
-    let mut vm = VirtualMachine::create(&sys).unwrap();
-
-    // Ensure that the VM supports memory backing with user memory
-    assert!(vm.check_capability(Capability::UserMemory) > 0);
-
-    // Once the memory is set we can't even call length.
-    let page_table_memory_limit = page_table_memory.len() - 1;
-
-    // Map the page table memory
-    vm.set_user_memory_region(0, page_table_memory, 0).unwrap();
-    // Map stack space
-    vm.set_user_memory_region(STACK_BASE_T.as_u64(), stack_memory, 0).unwrap();
-
-    // Map the process
-    let f = File::open("/proc/self/maps").unwrap();
-    let reader = BufReader::new(f);
-
-    for line in reader.lines() {
-        let line = line.unwrap();
-        println!("{}", line);
-        let mut s = line.split(' ');
-        let mut s2 = s.next().unwrap().split('-');
-        let begin = usize::from_str_radix(s2.next().unwrap(), 16).unwrap();
-        let end = usize::from_str_radix(s2.next().unwrap(), 16).unwrap();
-        if end < 0x800000000000 {
-            let perm = s.next().unwrap();
-            //println!("{:#X}-{:#X} {}", begin, end, perm);
-            let slice = {
-                let begin_ptr: *mut u8 = begin as *const u8 as _;
-                unsafe { ::std::slice::from_raw_parts_mut(begin_ptr, end - begin) }
-            };
-            // Make sure process doesn't overlap with page table
-            assert!(begin > page_table_memory_limit);
-            vm.set_user_memory_region(begin as _, slice, 0).unwrap();
-        }
-    }
-
-    let mut vcpu = Vcpu::create(&mut vm).unwrap();
-    // Set supported CPUID (KVM fails without doing this)
-    let mut cpuid = sys.get_supported_cpuid().unwrap();
-    vcpu.set_cpuid2(&mut cpuid).unwrap();
-
-    // Setup the special registers
-    let mut sregs = vcpu.get_sregs().unwrap();
-    // Set the code segment to have base 0, limit 4GB (flat segmentation)
-    let segment_template = Segment {
-        base: 0x0,
-        limit: 0xffffffff,
-        selector: 0,
-        _type: 0,
-        present: 0,
-        dpl: 0,
-        db: 1,
-        s: 0,
-        l: 0,
-        g: 1,
-        avl: 0,
-        ..Default::default()
-    };
-    sregs.cs = Segment {
-        selector: 0x8,
-        _type: 0xb,
-        present: 1,
-        db: 0,
-        s: 1,
-        l: 1,
-        ..segment_template
-    };
-    sregs.ss = Segment { ..segment_template };
-    sregs.ds = Segment { ..segment_template };
-    sregs.es = Segment { ..segment_template };
-    sregs.fs = Segment { ..segment_template };
-    sregs.gs = Segment { ..segment_template };
-    // We don't need to populate the GDT if we have our segments setup
-    // cr0 - protected mode on, paging enabled
-    sregs.cr0 = (CR0_PROTECTED_MODE | CR0_MONITOR_COPROCESSOR | CR0_EXTENSION_TYPE |
-                 CR0_ENABLE_PAGING | CR0_NUMERIC_ERROR | CR0_WRITE_PROTECT |
-                 CR0_ALIGNMENT_MASK | CR0_ENABLE_PAGING)
-        .bits() as u64;
-    sregs.cr3 = PAGE_TABLE_P.as_u64();
-    sregs.cr4 = (CR4_ENABLE_PSE | CR4_ENABLE_PAE | CR4_ENABLE_GLOBAL_PAGES | CR4_ENABLE_SSE |
-                 CR4_UNMASKED_SSE |
-                 CR4_ENABLE_OS_XSAVE | CR4_ENABLE_SMEP | CR4_ENABLE_VME)
-        .bits() as u64;
-    sregs.efer = 0xd01;
-
-    // Set the special registers
-    vcpu.set_sregs(&sregs).unwrap();
-
-    let mut regs = vcpu.get_regs().unwrap();
-    // set the instruction pointer to 1 MB
-    regs.rip = vaddr.as_usize() as u64;
-    println!("regs.rip = 0x{:x}", regs.rip); // but is at: 0x40cd60
-    //println!("regs.rip = 0x{:x}", unsafe { *(regs.rip as *const u64) }); // but is at: 0x40cd60
-    //regs.rip = 0x40cd60;
-    regs.rflags = 0x246;
-    regs.rsp = STACK_BASE_T.as_u64() + stack_size as u64;
-    regs.rbp = regs.rsp;
-    vcpu.set_regs(&regs).unwrap();
-
-    // Actually run the VCPU
-
-    println!("size of run {:?}", std::mem::size_of::<kvm::Run>());
-    let mut vm_is_done = false;
-    let mut new_regs = kvm::Regs::default();
-    while !vm_is_done {
-        {
-            let (run, mut regs) = unsafe { vcpu.run_regs() }.unwrap();
-            match run.exit_reason {
-                Exit::Io => {
-                    let io = unsafe { *run.io() };
-                    match io.direction {
-                        IoDirection::In => {
-                            if io.port == 0x3fd {
-                                regs.rax = 0x20; // Mark serial line as ready to write
-                            } else {
-                                println!("IO on unknown port: {}", io.port);
-                            }
-                        }
-                        IoDirection::Out => {
-                            if io.port == 0x3f8 {
-                                println!("got char {:#?}", regs.rax as u8 as char);
-                            }
-                        }
-                    }
-                }
-                Exit::Shutdown => {
-                    println!("Shutting down");
-                    vm_is_done = true;
-                }
-                _ => {
-                    println!("Unknown exit reason: {:?}", run.exit_reason);
-                }
-            }
-
-            new_regs = regs;
-        }
-        vcpu.set_regs(&new_regs).unwrap();
-    }
-
-}*/
-
-
-pub fn test_before_run(name: &str) {
+pub fn test_before_run(name: &str) -> Option<&KvmTestMetaData> {
     print!("test {} ... ", name);
-
-    let meta_data = find_meta_data(name).unwrap();
-
+    find_meta_data(name)
 }
 
 pub fn test_panic_fmt(args: std::fmt::Arguments, file: &'static str, line: u32) {
@@ -369,11 +319,60 @@ pub fn test_main_static(tests: &[TestDescAndFn]) {
                 ignored += 1;
                 test_ignored(test.desc.name.0);
             } else {
-                test_before_run(test.desc.name.0);
+                let meta_data = test_before_run(test.desc.name.0);
 
                 __TEST_PANICKED = false;
+                match meta_data {
+                    Some(mtd) => {
+                        let sys = System::initialize().unwrap();
+                        let mut st = Stack::new();
+                        let mut pt = PageTable::new();
+                        pt.setup_identity_mapping();
 
-                test.testfn.0();
+                        let mut test_environment = TestEnvironment::new(&sys, &mut st, &mut pt);
+                        let test_fn_vaddr = VAddr::from_usize(test.testfn.0 as *const () as usize);
+                        let mut vcpu = test_environment.create_vcpu(test_fn_vaddr);
+
+                        let mut vm_is_done = false;
+                        let mut new_regs = kvm::Regs::default();
+                        while !vm_is_done {
+                            {
+                                let (run, mut regs) = unsafe { vcpu.run_regs() }.unwrap();
+                                match run.exit_reason {
+                                    Exit::Io => {
+                                        let io = unsafe { *run.io() };
+                                        match io.direction {
+                                            IoDirection::In => {
+                                                if io.port == 0x3fd {
+                                                    regs.rax = 0x20; // Mark serial line as ready to write
+                                                } else {
+                                                    println!("IO on unknown port: {}", io.port);
+                                                }
+                                            }
+                                            IoDirection::Out => {
+                                                if io.port == 0x3f8 {
+                                                    println!("got char {:#?}", regs.rax as u8 as char);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Exit::Shutdown => {
+                                        println!("Shutting down");
+                                        vm_is_done = true;
+                                    }
+                                    _ => {
+                                        println!("Unknown exit reason: {:?}", run.exit_reason);
+                                    }
+                                }
+
+                                new_regs = regs;
+                            }
+                            vcpu.set_regs(&new_regs).unwrap();
+                        }
+
+                    },
+                    _ => test.testfn.0() // Regular test, not running inside virtual machine
+                }
 
                 if __TEST_PANICKED == (test.desc.should_panic == ShouldPanic::Yes) {
                     passed += 1;
