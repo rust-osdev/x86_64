@@ -7,17 +7,23 @@ extern crate x86;
 use kvm::{Capability, Exit, IoDirection, Segment, System, Vcpu, VirtualMachine};
 use memmap::{Mmap, Protection};
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
+use std::io;
 
 use x86::shared::control_regs::*;
 use x86::shared::paging::*;
 use x86::bits64::paging::*;
 
+#[no_mangle]
+#[used]
+pub static mut __TEST_PANICKED: bool = false;
 
 struct PageTable {
     backing_memory: Mmap
 }
+
 type PageTableMemoryLayout = (PML4, [PDPT; 512]);
+
 static PAGE_TABLE_P: PAddr = PAddr::from_u64(0x1000); // XXX:
 
 impl PageTable {
@@ -73,6 +79,7 @@ impl PageTable {
 struct Stack {
      backing_memory: Mmap
 }
+
 static STACK_BASE_T: PAddr = PAddr::from_u64(0x2000000);
 
 impl Stack {
@@ -227,6 +234,7 @@ pub struct KvmTestMetaData {
     pub meta: &'static str,
     pub identity_map: bool,
     pub physical_memory: (u64, u64),
+    pub ioport_reads: (u16, u32),
 }
 
 /// Linker generates symbols that are inserted at the start and end of the kvm section.
@@ -272,7 +280,7 @@ pub fn test_ignored(name: &str) {
 }
 
 pub fn test_before_run(name: &str) -> Option<&KvmTestMetaData> {
-    print!("test {} ... ", name);
+    println!("test {} ... ", name);
     find_meta_data(name)
 }
 
@@ -303,77 +311,143 @@ pub fn test_summary(passed: usize, failed: usize, ignored: usize) {
     }
 }
 
-#[no_mangle]
-#[used]
-pub static mut __TEST_PANICKED: bool = false;
+struct SerialPrinter {
+    buffer: String
+}
+
+impl Write for SerialPrinter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        assert!(buf.len() == 1);
+        self.buffer.push(buf[0] as char);
+        match buf[0] as char {
+            '\n' => {
+                std::io::stdout().write(self.buffer.as_bytes());
+                self.buffer.clear();
+            }
+            _ => {}
+        }
+
+        Ok(1)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        std::io::stdout().write(self.buffer.as_bytes());
+        self.buffer.clear();
+        Ok(())
+    }
+}
+
+impl SerialPrinter {
+    fn new() -> SerialPrinter {
+        SerialPrinter { buffer: String::new() }
+    }
+}
+
+#[derive(Debug)]
+enum IoHandleError {
+    UnexpectedWrite(u16, u32),
+    UnexpectedRead(u16)
+}
+
+enum IoHandleStatus {
+    Handled,
+    TestCompleted,
+}
+
+fn handle_ioexit(meta: &KvmTestMetaData, cpu: &mut Vcpu, run: &kvm::Run, printer: &mut SerialPrinter) -> Result<IoHandleStatus, IoHandleError> {
+    let io = unsafe { *run.io() };
+
+    match io.direction {
+        IoDirection::In => {
+            let mut regs = cpu.get_regs().unwrap();
+            if io.port == 0x3fd {
+                regs.rax = 0x20; // Mark serial line ready to write
+                cpu.set_regs(&regs).unwrap();
+                return Ok(IoHandleStatus::Handled);
+            }
+            else if io.port == meta.ioport_reads.0 {
+                regs.rax = meta.ioport_reads.1 as u64;
+                cpu.set_regs(&regs).unwrap();
+                return Ok(IoHandleStatus::Handled);
+            }
+            return Err(IoHandleError::UnexpectedRead(io.port));
+        }
+        IoDirection::Out => {
+            let regs = cpu.get_regs().unwrap();
+            if io.port == 0x3f8 {
+                printer.write(&[regs.rax as u8]);
+                return Ok(IoHandleStatus::Handled);
+            }
+            else if io.port == 0xf4 && regs.rax as u8 == 0x0 {
+                // Magic shutdown command for exiting the test.
+                // The line unsafe { x86::shared::io::outw(0xf4, 0x00); }
+                // is automatically inserted at the end of every test!
+                return Ok(IoHandleStatus::TestCompleted);
+            }
+
+            return Err(IoHandleError::UnexpectedWrite(io.port, regs.rax as u32));
+        }
+    };
+}
 
 pub fn test_main_static(tests: &[TestDescAndFn]) {
-    unsafe {
-        test_start(tests.len());
+    test_start(tests.len());
 
-        let mut failed = 0;
-        let mut ignored = 0;
-        let mut passed = 0;
-        for test in tests {
-            if test.desc.ignore {
-                ignored += 1;
-                test_ignored(test.desc.name.0);
-            } else {
-                let meta_data = test_before_run(test.desc.name.0);
+    let mut failed = 0;
+    let mut ignored = 0;
+    let mut passed = 0;
+    for test in tests {
+        if test.desc.ignore {
+            ignored += 1;
+            test_ignored(test.desc.name.0);
+        } else {
+            let meta_data = test_before_run(test.desc.name.0);
 
-                __TEST_PANICKED = false;
-                match meta_data {
-                    Some(mtd) => {
-                        let sys = System::initialize().unwrap();
-                        let mut st = Stack::new();
-                        let mut pt = PageTable::new();
-                        pt.setup_identity_mapping();
+            unsafe { __TEST_PANICKED = false; }
 
-                        let mut test_environment = TestEnvironment::new(&sys, &mut st, &mut pt);
-                        let test_fn_vaddr = VAddr::from_usize(test.testfn.0 as *const () as usize);
-                        let mut vcpu = test_environment.create_vcpu(test_fn_vaddr);
+            match meta_data {
+                // Run this in a Virtual machine
+                Some(mtd) => {
+                    let sys = System::initialize().unwrap();
+                    let mut st = Stack::new();
+                    let mut pt = PageTable::new();
+                    pt.setup_identity_mapping();
+                    let mut test_environment = TestEnvironment::new(&sys, &mut st, &mut pt);
+                    let mut printer: SerialPrinter = SerialPrinter::new();
 
-                        let mut vm_is_done = false;
-                        let mut new_regs = kvm::Regs::default();
-                        while !vm_is_done {
-                            {
-                                let (run, mut regs) = unsafe { vcpu.run_regs() }.unwrap();
-                                match run.exit_reason {
-                                    Exit::Io => {
-                                        let io = unsafe { *run.io() };
-                                        match io.direction {
-                                            IoDirection::In => {
-                                                if io.port == 0x3fd {
-                                                    regs.rax = 0x20; // Mark serial line as ready to write
-                                                } else {
-                                                    println!("IO on unknown port: {}", io.port);
-                                                }
-                                            }
-                                            IoDirection::Out => {
-                                                if io.port == 0x3f8 {
-                                                    println!("got char {:#?}", regs.rax as u8 as char);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    Exit::Shutdown => {
-                                        println!("Shutting down");
+                    let test_fn_vaddr = VAddr::from_usize(test.testfn.0 as *const () as usize);
+                    let mut vcpu = test_environment.create_vcpu(test_fn_vaddr);
+
+                    let mut vm_is_done = false;
+                    while !vm_is_done {
+                        let run = unsafe { vcpu.run() }.unwrap();
+                        match run.exit_reason {
+                            Exit::Io => {
+                                match handle_ioexit(&mtd, &mut vcpu, &run, &mut printer) {
+                                    Result::Ok(IoHandleStatus::Handled) => {/* Continue */}
+                                    Result::Ok(IoHandleStatus::TestCompleted) => vm_is_done = true,
+                                    Result::Err(err) => {
+                                        println!("Test failed due to unexpected IO: {:?}", err);
                                         vm_is_done = true;
                                     }
-                                    _ => {
-                                        println!("Unknown exit reason: {:?}", run.exit_reason);
-                                    }
                                 }
-
-                                new_regs = regs;
+                            },
+                            Exit::Shutdown => {
+                                println!("Exit::Shutdown");
+                                vm_is_done = true;
                             }
-                            vcpu.set_regs(&new_regs).unwrap();
+                            _ => {
+                                println!("Unknown exit reason: {:?}", run.exit_reason);
+                            }
                         }
+                    }
 
-                    },
-                    _ => test.testfn.0() // Regular test, not running inside virtual machine
-                }
+                },
+                // Regular test, execute as usual:
+                _ => test.testfn.0() // Regular test, not running inside virtual machine
+            }
 
+            unsafe {
                 if __TEST_PANICKED == (test.desc.should_panic == ShouldPanic::Yes) {
                     passed += 1;
                     test_success(test.desc.name.0);
@@ -382,11 +456,11 @@ pub fn test_main_static(tests: &[TestDescAndFn]) {
                     test_failed(test.desc.name.0);
                 }
             }
-
         }
 
-        test_summary(passed, failed, ignored);
     }
+
+    test_summary(passed, failed, ignored);
 }
 
 // required for compatibility with the `rustc --test` interface

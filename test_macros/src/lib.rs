@@ -31,8 +31,9 @@ use syn::parse::IResult;
 use std::string;
 use proc_macro::TokenStream;
 use quote::ToTokens;
+use std::collections::HashMap;
 
-fn parse_kvmtest_args(args: &syn::DeriveInput) -> ((u64, u64), bool) {
+fn parse_kvmtest_args(args: &syn::DeriveInput) -> ((u64, u64), (u16, u32), bool) {
     if args.ident.as_ref() != "Dummy" {
         panic!("Get rid of this hack!");
     }
@@ -40,6 +41,8 @@ fn parse_kvmtest_args(args: &syn::DeriveInput) -> ((u64, u64), bool) {
     // If syn ever implements visitor for MetaItems, this can probably be written simpler:
     let mut identity_map: bool = false;
     let mut physical_memory: Vec<u64> = Vec::with_capacity(2);
+    let mut ioport_reads: Vec<u32> = vec![0,0];
+
     for attr in &args.attrs {
         match attr.value {
             syn::MetaItem::List(ref name, ref kvmattrs) => {
@@ -59,7 +62,18 @@ fn parse_kvmtest_args(args: &syn::DeriveInput) -> ((u64, u64), bool) {
                                                     &syn::NestedMetaItem::Literal(syn::Lit::Int(n, _)) =>  {
                                                         physical_memory.push(n);
                                                     },
-                                                    _ => panic!("Type mismatch in ram().")
+                                                    _ => panic!("Type mismatch in ram() arguments.")
+                                                }
+                                            }
+                                        }
+                                        "ioport" => {
+                                            ioport_reads.clear();
+                                            for (idx, innerattr) in innerattrs.iter().enumerate() {
+                                                match innerattr {
+                                                    &syn::NestedMetaItem::Literal(syn::Lit::Int(n, _)) =>  {
+                                                        ioport_reads.push(n as u32);
+                                                    },
+                                                    _ => panic!("Type mismatch in ioport() arguments.")
                                                 }
                                             }
                                         }
@@ -87,8 +101,11 @@ fn parse_kvmtest_args(args: &syn::DeriveInput) -> ((u64, u64), bool) {
     if physical_memory.len() != 2 {
         panic!("ram() takes two values (x,y)");
     }
+    if ioport_reads.len() != 2 {
+        panic!("in() takes two values (x,y)");
+    }
 
-    ((physical_memory[0], physical_memory[1]) , identity_map)
+    ((physical_memory[0], physical_memory[1]), (ioport_reads[0] as u16, ioport_reads[1]), identity_map)
 }
 
 /// Add a additional meta-data and setup functions for a KVM based test.
@@ -98,7 +115,7 @@ fn generate_kvmtest_meta_data(test_ident: &syn::Ident, args: &syn::DeriveInput) 
     let setup_fn_ident = syn::Ident::new(String::from(test_name) + "_setup");
     let struct_ident = syn::Ident::new(String::from(test_name) + "_kvm_meta_data");
 
-    let (physical_memory, identity_map) = parse_kvmtest_args(args);
+    let (physical_memory, ioport_reads, identity_map) = parse_kvmtest_args(args);
 
     (struct_ident.clone(),
      quote! {
@@ -108,7 +125,8 @@ fn generate_kvmtest_meta_data(test_ident: &syn::Ident, args: &syn::DeriveInput) 
             mbz: 0,
             meta: #test_name,
             identity_map: #identity_map,
-            physical_memory: #physical_memory
+            physical_memory: #physical_memory,
+            ioport_reads: #ioport_reads
         };
     })
 
@@ -130,6 +148,19 @@ fn insert_meta_data_reference(struct_ident: &syn::Ident, test_block: &mut syn::B
     test_block.stmts.insert(0, stmt);
 }
 
+/// Inserts an IO out (outw) instruction at the end of the test function
+/// that writes to port 0xf4 with value 0x0. outw will cause a vmexit.
+/// This particular port, payload combination is handled as a special case
+/// in the test runner to signal that the test has completed.
+fn insert_test_shutdown(struct_ident: &syn::Ident, test_block: &mut syn::Block) {
+    let stmt_exit_test = String::from("unsafe { x86::shared::io::outw(0xf4, 0x00); }");
+    let stmt = match syn::parse::stmt(stmt_exit_test.as_str()) {
+        IResult::Done(stmt_str, stmt) => stmt,
+        IResult::Error => panic!("Unable to generate test exit instruction."),
+    };
+    test_block.stmts.push(stmt);
+}
+
 
 #[proc_macro_attribute]
 pub fn kvmattrs(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -141,6 +172,7 @@ pub fn kvmattrs(args: TokenStream, input: TokenStream) -> TokenStream {
     // FIXME, see also https://github.com/dtolnay/syn/issues/86
     let derive_input_hack = format!("#[kvmattrs{}] struct Dummy;", args);
     let args_ast = syn::parse_derive_input(&derive_input_hack).unwrap();
+    println!("1");
 
     // Generate meta-data struct
     let ident = ast.ident.clone();
@@ -150,6 +182,7 @@ pub fn kvmattrs(args: TokenStream, input: TokenStream) -> TokenStream {
     match &mut ast.node {
         &mut syn::ItemKind::Fn(_, _, _, _, _, ref mut block) => {
             insert_meta_data_reference(&meta_data_ident, block);
+            insert_test_shutdown(&meta_data_ident, block);
         }
         _ => panic!("Not a function!"),
     };

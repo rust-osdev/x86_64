@@ -46,11 +46,6 @@ version = "0.7.7"
 optional = true
 features = ["core"]
 
-#[target.x86_64-utest-qemu.dev-dependencies.utest-macros]
-#path = "../utest/macros"
-#[target.x86_64-utest-qemu.dev-dependencies.utest-x86-64-qemu]
-#path = "../utest/x86-64-qemu"
-
 [dev-dependencies]
 klogger = { git = "https://github.com/gz/rust-klogger.git" }
 test = { path = "test_harness" }
