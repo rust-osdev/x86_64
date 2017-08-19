@@ -229,7 +229,8 @@ impl SegmentDescriptor {
             base2: ((base as usize & 0xFF0000) >> 16) as u8,
             base3: ((base as usize & 0xFF000000) >> 24) as u8,
             access: descriptor::Flags::from_type(ty1)
-                |   descriptor::Flags::from_priv(dpl),
+                |   descriptor::Flags::from_priv(dpl)
+                |   descriptor::FLAGS_PRESENT,
             limit1: limit1,
             limit2_flags: FLAGS_DB
                 | if fine_grained { Flags::empty() } else { FLAGS_G }
