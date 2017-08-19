@@ -246,7 +246,7 @@ bitflags! {
         const FLAGS_L    = 1 << 5,
         /// Default operation size (0 = 16-bit segment, 1 = 32-bit segment).
         const FLAGS_DB   = 1 << 6,
-        /// Granularity (0 = limit in bytes, 1 = limt in 4 KiB Pages).
+        /// Granularity (0 = limit in bytes, 1 = limit in 4 KiB Pages).
         const FLAGS_G    = 1 << 7,
 
     }
