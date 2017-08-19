@@ -256,7 +256,7 @@ impl Flags {
     pub const BLANK: Flags = Flags { bits: 0 };
 
     pub fn from_limit2(limit2: u8) -> Flags {
-        assert_eq!(limit2 & !0b111, 0);
+        assert_eq!(limit2 & !0b1111, 0);
         Flags { bits: limit2 }
     }
 }
