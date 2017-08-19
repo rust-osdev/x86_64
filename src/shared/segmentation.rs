@@ -232,7 +232,7 @@ impl SegmentDescriptor {
                 |   descriptor::Flags::from_priv(dpl),
             limit1: limit1,
             limit2_flags: FLAGS_DB
-                | if fine_grained { FLAGS_G } else { Flags::empty() }
+                | if fine_grained { Flags::empty() } else { FLAGS_G }
                 | Flags::from_limit2(limit2),
         }
     }
