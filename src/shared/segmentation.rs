@@ -174,8 +174,8 @@ pub enum Type {
 impl Type {
     pub fn pack(self) -> u8 {
         match self {
-            Type::Data(d) => d.bits | 0b0_000,
-            Type::Code(c) => c.bits | 0b1_000,
+            Type::Data(d) => d.bits | 0b10_000,
+            Type::Code(c) => c.bits | 0b11_000,
         }
     }
 }
