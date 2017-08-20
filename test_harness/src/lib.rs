@@ -473,6 +473,7 @@ pub struct TestDesc {
     pub ignore: bool,
     pub name: StaticTestName,
     pub should_panic: ShouldPanic,
+    pub allow_fail: bool,
 }
 
 pub struct StaticTestName(pub &'static str);
