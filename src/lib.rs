@@ -2,7 +2,6 @@
 
 #![feature(const_fn)]
 #![feature(asm)]
-#![feature(associated_consts)]
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]
 
