@@ -107,7 +107,7 @@ bitflags!{
 
         // Code => permissions
         const FLAGS_TYPE_SEG_C_READ = 0b1_0010,
-        const FLAGS_TYPE_SEG_D_CONFORMING = 0b1_0100,
+        const FLAGS_TYPE_SEG_C_CONFORMING = 0b1_0100,
 
         /// Data Read-Only
         const FLAGS_TYPE_SEG_D_RO     = FLAGS_TYPE_DATA.bits,
@@ -139,32 +139,32 @@ bitflags!{
                                       | FLAGS_TYPE_SEG_ACCESSED.bits,
 
         /// Code Execute-Only
-        const FLAGS_TYPE_SEG_C_EO     = FLAGS_TYPE_DATA.bits,
+        const FLAGS_TYPE_SEG_C_EO     = FLAGS_TYPE_CODE.bits,
         /// Code Execute-Only, accessed
-        const FLAGS_TYPE_SEG_C_EOA    = FLAGS_TYPE_DATA.bits
+        const FLAGS_TYPE_SEG_C_EOA    = FLAGS_TYPE_CODE.bits
                                       | FLAGS_TYPE_SEG_ACCESSED.bits,
         /// Code Execute/Read
-        const FLAGS_TYPE_SEG_C_ER     = FLAGS_TYPE_DATA.bits
+        const FLAGS_TYPE_SEG_C_ER     = FLAGS_TYPE_CODE.bits
                                       | FLAGS_TYPE_SEG_C_READ.bits,
         /// Code Execute/Read, accessed
-        const FLAGS_TYPE_SEG_C_ERA    = FLAGS_TYPE_DATA.bits
+        const FLAGS_TYPE_SEG_C_ERA    = FLAGS_TYPE_CODE.bits
                                       | FLAGS_TYPE_SEG_C_READ.bits
                                       | FLAGS_TYPE_SEG_ACCESSED.bits,
         /// Code Execute-Only, conforming
-        const FLAGS_TYPE_SEG_C_EOC    = FLAGS_TYPE_DATA.bits
-                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits,
+        const FLAGS_TYPE_SEG_C_EOC    = FLAGS_TYPE_CODE.bits
+                                      | FLAGS_TYPE_SEG_C_CONFORMING.bits,
         /// Code Execute-Only, conforming, accessed
-        const FLAGS_TYPE_SEG_C_EOCA   = FLAGS_TYPE_DATA.bits
-                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits
+        const FLAGS_TYPE_SEG_C_EOCA   = FLAGS_TYPE_CODE.bits
+                                      | FLAGS_TYPE_SEG_C_CONFORMING.bits
                                       | FLAGS_TYPE_SEG_ACCESSED.bits,
         /// Code Execute/Read, conforming
-        const FLAGS_TYPE_SEG_C_ERC    = FLAGS_TYPE_DATA.bits
+        const FLAGS_TYPE_SEG_C_ERC    = FLAGS_TYPE_CODE.bits
                                       | FLAGS_TYPE_SEG_C_READ.bits
-                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits,
+                                      | FLAGS_TYPE_SEG_C_CONFORMING.bits,
         /// Code Execute/Read, conforming, accessed
-        const FLAGS_TYPE_SEG_C_ERCA   = FLAGS_TYPE_DATA.bits
+        const FLAGS_TYPE_SEG_C_ERCA   = FLAGS_TYPE_CODE.bits
                                       | FLAGS_TYPE_SEG_C_READ.bits
-                                      | FLAGS_TYPE_SEG_D_CONFORMING.bits
+                                      | FLAGS_TYPE_SEG_C_CONFORMING.bits
                                       | FLAGS_TYPE_SEG_ACCESSED.bits,
     }
 }

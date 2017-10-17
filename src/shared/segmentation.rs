@@ -174,8 +174,8 @@ pub enum Type {
 impl Type {
     pub fn pack(self) -> u8 {
         match self {
-            Type::Data(d) => d.bits | 0b0_000,
-            Type::Code(c) => c.bits | 0b1_000,
+            Type::Data(d) => d.bits | 0b10_000,
+            Type::Code(c) => c.bits | 0b11_000,
         }
     }
 }
@@ -229,10 +229,11 @@ impl SegmentDescriptor {
             base2: ((base as usize & 0xFF0000) >> 16) as u8,
             base3: ((base as usize & 0xFF000000) >> 24) as u8,
             access: descriptor::Flags::from_type(ty1)
-                |   descriptor::Flags::from_priv(dpl),
+                |   descriptor::Flags::from_priv(dpl)
+                |   descriptor::FLAGS_PRESENT,
             limit1: limit1,
             limit2_flags: FLAGS_DB
-                | if fine_grained { FLAGS_G } else { Flags::empty() }
+                | if fine_grained { Flags::empty() } else { FLAGS_G }
                 | Flags::from_limit2(limit2),
         }
     }
@@ -246,7 +247,7 @@ bitflags! {
         const FLAGS_L    = 1 << 5,
         /// Default operation size (0 = 16-bit segment, 1 = 32-bit segment).
         const FLAGS_DB   = 1 << 6,
-        /// Granularity (0 = limit in bytes, 1 = limt in 4 KiB Pages).
+        /// Granularity (0 = limit in bytes, 1 = limit in 4 KiB Pages).
         const FLAGS_G    = 1 << 7,
 
     }
@@ -256,7 +257,7 @@ impl Flags {
     pub const BLANK: Flags = Flags { bits: 0 };
 
     pub fn from_limit2(limit2: u8) -> Flags {
-        assert_eq!(limit2 & !0b111, 0);
+        assert_eq!(limit2 & !0b1111, 0);
         Flags { bits: limit2 }
     }
 }

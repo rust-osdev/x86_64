@@ -8,7 +8,6 @@
 #[macro_use]
 extern crate bitflags;
 
-#[macro_use]
 extern crate raw_cpuid;
 
 #[cfg(feature = "performance-counter")]
