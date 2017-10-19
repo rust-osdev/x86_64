@@ -45,7 +45,7 @@ impl Type {
             Type::SystemDescriptor { size, ty } =>
                 (size as u8) << 3 | (ty as u8) | FLAGS_TYPE_SYS.bits,
             Type::SegmentDescriptor { ty, accessed } =>
-                (accessed as u8)  | ty.pack()  | FLAGS_TYPE_SYS.bits,
+                (accessed as u8)  | ty.pack()  | FLAGS_TYPE_SEG.bits,
         }
     }
 }
