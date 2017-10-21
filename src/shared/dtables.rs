@@ -17,30 +17,16 @@ pub struct DescriptorTablePointer<Entry> {
 }
 
 impl<T> DescriptorTablePointer<T> {
-    fn new(slice: &[T]) -> Self {
-        let len = slice.len() * size_of::<T>();
+    pub fn new(slice: &[T]) -> Self {
+        // GDT, LDT, and IDT all expect the limit to be set to "one less".
+        // See Intel 3a, Section 3.5.1 "Segment Descriptor Tables" and
+        // Section 6.10 "Interrupt Descriptor Table (IDT)".
+        let len = slice.len() * size_of::<T>() - 1;
         assert!(len < 0x10000);
         DescriptorTablePointer {
             base: slice.as_ptr(),
             limit: len as u16,
         }
-    }
-}
-
-impl DescriptorTablePointer<SegmentDescriptor> {
-    pub fn new_gdtp(gdt: &[SegmentDescriptor]) -> Self {
-        let mut p = Self::new(gdt);
-        p.limit -= 1;
-        p
-    }
-    pub fn new_ldtp(ldt: &[SegmentDescriptor]) -> Self {
-        Self::new(ldt)
-    }
-}
-
-impl DescriptorTablePointer<IdtEntry> {
-    pub fn new_idtp(idt: &[IdtEntry]) -> Self {
-        Self::new(idt)
     }
 }
 
