@@ -1,5 +1,5 @@
 //! Functions to read and write control registers.
-//! See Intel Vol. 3a Section 2.5, especially Figure 2.6.
+//! See Intel Vol. 3a Section 2.5, especially Figure 2-7.
 
 bitflags! {
     pub flags Cr0: usize {
@@ -19,12 +19,15 @@ bitflags! {
 
 bitflags! {
     pub flags Cr4: usize {
+        const CR4_ENABLE_PROTECTION_KEY = 1 << 22,
         const CR4_ENABLE_SMAP = 1 << 21,
         const CR4_ENABLE_SMEP = 1 << 20,
         const CR4_ENABLE_OS_XSAVE = 1 << 18,
         const CR4_ENABLE_PCID = 1 << 17,
+        const CR4_ENABLE_FSGSBASE = 1 << 16,
         const CR4_ENABLE_SMX = 1 << 14,
         const CR4_ENABLE_VMX = 1 << 13,
+        const CR4_ENABLE_UMIP = 1 << 11,
         const CR4_UNMASKED_SSE = 1 << 10,
         const CR4_ENABLE_SSE = 1 << 9,
         const CR4_ENABLE_PPMC = 1 << 8,
@@ -36,6 +39,20 @@ bitflags! {
         const CR4_TIME_STAMP_DISABLE = 1 << 2,
         const CR4_VIRTUAL_INTERRUPTS = 1 << 1,
         const CR4_ENABLE_VME = 1 << 0,
+    }
+}
+
+bitflags! {
+    pub flags Xcr0: usize {
+        const XCR0_PKRU_STATE = 1 << 9,
+        const XCR0_HI16_ZMM_STATE = 1 << 7,
+        const XCR0_ZMM_HI256_STATE = 1 << 6,
+        const XCR0_OPMASK_STATE = 1 << 5,
+        const XCR0_BNDCSR_STATE = 1 << 4,
+        const XCR0_BNDREG_STATE = 1 << 3,
+        const XCR0_AVX_STATE = 1 << 2,
+        const XCR0_SSE_STATE = 1 << 1,
+        const XCR0_FPU_MMX_STATE = 1 << 0,
     }
 }
 
@@ -81,4 +98,21 @@ pub unsafe fn cr4() -> Cr4 {
 /// Write cr4.
 pub unsafe fn cr4_write(val: Cr4) {
     asm!("mov $0, %cr4" :: "r" (val.bits) : "memory");
+}
+
+/// Read Extended Control Register XCR0.
+/// Only supported if CR4_ENABLE_OS_XSAVE is set.
+pub unsafe fn xcr0() -> Xcr0 {
+    let high: u32;
+    let low: u32;
+    asm!("xgetbv" : "={eax}"(low), "={edx}"(high) : "{ecx}"(0));
+    Xcr0::from_bits_truncate((high as usize) << 32 | low as usize)
+}
+
+/// Write to Extended Control Register XCR0.
+/// Only supported if CR4_ENABLE_OS_XSAVE is set.
+pub unsafe fn xcr0_write(val: Xcr0) {
+    let high: u32 = (val.bits >> 32) as u32;
+    let low: u32 = val.bits as u32;
+    asm!("xsetbv" :: "{eax}"(low), "{ecx}"(0), "{edx}"(high));
 }
