@@ -28,7 +28,7 @@ impl SegmentDescriptor {
         seg
     }
 
-    pub fn new_tss(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> [SegmentDescriptor; 2] {
+    pub fn new_tss(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> SegmentDescriptor {
         let tss_ptr = tss as *const TaskStateSegment;
         let ty1 = descriptor::Type::SystemDescriptor {
             size: true,
