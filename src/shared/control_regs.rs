@@ -43,7 +43,7 @@ bitflags! {
 }
 
 bitflags! {
-    pub flags Xcr0: usize {
+    pub flags Xcr0: u64 {
         const XCR0_PKRU_STATE = 1 << 9,
         const XCR0_HI16_ZMM_STATE = 1 << 7,
         const XCR0_ZMM_HI256_STATE = 1 << 6,
@@ -106,7 +106,7 @@ pub unsafe fn xcr0() -> Xcr0 {
     let high: u32;
     let low: u32;
     asm!("xgetbv" : "={eax}"(low), "={edx}"(high) : "{ecx}"(0));
-    Xcr0::from_bits_truncate((high as usize) << 32 | low as usize)
+    Xcr0::from_bits_truncate((high as u64) << 32 | low as u64)
 }
 
 /// Write to Extended Control Register XCR0.
