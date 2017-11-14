@@ -1,16 +1,11 @@
 //! Helpers to program the task state segment.
 //! See Intel 3a, Chapter 7, Section 7
 
-use shared::segmentation;
-
-pub type TaskStateDescriptorLow = segmentation::SegmentDescriptor;
-pub type TaskStateDescriptorHigh = u64;
-
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
 /// but is used for finding kernel level stack
 /// if interrupts arrive while in kernel mode.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[repr(C, packed)]
 pub struct TaskStateSegment {
     pub reserved: u32,

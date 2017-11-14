@@ -1,4 +1,5 @@
 pub mod irq;
+pub mod segmentation;
 pub mod task;
 
 #[inline(always)]

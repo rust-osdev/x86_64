@@ -24,36 +24,6 @@ bitflags! {
     }
 }
 
-/// Reload code segment register.
-/// Note this is special since we can not directly move
-/// to %cs. Instead we push the new segment selector
-/// and return value on the stack and use lretq
-/// to reload cs and continue at 1:.
-pub unsafe fn set_cs(sel: SegmentSelector) {
-
-    #[cfg(target_arch="x86")]
-    #[inline(always)]
-    unsafe fn inner(sel: SegmentSelector) {
-        asm!("pushl $0; \
-              pushl $$1f; \
-              lretl; \
-              1:" :: "ri" (sel.bits() as usize) : "rax" "memory");
-    }
-
-    #[cfg(target_arch="x86_64")]
-    #[inline(always)]
-    unsafe fn inner(sel: SegmentSelector) {
-        asm!("pushq $0; \
-              leaq  1f(%rip), %rax; \
-              pushq %rax; \
-              lretq; \
-              1:" :: "ri" (sel.bits() as usize) : "rax" "memory");
-    }
-
-    inner(sel)
-}
-
-
 impl SegmentSelector {
     /// Create a new SegmentSelector
     ///
@@ -196,21 +166,22 @@ pub struct SegmentDescriptor {
     base3: u8,
 }
 
-/// This is data-structure is a ugly mess thing so we provide some
+
+/// This data-structure is an ugly mess thing so we provide some
 /// convenience function to program it.
 impl SegmentDescriptor {
     pub const NULL: SegmentDescriptor = SegmentDescriptor {
+        limit1: 0,
         base1: 0,
         base2: 0,
-        base3: 0,
         access: descriptor::Flags::BLANK,
-        limit1: 0,
         limit2_flags: Flags::BLANK,
+        base3: 0,
     };
 
-    pub fn new(base: u32, limit: u32,
-               ty: Type, accessed: bool, dpl: PrivilegeLevel) -> SegmentDescriptor
-    {
+    /// Outputs a memory or TSS descriptor.
+    /// For a TSS descriptor on x86-64, you also need a high descriptor as second entry (see below).
+    pub(crate) fn memory_or_tss(base: u32, limit: u32, ty: descriptor::Type, dpl: PrivilegeLevel, flags: Flags) -> SegmentDescriptor {
         let fine_grained = limit < 0x100000;
         let (limit1, limit2) = if fine_grained {
             ((limit & 0xFFFF) as u16, ((limit & 0xF0000) >> 16) as u8)
@@ -220,21 +191,30 @@ impl SegmentDescriptor {
             }
             (((limit & 0xFFFF000) >> 12) as u16, ((limit & 0xF0000000) >> 28) as u8)
         };
-        let ty1 = descriptor::Type::SegmentDescriptor {
-            ty: ty,
-            accessed: accessed
-        };
         SegmentDescriptor {
+            limit1: limit1,
             base1: base as u16,
             base2: ((base as usize & 0xFF0000) >> 16) as u8,
-            base3: ((base as usize & 0xFF000000) >> 24) as u8,
-            access: descriptor::Flags::from_type(ty1)
+            access: descriptor::Flags::from_type(ty)
                 |   descriptor::Flags::from_priv(dpl)
                 |   descriptor::FLAGS_PRESENT,
-            limit1: limit1,
-            limit2_flags: FLAGS_DB
-                | if fine_grained { Flags::empty() } else { FLAGS_G }
+            limit2_flags: if fine_grained { Flags::empty() } else { FLAGS_G }
+                | flags
                 | Flags::from_limit2(limit2),
+            base3: ((base as usize & 0xFF000000) >> 24) as u8,
+        }
+    }
+
+    /// Outputs a descriptor containing the high 32 bits of a memory address.
+    /// Serves as the second entry for descriptors that consume 2 table entries in x86-64.
+    pub(crate) const fn high(address: u64) -> SegmentDescriptor {
+        SegmentDescriptor {
+            limit1: (address >> 32) as u16,
+            base1: (address >> 48) as u16,
+            base2: 0,
+            access: descriptor::Flags::BLANK,
+            limit2_flags: Flags::BLANK,
+            base3: 0,
         }
     }
 }

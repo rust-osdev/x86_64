@@ -2,6 +2,7 @@
 
 use core::fmt;
 
+use bits64::segmentation::SegmentSelector;
 use shared::descriptor::*;
 use shared::paging::VAddr;
 use shared::PrivilegeLevel;
@@ -9,22 +10,36 @@ use shared::PrivilegeLevel;
 /// An interrupt gate descriptor.
 ///
 /// See Intel manual 3a for details, specifically section "6.14.1 64-Bit Mode
-/// IDT" and "Table 3-2. System-Segment and Gate-Descriptor Types".
+/// IDT" and "Figure 6-7. 64-Bit IDT Gate Descriptors".
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
 pub struct IdtEntry {
     /// Lower 16 bits of ISR.
     pub base_lo: u16,
     /// Segment selector.
-    pub selector: u16,
+    pub selector: SegmentSelector,
     /// This must always be zero.
-    pub reserved0: u8,
+    pub ist_index: u8,
     /// Flags.
     pub flags: Flags,
     /// The upper 48 bits of ISR (the last 16 bits must be zero).
     pub base_hi: u64,
     /// Must be zero.
     pub reserved1: u16,
+}
+
+pub enum Type {
+    InterruptGate,
+    TrapGate,
+}
+
+impl Type {
+    pub fn pack(self) -> Flags {
+        match self {
+            Type::InterruptGate => FLAGS_TYPE_SYS_NATIVE_INTERRUPT_GATE,
+            Type::TrapGate => FLAGS_TYPE_SYS_NATIVE_TRAP_GATE,
+        }
+    }
 }
 
 impl IdtEntry {
@@ -35,8 +50,8 @@ impl IdtEntry {
     /// some other data stored in the error code.
     pub const MISSING: IdtEntry = IdtEntry {
         base_lo: 0,
-        selector: 0,
-        reserved0: 0,
+        selector: SegmentSelector::from_raw(0),
+        ist_index: 0,
         flags: Flags::BLANK,
         base_hi: 0,
         reserved1: 0,
@@ -49,20 +64,17 @@ impl IdtEntry {
     ///
     /// The "Present" flag set, which is the most common case.  If you need
     /// something else, you can construct it manually.
-    pub const fn new(handler: VAddr, gdt_code_selector: u16,
-                     dpl: PrivilegeLevel, block: bool) -> IdtEntry {
+    pub fn new(handler: VAddr, gdt_code_selector: SegmentSelector,
+               dpl: PrivilegeLevel, ty: Type, ist_index: u8) -> IdtEntry {
+        assert!(ist_index < 0b1000);
         IdtEntry {
             base_lo: ((handler.as_usize() as u64) & 0xFFFF) as u16,
             base_hi: handler.as_usize() as u64 >> 16,
             selector: gdt_code_selector,
-            reserved0: 0,
-            // Nice bitflags operations don't work in const fn, hence these
-            // ad-hoc methods.
+            ist_index: ist_index,
             flags: Flags::from_priv(dpl)
-                .const_or(FLAGS_TYPE_SYS_NATIVE_INTERRUPT_GATE
-                          .const_mux(FLAGS_TYPE_SYS_NATIVE_TRAP_GATE,
-                                     block))
-                .const_or(FLAGS_PRESENT),
+                |  ty.pack()
+                |  FLAGS_PRESENT,
             reserved1: 0,
         }
     }
