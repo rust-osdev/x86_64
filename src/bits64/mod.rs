@@ -15,21 +15,6 @@ macro_rules! check_flag {
     )
 }
 
-macro_rules! is_bit_set {
-    ($field:expr, $bit:expr) => (
-        $field & (1 << $bit) > 0
-    )
-}
-
-macro_rules! check_bit_fn {
-    ($doc:meta, $fun:ident, $field:ident, $bit:expr) => (
-        #[$doc]
-        pub fn $fun(&self) -> bool {
-            is_bit_set!(self.$field, $bit)
-        }
-    )
-}
-
 pub mod time;
 pub mod irq;
 pub mod paging;
