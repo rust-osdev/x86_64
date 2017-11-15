@@ -15,7 +15,6 @@ macro_rules! check_flag {
     )
 }
 
-pub mod time;
 pub mod irq;
 pub mod paging;
 pub mod segmentation;

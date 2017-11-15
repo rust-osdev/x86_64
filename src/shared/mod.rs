@@ -9,6 +9,7 @@ pub mod flags;
 pub mod segmentation;
 pub mod task;
 pub mod tlb;
+pub mod time;
 
 pub mod cpuid {
     pub use raw_cpuid::*;
