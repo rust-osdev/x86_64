@@ -1,30 +1,30 @@
 //! This crate provides x86_64 specific functions and data structures,
 //! and access to various system registers.
 
-#![cfg(target_arch="x86_64")]
-
 #![warn(missing_docs)]
 
 #![feature(const_fn)]
 #![feature(asm)]
-#![feature(associated_consts)]
 #![feature(abi_x86_interrupt)]
-#![cfg_attr(test, allow(unused_features))]
+#![feature(step_trait)]
+#![feature(try_from)]
 
 #![no_std]
 
-pub use address::{VirtualAddress, PhysicalAddress};
+#[cfg(test)]
+#[macro_use]
+extern crate std;
 
 extern crate bit_field;
+extern crate ux;
 
-#[macro_use]
-mod bitflags;
+pub use addr::{VirtAddr, PhysAddr, UsizeConversions, align_up, align_down};
 
-pub mod instructions;
-pub mod registers;
-pub mod structures;
+//pub mod instructions;
+//pub mod registers;
+//pub mod structures;
 
-mod address;
+mod addr;
 
 /// Represents a protection ring level.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
