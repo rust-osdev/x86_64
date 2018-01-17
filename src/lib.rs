@@ -15,14 +15,17 @@
 #[macro_use]
 extern crate std;
 
+#[macro_use]
+extern crate bitflags;
 extern crate bit_field;
-extern crate ux;
+extern crate usize_conversions;
+pub extern crate ux;
 
-pub use addr::{VirtAddr, PhysAddr, UsizeConversions, align_up, align_down};
+pub use addr::{VirtAddr, PhysAddr, align_up, align_down};
 
-//pub mod instructions;
-//pub mod registers;
-//pub mod structures;
+pub mod instructions;
+pub mod registers;
+pub mod structures;
 
 mod addr;
 

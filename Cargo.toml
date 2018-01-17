@@ -1,11 +1,11 @@
 [package]
 authors = [
-  "Gerd Zellweger <mail@gerdzellweger.com>",
-  "Eric Kidd <git@randomhacks.net>",
-  "Philipp Oppermann <dev@phil-opp.com>",
-  "Dan Schatzberg <schatzberg.dan@gmail.com>",
-  "John Ericson <John_Ericson@Yahoo.com>",
-  "Rex Lunae <rexlunae@gmail.com>"
+    "Gerd Zellweger <mail@gerdzellweger.com>",
+    "Eric Kidd <git@randomhacks.net>",
+    "Philipp Oppermann <dev@phil-opp.com>",
+    "Dan Schatzberg <schatzberg.dan@gmail.com>",
+    "John Ericson <John_Ericson@Yahoo.com>",
+    "Rex Lunae <rexlunae@gmail.com>",
 ]
 description = "Provides x86_64 specific functions and data structures, and access to various system registers."
 documentation = "https://docs.rs/x86_64"
@@ -15,12 +15,17 @@ keywords = [
     "x86_64",
     "no_std",
 ]
-license = "MIT/Apache2"
+license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/phil-opp/x86_64"
-version = "0.2.0"
+version = "0.2.0-alpha-001"
 
 [dependencies]
 bit_field = "0.9.0"
-ux = { version = "0.1.0", default-features = false }
+bitflags = "1.0.1"
+usize_conversions = "0.2.0"
+
+[dependencies.ux]
+default-features = false
+version = "0.1.0"

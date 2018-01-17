@@ -31,28 +31,6 @@ pub struct VirtAddr(u64);
 #[repr(C)]
 pub struct PhysAddr(u64);
 
-/// This trait allows conversions between `usize` and `u64` on systems where these two types
-/// have the same size.
-///
-/// On 64-bit systems, this trait is implemented for `usize`.
-pub trait UsizeConversions: Clone {
-    /// Safely converts the `usize` to an `u64`.
-    fn as_u64(self) -> u64;
-    /// Safely converts the given `u64` to an `usize`.
-    fn from_u64(value: u64) -> Self;
-}
-
-#[cfg(target_pointer_width = "64")]
-impl UsizeConversions for usize {
-    fn as_u64(self) -> u64 {
-        self as u64
-    }
-
-    fn from_u64(value: u64) -> Self {
-        value as usize
-    }
-}
-
 /// A passed `u64` was not a valid virtual address.
 ///
 /// This means that bits 48 to 64 are not
@@ -146,6 +124,12 @@ impl VirtAddr {
     /// Returns the 9-bit level 4 page table index.
     pub fn p4_index(&self) -> u9 {
         u9::new(((self.0 >> 12 >> 9 >> 9 >> 9) & 0o777).try_into().unwrap())
+    }
+}
+
+impl fmt::Debug for VirtAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "VirtAddr({:#x})", self.0)
     }
 }
 
@@ -244,15 +228,19 @@ impl PhysAddr {
     /// Aligns the physical address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
-    pub fn align_up(self, align: u64) -> Self {
-        PhysAddr(align_up(self.0, align))
+    pub fn align_up<U>(self, align: U) -> Self
+        where U: Into<u64>
+    {
+        PhysAddr(align_up(self.0, align.into()))
     }
 
     /// Aligns the physical address downwards to the given alignment.
     ///
     /// See the `align_down` function for more information.
-    pub fn align_down(self, align: u64) -> Self {
-        PhysAddr(align_down(self.0, align))
+    pub fn align_down<U>(self, align: U) -> Self
+        where U: Into<u64>
+    {
+        PhysAddr(align_down(self.0, align.into()))
     }
 }
 
