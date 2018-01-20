@@ -3,7 +3,7 @@
 pub use self::page_table::*;
 
 use addr::{VirtAddr, PhysAddr};
-use core::ops::Add;
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
 
 mod page_table;
@@ -12,6 +12,7 @@ mod page_table;
 pub const PAGE_SIZE: u16 = 4096;
 
 /// A virtual 4kB page.
+#[derive(Debug, Clone)]
 pub struct Page {
    number: u64,
 }
@@ -55,8 +56,27 @@ impl Add<u64> for Page {
     }
 }
 
+impl AddAssign<u64> for Page {
+    fn add_assign(&mut self, rhs: u64) {
+        *self = self.clone() + rhs;
+    }
+}
+
+impl Sub<u64> for Page {
+    type Output = Self;
+    fn sub(self, rhs: u64) -> Self::Output {
+        Page::containing_address(self.start_address() - rhs * u64::from(PAGE_SIZE))
+    }
+}
+
+impl SubAssign<u64> for Page {
+    fn sub_assign(&mut self, rhs: u64) {
+        *self = self.clone() - rhs;
+    }
+}
 
 /// A physical 4kB frame.
+#[derive(Debug, Clone)]
 pub struct PhysFrame {
    number: u64,
 }
@@ -77,5 +97,24 @@ impl Add<u64> for PhysFrame {
     type Output = Self;
     fn add(self, rhs: u64) -> Self::Output {
         PhysFrame::containing_address(self.start_address() + rhs * u64::from(PAGE_SIZE))
+    }
+}
+
+impl AddAssign<u64> for PhysFrame {
+    fn add_assign(&mut self, rhs: u64) {
+        *self = self.clone() + rhs;
+    }
+}
+
+impl Sub<u64> for PhysFrame {
+    type Output = Self;
+    fn sub(self, rhs: u64) -> Self::Output {
+        PhysFrame::containing_address(self.start_address() - rhs * u64::from(PAGE_SIZE))
+    }
+}
+
+impl SubAssign<u64> for PhysFrame {
+    fn sub_assign(&mut self, rhs: u64) {
+        *self = self.clone() - rhs;
     }
 }
