@@ -3,7 +3,7 @@
 pub use self::page_table::*;
 
 use addr::{VirtAddr, PhysAddr};
-
+use core::ops::Add;
 use ux::*;
 
 mod page_table;
@@ -48,6 +48,14 @@ impl Page {
     }
 }
 
+impl Add<u64> for Page {
+    type Output = Self;
+    fn add(self, rhs: u64) -> Self::Output {
+        Page::containing_address(self.start_address() + rhs * u64::from(PAGE_SIZE))
+    }
+}
+
+
 /// A physical 4kB frame.
 pub struct PhysFrame {
    number: u64,
@@ -62,5 +70,12 @@ impl PhysFrame {
     /// Returns the start address of the page.
     pub fn start_address(&self) -> PhysAddr {
         PhysAddr::new(self.number * u64::from(PAGE_SIZE))
+    }
+}
+
+impl Add<u64> for PhysFrame {
+    type Output = Self;
+    fn add(self, rhs: u64) -> Self::Output {
+        PhysFrame::containing_address(self.start_address() + rhs * u64::from(PAGE_SIZE))
     }
 }
