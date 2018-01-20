@@ -136,33 +136,33 @@ impl fmt::Debug for VirtAddr {
 impl Add<u64> for VirtAddr {
     type Output = Self;
     fn add(self, rhs: u64) -> Self::Output {
-        VirtAddr(self.0 + rhs)
+        VirtAddr::new(self.0 + rhs)
     }
 }
 
 impl AddAssign<u64> for VirtAddr {
     fn add_assign(&mut self, rhs: u64) {
-        self.0 += rhs;
+        *self = *self + rhs;
     }
 }
 
 impl Sub<u64> for VirtAddr {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        VirtAddr(self.0 - rhs)
+        VirtAddr::new(self.0 - rhs)
     }
 }
 
 impl SubAssign<u64> for VirtAddr {
     fn sub_assign(&mut self, rhs: u64) {
-        self.0 -= rhs;
+        *self = *self - rhs;
     }
 }
 
 impl Step for VirtAddr {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
         if *start < *end {
-            usize::try_from(end.0 - start.0).ok()
+            usize::try_from(end.0.get_bits(0..48) - start.0.get_bits(0..48)).ok()
         } else {
             Some(0)
         }
@@ -277,26 +277,26 @@ impl fmt::UpperHex for PhysAddr {
 impl Add<u64> for PhysAddr {
     type Output = Self;
     fn add(self, rhs: u64) -> Self::Output {
-        PhysAddr(self.0 + rhs)
+        PhysAddr::new(self.0 + rhs)
     }
 }
 
 impl AddAssign<u64> for PhysAddr {
     fn add_assign(&mut self, rhs: u64) {
-        self.0 += rhs;
+        *self = *self + rhs;
     }
 }
 
 impl Sub<u64> for PhysAddr {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        PhysAddr(self.0 - rhs)
+        PhysAddr::new(self.0 - rhs)
     }
 }
 
 impl SubAssign<u64> for PhysAddr {
     fn sub_assign(&mut self, rhs: u64) {
-        self.0 -= rhs;
+        *self = *self - rhs;
     }
 }
 
