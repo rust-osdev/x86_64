@@ -159,6 +159,13 @@ impl SubAssign<u64> for VirtAddr {
     }
 }
 
+impl Sub<VirtAddr> for VirtAddr {
+    type Output = u64;
+    fn sub(self, rhs: VirtAddr) -> Self::Output {
+        self.as_u64() - rhs.as_u64()
+    }
+}
+
 impl Step for VirtAddr {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
         if *start < *end {
@@ -299,6 +306,14 @@ impl SubAssign<u64> for PhysAddr {
         *self = *self - rhs;
     }
 }
+
+impl Sub<PhysAddr> for PhysAddr {
+    type Output = u64;
+    fn sub(self, rhs: PhysAddr) -> Self::Output {
+        self.as_u64() - rhs.as_u64()
+    }
+}
+
 
 impl Step for PhysAddr {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
