@@ -8,6 +8,7 @@
 #![feature(abi_x86_interrupt)]
 #![feature(step_trait)]
 #![feature(try_from)]
+#![feature(repr_transparent)]
 
 #![no_std]
 
