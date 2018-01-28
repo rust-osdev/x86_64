@@ -1,4 +1,5 @@
 use core::ops::{Index, IndexMut};
+use core::fmt;
 
 use addr::PhysAddr;
 use super::PhysFrame;
@@ -31,6 +32,15 @@ impl PageTableEntry {
 
     pub fn set(&mut self, frame: PhysFrame, flags: PageTableFlags) {
         self.0 = (frame.start_address().as_u64()) | flags.bits();
+    }
+}
+
+impl fmt::Debug for PageTableEntry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut f = f.debug_struct("PageTableEntry");
+        f.field("points_to", &self.points_to());
+        f.field("flags", &self.flags());
+        f.finish()
     }
 }
 
@@ -102,5 +112,11 @@ impl Index<u9> for PageTable {
 impl IndexMut<u9> for PageTable {
     fn index_mut(&mut self, index: u9) -> &mut PageTableEntry {
         &mut self.entries[usize_from(u16::from(index))]
+    }
+}
+
+impl fmt::Debug for PageTable {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.entries[..].fmt(f)
     }
 }
