@@ -11,11 +11,16 @@ pub struct Cr0;
 impl Cr0 {
     /// Read the current set of CR0 flags.
     pub fn read() -> Cr0Flags {
+        Cr0Flags::from_bits_truncate(Self::read_raw())
+    }
+
+    /// Read the current raw CR0 value.
+    pub fn read_raw() -> u64 {
         let value: u64;
         unsafe {
             asm!("mov %cr0, $0" : "=r" (value));
         }
-        Cr0Flags::from_bits_truncate(value)
+        value
     }
 
     /// Write CR0 flags.
@@ -23,11 +28,20 @@ impl Cr0 {
     /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
     /// safety by e.g. disabling paging.
     pub unsafe fn write(flags: Cr0Flags) {
-        let mut value = Self::read();
-        value |= flags;
-        let value = value.bits();
+        let mut value = Self::read_raw();
+        value |= flags.bits();
 
         asm!("mov $0, %cr0" :: "r" (value) : "memory")
+    }
+
+    /// Updates CR0 flags.
+    ///
+    /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
+    /// safety by e.g. disabling paging.
+    pub unsafe fn update<F>(f: F) where F: FnOnce(&mut Cr0Flags) {
+        let mut flags = Self::read();
+        f(&mut flags);
+        Self::write(flags);
     }
 }
 
