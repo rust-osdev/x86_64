@@ -1,5 +1,7 @@
 //! Functions to read and write control registers.
 
+pub use super::model_specific::Efer;
+
 use PhysAddr;
 use structures::paging::PhysFrame;
 

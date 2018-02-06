@@ -9,7 +9,7 @@ pub fn flush(addr: VirtAddr) {
 
 /// Invalidate the TLB completely by reloading the CR3 register.
 pub fn flush_all() {
-    use registers::control_regs::Cr3;
+    use registers::control::Cr3;
     let (frame, flags) = Cr3::read();
     unsafe { Cr3::write(frame, flags) }
 }
