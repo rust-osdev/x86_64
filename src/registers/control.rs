@@ -5,6 +5,49 @@ pub use super::model_specific::Efer;
 use PhysAddr;
 use structures::paging::PhysFrame;
 
+/// Various control flags modifying the basic operation of the CPU.
+pub struct Cr0;
+
+impl Cr0 {
+    /// Read the current set of CR0 flags.
+    pub fn read() -> Cr0Flags {
+        let value: u64;
+        unsafe {
+            asm!("mov %cr0, $0" : "=r" (value));
+        }
+        Cr0Flags::from_bits_truncate(value)
+    }
+
+    /// Write CR0 flags.
+    ///
+    /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
+    /// safety by e.g. disabling paging.
+    pub unsafe fn write(flags: Cr0Flags) {
+        let mut value = Self::read();
+        value |= flags;
+        let value = value.bits();
+
+        asm!("mov $0, %cr0" :: "r" (value) : "memory")
+    }
+}
+
+bitflags! {
+    pub struct Cr0Flags: u64 {
+        const PROTECTED_MODE_ENABLE = 1 << 0;
+        const MONITOR_COPROCESSOR = 1 << 1;
+        const EMULATION = 1 << 2;
+        const TASK_SWITCHED = 1 << 3;
+        const EXTENSION_TYPE = 1 << 4;
+        const NUMERIC_ERROR = 1 << 5;
+        const WRITE_PROTECT = 1 << 16;
+        const ALIGNMENT_MASK = 1 << 18;
+        const NON_WRITE_THROUGH = 1 << 29;
+        const CACHE_DISABLE = 1 << 30;
+        const PAGING = 1 << 31;
+    }
+}
+
+
 /// Contains the physical address of the level 4 page table.
 pub struct Cr3;
 
