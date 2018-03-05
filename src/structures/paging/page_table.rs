@@ -7,6 +7,7 @@ use super::PhysFrame;
 use ux::*;
 use usize_conversions::usize_from;
 
+#[repr(transparent)]
 pub struct PageTableEntry(u64);
 
 impl PageTableEntry {
@@ -75,6 +76,7 @@ bitflags! {
 
 const ENTRY_COUNT: usize = 512;
 
+#[repr(transparent)]
 pub struct PageTable {
     entries: [PageTableEntry; ENTRY_COUNT],
 }
