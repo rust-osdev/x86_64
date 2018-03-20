@@ -12,7 +12,7 @@ mod page_table;
 pub const PAGE_SIZE: u16 = 4096;
 
 /// A virtual 4kB page.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Page {
    number: u64,
 }
@@ -76,7 +76,7 @@ impl SubAssign<u64> for Page {
 }
 
 /// A physical 4kB frame.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct PhysFrame {
    number: u64,
 }
