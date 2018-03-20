@@ -23,9 +23,10 @@ impl PageTableEntry {
         PageTableFlags::from_bits_truncate(self.0)
     }
 
-    pub fn points_to(&self) -> Option<PhysAddr> {
+    pub fn frame(&self) -> Option<PhysFrame> {
         if self.flags().contains(PageTableFlags::PRESENT) {
-            Some(PhysAddr::new(self.0 & 0x000fffff_fffff000))
+            let addr = PhysAddr::new(self.0 & 0x000fffff_fffff000);
+            Some(PhysFrame::containing_address(addr))
         } else {
             None
         }
@@ -39,7 +40,7 @@ impl PageTableEntry {
 impl fmt::Debug for PageTableEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut f = f.debug_struct("PageTableEntry");
-        f.field("points_to", &self.points_to());
+        f.field("frame", &self.frame());
         f.field("flags", &self.flags());
         f.finish()
     }
