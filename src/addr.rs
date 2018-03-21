@@ -3,6 +3,7 @@ use core::iter::Step;
 use core::{fmt, mem};
 use core::convert::{Into, TryFrom, TryInto};
 
+use usize_conversions::usize_from;
 use bit_field::BitField;
 use ux::*;
 
@@ -81,6 +82,14 @@ impl VirtAddr {
     /// Converts the address to an `u64`.
     pub fn as_u64(self) -> u64 {
         self.0
+    }
+
+    pub fn as_ptr<T>(self) -> *const T {
+        usize_from(self.as_u64()) as *const T
+    }
+
+    pub fn as_mut_ptr<T>(self) -> *mut T {
+        self.as_ptr::<T>() as *mut T
     }
 
     /// Aligns the virtual address upwards to the given alignment.
