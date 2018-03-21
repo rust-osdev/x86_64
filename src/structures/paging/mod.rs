@@ -23,6 +23,19 @@ impl Page {
         Page { number: address.as_u64() / u64::from(PAGE_SIZE) }
     }
 
+    pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9)
+        -> Page
+    {
+        use bit_field::BitField;
+
+        let mut addr = 0;
+        addr.set_bits(39..48, u64::from(p4_index));
+        addr.set_bits(30..39, u64::from(p3_index));
+        addr.set_bits(21..30, u64::from(p2_index));
+        addr.set_bits(12..21, u64::from(p1_index));
+        Page::containing_address(VirtAddr::new(addr))
+    }
+
     /// Returns the start address of the page.
     pub fn start_address(&self) -> VirtAddr {
         VirtAddr::new(self.number * u64::from(PAGE_SIZE))
