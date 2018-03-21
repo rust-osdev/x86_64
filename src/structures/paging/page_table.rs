@@ -7,6 +7,7 @@ use super::PhysFrame;
 use ux::*;
 use usize_conversions::usize_from;
 
+#[derive(Clone)]
 #[repr(transparent)]
 pub struct PageTableEntry(u64);
 
