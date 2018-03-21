@@ -1,12 +1,14 @@
 //! Abstractions for page tables and other paging related structures.
 
 pub use self::page_table::*;
+pub use self::recursive::*;
 
 use addr::{VirtAddr, PhysAddr};
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
 
 mod page_table;
+mod recursive;
 
 /// The default page size on x86_64.
 pub const PAGE_SIZE: u16 = 4096;
