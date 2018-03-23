@@ -3,7 +3,7 @@ use core::iter::Step;
 use core::{fmt, mem};
 use core::convert::{Into, TryFrom, TryInto};
 
-use usize_conversions::usize_from;
+use usize_conversions::{usize_from, FromUsize};
 use bit_field::BitField;
 use ux::*;
 
@@ -155,6 +155,19 @@ impl AddAssign<u64> for VirtAddr {
     }
 }
 
+impl Add<usize> for VirtAddr where u64: FromUsize {
+    type Output = Self;
+    fn add(self, rhs: usize) -> Self::Output {
+        self + u64::from_usize(rhs)
+    }
+}
+
+impl AddAssign<usize> for VirtAddr where u64: FromUsize {
+    fn add_assign(&mut self, rhs: usize) {
+        self.add_assign(u64::from_usize(rhs))
+    }
+}
+
 impl Sub<u64> for VirtAddr {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
@@ -165,6 +178,19 @@ impl Sub<u64> for VirtAddr {
 impl SubAssign<u64> for VirtAddr {
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
+    }
+}
+
+impl Sub<usize> for VirtAddr where u64: FromUsize {
+    type Output = Self;
+    fn sub(self, rhs: usize) -> Self::Output {
+        self - u64::from_usize(rhs)
+    }
+}
+
+impl SubAssign<usize> for VirtAddr where u64: FromUsize {
+    fn sub_assign(&mut self, rhs: usize) {
+        self.sub_assign(u64::from_usize(rhs))
     }
 }
 
@@ -193,11 +219,11 @@ impl Step for VirtAddr {
     }
 
     fn add_one(&self) -> Self {
-        *self + 1
+        *self + 1u64
     }
 
     fn sub_one(&self) -> Self {
-        *self - 1
+        *self - 1u64
     }
 
     fn add_usize(&self, n: usize) -> Option<Self> {
@@ -303,6 +329,19 @@ impl AddAssign<u64> for PhysAddr {
     }
 }
 
+impl Add<usize> for PhysAddr where u64: FromUsize {
+    type Output = Self;
+    fn add(self, rhs: usize) -> Self::Output {
+        self + u64::from_usize(rhs)
+    }
+}
+
+impl AddAssign<usize> for PhysAddr where u64: FromUsize {
+    fn add_assign(&mut self, rhs: usize) {
+        self.add_assign(u64::from_usize(rhs))
+    }
+}
+
 impl Sub<u64> for PhysAddr {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
@@ -313,6 +352,19 @@ impl Sub<u64> for PhysAddr {
 impl SubAssign<u64> for PhysAddr {
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
+    }
+}
+
+impl Sub<usize> for PhysAddr where u64: FromUsize {
+    type Output = Self;
+    fn sub(self, rhs: usize) -> Self::Output {
+        self - u64::from_usize(rhs)
+    }
+}
+
+impl SubAssign<usize> for PhysAddr where u64: FromUsize {
+    fn sub_assign(&mut self, rhs: usize) {
+        self.sub_assign(u64::from_usize(rhs))
     }
 }
 
@@ -342,11 +394,11 @@ impl Step for PhysAddr {
     }
 
     fn add_one(&self) -> Self {
-        *self + 1
+        *self + 1u64
     }
 
     fn sub_one(&self) -> Self {
-        *self - 1
+        *self - 1u64
     }
 
     fn add_usize(&self, n: usize) -> Option<Self> {
