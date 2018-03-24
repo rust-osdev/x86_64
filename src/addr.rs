@@ -1,5 +1,4 @@
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-use core::iter::Step;
 use core::{fmt, mem};
 use core::convert::{Into, TryFrom, TryInto};
 
@@ -201,36 +200,6 @@ impl Sub<VirtAddr> for VirtAddr {
     }
 }
 
-impl Step for VirtAddr {
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        if *start < *end {
-            usize::try_from(end.0.get_bits(0..48) - start.0.get_bits(0..48)).ok()
-        } else {
-            Some(0)
-        }
-    }
-
-    fn replace_one(&mut self) -> Self {
-        mem::replace(self, VirtAddr(1))
-    }
-
-    fn replace_zero(&mut self) -> Self {
-        mem::replace(self, VirtAddr(0))
-    }
-
-    fn add_one(&self) -> Self {
-        *self + 1u64
-    }
-
-    fn sub_one(&self) -> Self {
-        *self - 1u64
-    }
-
-    fn add_usize(&self, n: usize) -> Option<Self> {
-        u64::try_from(n).ok().and_then(|n| self.0.checked_add(n)).map(VirtAddr)
-    }
-}
-
 /// A passed `u64` was not a valid physical address.
 ///
 /// This means that bits 52 to 64 are not were not all null.
@@ -372,37 +341,6 @@ impl Sub<PhysAddr> for PhysAddr {
     type Output = u64;
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64() - rhs.as_u64()
-    }
-}
-
-
-impl Step for PhysAddr {
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        if *start < *end {
-            usize::try_from(end.0 - start.0).ok()
-        } else {
-            Some(0)
-        }
-    }
-
-    fn replace_one(&mut self) -> Self {
-        mem::replace(self, PhysAddr(1))
-    }
-
-    fn replace_zero(&mut self) -> Self {
-        mem::replace(self, PhysAddr(0))
-    }
-
-    fn add_one(&self) -> Self {
-        *self + 1u64
-    }
-
-    fn sub_one(&self) -> Self {
-        *self - 1u64
-    }
-
-    fn add_usize(&self, n: usize) -> Option<Self> {
-        u64::try_from(n).ok().and_then(|n| self.0.checked_add(n)).map(PhysAddr)
     }
 }
 

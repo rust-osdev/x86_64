@@ -6,7 +6,6 @@
 #![feature(const_fn)]
 #![feature(asm)]
 #![feature(abi_x86_interrupt)]
-#![feature(step_trait)]
 #![feature(try_from)]
 #![feature(repr_transparent)]
 
