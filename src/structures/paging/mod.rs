@@ -62,6 +62,14 @@ impl Page {
     pub fn p1_index(&self) -> u9 {
         self.start_address().p1_index()
     }
+
+    pub fn range(start: Page, end: Page) -> PageRange {
+        PageRange { start, end }
+    }
+
+    pub fn range_inclusive(start: Page, end: Page) -> PageRangeInclusive {
+        PageRangeInclusive { start, end }
+    }
 }
 
 impl Add<u64> for Page {
@@ -87,6 +95,44 @@ impl Sub<u64> for Page {
 impl SubAssign<u64> for Page {
     fn sub_assign(&mut self, rhs: u64) {
         *self = self.clone() - rhs;
+    }
+}
+
+pub struct PageRange {
+    pub start: Page,
+    pub end: Page,
+}
+
+impl Iterator for PageRange {
+    type Item = Page;
+
+    fn next(&mut self) -> Option<Page> {
+        if self.start < self.end {
+            let page = self.start.clone();
+            self.start += 1;
+            Some(page)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct PageRangeInclusive {
+    pub start: Page,
+    pub end: Page,
+}
+
+impl Iterator for PageRangeInclusive {
+    type Item = Page;
+
+    fn next(&mut self) -> Option<Page> {
+        if self.start <= self.end {
+            let page = self.start.clone();
+            self.start += 1;
+            Some(page)
+        } else {
+            None
+        }
     }
 }
 
