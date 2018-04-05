@@ -7,7 +7,7 @@ authors = [
     "John Ericson <John_Ericson@Yahoo.com>",
     "Rex Lunae <rexlunae@gmail.com>",
 ]
-description = "Provides x86_64 specific functions and data structures, and access to various system registers."
+description = "Support for x86_64 specific instructions, registers, and structures."
 documentation = "https://docs.rs/x86_64"
 keywords = [
     "amd64",
@@ -15,10 +15,13 @@ keywords = [
     "x86_64",
     "no_std",
 ]
+categories = [
+    "no-std",
+]
 license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
-repository = "https://github.com/phil-opp/x86_64"
+repository = "https://github.com/rust-osdev/x86_64"
 version = "0.2.0-alpha-011"
 
 [dependencies]
