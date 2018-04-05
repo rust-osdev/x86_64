@@ -152,6 +152,14 @@ impl PhysFrame {
     pub fn start_address(&self) -> PhysAddr {
         PhysAddr::new(self.number * u64::from(PAGE_SIZE))
     }
+
+    pub fn range(start: PhysFrame, end: PhysFrame) -> PhysFrameRange {
+        PhysFrameRange { start, end }
+    }
+
+    pub fn range_inclusive(start: PhysFrame, end: PhysFrame) -> PhysFrameRangeInclusive {
+        PhysFrameRangeInclusive { start, end }
+    }
 }
 
 impl Add<u64> for PhysFrame {
@@ -177,5 +185,44 @@ impl Sub<u64> for PhysFrame {
 impl SubAssign<u64> for PhysFrame {
     fn sub_assign(&mut self, rhs: u64) {
         *self = self.clone() - rhs;
+    }
+}
+
+
+pub struct PhysFrameRange {
+    pub start: PhysFrame,
+    pub end: PhysFrame,
+}
+
+impl Iterator for PhysFrameRange {
+    type Item = PhysFrame;
+
+    fn next(&mut self) -> Option<PhysFrame> {
+        if self.start < self.end {
+            let frame = self.start.clone();
+            self.start += 1;
+            Some(frame)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct PhysFrameRangeInclusive {
+    pub start: PhysFrame,
+    pub end: PhysFrame,
+}
+
+impl Iterator for PhysFrameRangeInclusive {
+    type Item = PhysFrame;
+
+    fn next(&mut self) -> Option<PhysFrame> {
+        if self.start <= self.end {
+            let frame = self.start.clone();
+            self.start += 1;
+            Some(frame)
+        } else {
+            None
+        }
     }
 }
