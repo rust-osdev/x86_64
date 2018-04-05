@@ -1,27 +1,34 @@
 [package]
-
-name = "x86_64"
-version = "0.1.2"
 authors = [
-  "Gerd Zellweger <mail@gerdzellweger.com>",
-  "Eric Kidd <git@randomhacks.net>",
-  "Philipp Oppermann <dev@phil-opp.com>",
-  "Dan Schatzberg <schatzberg.dan@gmail.com>",
-  "John Ericson <John_Ericson@Yahoo.com>",
-  "Rex Lunae <rexlunae@gmail.com>"
+    "Gerd Zellweger <mail@gerdzellweger.com>",
+    "Eric Kidd <git@randomhacks.net>",
+    "Philipp Oppermann <dev@phil-opp.com>",
+    "Dan Schatzberg <schatzberg.dan@gmail.com>",
+    "John Ericson <John_Ericson@Yahoo.com>",
+    "Rex Lunae <rexlunae@gmail.com>",
 ]
-
-description = "Provides x86_64 specific functions and data structures, and access to various system registers."
-
-repository = "https://github.com/phil-opp/x86_64"
+description = "Support for x86_64 specific instructions, registers, and structures."
 documentation = "https://docs.rs/x86_64"
+keywords = [
+    "amd64",
+    "x86",
+    "x86_64",
+    "no_std",
+]
+categories = [
+    "no-std",
+]
+license = "MIT/Apache-2.0"
+name = "x86_64"
 readme = "README.md"
-keywords = ["amd64", "x86", "x86_64", "no_std"]
-license = "MIT"
-
-[[test]]
-name = "no_std_build"
-harness = false
+repository = "https://github.com/rust-osdev/x86_64"
+version = "0.2.0-alpha-011"
 
 [dependencies]
-bit_field = "0.7.0"
+bit_field = "0.9.0"
+bitflags = "1.0.1"
+usize_conversions = "0.2.0"
+
+[dependencies.ux]
+default-features = false
+version = "0.1.0"
