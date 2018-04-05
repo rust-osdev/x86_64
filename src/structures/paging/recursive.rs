@@ -139,12 +139,6 @@ impl<'a> RecursivePageTable<'a> {
     }
 }
 
-fn p4_ptr(recursive_index: u9) -> *mut PageTable {
-    Page::from_page_table_indices(
-        recursive_index, recursive_index, recursive_index, recursive_index,
-    ).start_address().as_mut_ptr()
-}
-
 fn p3_ptr(page: &Page, recursive_index: u9) -> *mut PageTable {
     Page::from_page_table_indices(
         recursive_index, recursive_index, recursive_index, page.p4_index()
