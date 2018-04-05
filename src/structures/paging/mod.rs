@@ -226,3 +226,32 @@ impl Iterator for PhysFrameRangeInclusive {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn test_page_ranges() {
+        let page_size = u64::from(PAGE_SIZE);
+        let number = 1000;
+
+        let start_addr = VirtAddr::new(0xdeadbeaf);
+        let start = Page::containing_address(start_addr);
+        let end = start.clone() + number;
+
+        let mut range = Page::range(start.clone(), end.clone());
+        for i in 0..number {
+            assert_eq!(range.next(),
+            Some(Page::containing_address(start_addr + u64::from(PAGE_SIZE) * i)));
+        }
+        assert_eq!(range.next(), None);
+
+        let mut range_inclusive = Page::range_inclusive(start, end);
+        for i in 0..=number {
+            assert_eq!(range_inclusive.next(),
+            Some(Page::containing_address(start_addr + u64::from(PAGE_SIZE) * i)));
+        }
+        assert_eq!(range_inclusive.next(), None);
+    }
+}
