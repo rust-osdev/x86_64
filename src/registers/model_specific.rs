@@ -32,7 +32,7 @@ impl Efer {
     }
 
     /// Write the EFER flags.
-    /// 
+    ///
     /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
     /// safety, e.g. by disabling long mode.
     pub unsafe fn write(flags: EferFlags) {
@@ -42,10 +42,13 @@ impl Efer {
     }
 
     /// Update EFER flags.
-    /// 
+    ///
     /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
     /// safety, e.g. by disabling long mode.
-    pub unsafe fn update<F>(f: F) where F: FnOnce(&mut EferFlags) {
+    pub unsafe fn update<F>(f: F)
+    where
+        F: FnOnce(&mut EferFlags),
+    {
         let mut flags = Self::read();
         f(&mut flags);
         Self::write(flags);

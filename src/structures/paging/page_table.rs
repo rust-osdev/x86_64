@@ -1,11 +1,11 @@
-use core::ops::{Index, IndexMut};
 use core::fmt;
+use core::ops::{Index, IndexMut};
 
-use addr::PhysAddr;
 use super::PhysFrame;
+use addr::PhysAddr;
 
-use ux::*;
 use usize_conversions::usize_from;
+use ux::*;
 
 #[derive(Clone)]
 #[repr(transparent)]

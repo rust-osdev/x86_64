@@ -1,9 +1,9 @@
-use core::ops::{Add, AddAssign, Sub, SubAssign};
-use core::fmt;
 use core::convert::{Into, TryInto};
+use core::fmt;
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 
-use usize_conversions::{usize_from, FromUsize};
 use bit_field::BitField;
+use usize_conversions::{usize_from, FromUsize};
 use ux::*;
 
 /// A canonical 64-bit virtual memory address.
@@ -46,8 +46,10 @@ impl VirtAddr {
     /// This function performs sign extension of bit 47 to make the address canonical. Panics
     /// if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
     pub fn new(addr: u64) -> VirtAddr {
-        Self::try_new(addr).expect("address passed to VirtAddr::new must not contain any data \
-        in bits 48 to 64")
+        Self::try_new(addr).expect(
+            "address passed to VirtAddr::new must not contain any data \
+             in bits 48 to 64",
+        )
     }
 
     /// Tries to create a new canonical virtual address.
@@ -58,9 +60,9 @@ impl VirtAddr {
     /// is returned.
     pub fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
         match addr.get_bits(47..64) {
-            0 | 0x1ffff => Ok(VirtAddr(addr)), // address is canonical
+            0 | 0x1ffff => Ok(VirtAddr(addr)),      // address is canonical
             1 => Ok(VirtAddr::new_unchecked(addr)), // address needs sign extension
-            other => Err(VirtAddrNotValid(other))
+            other => Err(VirtAddrNotValid(other)),
         }
     }
 
@@ -95,7 +97,8 @@ impl VirtAddr {
     ///
     /// See the `align_up` function for more information.
     pub fn align_up<U>(self, align: U) -> Self
-        where U: Into<u64>
+    where
+        U: Into<u64>,
     {
         VirtAddr(align_up(self.0, align.into()))
     }
@@ -104,7 +107,8 @@ impl VirtAddr {
     ///
     /// See the `align_down` function for more information.
     pub fn align_down<U>(self, align: U) -> Self
-        where U: Into<u64>
+    where
+        U: Into<u64>,
     {
         VirtAddr(align_down(self.0, align.into()))
     }
@@ -154,14 +158,20 @@ impl AddAssign<u64> for VirtAddr {
     }
 }
 
-impl Add<usize> for VirtAddr where u64: FromUsize {
+impl Add<usize> for VirtAddr
+where
+    u64: FromUsize,
+{
     type Output = Self;
     fn add(self, rhs: usize) -> Self::Output {
         self + u64::from_usize(rhs)
     }
 }
 
-impl AddAssign<usize> for VirtAddr where u64: FromUsize {
+impl AddAssign<usize> for VirtAddr
+where
+    u64: FromUsize,
+{
     fn add_assign(&mut self, rhs: usize) {
         self.add_assign(u64::from_usize(rhs))
     }
@@ -180,14 +190,20 @@ impl SubAssign<u64> for VirtAddr {
     }
 }
 
-impl Sub<usize> for VirtAddr where u64: FromUsize {
+impl Sub<usize> for VirtAddr
+where
+    u64: FromUsize,
+{
     type Output = Self;
     fn sub(self, rhs: usize) -> Self::Output {
         self - u64::from_usize(rhs)
     }
 }
 
-impl SubAssign<usize> for VirtAddr where u64: FromUsize {
+impl SubAssign<usize> for VirtAddr
+where
+    u64: FromUsize,
+{
     fn sub_assign(&mut self, rhs: usize) {
         self.sub_assign(u64::from_usize(rhs))
     }
@@ -211,8 +227,11 @@ impl PhysAddr {
     ///
     /// Panics if a bit in the range 52 to 64 is set.
     pub fn new(addr: u64) -> PhysAddr {
-        assert_eq!(addr.get_bits(52..64), 0,
-            "physical addresses must not have any bits in the range 52 to 64 set");
+        assert_eq!(
+            addr.get_bits(52..64),
+            0,
+            "physical addresses must not have any bits in the range 52 to 64 set"
+        );
         PhysAddr(addr)
     }
 
@@ -222,7 +241,7 @@ impl PhysAddr {
     pub fn try_new(addr: u64) -> Result<PhysAddr, PhysAddrNotValid> {
         match addr.get_bits(52..64) {
             0 => Ok(PhysAddr(addr)), // address is valid
-            other => Err(PhysAddrNotValid(other))
+            other => Err(PhysAddrNotValid(other)),
         }
     }
 
@@ -240,7 +259,8 @@ impl PhysAddr {
     ///
     /// See the `align_up` function for more information.
     pub fn align_up<U>(self, align: U) -> Self
-        where U: Into<u64>
+    where
+        U: Into<u64>,
     {
         PhysAddr(align_up(self.0, align.into()))
     }
@@ -249,7 +269,8 @@ impl PhysAddr {
     ///
     /// See the `align_down` function for more information.
     pub fn align_down<U>(self, align: U) -> Self
-        where U: Into<u64>
+    where
+        U: Into<u64>,
     {
         PhysAddr(align_down(self.0, align.into()))
     }
@@ -298,14 +319,20 @@ impl AddAssign<u64> for PhysAddr {
     }
 }
 
-impl Add<usize> for PhysAddr where u64: FromUsize {
+impl Add<usize> for PhysAddr
+where
+    u64: FromUsize,
+{
     type Output = Self;
     fn add(self, rhs: usize) -> Self::Output {
         self + u64::from_usize(rhs)
     }
 }
 
-impl AddAssign<usize> for PhysAddr where u64: FromUsize {
+impl AddAssign<usize> for PhysAddr
+where
+    u64: FromUsize,
+{
     fn add_assign(&mut self, rhs: usize) {
         self.add_assign(u64::from_usize(rhs))
     }
@@ -324,14 +351,20 @@ impl SubAssign<u64> for PhysAddr {
     }
 }
 
-impl Sub<usize> for PhysAddr where u64: FromUsize {
+impl Sub<usize> for PhysAddr
+where
+    u64: FromUsize,
+{
     type Output = Self;
     fn sub(self, rhs: usize) -> Self::Output {
         self - u64::from_usize(rhs)
     }
 }
 
-impl SubAssign<usize> for PhysAddr where u64: FromUsize {
+impl SubAssign<usize> for PhysAddr
+where
+    u64: FromUsize,
+{
     fn sub_assign(&mut self, rhs: usize) {
         self.sub_assign(u64::from_usize(rhs))
     }

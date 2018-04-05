@@ -3,7 +3,7 @@
 pub use self::page_table::*;
 pub use self::recursive::*;
 
-use addr::{VirtAddr, PhysAddr};
+use addr::{PhysAddr, VirtAddr};
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
 
@@ -16,18 +16,18 @@ pub const PAGE_SIZE: u16 = 4096;
 /// A virtual 4kB page.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Page {
-   number: u64,
+    number: u64,
 }
 
 impl Page {
     /// Returns the page that contains the given virtual address.
     pub fn containing_address(address: VirtAddr) -> Page {
-        Page { number: address.as_u64() / u64::from(PAGE_SIZE) }
+        Page {
+            number: address.as_u64() / u64::from(PAGE_SIZE),
+        }
     }
 
-    pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9)
-        -> Page
-    {
+    pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9) -> Page {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -139,13 +139,15 @@ impl Iterator for PageRangeInclusive {
 /// A physical 4kB frame.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct PhysFrame {
-   number: u64,
+    number: u64,
 }
 
 impl PhysFrame {
     /// Returns the frame that contains the given physical address.
     pub fn containing_address(address: PhysAddr) -> PhysFrame {
-        PhysFrame { number: address.as_u64() / u64::from(PAGE_SIZE) }
+        PhysFrame {
+            number: address.as_u64() / u64::from(PAGE_SIZE),
+        }
     }
 
     /// Returns the start address of the page.
@@ -187,7 +189,6 @@ impl SubAssign<u64> for PhysFrame {
         *self = self.clone() - rhs;
     }
 }
-
 
 pub struct PhysFrameRange {
     pub start: PhysFrame,
@@ -242,15 +243,23 @@ mod tests {
 
         let mut range = Page::range(start.clone(), end.clone());
         for i in 0..number {
-            assert_eq!(range.next(),
-            Some(Page::containing_address(start_addr + u64::from(PAGE_SIZE) * i)));
+            assert_eq!(
+                range.next(),
+                Some(Page::containing_address(
+                    start_addr + u64::from(PAGE_SIZE) * i
+                ))
+            );
         }
         assert_eq!(range.next(), None);
 
         let mut range_inclusive = Page::range_inclusive(start, end);
         for i in 0..=number {
-            assert_eq!(range_inclusive.next(),
-            Some(Page::containing_address(start_addr + u64::from(PAGE_SIZE) * i)));
+            assert_eq!(
+                range_inclusive.next(),
+                Some(Page::containing_address(
+                    start_addr + u64::from(PAGE_SIZE) * i
+                ))
+            );
         }
         assert_eq!(range_inclusive.next(), None);
     }

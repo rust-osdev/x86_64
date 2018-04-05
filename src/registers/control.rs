@@ -38,7 +38,10 @@ impl Cr0 {
     ///
     /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
     /// safety by e.g. disabling paging.
-    pub unsafe fn update<F>(f: F) where F: FnOnce(&mut Cr0Flags) {
+    pub unsafe fn update<F>(f: F)
+    where
+        F: FnOnce(&mut Cr0Flags),
+    {
         let mut flags = Self::read();
         f(&mut flags);
         Self::write(flags);
@@ -60,7 +63,6 @@ bitflags! {
         const PAGING = 1 << 31;
     }
 }
-
 
 /// Contains the physical address of the level 4 page table.
 pub struct Cr3;

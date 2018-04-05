@@ -2,13 +2,11 @@
 //! and access to various system registers.
 
 #![warn(missing_docs)]
-
 #![feature(const_fn)]
 #![feature(asm)]
 #![feature(abi_x86_interrupt)]
 #![feature(try_from)]
 #![feature(repr_transparent)]
-
 #![no_std]
 
 #[cfg(test)]
@@ -21,7 +19,7 @@ extern crate bit_field;
 extern crate usize_conversions;
 pub extern crate ux;
 
-pub use addr::{VirtAddr, PhysAddr, align_up, align_down};
+pub use addr::{align_down, align_up, PhysAddr, VirtAddr};
 
 pub mod instructions;
 pub mod registers;
