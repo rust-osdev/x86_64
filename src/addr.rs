@@ -1,6 +1,6 @@
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-use core::{fmt, mem};
-use core::convert::{Into, TryFrom, TryInto};
+use core::fmt;
+use core::convert::{Into, TryInto};
 
 use usize_conversions::{usize_from, FromUsize};
 use bit_field::BitField;
