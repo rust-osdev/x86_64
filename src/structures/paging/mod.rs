@@ -14,7 +14,7 @@ mod recursive;
 pub const PAGE_SIZE: u16 = 4096;
 
 /// A virtual 4kB page.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Page {
     number: u64,
 }
@@ -144,7 +144,7 @@ impl Iterator for PageRangeInclusive {
 }
 
 /// A physical 4kB frame.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct PhysFrame {
     number: u64,
 }
