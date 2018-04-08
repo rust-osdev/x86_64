@@ -98,6 +98,13 @@ impl SubAssign<u64> for Page {
     }
 }
 
+impl Sub<Page> for Page {
+    type Output = u64;
+    fn sub(self, rhs: Page) -> Self::Output {
+        self.number - rhs.number
+    }
+}
+
 pub struct PageRange {
     pub start: Page,
     pub end: Page,
@@ -187,6 +194,13 @@ impl Sub<u64> for PhysFrame {
 impl SubAssign<u64> for PhysFrame {
     fn sub_assign(&mut self, rhs: u64) {
         *self = self.clone() - rhs;
+    }
+}
+
+impl Sub<PhysFrame> for PhysFrame {
+    type Output = u64;
+    fn sub(self, rhs: PhysFrame) -> Self::Output {
+        self.number - rhs.number
     }
 }
 
