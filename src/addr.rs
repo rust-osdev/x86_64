@@ -180,7 +180,7 @@ where
 impl Sub<u64> for VirtAddr {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        VirtAddr::new(self.0 - rhs)
+        VirtAddr::new(self.0.checked_sub(rhs).unwrap())
     }
 }
 
@@ -212,7 +212,7 @@ where
 impl Sub<VirtAddr> for VirtAddr {
     type Output = u64;
     fn sub(self, rhs: VirtAddr) -> Self::Output {
-        self.as_u64() - rhs.as_u64()
+        self.as_u64().checked_sub(rhs.as_u64()).unwrap()
     }
 }
 
@@ -341,7 +341,7 @@ where
 impl Sub<u64> for PhysAddr {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        PhysAddr::new(self.0 - rhs)
+        PhysAddr::new(self.0.checked_sub(rhs).unwrap())
     }
 }
 
@@ -373,7 +373,7 @@ where
 impl Sub<PhysAddr> for PhysAddr {
     type Output = u64;
     fn sub(self, rhs: PhysAddr) -> Self::Output {
-        self.as_u64() - rhs.as_u64()
+        self.as_u64().checked_sub(rhs.as_u64()).unwrap()
     }
 }
 

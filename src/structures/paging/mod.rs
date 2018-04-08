@@ -101,7 +101,7 @@ impl SubAssign<u64> for Page {
 impl Sub<Page> for Page {
     type Output = u64;
     fn sub(self, rhs: Page) -> Self::Output {
-        self.number - rhs.number
+        self.number.checked_sub(rhs.number).unwrap()
     }
 }
 
@@ -200,7 +200,7 @@ impl SubAssign<u64> for PhysFrame {
 impl Sub<PhysFrame> for PhysFrame {
     type Output = u64;
     fn sub(self, rhs: PhysFrame) -> Self::Output {
-        self.number - rhs.number
+        self.number.checked_sub(rhs.number).unwrap()
     }
 }
 
