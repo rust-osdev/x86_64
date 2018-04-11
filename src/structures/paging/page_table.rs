@@ -1,47 +1,66 @@
 use core::fmt;
 use core::ops::{Index, IndexMut};
 
-use super::PhysFrame;
+use super::{PhysFrame, PageSize, Size4KB};
 use addr::PhysAddr;
 
 use usize_conversions::usize_from;
 use ux::*;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FrameError {
+    FrameNotPresent,
+    HugeFrame,
+}
+
 #[derive(Clone)]
 #[repr(transparent)]
-pub struct PageTableEntry(u64);
+pub struct PageTableEntry {
+    entry: u64,
+}
 
 impl PageTableEntry {
     pub fn is_unused(&self) -> bool {
-        self.0 == 0
+        self.entry == 0
     }
 
     pub fn set_unused(&mut self) {
-        self.0 = 0;
+        self.entry = 0;
     }
 
     pub fn flags(&self) -> PageTableFlags {
-        PageTableFlags::from_bits_truncate(self.0)
+        PageTableFlags::from_bits_truncate(self.entry)
     }
 
-    pub fn frame(&self) -> Option<PhysFrame> {
-        if self.flags().contains(PageTableFlags::PRESENT) {
-            let addr = PhysAddr::new(self.0 & 0x000fffff_fffff000);
-            Some(PhysFrame::containing_address(addr))
+    pub fn addr(&self) -> PhysAddr {
+        PhysAddr::new(self.entry & 0x000fffff_fffff000)
+    }
+
+    pub fn frame(&self) -> Result<PhysFrame, FrameError> {
+        if !self.flags().contains(PageTableFlags::PRESENT) {
+            Err(FrameError::FrameNotPresent)
+        } else if self.flags().contains(PageTableFlags::HUGE_PAGE) {
+            Err(FrameError::HugeFrame)
         } else {
-            None
+            Ok(PhysFrame::containing_address(self.addr()))
         }
     }
 
-    pub fn set(&mut self, frame: PhysFrame, flags: PageTableFlags) {
-        self.0 = (frame.start_address().as_u64()) | flags.bits();
+    pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
+        assert!(addr.is_aligned(Size4KB::SIZE));
+        self.entry = (addr.as_u64()) | flags.bits();
+    }
+
+    pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
+        assert!(!flags.contains(PageTableFlags::HUGE_PAGE));
+        self.set_addr(frame.start_address(), flags)
     }
 }
 
 impl fmt::Debug for PageTableEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut f = f.debug_struct("PageTableEntry");
-        f.field("frame", &self.frame());
+        f.field("addr", &self.addr());
         f.field("flags", &self.flags());
         f.finish()
     }
@@ -94,13 +113,13 @@ impl PageTable {
 impl Index<usize> for PageTable {
     type Output = PageTableEntry;
 
-    fn index(&self, index: usize) -> &PageTableEntry {
+    fn index(&self, index: usize) -> &Self::Output {
         &self.entries[index]
     }
 }
 
 impl IndexMut<usize> for PageTable {
-    fn index_mut(&mut self, index: usize) -> &mut PageTableEntry {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.entries[index]
     }
 }
@@ -108,13 +127,13 @@ impl IndexMut<usize> for PageTable {
 impl Index<u9> for PageTable {
     type Output = PageTableEntry;
 
-    fn index(&self, index: u9) -> &PageTableEntry {
+    fn index(&self, index: u9) -> &Self::Output {
         &self.entries[usize_from(u16::from(index))]
     }
 }
 
 impl IndexMut<u9> for PageTable {
-    fn index_mut(&mut self, index: u9) -> &mut PageTableEntry {
+    fn index_mut(&mut self, index: u9) -> &mut Self::Output {
         &mut self.entries[usize_from(u16::from(index))]
     }
 }
