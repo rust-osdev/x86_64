@@ -430,11 +430,11 @@ mod tests {
 
     #[test]
     pub fn test_page_ranges() {
-        let page_size = u64::from(PAGE_SIZE);
+        let page_size = Size4KB::SIZE;
         let number = 1000;
 
         let start_addr = VirtAddr::new(0xdeadbeaf);
-        let start = Page::containing_address(start_addr);
+        let start: Page = Page::containing_address(start_addr);
         let end = start.clone() + number;
 
         let mut range = Page::range(start.clone(), end.clone());
@@ -442,7 +442,7 @@ mod tests {
             assert_eq!(
                 range.next(),
                 Some(Page::containing_address(
-                    start_addr + u64::from(PAGE_SIZE) * i
+                    start_addr + page_size * i
                 ))
             );
         }
@@ -453,7 +453,7 @@ mod tests {
             assert_eq!(
                 range_inclusive.next(),
                 Some(Page::containing_address(
-                    start_addr + u64::from(PAGE_SIZE) * i
+                    start_addr + page_size * i
                 ))
             );
         }
