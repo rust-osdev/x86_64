@@ -113,6 +113,14 @@ impl VirtAddr {
         VirtAddr(align_down(self.0, align.into()))
     }
 
+    /// Checks whether the virtual address has the demanded alignment.
+    pub fn is_aligned<U>(self, align: U) -> bool
+    where
+        U: Into<u64>,
+    {
+        self.align_down(align) == self
+    }
+
     /// Returns the 12-bit page offset of this virtual address.
     pub fn page_offset(&self) -> u12 {
         u12::new((self.0 & 0xfff).try_into().unwrap())
@@ -273,6 +281,14 @@ impl PhysAddr {
         U: Into<u64>,
     {
         PhysAddr(align_down(self.0, align.into()))
+    }
+
+    /// Checks whether the physical address has the demanded alignment.
+    pub fn is_aligned<U>(self, align: U) -> bool
+    where
+        U: Into<u64>,
+    {
+        self.align_down(align) == self
     }
 }
 
