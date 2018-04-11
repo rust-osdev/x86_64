@@ -14,7 +14,7 @@ use core::marker::PhantomData;
 use core::mem;
 use core::ops::{Index, IndexMut};
 use bit_field::BitField;
-use {PrivilegeLevel, VirtualAddress};
+use {PrivilegeLevel, VirtAddr};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -459,7 +459,7 @@ impl IndexMut<usize> for Idt {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 #[repr(C, packed)]
 pub struct IdtEntry<F> {
     pointer_low: u16,
@@ -508,8 +508,10 @@ impl<F> IdtEntry<F> {
 
         self.gdt_selector = segmentation::cs().0;
 
-        self.options.set_present(true);
-        &mut self.options
+        unsafe {
+            self.options.set_present(true);
+            &mut self.options
+        }
     }
 }
 
@@ -596,13 +598,13 @@ pub struct ExceptionStackFrame {
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
     /// return. See the documentation of the `Idt` fields for more details.
-    pub instruction_pointer: VirtualAddress,
+    pub instruction_pointer: VirtAddr,
     /// The code segment selector, padded with zeros.
     pub code_segment: u64,
     /// The flags register before the interrupt handler was invoked.
     pub cpu_flags: u64,
     /// The stack pointer at the time of the interrupt.
-    pub stack_pointer: VirtualAddress,
+    pub stack_pointer: VirtAddr,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
     pub stack_segment: u64,
 }
@@ -628,27 +630,27 @@ impl fmt::Debug for ExceptionStackFrame {
 
 bitflags! {
     /// Describes an page fault error code.
-    pub flags PageFaultErrorCode: u64 {
+    pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.
-        const PROTECTION_VIOLATION = 1 << 0,
+        const PROTECTION_VIOLATION = 1 << 0;
 
         /// If this flag is set, the memory access that caused the page fault was a write.
         /// Else the access that caused the page fault is a memory read. This bit does not
         /// necessarily indicate the cause of the page fault was a read or write violation.
-        const CAUSED_BY_WRITE = 1 << 1,
+        const CAUSED_BY_WRITE = 1 << 1;
 
         /// If this flag is set, an access in user mode (CPL=3) caused the page fault. Else
         /// an access in supervisor mode (CPL=0, 1, or 2) caused the page fault. This bit
         /// does not necessarily indicate the cause of the page fault was a privilege violation.
-        const USER_MODE = 1 << 2,
+        const USER_MODE = 1 << 2;
 
         /// If this flag is set, the page fault is a result of the processor reading a 1 from
         /// a reserved field within a page-translation-table entry.
-        const MALFORMED_TABLE = 1 << 3,
+        const MALFORMED_TABLE = 1 << 3;
 
         /// If this flag is set, it indicates that the access that caused the page fault was an
         /// instruction fetch.
-        const INSTRUCTION_FETCH = 1 << 4,
+        const INSTRUCTION_FETCH = 1 << 4;
     }
 }
