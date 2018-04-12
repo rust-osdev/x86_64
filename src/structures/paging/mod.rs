@@ -3,11 +3,11 @@
 pub use self::page_table::*;
 pub use self::recursive::*;
 
-use {VirtAddr, PhysAddr};
-use core::ops::{Add, AddAssign, Sub, SubAssign};
-use core::marker::PhantomData;
 use core::fmt;
+use core::marker::PhantomData;
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
+use {PhysAddr, VirtAddr};
 
 mod page_table;
 mod recursive;
@@ -148,8 +148,11 @@ impl Page<Size4KB> {
 
 impl<S: PageSize> fmt::Debug for Page<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_fmt(format_args!("Page[{}]({:#x})", S::SIZE_AS_DEBUG_STR,
-            self.start_address().as_u64()))
+        f.write_fmt(format_args!(
+            "Page[{}]({:#x})",
+            S::SIZE_AS_DEBUG_STR,
+            self.start_address().as_u64()
+        ))
     }
 }
 
@@ -314,8 +317,11 @@ impl<S: PageSize> PhysFrame<S> {
 
 impl<S: PageSize> fmt::Debug for PhysFrame<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_fmt(format_args!("PhysFrame[{}]({:#x})", S::SIZE_AS_DEBUG_STR,
-            self.start_address().as_u64()))
+        f.write_fmt(format_args!(
+            "PhysFrame[{}]({:#x})",
+            S::SIZE_AS_DEBUG_STR,
+            self.start_address().as_u64()
+        ))
     }
 }
 
@@ -441,9 +447,7 @@ mod tests {
         for i in 0..number {
             assert_eq!(
                 range.next(),
-                Some(Page::containing_address(
-                    start_addr + page_size * i
-                ))
+                Some(Page::containing_address(start_addr + page_size * i))
             );
         }
         assert_eq!(range.next(), None);
@@ -452,9 +456,7 @@ mod tests {
         for i in 0..=number {
             assert_eq!(
                 range_inclusive.next(),
-                Some(Page::containing_address(
-                    start_addr + page_size * i
-                ))
+                Some(Page::containing_address(start_addr + page_size * i))
             );
         }
         assert_eq!(range_inclusive.next(), None);

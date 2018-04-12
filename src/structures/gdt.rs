@@ -1,8 +1,8 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+use bit_field::BitField;
 use core::fmt;
 use PrivilegeLevel;
-use bit_field::BitField;
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table

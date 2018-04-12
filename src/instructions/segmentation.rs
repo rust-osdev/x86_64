@@ -8,8 +8,7 @@ use structures::gdt::SegmentSelector;
 /// and return value on the stack and use lretq
 /// to reload cs and continue at 1:.
 pub unsafe fn set_cs(sel: SegmentSelector) {
-
-    #[cfg(target_arch="x86")]
+    #[cfg(target_arch = "x86")]
     #[inline(always)]
     unsafe fn inner(sel: SegmentSelector) {
         asm!("pushl $0; \
@@ -18,7 +17,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
               1:" :: "ri" (u64::from(sel.0)) : "rax" "memory");
     }
 
-    #[cfg(target_arch="x86_64")]
+    #[cfg(target_arch = "x86_64")]
     #[inline(always)]
     unsafe fn inner(sel: SegmentSelector) {
         asm!("pushq $0; \

@@ -1,8 +1,8 @@
 use registers::control::Cr3;
-use structures::paging::page_table::{PageTable, PageTableEntry, PageTableFlags, FrameError};
-use structures::paging::{Page, PhysFrame, PageSize, NotGiantPageSize, Size4KB, Size2MB, Size1GB};
-use VirtAddr;
+use structures::paging::page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags};
+use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GB, Size2MB, Size4KB};
 use ux::u9;
+use VirtAddr;
 
 pub trait Mapper<S: PageSize> {
     fn map_to<A>(
@@ -62,7 +62,7 @@ impl<'a> RecursivePageTable<'a> {
         })
     }
 
-    pub fn identity_map<A, S> (
+    pub fn identity_map<A, S>(
         &mut self,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
@@ -77,7 +77,10 @@ impl<'a> RecursivePageTable<'a> {
         self.map_to(page, frame, flags, allocator)
     }
 
-    fn create_next_table<A>(entry: &mut PageTableEntry, allocator: &mut A) -> Result<bool, MapToError>
+    fn create_next_table<A>(
+        entry: &mut PageTableEntry,
+        allocator: &mut A,
+    ) -> Result<bool, MapToError>
     where
         A: FnMut() -> Option<PhysFrame>,
     {
@@ -149,9 +152,8 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
             return Err(UnmapError::EntryWithInvalidFlagsPresent(p3_entry.flags()));
         }
 
-        let frame = PhysFrame::from_start_address(p3_entry.addr()).map_err(|()| {
-            UnmapError::InvalidFrameAddressInPageTable
-        })?;
+        let frame = PhysFrame::from_start_address(p3_entry.addr())
+            .map_err(|()| UnmapError::InvalidFrameAddressInPageTable)?;
         allocator(frame);
         p3_entry.set_unused();
         Ok(())
@@ -221,15 +223,13 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
             return Err(UnmapError::EntryWithInvalidFlagsPresent(p2_entry.flags()));
         }
 
-        let frame = PhysFrame::from_start_address(p2_entry.addr()).map_err(|()| {
-            UnmapError::InvalidFrameAddressInPageTable
-        })?;
+        let frame = PhysFrame::from_start_address(p2_entry.addr())
+            .map_err(|()| UnmapError::InvalidFrameAddressInPageTable)?;
         allocator(frame);
         p2_entry.set_unused();
         Ok(())
     }
 }
-
 
 impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
     fn map_to<A>(

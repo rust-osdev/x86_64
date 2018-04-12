@@ -9,11 +9,11 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
+use bit_field::BitField;
 use core::fmt;
 use core::marker::PhantomData;
 use core::mem;
 use core::ops::{Index, IndexMut};
-use bit_field::BitField;
 use {PrivilegeLevel, VirtAddr};
 
 /// An Interrupt Descriptor Table with 256 entries.
@@ -390,8 +390,8 @@ impl Idt {
 
     /// Loads the IDT in the CPU using the `lidt` command.
     pub fn load(&'static self) {
-        use instructions::tables::{DescriptorTablePointer, lidt};
         use core::mem::size_of;
+        use instructions::tables::{lidt, DescriptorTablePointer};
 
         let ptr = DescriptorTablePointer {
             base: self as *const _ as u64,
@@ -474,9 +474,11 @@ pub struct IdtEntry<F> {
 /// A handler function for an interrupt or an exception without error code.
 pub type HandlerFunc = extern "x86-interrupt" fn(&mut ExceptionStackFrame);
 /// A handler function for an exception that pushes an error code.
-pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: u64);
+pub type HandlerFuncWithErrCode =
+    extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
-pub type PageFaultHandlerFunc = extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: PageFaultErrorCode);
+pub type PageFaultHandlerFunc =
+    extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: PageFaultErrorCode);
 
 impl<F> IdtEntry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -527,7 +529,7 @@ macro_rules! impl_set_handler_fn {
                 self.set_handler_addr(handler as u64)
             }
         }
-    }
+    };
 }
 
 impl_set_handler_fn!(HandlerFunc);

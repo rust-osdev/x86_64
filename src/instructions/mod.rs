@@ -1,6 +1,6 @@
 //! Special x86_64 instructions.
 
-pub mod tlb;
+pub mod port;
 pub mod segmentation;
 pub mod tables;
-pub mod port;
+pub mod tlb;

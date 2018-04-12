@@ -1,7 +1,7 @@
 use core::fmt;
 use core::ops::{Index, IndexMut};
 
-use super::{PhysFrame, PageSize, Size4KB};
+use super::{PageSize, PhysFrame, Size4KB};
 use addr::PhysAddr;
 
 use usize_conversions::usize_from;

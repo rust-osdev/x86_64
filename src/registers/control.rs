@@ -2,8 +2,8 @@
 
 pub use super::model_specific::{Efer, EferFlags};
 
-use PhysAddr;
 use structures::paging::PhysFrame;
+use PhysAddr;
 
 /// Various control flags modifying the basic operation of the CPU.
 pub struct Cr0;
