@@ -460,7 +460,7 @@ impl IndexMut<usize> for Idt {
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
 #[derive(Clone, Copy)]
-#[repr(C, packed)]
+#[repr(C)]
 pub struct IdtEntry<F> {
     pointer_low: u16,
     gdt_selector: u16,
@@ -508,10 +508,8 @@ impl<F> IdtEntry<F> {
 
         self.gdt_selector = segmentation::cs().0;
 
-        unsafe {
-            self.options.set_present(true);
-            &mut self.options
-        }
+        self.options.set_present(true);
+        &mut self.options
     }
 }
 
@@ -652,5 +650,16 @@ bitflags! {
         /// If this flag is set, it indicates that the access that caused the page fault was an
         /// instruction fetch.
         const INSTRUCTION_FETCH = 1 << 4;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn size_test() {
+        use core::mem::size_of;
+        assert_eq!(size_of::<IdtEntry<HandlerFunc>>(), 16);
     }
 }
