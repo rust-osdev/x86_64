@@ -5,8 +5,6 @@ use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GB, S
 use ux::u9;
 use VirtAddr;
 
-use core::mem;
-
 /// This type must be used and will either flush the modified page or can be unsafely ignored.
 #[must_use = "Page Table changes must be flushed or unsafely ignored."]
 pub struct MapperFlush<S: PageSize>(Page<S>);
@@ -20,18 +18,9 @@ impl<S: PageSize> MapperFlush<S> {
     // Flush 
     pub fn flush(self) {
         tlb::flush(self.0.start_address());
-        mem::forget(self);
     }
 
-    pub unsafe fn ignore(self) {
-        mem::forget(self);
-    }
-}
-
-impl<S: PageSize> Drop for MapperFlush<S> {
-    fn drop(&mut self) {
-        panic!("`MapperFlush` must be used.")
-    }
+    pub unsafe fn ignore(self) {}
 }
 
 pub trait Mapper<S: PageSize> {
