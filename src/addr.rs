@@ -80,6 +80,11 @@ impl VirtAddr {
         VirtAddr(addr)
     }
 
+    /// Creates a virtual address that points to `0`.
+    pub const fn zero() -> VirtAddr {
+        VirtAddr(0)
+    }
+
     /// Converts the address to an `u64`.
     pub fn as_u64(self) -> u64 {
         self.0

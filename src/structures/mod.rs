@@ -2,5 +2,5 @@
 
 pub mod paging;
 pub mod gdt;
-// pub mod idt;
-//pub mod tss;
+pub mod idt;
+pub mod tss;

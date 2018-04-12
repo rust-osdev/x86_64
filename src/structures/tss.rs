@@ -1,20 +1,19 @@
 //! Provides a type for the task state segment structure.
 
-use VirtualAddress;
+use VirtAddr;
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
 /// but is used for finding kernel level stack
 /// if interrupts arrive while in kernel mode.
-#[derive(Debug)]
 #[repr(C, packed)]
 pub struct TaskStateSegment {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
-    pub privilege_stack_table: [VirtualAddress; 3],
+    pub privilege_stack_table: [VirtAddr; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
-    pub interrupt_stack_table: [VirtualAddress; 7],
+    pub interrupt_stack_table: [VirtAddr; 7],
     reserved_3: u64,
     reserved_4: u16,
     /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base.
@@ -26,8 +25,8 @@ impl TaskStateSegment {
     /// `iomap_base`.
     pub const fn new() -> TaskStateSegment {
         TaskStateSegment {
-            privilege_stack_table: [VirtualAddress(0); 3],
-            interrupt_stack_table: [VirtualAddress(0); 7],
+            privilege_stack_table: [VirtAddr::zero(); 3],
+            interrupt_stack_table: [VirtAddr::zero(); 7],
             iomap_base: 0,
             reserved_1: 0,
             reserved_2: 0,
