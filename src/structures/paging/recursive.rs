@@ -39,6 +39,8 @@ pub trait Mapper<S: PageSize> {
         A: FnMut(PhysFrame<S>);
 
     fn update_flags(&mut self, page: Page<S>, flags: PageTableFlags) -> Result<MapperFlush<S>, FlagUpdateError>;
+
+    fn translate(&self, page: Page<S>) -> Option<PhysFrame<S>>;
 }
 
 pub struct RecursivePageTable<'a> {
@@ -209,6 +211,23 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
 
         Ok(MapperFlush::new(page))
     }
+
+    fn translate(&self, page: Page<Size1GB>) -> Option<PhysFrame<Size1GB>> {
+        let p4 = &self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return None;
+        }
+
+        let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return None;
+        }
+
+        PhysFrame::from_start_address(p3_entry.addr()).ok()
+    }
 }
 
 impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
@@ -304,6 +323,30 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
         p2[page.p2_index()].set_flags(flags | Flags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
+    }
+
+    fn translate(&self, page: Page<Size2MB>) -> Option<PhysFrame<Size2MB>> {
+        let p4 = &self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return None;
+        }
+
+        let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return None;
+        }
+
+        let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
+        let p2_entry = &p2[page.p2_index()];
+
+        if p2_entry.is_unused() {
+            return None;
+        }
+
+        PhysFrame::from_start_address(p2_entry.addr()).ok()
     }
 }
 
@@ -411,6 +454,37 @@ impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
         p1[page.p1_index()].set_flags(flags);
 
         Ok(MapperFlush::new(page))
+    }
+
+    fn translate(&self, page: Page<Size4KB>) -> Option<PhysFrame<Size4KB>> {
+        let p4 = &self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return None;
+        }
+
+        let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return None;
+        }
+
+        let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
+        let p2_entry = &p2[page.p2_index()];
+
+        if p2_entry.is_unused() {
+            return None;
+        }
+
+        let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
+        let p1_entry = &p1[page.p1_index()];
+
+        if p1_entry.is_unused() {
+            return None;
+        }
+
+        PhysFrame::from_start_address(p1_entry.addr()).ok()
     }
 }
 
