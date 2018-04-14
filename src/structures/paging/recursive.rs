@@ -38,7 +38,7 @@ pub trait Mapper<S: PageSize> {
     where
         A: FnMut(PhysFrame<S>);
 
-    fn remap(&mut self, page: Page<S>, flags: PageTableFlags) -> Result<MapperFlush<S>, RemapError>;
+    fn update_flags(&mut self, page: Page<S>, flags: PageTableFlags) -> Result<MapperFlush<S>, FlagUpdateError>;
 }
 
 pub struct RecursivePageTable<'a> {
@@ -64,7 +64,7 @@ pub enum UnmapError {
 }
 
 #[derive(Debug)]
-pub enum RemapError {
+pub enum FlagUpdateError {
     PageNotMapped,
 }
 
@@ -86,6 +86,13 @@ impl<'a> RecursivePageTable<'a> {
             p4: table,
             recursive_index,
         })
+    }
+
+    pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: u9) -> Self {
+        RecursivePageTable {
+            p4: table,
+            recursive_index,
+        }
     }
 
     pub fn identity_map<A, S>(
@@ -185,18 +192,18 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn remap(&mut self, page: Page<Size1GB>, flags: PageTableFlags) -> Result<MapperFlush<Size1GB>, RemapError> {
+    fn update_flags(&mut self, page: Page<Size1GB>, flags: PageTableFlags) -> Result<MapperFlush<Size1GB>, FlagUpdateError> {
         use structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
 
         if p3[page.p3_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
         p3[page.p3_index()].set_flags(flags | Flags::HUGE_PAGE);
 
@@ -274,24 +281,24 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn remap(&mut self, page: Page<Size2MB>, flags: PageTableFlags) -> Result<MapperFlush<Size2MB>, RemapError> {
+    fn update_flags(&mut self, page: Page<Size2MB>, flags: PageTableFlags) -> Result<MapperFlush<Size2MB>, FlagUpdateError> {
         use structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
 
         if p3[page.p3_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
 
         if p2[page.p2_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
         
         p2[page.p2_index()].set_flags(flags | Flags::HUGE_PAGE);
@@ -376,29 +383,29 @@ impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn remap(&mut self, page: Page<Size4KB>, flags: PageTableFlags) -> Result<MapperFlush<Size4KB>, RemapError> {
+    fn update_flags(&mut self, page: Page<Size4KB>, flags: PageTableFlags) -> Result<MapperFlush<Size4KB>, FlagUpdateError> {
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
 
         if p3[page.p3_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
 
         if p2[page.p2_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         let p1 = unsafe { &mut *(p1_ptr(page, self.recursive_index)) };
 
         if p1[page.p1_index()].is_unused() {
-            return Err(RemapError::PageNotMapped);
+            return Err(FlagUpdateError::PageNotMapped);
         }
 
         p1[page.p1_index()].set_flags(flags);
