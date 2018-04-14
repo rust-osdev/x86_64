@@ -55,6 +55,10 @@ impl PageTableEntry {
         assert!(!flags.contains(PageTableFlags::HUGE_PAGE));
         self.set_addr(frame.start_address(), flags)
     }
+
+    pub fn set_flags(&mut self, flags: PageTableFlags) {
+        self.entry |= flags.bits();
+    }
 }
 
 impl fmt::Debug for PageTableEntry {
