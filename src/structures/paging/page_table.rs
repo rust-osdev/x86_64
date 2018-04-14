@@ -57,7 +57,7 @@ impl PageTableEntry {
     }
 
     pub fn set_flags(&mut self, flags: PageTableFlags) {
-        self.entry |= flags.bits();
+        self.entry = self.addr().as_u64() | flags.bits();
     }
 }
 
