@@ -8,6 +8,7 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
 use {PhysAddr, VirtAddr};
+use os_bootinfo;
 
 mod page_table;
 mod recursive;
@@ -382,6 +383,21 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
         } else {
             None
         }
+    }
+}
+
+impl From<os_bootinfo::FrameRange> for PhysFrameRange {
+    fn from(range: os_bootinfo::FrameRange) -> Self {
+        PhysFrameRange {
+            start: PhysFrame::from_start_address(PhysAddr::new(range.start_addr())).unwrap(),
+            end: PhysFrame::from_start_address(PhysAddr::new(range.end_addr())).unwrap(),
+        }
+    }
+}
+
+impl Into<os_bootinfo::FrameRange> for PhysFrameRange {
+    fn into(self) -> os_bootinfo::FrameRange {
+        os_bootinfo::FrameRange::new(self.start.start_address().as_u64(), self.end.start_address().as_u64())
     }
 }
 
