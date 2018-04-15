@@ -4,6 +4,11 @@
 pub struct Msr(u32);
 
 impl Msr {
+    /// Create an instance from a register.
+    pub const fn new(reg: u32) -> Msr {
+        Msr(reg)
+    }
+
     /// Read 64 bits msr register.
     pub unsafe fn read(&self) -> u64 {
         let (high, low): (u32, u32);
