@@ -16,6 +16,7 @@ extern crate std;
 #[macro_use]
 extern crate bitflags;
 extern crate bit_field;
+extern crate os_bootinfo;
 extern crate usize_conversions;
 pub extern crate ux;
 
