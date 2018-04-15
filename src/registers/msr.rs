@@ -2,7 +2,7 @@
 
 #![allow(missing_docs)]
 
-pub use instructions::{rdmsr, wrmsr};
+// pub use instructions::{rdmsr, wrmsr};
 
 // What follows is a long list of all MSR register taken from Intel's manual.
 // Some of the register values appear duplicated as they may be
