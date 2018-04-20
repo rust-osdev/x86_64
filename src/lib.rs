@@ -12,10 +12,16 @@ extern crate raw_cpuid;
 #[macro_use]
 extern crate phf;
 
+macro_rules! bit {
+    ( $x:expr ) => {
+        1 << $x
+    };
+}
+
 pub mod bits32;
 pub mod bits64;
 
-pub mod control_regs;
+pub mod controlregs;
 pub mod descriptor;
 pub mod dtables;
 pub mod io;
