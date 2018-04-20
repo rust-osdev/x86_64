@@ -19,13 +19,13 @@ matrix:
   include:
 
     # Linux
-    - env: TARGET=i686-unknown-linux-gnu
-    - env: TARGET=x86_64-unknown-linux-gnu
+    - env: TARGET=i686-unknown-linux-gnu DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-linux-gnu DISABLE_TESTS=1
 
     # OSX
-    - env: TARGET=i686-apple-darwin
+    - env: TARGET=i686-apple-darwin DISABLE_TESTS=1
       os: osx
-    - env: TARGET=x86_64-apple-darwin
+    - env: TARGET=x86_64-apple-darwin DISABLE_TESTS=1
       os: osx
 
     # *BSD
@@ -34,7 +34,7 @@ matrix:
     - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
 
     # Windows
-    - env: TARGET=x86_64-pc-windows-gnu
+    - env: TARGET=x86_64-pc-windows-gnu DISABLE_TESTS=1
 
 
 before_install:
