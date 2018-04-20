@@ -12,10 +12,7 @@ extern crate raw_cpuid;
 #[macro_use]
 extern crate phf;
 
-#[cfg(target_arch="x86")]
 pub mod bits32;
-
-#[cfg(target_arch="x86_64")]
 pub mod bits64;
 
 pub mod control_regs;
@@ -25,7 +22,6 @@ pub mod io;
 pub mod irq;
 pub mod msr;
 pub mod paging;
-pub mod flags;
 pub mod segmentation;
 pub mod task;
 pub mod tlb;

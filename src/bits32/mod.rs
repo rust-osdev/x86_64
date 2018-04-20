@@ -1,4 +1,5 @@
 pub mod irq;
+pub mod eflags;
 pub mod segmentation;
 pub mod task;
 

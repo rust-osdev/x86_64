@@ -1,11 +1,15 @@
-//! Processor state stored in the FLAGS, EFLAGS, or RFLAGS register.
+//! Processor state stored in the RFLAGS register.
+//!
+//! In 64-bit mode, EFLAGS is extended to 64 bits and called RFLAGS. 
+//! The upper 32 bits of RFLAGS register is reserved. 
+//! The lower 32 bits of RFLAGS is the same as EFLAGS.
 
 use ::PrivilegeLevel;
 
-/// The RFLAGS register. All variants are backwards compatable so only one
-/// bitflags struct needed.
+/// The RFLAGS register.
+/// This is duplicated code from bits32 eflags.rs.
 bitflags! {
-    pub flags Flags: usize {
+    pub flags RFlags: u64 {
         /// ID Flag (ID)
         const FLAGS_ID = 1 << 21,
         /// Virtual Interrupt Pending (VIP)
@@ -21,13 +25,13 @@ bitflags! {
         /// Nested Task (NT)
         const FLAGS_NT = 1 << 14,
         /// I/O Privilege Level (IOPL) 0
-        const FLAGS_IOPL0 = 0 << 12,
+        const FLAGS_IOPL0 = 0b00 << 12,
         /// I/O Privilege Level (IOPL) 1
-        const FLAGS_IOPL1 = 1 << 12,
+        const FLAGS_IOPL1 = 0b01 << 12,
         /// I/O Privilege Level (IOPL) 2
-        const FLAGS_IOPL2 = 2 << 12,
+        const FLAGS_IOPL2 = 0b10 << 12,
         /// I/O Privilege Level (IOPL) 3
-        const FLAGS_IOPL3 = 3 << 12,
+        const FLAGS_IOPL3 = 0b11 << 12,
         /// Overflow Flag (OF)
         const FLAGS_OF = 1 << 11,
         /// Direction Flag (DF)
@@ -51,52 +55,24 @@ bitflags! {
     }
 }
 
-impl Flags {
+impl RFlags {
     /// Creates a new Flags entry. Ensures bit 1 is set.
-    pub const fn new() -> Flags {
+    pub const fn new() -> RFlags {
         FLAGS_A1
     }
 
     /// Creates a new Flags with the given I/O privilege level.
-    pub const fn from_priv(iopl: PrivilegeLevel) -> Flags {
-        Flags { bits: (iopl as usize) << 12 }
+    pub const fn from_priv(iopl: PrivilegeLevel) -> RFlags {
+        RFlags { bits: (iopl as u64) << 12 }
     }
 }
 
-pub fn flags() -> Flags {
-
-    #[cfg(target_arch="x86")]
-    #[inline(always)]
-    unsafe fn inner() -> Flags {
-        let r: usize;
-        asm!("pushfl; popl $0" : "=r"(r) :: "memory");
-        Flags::from_bits_truncate(r)
-    }
-
-    #[cfg(target_arch="x86_64")]
-    #[inline(always)]
-    unsafe fn inner() -> Flags {
-        let r: usize;
-        asm!("pushfq; popq $0" : "=r"(r) :: "memory");
-        Flags::from_bits_truncate(r)
-    }
-
-    unsafe { inner() }
+pub unsafe fn flags() -> RFlags {
+    let r: u64;
+    asm!("pushfq; popq $0" : "=r"(r) :: "memory");
+    RFlags::from_bits_truncate(r)
 }
 
-pub fn set(val: Flags) {
-
-    #[cfg(target_arch="x86")]
-    #[inline(always)]
-    unsafe fn inner(val: Flags) {
-        asm!("pushl $0; popfl" :: "r"(val.bits()) : "memory" "flags");
-    }
-
-    #[cfg(target_arch="x86_64")]
-    #[inline(always)]
-    unsafe fn inner(val: Flags) {
-        asm!("pushq $0; popfq" :: "r"(val.bits()) : "memory" "flags");
-    }
-
-    unsafe { inner(val) }
+pub unsafe fn set(val: RFlags) {
+    asm!("pushq $0; popfq" :: "r"(val.bits()) : "memory" "flags");
 }
