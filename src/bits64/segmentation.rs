@@ -10,6 +10,7 @@ use bits64::task::*;
 /// to %cs. Instead we push the new segment selector
 /// and return value on the stack and use lretq
 /// to reload cs and continue at 1:.
+#[cfg(target_arch="x86-64")]
 pub unsafe fn set_cs(sel: SegmentSelector) {
     asm!("pushq $0; \
           leaq  1f(%rip), %rax; \
@@ -33,7 +34,7 @@ impl SegmentBitness {
 }
 
 impl SegmentDescriptor {
-    pub fn new_memory(base: u32, limit: u32, ty: Type, accessed: bool, dpl: PrivilegeLevel, bitness: SegmentBitness) -> SegmentDescriptor {
+    pub fn new_memory64(base: u32, limit: u32, ty: Type, accessed: bool, dpl: PrivilegeLevel, bitness: SegmentBitness) -> SegmentDescriptor {
         let ty1 = descriptor::Type::SegmentDescriptor {
             ty: ty,
             accessed: accessed,
@@ -43,7 +44,7 @@ impl SegmentDescriptor {
         seg
     }
 
-    pub fn new_tss(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> [SegmentDescriptor; 2] {
+    pub fn new_tss64(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> [SegmentDescriptor; 2] {
         let tss_ptr = tss as *const TaskStateSegment;
         let ty1 = descriptor::Type::SystemDescriptor {
             size: true,

@@ -1,6 +1,6 @@
 //! Processor state stored in the EFLAGS register.
 
-use super::PrivilegeLevel;
+use ::PrivilegeLevel;
 
 /// The EFLAGS register.
 bitflags! {
@@ -50,7 +50,7 @@ bitflags! {
     }
 }
 
-impl Flags {
+impl EFlags {
     /// Creates a new Flags entry. Ensures bit 1 is set.
     pub const fn new() -> EFlags {
         FLAGS_A1
@@ -62,12 +62,14 @@ impl Flags {
     }
 }
 
+#[cfg(target_arch="x86")]
 pub unsafe fn read() -> EFlags {
     let r: u32;
     asm!("pushfl; popl $0" : "=r"(r) :: "memory");
     EFlags::from_bits_truncate(r)
 }
 
+#[cfg(target_arch="x86")]
 pub unsafe fn set(val: EFlags) {
     asm!("pushl $0; popfl" :: "r"(val.bits()) : "memory" "flags");
 }

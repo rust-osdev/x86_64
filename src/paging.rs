@@ -11,10 +11,16 @@ impl VAddr {
     pub const fn as_usize(&self) -> usize {
         self.0
     }
+
     /// Convert from `usize`
     pub const fn from_usize(v: usize) -> Self {
         VAddr(v)
     }
+
+    pub const fn as_u64(&self) -> u64 {
+        self.0 as u64
+    }
+
 }
 
 impl fmt::Binary for VAddr {

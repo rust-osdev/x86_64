@@ -75,26 +75,26 @@ pub type PT = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
 #[inline]
-pub fn pml4_index(addr: VAddr) -> usize {
-    (addr.as_usize() >> 39) & 0b111111111
+pub fn pml4_index(addr: VAddr) -> u64 {
+    (addr.as_u64() >> 39) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PDPT.
 #[inline]
-pub fn pdpt_index(addr: VAddr) -> usize {
-    (addr.as_usize() >> 30) & 0b111111111
+pub fn pdpt_index(addr: VAddr) -> u64 {
+    (addr.as_u64() >> 30) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PD.
 #[inline]
-pub fn pd_index(addr: VAddr) -> usize {
-    (addr.as_usize() >> 21) & 0b111111111
+pub fn pd_index(addr: VAddr) -> u64 {
+    (addr.as_u64() >> 21) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PT.
 #[inline]
-pub fn pt_index(addr: VAddr) -> usize {
-    (addr.as_usize() >> 12) & 0b111111111
+pub fn pt_index(addr: VAddr) -> u64 {
+    (addr.as_u64() >> 12) & 0b111111111
 }
 
 /// PML4 Entry bits description.

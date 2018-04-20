@@ -11,15 +11,16 @@ use bits32::task::*;
 /// to %cs. Instead we push the new segment selector
 /// and return value on the stack and use lretl
 /// to reload cs and continue at 1:.
+#[cfg(target_arch="x86")]
 pub unsafe fn set_cs(sel: SegmentSelector) {
     asm!("pushl $0; \
           pushl $$1f; \
           lretl; \
-          1:" :: "ri" (sel.bits() as usize) : "memory");
+          1:" :: "ri" (sel.bits() as u32) : "memory");
 }
 
 impl SegmentDescriptor {
-    pub fn new_memory(base: u32, limit: u32, ty: Type, accessed: bool, dpl: PrivilegeLevel) -> SegmentDescriptor {
+    pub fn new_memory32(base: u32, limit: u32, ty: Type, accessed: bool, dpl: PrivilegeLevel) -> SegmentDescriptor {
         let ty1 = descriptor::Type::SegmentDescriptor {
             ty: ty,
             accessed: accessed,
@@ -29,7 +30,7 @@ impl SegmentDescriptor {
         seg
     }
 
-    pub fn new_tss(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> SegmentDescriptor {
+    pub fn new_tss32(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> SegmentDescriptor {
         let tss_ptr = tss as *const TaskStateSegment;
         let ty1 = descriptor::Type::SystemDescriptor {
             size: true,

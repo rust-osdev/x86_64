@@ -21,4 +21,6 @@ pub mod paging;
 pub mod segmentation;
 pub mod task;
 pub mod syscall;
+
+#[cfg(target_arch="x86-64")]
 pub mod sgx;
