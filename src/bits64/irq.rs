@@ -2,10 +2,10 @@
 
 use core::fmt;
 
+use ::descriptor::*;
+use ::paging::VAddr;
+use ::PrivilegeLevel;
 use bits64::segmentation::SegmentSelector;
-use shared::descriptor::*;
-use shared::paging::VAddr;
-use shared::PrivilegeLevel;
 
 /// An interrupt gate descriptor.
 ///

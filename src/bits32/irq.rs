@@ -1,8 +1,8 @@
 //! Interrupt description and set-up code.
 
-use shared::descriptor::*;
-use shared::paging::VAddr;
-use shared::PrivilegeLevel;
+use ::descriptor::*;
+use ::paging::VAddr;
+use ::PrivilegeLevel;
 
 /// An interrupt gate or trap gate descriptor.
 ///

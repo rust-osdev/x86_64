@@ -1,7 +1,7 @@
 use core::fmt;
 
-use shared::descriptor;
-use shared::PrivilegeLevel;
+use ::descriptor;
+use ::PrivilegeLevel;
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table

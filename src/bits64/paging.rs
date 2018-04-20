@@ -2,7 +2,7 @@
 
 use core::fmt;
 
-use shared::paging::*;
+use ::paging::*;
 
 /// Represents a physical memory address
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]

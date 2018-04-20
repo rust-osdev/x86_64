@@ -1,9 +1,9 @@
 use core::mem::size_of;
 
+use ::descriptor;
+use ::PrivilegeLevel;
+pub use ::segmentation::*;
 use bits64::task::*;
-use shared::descriptor;
-use shared::PrivilegeLevel;
-pub use shared::segmentation::*;
 
 /// Reload code segment register.
 /// Note this is special since we can not directly move

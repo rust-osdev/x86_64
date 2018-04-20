@@ -1,13 +1,13 @@
 //! Functions and data-structures to load descriptor tables.
 
+use core::fmt;
 use core::mem::size_of;
 
 use current::irq::IdtEntry;
-use shared::segmentation::SegmentDescriptor;
+use segmentation::SegmentDescriptor;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.
-#[derive(Debug)]
 #[repr(C, packed)]
 pub struct DescriptorTablePointer<Entry> {
     /// Size of the DT.
@@ -30,6 +30,11 @@ impl<T> DescriptorTablePointer<T> {
     }
 }
 
+impl<T> fmt::Debug for DescriptorTablePointer<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        unsafe { write!(f, "DescriptorTablePointer ({} {:?})", self.limit, self.base) }
+    }
+}
 
 /// Load GDT table.
 pub unsafe fn lgdt(gdt: &DescriptorTablePointer<SegmentDescriptor>) {

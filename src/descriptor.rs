@@ -1,7 +1,7 @@
 //! Fields which are common to all segment-section and gate descriptors
 
-use shared::PrivilegeLevel;
-use shared::segmentation;
+use ::PrivilegeLevel;
+use ::segmentation;
 
 /// System-Segment and Gate-Descriptor Types for IA32e mode.  When the `S`
 /// (descriptor type) flag in a segment descriptor is clear, the descriptor type
