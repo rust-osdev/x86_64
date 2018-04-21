@@ -3,7 +3,6 @@
 use core::fmt;
 use core::mem::size_of;
 
-use current::irq::IdtEntry;
 use segmentation::SegmentDescriptor;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
@@ -45,8 +44,9 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer<SegmentDescriptor>) {
 pub unsafe fn lldt(ldt: &DescriptorTablePointer<SegmentDescriptor>) {
     asm!("lldt ($0)" :: "r" (ldt) : "memory");
 }
-
+/*
 /// Load IDT table.
 pub unsafe fn lidt(idt: &DescriptorTablePointer<IdtEntry>) {
     asm!("lidt ($0)" :: "r" (idt) : "memory");
 }
+*/

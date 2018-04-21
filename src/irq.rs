@@ -185,46 +185,46 @@ pub static EXCEPTIONS: [InterruptDescription; 21] = [
 
 bitflags!{
     // Taken from Intel Manual Section 4.7 Page-Fault Exceptions.
-    pub flags PageFaultError: u32 {
+    pub struct PageFaultError: u32 {
         /// 0: The fault was caused by a non-present page.
         /// 1: The fault was caused by a page-level protection violation
-        const PFAULT_ERROR_P = bit!(0),
+        const PFAULT_ERROR_P = bit!(0);
 
         /// 0: The access causing the fault was a read.
         /// 1: The access causing the fault was a write.
-        const PFAULT_ERROR_WR = bit!(1),
+        const PFAULT_ERROR_WR = bit!(1);
 
         /// 0: The access causing the fault originated when the processor
         /// was executing in supervisor mode.
         /// 1: The access causing the fault originated when the processor
         /// was executing in user mode.
-        const PFAULT_ERROR_US = bit!(2),
+        const PFAULT_ERROR_US = bit!(2);
 
         /// 0: The fault was not caused by reserved bit violation.
         /// 1: The fault was caused by reserved bits set to 1 in a page directory.
-        const PFAULT_ERROR_RSVD = bit!(3),
+        const PFAULT_ERROR_RSVD = bit!(3);
 
         /// 0: The fault was not caused by an instruction fetch.
         /// 1: The fault was caused by an instruction fetch.
-        const PFAULT_ERROR_ID = bit!(4),
+        const PFAULT_ERROR_ID = bit!(4);
 
         /// 0: The fault was not by protection keys.
         /// 1: There was a protection key violation.
-        const PFAULT_ERROR_PK = bit!(5),
+        const PFAULT_ERROR_PK = bit!(5);
     }
 }
 
 impl fmt::Display for PageFaultError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let p = match self.contains(PFAULT_ERROR_P) {
+        let p = match self.contains(PageFaultError::PFAULT_ERROR_P) {
             false => "The fault was caused by a non-present page.",
             true => "The fault was caused by a page-level protection violation.",
         };
-        let wr = match self.contains(PFAULT_ERROR_WR) {
+        let wr = match self.contains(PageFaultError::PFAULT_ERROR_WR) {
             false => "The access causing the fault was a read.",
             true => "The access causing the fault was a write.",
         };
-        let us = match self.contains(PFAULT_ERROR_US) {
+        let us = match self.contains(PageFaultError::PFAULT_ERROR_US) {
             false => {
                 "The access causing the fault originated when the processor was executing in \
                  supervisor mode."
@@ -234,11 +234,11 @@ impl fmt::Display for PageFaultError {
                  mode."
             }
         };
-        let rsvd = match self.contains(PFAULT_ERROR_RSVD) {
+        let rsvd = match self.contains(PageFaultError::PFAULT_ERROR_RSVD) {
             false => "The fault was not caused by reserved bit violation.",
             true => "The fault was caused by reserved bits set to 1 in a page directory.",
         };
-        let id = match self.contains(PFAULT_ERROR_ID) {
+        let id = match self.contains(PageFaultError::PFAULT_ERROR_ID) {
             false => "The fault was not caused by an instruction fetch.",
             true => "The fault was caused by an instruction fetch.",
         };
@@ -249,12 +249,12 @@ impl fmt::Display for PageFaultError {
 
 #[test]
 fn bit_macro() {
-    assert!(PFAULT_ERROR_PK.bits() == 0b100000);
-    assert!(PFAULT_ERROR_ID.bits() == 0b10000);
-    assert!(PFAULT_ERROR_RSVD.bits() == 0b1000);
-    assert!(PFAULT_ERROR_US.bits() == 0b100);
-    assert!(PFAULT_ERROR_WR.bits() == 0b10);
-    assert!(PFAULT_ERROR_P.bits() == 0b1);
+    assert!(PageFaultError::PFAULT_ERROR_PK.bits() == 0b100000);
+    assert!(PageFaultError::PFAULT_ERROR_ID.bits() == 0b10000);
+    assert!(PageFaultError::PFAULT_ERROR_RSVD.bits() == 0b1000);
+    assert!(PageFaultError::PFAULT_ERROR_US.bits() == 0b100);
+    assert!(PageFaultError::PFAULT_ERROR_WR.bits() == 0b10);
+    assert!(PageFaultError::PFAULT_ERROR_P.bits() == 0b1);
 }
 
 /// Enable Interrupts.

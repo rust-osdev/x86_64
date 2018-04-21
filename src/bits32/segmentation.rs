@@ -1,10 +1,5 @@
-use core::mem::size_of;
-
-use ::descriptor;
-use ::PrivilegeLevel;
-pub use ::segmentation::*;
-
-use bits32::task::*;
+#[allow(unused_imports)]
+use segmentation::SegmentSelector;
 
 /// Reload code segment register.
 /// Note this is special since we can not directly move
@@ -17,26 +12,4 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
           pushl $$1f; \
           lretl; \
           1:" :: "ri" (sel.bits() as u32) : "memory");
-}
-
-impl SegmentDescriptor {
-    pub fn new_memory32(base: u32, limit: u32, ty: Type, accessed: bool, dpl: PrivilegeLevel) -> SegmentDescriptor {
-        let ty1 = descriptor::Type::SegmentDescriptor {
-            ty: ty,
-            accessed: accessed,
-        };
-        let flags = FLAGS_DB;
-        let seg = SegmentDescriptor::memory_or_tss(base, limit, ty1, dpl, flags);
-        seg
-    }
-
-    pub fn new_tss32(tss: &TaskStateSegment, dpl: PrivilegeLevel) -> SegmentDescriptor {
-        let tss_ptr = tss as *const TaskStateSegment;
-        let ty1 = descriptor::Type::SystemDescriptor {
-            size: true,
-            ty: descriptor::SystemType::TssAvailable,
-        };
-        let seg = SegmentDescriptor::memory_or_tss(tss_ptr as u32, size_of::<TaskStateSegment>() as u32, ty1, dpl, Flags::empty());
-        seg
-    }
 }

@@ -1,7 +1,7 @@
 //! Data structures and functions used by IA-32e but not Protected Mode.
 
 macro_rules! check_flag {
-    ($doc:meta, $fun:ident, $flag:ident) => (
+    ($doc:meta, $fun:ident, $flag:expr) => (
         #[$doc]
         pub fn $fun(&self) -> bool {
             self.contains($flag)

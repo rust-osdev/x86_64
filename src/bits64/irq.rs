@@ -1,7 +1,7 @@
 //! Interrupt description and set-up code.
-
+/*
 use ::segmentation::SegmentSelector;
-use PrivilegeLevel;
+use Ring;
 use descriptor::*;
 use paging::VAddr;
 
@@ -21,7 +21,7 @@ pub struct IdtEntry {
     /// This must always be zero.
     pub ist_index: u8,
     /// Flags.
-    pub flags: Flags,
+    pub struct: Flags,
     /// The upper 48 bits of ISR (the last 16 bits must be zero).
     pub base_hi: u64,
     /// Must be zero.
@@ -67,7 +67,7 @@ impl IdtEntry {
     pub fn new(
         handler: VAddr,
         gdt_code_selector: SegmentSelector,
-        dpl: PrivilegeLevel,
+        dpl: Ring,
         ty: Type,
         ist_index: u8,
     ) -> IdtEntry {
@@ -83,3 +83,4 @@ impl IdtEntry {
     }
 }
 
+*/

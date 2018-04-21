@@ -2,57 +2,57 @@
 //! See Intel Vol. 3a Section 2.5, especially Figure 2-7.
 
 bitflags! {
-    pub flags Cr0: usize {
-        const CR0_ENABLE_PAGING = 1 << 31,
-        const CR0_CACHE_DISABLE = 1 << 30,
-        const CR0_NOT_WRITE_THROUGH = 1 << 29,
-        const CR0_ALIGNMENT_MASK = 1 << 18,
-        const CR0_WRITE_PROTECT = 1 << 16,
-        const CR0_NUMERIC_ERROR = 1 << 5,
-        const CR0_EXTENSION_TYPE = 1 << 4,
-        const CR0_TASK_SWITCHED = 1 << 3,
-        const CR0_EMULATE_COPROCESSOR = 1 << 2,
-        const CR0_MONITOR_COPROCESSOR = 1 << 1,
-        const CR0_PROTECTED_MODE = 1 << 0,
+    pub struct Cr0: usize {
+        const CR0_ENABLE_PAGING = 1 << 31;
+        const CR0_CACHE_DISABLE = 1 << 30;
+        const CR0_NOT_WRITE_THROUGH = 1 << 29;
+        const CR0_ALIGNMENT_MASK = 1 << 18;
+        const CR0_WRITE_PROTECT = 1 << 16;
+        const CR0_NUMERIC_ERROR = 1 << 5;
+        const CR0_EXTENSION_TYPE = 1 << 4;
+        const CR0_TASK_SWITCHED = 1 << 3;
+        const CR0_EMULATE_COPROCESSOR = 1 << 2;
+        const CR0_MONITOR_COPROCESSOR = 1 << 1;
+        const CR0_PROTECTED_MODE = 1 << 0;
     }
 }
 
 bitflags! {
-    pub flags Cr4: usize {
-        const CR4_ENABLE_PROTECTION_KEY = 1 << 22,
-        const CR4_ENABLE_SMAP = 1 << 21,
-        const CR4_ENABLE_SMEP = 1 << 20,
-        const CR4_ENABLE_OS_XSAVE = 1 << 18,
-        const CR4_ENABLE_PCID = 1 << 17,
-        const CR4_ENABLE_FSGSBASE = 1 << 16,
-        const CR4_ENABLE_SMX = 1 << 14,
-        const CR4_ENABLE_VMX = 1 << 13,
-        const CR4_ENABLE_UMIP = 1 << 11,
-        const CR4_UNMASKED_SSE = 1 << 10,
-        const CR4_ENABLE_SSE = 1 << 9,
-        const CR4_ENABLE_PPMC = 1 << 8,
-        const CR4_ENABLE_GLOBAL_PAGES = 1 << 7,
-        const CR4_ENABLE_MACHINE_CHECK = 1 << 6,
-        const CR4_ENABLE_PAE = 1 << 5,
-        const CR4_ENABLE_PSE = 1 << 4,
-        const CR4_DEBUGGING_EXTENSIONS = 1 << 3,
-        const CR4_TIME_STAMP_DISABLE = 1 << 2,
-        const CR4_VIRTUAL_INTERRUPTS = 1 << 1,
-        const CR4_ENABLE_VME = 1 << 0,
+    pub struct Cr4: usize {
+        const CR4_ENABLE_PROTECTION_KEY = 1 << 22;
+        const CR4_ENABLE_SMAP = 1 << 21;
+        const CR4_ENABLE_SMEP = 1 << 20;
+        const CR4_ENABLE_OS_XSAVE = 1 << 18;
+        const CR4_ENABLE_PCID = 1 << 17;
+        const CR4_ENABLE_FSGSBASE = 1 << 16;
+        const CR4_ENABLE_SMX = 1 << 14;
+        const CR4_ENABLE_VMX = 1 << 13;
+        const CR4_ENABLE_UMIP = 1 << 11;
+        const CR4_UNMASKED_SSE = 1 << 10;
+        const CR4_ENABLE_SSE = 1 << 9;
+        const CR4_ENABLE_PPMC = 1 << 8;
+        const CR4_ENABLE_GLOBAL_PAGES = 1 << 7;
+        const CR4_ENABLE_MACHINE_CHECK = 1 << 6;
+        const CR4_ENABLE_PAE = 1 << 5;
+        const CR4_ENABLE_PSE = 1 << 4;
+        const CR4_DEBUGGING_EXTENSIONS = 1 << 3;
+        const CR4_TIME_STAMP_DISABLE = 1 << 2;
+        const CR4_VIRTUAL_INTERRUPTS = 1 << 1;
+        const CR4_ENABLE_VME = 1 << 0;
     }
 }
 
 bitflags! {
-    pub flags Xcr0: u64 {
-        const XCR0_PKRU_STATE = 1 << 9,
-        const XCR0_HI16_ZMM_STATE = 1 << 7,
-        const XCR0_ZMM_HI256_STATE = 1 << 6,
-        const XCR0_OPMASK_STATE = 1 << 5,
-        const XCR0_BNDCSR_STATE = 1 << 4,
-        const XCR0_BNDREG_STATE = 1 << 3,
-        const XCR0_AVX_STATE = 1 << 2,
-        const XCR0_SSE_STATE = 1 << 1,
-        const XCR0_FPU_MMX_STATE = 1 << 0,
+    pub struct Xcr0: u64 {
+        const XCR0_PKRU_STATE = 1 << 9;
+        const XCR0_HI16_ZMM_STATE = 1 << 7;
+        const XCR0_ZMM_HI256_STATE = 1 << 6;
+        const XCR0_OPMASK_STATE = 1 << 5;
+        const XCR0_BNDCSR_STATE = 1 << 4;
+        const XCR0_BNDREG_STATE = 1 << 3;
+        const XCR0_AVX_STATE = 1 << 2;
+        const XCR0_SSE_STATE = 1 << 1;
+        const XCR0_FPU_MMX_STATE = 1 << 0;
     }
 }
 

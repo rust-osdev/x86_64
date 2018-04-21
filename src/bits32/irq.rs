@@ -1,8 +1,8 @@
 //! Interrupt description and set-up code.
-
+/*
 use ::descriptor::*;
 use ::paging::VAddr;
-use ::PrivilegeLevel;
+use ::Ring;
 
 /// An interrupt gate or trap gate descriptor.
 ///
@@ -17,7 +17,7 @@ pub struct IdtEntry {
     /// This must always be zero.
     pub reserved: u8,
     /// flags.
-    pub flags: Flags,
+    pub struct: Flags,
     /// The upper 16 bits of ISR.
     pub offset_hi: u16
 }
@@ -39,7 +39,7 @@ impl IdtEntry {
     /// The "Present" flag set, which is the most common case.  If you need
     /// something else, you can construct it manually.
     pub const fn new(handler: VAddr, gdt_code_selector: u16,
-                     dpl: PrivilegeLevel, block: bool) -> IdtEntry {
+                     dpl: Ring, block: bool) -> IdtEntry {
         IdtEntry {
             offset_lo: ((handler.as_usize() as u32) & 0xFFFF) as u16,
             offset_hi: ((handler.as_usize() as u32 & 0xFFFF0000) >> 16) as u16,
@@ -55,3 +55,4 @@ impl IdtEntry {
         }
     }
 }
+*/
