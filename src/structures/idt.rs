@@ -200,7 +200,7 @@ pub struct Idt {
     /// The returned error code is the `SS` segment selector. The saved instruction pointer
     /// points to the control-transfer instruction that caused the `#TS`.
     ///
-    /// The vector number of the `#DF` exception is 10.
+    /// The vector number of the `#TS` exception is 10.
     pub invalid_tss: IdtEntry<HandlerFuncWithErrCode>,
 
     /// An segment-not-present exception (`#NP`) occurs when an attempt is made to load a
