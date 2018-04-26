@@ -8,12 +8,12 @@ use ::Ring;
 /// See Intel 3a, Section 3.4.5 "Segment Descriptors", and Section 3.5.2
 #[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
-pub struct Descriptor32 {
+pub struct Descriptor {
     pub lower: u32,
     pub upper: u32,
 }
 
-impl Descriptor32 {
+impl Descriptor {
 
     pub(crate) fn apply_builder_settings(&mut self, builder: &DescriptorBuilder) {
         builder.dpl.map(|ring| self.set_dpl(ring));
@@ -172,9 +172,9 @@ impl LdtDescriptorBuilder<u32> for DescriptorBuilder {
     }
 }
 
-impl BuildDescriptor<Descriptor32> for DescriptorBuilder {
-    fn finish(&self) -> Descriptor32 {
-        let mut desc: Descriptor32 = Default::default();
+impl BuildDescriptor<Descriptor> for DescriptorBuilder {
+    fn finish(&self) -> Descriptor {
+        let mut desc: Descriptor = Default::default();
         desc.apply_builder_settings(self);
 
         let typ = match self.typ {

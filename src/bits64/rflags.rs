@@ -68,7 +68,7 @@ impl RFlags {
 }
 
 #[cfg(target_arch="x86-64")]
-pub unsafe fn flags() -> RFlags {
+pub unsafe fn read() -> RFlags {
     let r: u64;
     asm!("pushfq; popq $0" : "=r"(r) :: "memory");
     RFlags::from_bits_truncate(r)

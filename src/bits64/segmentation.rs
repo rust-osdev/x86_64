@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use segmentation::{SegmentSelector};
 use segmentation::{DescriptorBuilder, BuildDescriptor, DescriptorType, GateDescriptorBuilder, SegmentDescriptorBuilder, LdtDescriptorBuilder, CodeSegmentType, DataSegmentType, SystemDescriptorTypes64};
-use bits32::segmentation::{Descriptor32};
+use bits32::segmentation::Descriptor as Descriptor32;
 
 /// Entry for IDT, GDT or LDT.
 ///
@@ -9,13 +9,13 @@ use bits32::segmentation::{Descriptor32};
 /// "Segment Descriptor Tables in IA-32e Mode", especially Figure 3-8.
 #[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
-pub struct Descriptor64 {
+pub struct Descriptor {
     desc32: Descriptor32,
     lower: u32,
     upper: u32
 }
 
-impl Descriptor64 {
+impl Descriptor {
 
     pub(crate) fn apply_builder_settings(&mut self, builder: &DescriptorBuilder) {
         self.desc32.apply_builder_settings(builder);
@@ -87,16 +87,15 @@ impl LdtDescriptorBuilder<u64> for DescriptorBuilder {
     }
 }
 
-impl BuildDescriptor<Descriptor64> for DescriptorBuilder {
-    fn finish(&self) -> Descriptor64 {
-        let mut desc: Descriptor64 = Default::default();
+impl BuildDescriptor<Descriptor> for DescriptorBuilder {
+    fn finish(&self) -> Descriptor {
+        let mut desc: Descriptor = Default::default();
         desc.apply_builder_settings(self);
         desc.desc32.set_l(); // 64-bit descriptor
 
         let typ = match self.typ {
             Some(DescriptorType::System64(typ)) => {
                 if typ == SystemDescriptorTypes64::LDT || typ == SystemDescriptorTypes64::TssAvailable || typ == SystemDescriptorTypes64::TssBusy {
-                    assert!(!self.db);
                     assert!(!self.db);
                 }
                 typ as u8
