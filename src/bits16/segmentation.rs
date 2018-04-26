@@ -4,8 +4,8 @@ impl GateDescriptorBuilder<u16> for DescriptorBuilder {
 
     fn tss_descriptor(selector: SegmentSelector, offset: u16, available: bool) -> DescriptorBuilder {
         let typ = match available {
-            true => DescriptorType::System32(SystemDescriptorTypes32::TssAvailable32),
-            false => DescriptorType::System32(SystemDescriptorTypes32::TssBusy32),
+            true => DescriptorType::System32(SystemDescriptorTypes32::TSSAvailable16),
+            false => DescriptorType::System32(SystemDescriptorTypes32::TssBusy16),
         };
 
         DescriptorBuilder::with_selector_offset(selector, offset.into()).set_type(typ)
