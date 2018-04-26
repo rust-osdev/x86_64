@@ -14,6 +14,7 @@ rust:
 env:
   global:
     - CRATE_NAME=x86
+    - RUSTFLAGS='-D warnings'
 
 matrix:
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you

@@ -76,21 +76,54 @@ impl fmt::Display for SegmentSelector {
     }
 }
 
-/// Entry for GDT or LDT. Provides size and location of a segment.
-///
-/// See Intel 3a, Section 3.4.5 "Segment Descriptors", and Section 3.5.2
-/// "Segment Descriptor Tables in IA-32e Mode", especially Figure 3-8.
-#[derive(Copy, Clone, Debug)]
-#[repr(C, packed)]
-pub struct SegmentDescriptor {
-    limit1: u16,
-    base1: u16,
-    base2: u8,
-    type_access: u8,
-    limit2_flags: u8,
-    base3: u8,
+/// System-Segment and Gate-Descriptor Types 64-bit mode
+/// See also Intel 3a, Table 3-2 System Segment and Gate-Descriptor Types.
+#[repr(u8)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum SystemDescriptorTypes64 {
+    //Reserved0 = 0b0000,
+    //Reserved1 = 0b0001,
+    LDT = 0b0010,
+    //Reserved = 0b0011,
+    //Reserved = 0b0100,
+    //Reserved = 0b0101,
+    //Reserved = 0b0110,
+    //Reserved = 0b0111,
+    //Reserved = 0b1000,
+    TssAvailable = 0b1001,
+    //Reserved = 0b1010,
+    TssBusy = 0b1011,
+    CallGate = 0b1100,
+    //Reserved = 0b1101,
+    InterruptGate = 0b1110,
+    TrapGate = 0b1111,
 }
 
+/// System-Segment and Gate-Descriptor Types 32-bit mode.
+/// See also Intel 3a, Table 3-2 System Segment and Gate-Descriptor Types.
+#[repr(u8)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum SystemDescriptorTypes32 {
+    //Reserved0 = 0b0000,
+    TSSAvailable16 = 0b0001,
+    LDT = 0b0010,
+    TSSBusy16 = 0b0011,
+    CallGate16 = 0b0100,
+    TaskGate = 0b0101,
+    InterruptGate16 = 0b0110,
+    TrapGate16 = 0b0111,
+    //Reserved1 = 0b1000,
+    TssAvailable32 = 0b1001,
+    //Reserved2 = 0b1010,
+    TssBusy32 = 0b1011,
+    CallGate32 = 0b1100,
+    //Reserved3 = 0b1101,
+    InterruptGate32 = 0b1110,
+    TrapGate32 = 0b1111,
+}
+
+/// Data Segment types for descriptors.
+/// See also Intel 3a, Table 3-1 Code- and Data-Segment Types.
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum DataSegmentType {
@@ -112,6 +145,8 @@ pub enum DataSegmentType {
     ReadWriteExpandAccessed = 0b0111,
 }
 
+/// Code Segment types for descriptors.
+/// See also Intel 3a, Table 3-1 Code- and Data-Segment Types.
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum CodeSegmentType {
@@ -133,115 +168,82 @@ pub enum CodeSegmentType {
     ExecuteReadConformingAccessed = 0b1111,
 }
 
-/// System-Segment and Gate-Descriptor Types 32-bit mode
-#[repr(u8)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-enum SystemDescriptor32 {
-    //Reserved0 = 0b0000,
-    TSSAvailable16 = 0b0001,
-    LDT = 0b0010,
-    TSSBusy16 = 0b0011,
-    CallGate16 = 0b0100,
-    TaskGate = 0b0101,
-    InterruptGate16 = 0b0110,
-    TrapGate16 = 0b0111,
-    //Reserved1 = 0b1000,
-    TssAvailable32 = 0b1001,
-    //Reserved2 = 0b1010,
-    TssBusy32 = 0b1011,
-    CallGate32 = 0b1100,
-    //Reserved3 = 0b1101,
-    InterruptGate32 = 0b1110,
-    TrapGate32 = 0b1111,
-}
-
-/// System-Segment and Gate-Descriptor Types 64-bit mode
-#[repr(u8)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-enum SystemDescriptor64 {
-    //Reserved0 = 0b0000,
-    //Reserved1 = 0b0001,
-    LDT = 0b0010,
-    //Reserved = 0b0011,
-    //Reserved = 0b0100,
-    //Reserved = 0b0101,
-    //Reserved = 0b0110,
-    //Reserved = 0b0111,
-    //Reserved = 0b1000,
-    TssAvailable64 = 0b1001,
-    //Reserved = 0b1010,
-    TssBusy64 = 0b1011,
-    CallGate64 = 0b1100,
-    //Reserved = 0b1101,
-    InterruptGate64 = 0b1110,
-    TrapGate64 = 0b1111,
-}
-
+/// Helper enum type to differentiate between the different descriptor types that all end up written in the same field.
 #[derive(Debug, Eq, PartialEq)]
-pub enum SystemMode {
-    Mode16,
-    Mode32,
-    Mode64,
+pub(crate) enum DescriptorType {
+    System64(SystemDescriptorTypes64),
+    System32(SystemDescriptorTypes32),
+    Data(DataSegmentType),
+    Code(CodeSegmentType)
+}
+
+/// Trait that defines the architecture specific functions for building various system segment descriptors
+/// which are available on all 16, 32, and 64 bits.
+pub(crate) trait GateDescriptorBuilder<Size> {
+    fn tss_descriptor(selector: SegmentSelector, offset: Size, available: bool) -> Self;
+    fn call_gate_descriptor(selector: SegmentSelector, offset: Size) -> Self;
+    fn interrupt_descriptor(selector: SegmentSelector, offset: Size) -> Self;
+    fn trap_gate_descriptor(selector: SegmentSelector, offset: Size) -> Self;
+}
+
+/// Trait to implement for building a task-gate (this descriptor is not implemented for 64-bit systems since 
+/// Hardware task switches are not supported in IA-32e mode.).
+pub(crate) trait TaskGateDescriptorBuilder {
+    fn task_gate_descriptor(selector: SegmentSelector) -> Self;
+}
+
+/// Trait to define functions that build architecture specific code and data descriptors.
+pub(crate) trait SegmentDescriptorBuilder<Size> {
+    fn code_descriptor(base: Size, limit: Size, cst: CodeSegmentType) -> Self;
+    fn data_descriptor(base: Size, limit: Size, dst: DataSegmentType) -> Self;
+}
+
+/// Trait to define functions that build an architecture specific ldt descriptor.
+/// There is no corresponding ldt descriptor type for 16 bit.
+pub(crate) trait LdtDescriptorBuilder<Size> {
+    fn ldt_descriptor(base: Size, limit: Size) -> Self;
+}
+
+pub(crate) trait BuildDescriptor<Descriptor> {
+    fn finish(&self) -> Descriptor;
 }
 
 /// Makes building descriptors easier (hopefully).
+#[derive(Debug)]
 pub struct DescriptorBuilder {
-    /// What privilege level the descriptor is for.
-    mode: SystemMode,
-
-    /// Defines the location of byte 0 of the segment within the 4-GByte linear address space.
-    base: u32,
-    /// The size of the range covered by the segment. Really a 20bit value.
-    limit: u32,
-
-    /// The type of the segment if we have a data segment.
-    dst: Option<DataSegmentType>,
-    /// The type of the segment if we have a code segment.
-    cst: Option<CodeSegmentType>,
-    /// The type of the segment if we have a system segment in 32bit mode.
-    system_type32: Option<SystemDescriptor32>,
-    /// The type of the segment if we have a system segment in 64bit mode.
-    system_type64: Option<SystemDescriptor64>,
-
+    /// The base defines the location of byte 0 of the segment within the 4-GByte linear address space.
+    /// The limit is the size of the range covered by the segment. Really a 20bit value.
+    pub(crate) base_limit: Option<(u64, u64)>,
+    /// Alternative to base_limit we use a selector that points to a segment and an an offset for certain descriptors.
+    pub(crate) selector_offset: Option<(SegmentSelector, u64)>,
+    /// Descriptor type
+    pub(crate) typ: Option<DescriptorType>,
     /// Specifies the privilege level of the segment. The privilege level can range from 0 to 3, with 0 being the most privileged level.
-    dpl: Option<Ring>,
+    pub(crate) dpl: Option<Ring>,
     /// Indicates whether the segment is present in memory (set) or not present (clear).
-    present: bool,
+    pub(crate) present: bool,
     /// Available for use by system software
-    avl: bool,
-    /// Performs different functions depending on whether the segment descriptor is an executable code segment, an expand-down data segment, or a stack segment.
-    db: bool,
+    pub(crate) avl: bool,
+    /// Default operation size
+    pub(crate) db: bool,
     /// Determines the scaling of the segment limit field. When the granularity flag is clear, the segment limit is interpreted in byte units; when flag is set, the segment limit is interpreted in 4-KByte units.
-    limit_granularity_4k: bool,
+    pub(crate) limit_granularity_4k: bool,
 }
 
 impl DescriptorBuilder {
-    pub fn new(mode: SystemMode) -> DescriptorBuilder {
-        DescriptorBuilder {
-            base: 0,
-            limit: 0,
-            mode: mode,
-            dst: None,
-            cst: None,
-            system_type32: None,
-            system_type64: None,
-            dpl: None,
-            present: false,
-            db: false,
-            avl: false,
-            limit_granularity_4k: false,
-        }
+
+    /// Start building a new descriptor with a base and limit.
+    pub(crate) fn with_base_limit(base: u64, limit: u64) -> DescriptorBuilder {
+        DescriptorBuilder { base_limit: Some((base, limit)), selector_offset: None, typ: None, dpl: None, present: false, avl: false, db: false, limit_granularity_4k: false }
     }
 
-    /// Set a base for the descriptor.
-    pub fn base(mut self, base: u32) -> DescriptorBuilder {
-        self.base = base;
-        self
+    /// Start building a new descriptor with a segment selector and offset.
+    pub(crate) fn with_selector_offset(selector: SegmentSelector, offset: u64) -> DescriptorBuilder {
+        DescriptorBuilder { base_limit: None, selector_offset: Some((selector, offset)), typ: None, dpl: None, present: false, avl: false, db: false, limit_granularity_4k: false }
     }
-
-    /// Set the limit for the descriptor.
-    pub fn limit(mut self, limit: u32) -> DescriptorBuilder {
-        self.limit = limit;
+    
+    pub(crate) fn set_type(mut self, typ: DescriptorType) -> DescriptorBuilder {
+        self.typ = Some(typ);
         self
     }
 
@@ -269,140 +271,13 @@ impl DescriptorBuilder {
         self
     }
 
-    /// Make a ldt descriptor.
-    pub fn ldt_descriptor(mut self) -> DescriptorBuilder {
-        match self.mode {
-            SystemMode::Mode16 => self.system_type32 = Some(SystemDescriptor32::LDT),
-            SystemMode::Mode32 => self.system_type32 = Some(SystemDescriptor32::LDT),
-            SystemMode::Mode64 => self.system_type64 = Some(SystemDescriptor64::LDT),
-        }
+    /// Set default operation size (false for 16bit segment, true for 32bit segments).
+    pub fn db(mut self) -> DescriptorBuilder {
+        self.db = true;
         self
-    }
-
-    /// Make a tss descriptor.
-    pub fn tss_descriptor(mut self, available: bool) -> DescriptorBuilder {
-        match (available, &self.mode)  {
-            (true, SystemMode::Mode16) => self.system_type32 = Some(SystemDescriptor32::TSSAvailable16),
-            (true, SystemMode::Mode32) => self.system_type32 = Some(SystemDescriptor32::TssAvailable32),
-            (true, SystemMode::Mode64) => self.system_type64 = Some(SystemDescriptor64::TssAvailable64),
-            (false, SystemMode::Mode16) => self.system_type32 = Some(SystemDescriptor32::TSSBusy16),
-            (false, SystemMode::Mode32) => self.system_type32 = Some(SystemDescriptor32::TssBusy32),
-            (false, SystemMode::Mode64) => self.system_type64 = Some(SystemDescriptor64::TssBusy64),
-        }
-        self
-    }
-
-    /// Make a call gate descriptor.
-    pub fn call_gate_descriptor(mut self) -> DescriptorBuilder {
-        match self.mode {
-            SystemMode::Mode16 => self.system_type32 = Some(SystemDescriptor32::CallGate16),
-            SystemMode::Mode32 => self.system_type32 = Some(SystemDescriptor32::CallGate32),
-            SystemMode::Mode64 => self.system_type64 = Some(SystemDescriptor64::CallGate64),
-        }
-        self
-    }
-
-    /// Make an interrupt descriptor.
-    pub fn interrupt_descriptor(mut self) -> DescriptorBuilder {
-        match self.mode  {
-            SystemMode::Mode16 => self.system_type32 = Some(SystemDescriptor32::InterruptGate16),
-            SystemMode::Mode32 => self.system_type32 = Some(SystemDescriptor32::InterruptGate32),
-            SystemMode::Mode64 => self.system_type64 = Some(SystemDescriptor64::InterruptGate64),
-        }
-        self
-    }
-
-    /// Make a trap gate descriptor
-    pub fn trap_gate_descriptor(mut self) -> DescriptorBuilder {
-        match self.mode  {
-            SystemMode::Mode16 => self.system_type32 = Some(SystemDescriptor32::TrapGate16),
-            SystemMode::Mode32 => self.system_type32 = Some(SystemDescriptor32::TrapGate32),
-            SystemMode::Mode64 => self.system_type64 = Some(SystemDescriptor64::TrapGate64),
-        }
-        self
-    }
-
-    /// Make a task gate descriptor. Note: This call will panic if mode is not 32bit!
-    pub fn task_gate_descriptor(mut self) -> DescriptorBuilder {
-        match self.mode {
-            SystemMode::Mode32 => self.system_type32 = Some(SystemDescriptor32::TaskGate),
-            _ => panic!("Can't build a taskgate for {:?}", self.mode)
-        }
-        self
-    }
-
-    // Make a code segment descriptor.
-    pub fn new_code_descriptor(mut self, cst: CodeSegmentType) -> DescriptorBuilder {
-        self.cst = Some(cst);
-        if self.mode == SystemMode::Mode32 {
-            // Not sure it's always ok to do this here but the manual says:
-            // This flag should always be set to 1 for 32-bit code and data segments and to 0 for 16-bit code and data segments.
-            self.db = true;
-        }
-        self
-    }
-
-    // Make a data segment descriptor.
-    pub fn new_data_descriptor(mut self, dst: DataSegmentType) -> DescriptorBuilder {
-        self.dst = Some(dst);
-        if self.mode == SystemMode::Mode32 {
-            // Not sure it's always ok to do this here but the manual says:
-            // This flag should always be set to 1 for 32-bit code and data segments and to 0 for 16-bit code and data segments.
-            self.db = true;
-        }
-        self
-    }
-
-    // Build the final segment descriptor.
-    pub fn finish(&self) -> SegmentDescriptor {
-        let mut sd = SegmentDescriptor {
-            limit1: 0,
-            base1: 0,
-            base2: 0,
-            type_access: 0,
-            limit2_flags: 0,
-            base3: 0,
-        };
-
-        // Set base
-        sd.base1 = self.base as u16;
-        sd.base2 = (self.base >> 16) as u8;
-        sd.base3 = (self.base >> 24) as u8;
-
-        // Set limit
-        sd.limit1 = self.limit as u16;
-        sd.limit2_flags = (sd.limit2_flags & 0xf0) | (((self.limit >> 16) as u8) & 0x0f);
-
-        // Set Type and S
-        // s_bit specifies whether the segment descriptor is for a system segment (S flag is clear) or a code or data segment (S flag is set).
-        let s_bit = 1 << 4;
-        match (self.dst, self.cst, self.system_type32, self.system_type64) {
-            (Some(typ), None, None, None) => sd.type_access = (sd.type_access & 0xf0) | s_bit | (typ as u8 & 0x0f),
-            (None, Some(typ), None, None) => sd.type_access = (sd.type_access & 0xf0) | s_bit | (typ as u8  & 0x0f),
-            (None, None, Some(typ), None) => sd.type_access = (sd.type_access & 0xf0) | (typ as u8 & 0x0f),
-            (None, None, None, Some(typ)) => sd.type_access = (sd.type_access & 0xf0) | (typ as u8 & 0x0f),
-            (None, None, None, None) => {/* do nothing */},
-            _ => panic!("Trying to build a segment descriptor that is multiple types is not possible."),
-        }
-
-        // Set DPL
-        self.dpl.map(|ring| {
-            sd.type_access |= (ring as u8) << 5;
-        });
-        // Set P
-        sd.type_access |= (self.present as u8) << 7; 
-        // Set AVL
-        sd.limit2_flags |= (self.avl as u8) << 4;
-        // Set L
-        sd.limit2_flags |= ((self.mode == SystemMode::Mode64) as u8) << 5;
-        // Set D/B
-        sd.limit2_flags |= (self.db as u8) << 6;
-        // Set G
-        sd.limit2_flags |= (self.limit_granularity_4k as u8) << 7;
-        
-        sd
     }
 }
+
 
 /// Reload stack segment register.
 pub unsafe fn load_ss(sel: SegmentSelector) {

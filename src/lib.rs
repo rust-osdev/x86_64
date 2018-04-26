@@ -12,12 +12,22 @@ extern crate raw_cpuid;
 #[macro_use]
 extern crate phf;
 
+macro_rules! check_flag {
+    ($doc:meta, $fun:ident, $flag:expr) => (
+        #[$doc]
+        pub fn $fun(&self) -> bool {
+            self.contains($flag)
+        }
+    )
+}
+
 macro_rules! bit {
     ( $x:expr ) => {
         1 << $x
     };
 }
 
+pub mod bits16;
 pub mod bits32;
 pub mod bits64;
 
@@ -52,13 +62,16 @@ mod std {
     pub use core::option;
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u8)]
+/// x86 Protection levels
+/// Note: This should not contain values larger than 2 bits, otherwise 
+/// segment descriptor code needs to be adjusted accordingly.
 pub enum Ring {
-    Ring0 = 0,
-    Ring1 = 1,
-    Ring2 = 2,
-    Ring3 = 3,
+    Ring0 = 0b00,
+    Ring1 = 0b01,
+    Ring2 = 0b10,
+    Ring3 = 0b11,
 }
 
 #[inline(always)]
