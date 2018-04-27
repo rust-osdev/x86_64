@@ -1,4 +1,3 @@
-pub mod dtables;
 pub mod eflags;
 pub mod segmentation;
 pub mod task;

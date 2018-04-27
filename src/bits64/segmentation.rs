@@ -1,7 +1,6 @@
 #[allow(unused_imports)]
 use segmentation::{SegmentSelector};
-use segmentation::{DescriptorBuilder, BuildDescriptor, DescriptorType, GateDescriptorBuilder, SegmentDescriptorBuilder, LdtDescriptorBuilder, CodeSegmentType, DataSegmentType, SystemDescriptorTypes64};
-use bits32::segmentation::Descriptor as Descriptor32;
+use segmentation::{DescriptorBuilder, BuildDescriptor, Descriptor, DescriptorType, GateDescriptorBuilder, LdtDescriptorBuilder, SystemDescriptorTypes64};
 
 /// Entry for IDT, GDT or LDT.
 ///
@@ -9,13 +8,13 @@ use bits32::segmentation::Descriptor as Descriptor32;
 /// "Segment Descriptor Tables in IA-32e Mode", especially Figure 3-8.
 #[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
-pub struct Descriptor {
-    desc32: Descriptor32,
+pub struct Descriptor64 {
+    desc32: Descriptor,
     lower: u32,
     upper: u32
 }
 
-impl Descriptor {
+impl Descriptor64 {
 
     pub(crate) fn apply_builder_settings(&mut self, builder: &DescriptorBuilder) {
         self.desc32.apply_builder_settings(builder);
@@ -49,13 +48,13 @@ impl Descriptor {
 
 impl GateDescriptorBuilder<u64> for DescriptorBuilder {
 
-    fn tss_descriptor(selector: SegmentSelector, offset: u64, available: bool) -> DescriptorBuilder {
+    fn tss_descriptor(base: u64, limit: u64, available: bool) -> DescriptorBuilder {
         let typ = match available {
             true => DescriptorType::System64(SystemDescriptorTypes64::TssAvailable),
             false => DescriptorType::System64(SystemDescriptorTypes64::TssBusy),
         };
 
-        DescriptorBuilder::with_selector_offset(selector, offset).set_type(typ)
+        DescriptorBuilder::with_base_limit(base, limit).set_type(typ)
     }
 
     fn call_gate_descriptor(selector: SegmentSelector, offset: u64) -> DescriptorBuilder {
@@ -71,46 +70,31 @@ impl GateDescriptorBuilder<u64> for DescriptorBuilder {
     }
 }
 
-impl SegmentDescriptorBuilder<u64> for DescriptorBuilder {
-    fn code_descriptor(base: u64, limit: u64, cst: CodeSegmentType) -> DescriptorBuilder {
-        DescriptorBuilder::with_base_limit(base, limit).set_type(DescriptorType::Code(cst)).db()
-    }
-
-    fn data_descriptor(base: u64, limit: u64, dst: DataSegmentType) -> DescriptorBuilder {
-        DescriptorBuilder::with_base_limit(base, limit).set_type(DescriptorType::Data(dst)).db()
-    }
-}
-
 impl LdtDescriptorBuilder<u64> for DescriptorBuilder {
     fn ldt_descriptor(base: u64, limit: u64) -> DescriptorBuilder {
         DescriptorBuilder::with_base_limit(base, limit).set_type(DescriptorType::System64(SystemDescriptorTypes64::LDT))
     }
 }
 
-impl BuildDescriptor<Descriptor> for DescriptorBuilder {
-    fn finish(&self) -> Descriptor {
-        let mut desc: Descriptor = Default::default();
+impl BuildDescriptor<Descriptor64> for DescriptorBuilder {
+    fn finish(&self) -> Descriptor64 {
+        let mut desc: Descriptor64 = Default::default();
         desc.apply_builder_settings(self);
-        desc.desc32.set_l(); // 64-bit descriptor
 
         let typ = match self.typ {
             Some(DescriptorType::System64(typ)) => {
+                assert!(!self.l);
                 if typ == SystemDescriptorTypes64::LDT || typ == SystemDescriptorTypes64::TssAvailable || typ == SystemDescriptorTypes64::TssBusy {
                     assert!(!self.db);
                 }
                 typ as u8
             },
-            Some(DescriptorType::System32(_typ)) => panic!("You shall not use 32-bit types on 64-bit descriptors."),
-            Some(DescriptorType::Data(typ)) => {
-                desc.desc32.set_s();
-                typ as u8
-            },
-            Some(DescriptorType::Code(typ)) => {
-                desc.desc32.set_s();
-                typ as u8
-            },
+            Some(DescriptorType::System32(_typ)) => panic!("Can't build a 64-bit version of this type."),
+            Some(DescriptorType::Data(_typ)) => panic!("Can't build a 64-bit version of this type."),
+            Some(DescriptorType::Code(_typ)) => panic!("Can't build a 64-bit version of this type."),
             None => unreachable!("Type not set, this is a library bug in x86."),
         };
+
         desc.desc32.set_type(typ);
         desc
     }
@@ -122,7 +106,7 @@ impl BuildDescriptor<Descriptor> for DescriptorBuilder {
 /// and return value on the stack and use lretq
 /// to reload cs and continue at 1:.
 #[cfg(target_arch="x86_64")]
-pub unsafe fn set_cs(sel: SegmentSelector) {
+pub unsafe fn load_cs(sel: SegmentSelector) {
     asm!("pushq $0; \
           leaq  1f(%rip), %rax; \
           pushq %rax; \

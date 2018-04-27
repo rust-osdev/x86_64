@@ -31,3 +31,18 @@ impl<T> fmt::Debug for DescriptorTablePointer<T> {
         unsafe { write!(f, "DescriptorTablePointer ({} {:?})", self.limit, self.base) }
     }
 }
+
+/// Load GDT table with 32bit descriptors
+pub unsafe fn lgdt<T>(gdt: &DescriptorTablePointer<T>) {
+    asm!("lgdt ($0)" :: "r" (gdt) : "memory");
+}
+
+/// Load LDT table with 32bit descriptors.
+pub unsafe fn lldt<T>(ldt: &DescriptorTablePointer<T>) {
+    asm!("lldt ($0)" :: "r" (ldt) : "memory");
+}
+
+/// Load IDT table with 32bit descriptors.
+pub unsafe fn lidt<T>(idt: &DescriptorTablePointer<T>) {
+    asm!("lidt ($0)" :: "r" (idt) : "memory");
+}
