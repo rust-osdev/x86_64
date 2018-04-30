@@ -36,7 +36,6 @@ pub mod dtables;
 pub mod io;
 pub mod irq;
 pub mod msr;
-pub mod paging;
 pub mod segmentation;
 pub mod task;
 pub mod tlb;

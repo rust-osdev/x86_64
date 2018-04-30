@@ -374,6 +374,8 @@ pub struct Descriptor {
 
 impl Descriptor {
 
+    pub const NULL: Descriptor = Descriptor { lower: 0, upper: 0 };
+
     pub(crate) fn apply_builder_settings(&mut self, builder: &DescriptorBuilder) {
         builder.dpl.map(|ring| self.set_dpl(ring));
         builder.base_limit.map(|(base, limit)| self.set_base_limit(base as u32, limit as u32));

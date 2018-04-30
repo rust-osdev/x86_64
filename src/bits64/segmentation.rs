@@ -16,6 +16,8 @@ pub struct Descriptor64 {
 
 impl Descriptor64 {
 
+    pub const NULL: Descriptor64 =  Descriptor64 { desc32: Descriptor::NULL, lower: 0, upper: 0 };
+
     pub(crate) fn apply_builder_settings(&mut self, builder: &DescriptorBuilder) {
         self.desc32.apply_builder_settings(builder);
         builder.base_limit.map(|(base, limit)| self.set_base_limit(base, limit));
