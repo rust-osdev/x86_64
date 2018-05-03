@@ -1,6 +1,5 @@
 //! Description of the data-structures for IA-32e paging mode.
 
-/// Represents a physical memory address
 pub type PAddr = u64;
 pub type VAddr = usize;
 
@@ -16,7 +15,6 @@ pub const MAXPHYADDR: u64 = 52;
 const ADDRESS_MASK: u64 = ((1 << MAXPHYADDR) - 1) & !0xfff;
 
 /// A PML4 table.
-/// In practice this has only 4 entries but it still needs to be the size of a 4K page.
 pub type PML4 = [PML4Entry; 512];
 
 /// A page directory pointer table.
@@ -29,6 +27,7 @@ pub type PD = [PDEntry; 512];
 pub type PT = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
+#[cfg(target_arch="x86_64")]
 #[inline]
 pub fn pml4_index(addr: VAddr) -> usize {
     (addr >> 39) & 0b111111111
