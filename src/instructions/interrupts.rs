@@ -2,12 +2,16 @@
 
 /// Enable interrupts. This is a wrapper around `sti`.
 pub fn enable() {
-    asm!("sti")
+    unsafe {
+        asm!("sti");
+    }
 }
 
 /// Disable interrupts. This is a wrapper around `cli`.
 pub fn disable() {
-    asm!("cli")
+    unsafe {
+        asm!("cli");
+    }
 }
 
 /// Run the given closure, disabling interrupts before running it and enabling interrupts
