@@ -1,5 +1,7 @@
 //! Enabling and disabling interrupts
 
+use registers::flags::{flags, Flags};
+
 /// Enable interrupts. This is a wrapper around `sti`.
 pub fn enable() {
     unsafe {
@@ -14,8 +16,8 @@ pub fn disable() {
     }
 }
 
-/// Run the given closure, disabling interrupts before running it and enabling interrupts
-/// afterwards.
+/// Run the given closure, disabling interrupts before running it (if they aren't already disabled)
+/// and enabling interrupts afterwards if they were enabled before.
 ///
 /// # Note
 ///
@@ -25,8 +27,17 @@ pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    disable();
+    let already_enabled = flags().contains(Flags::IF);
+
+    if already_enabled {
+        disable();
+    }
+
     let ret = f();
-    enable();
+
+    if already_enabled {
+        enable();
+    }
+
     ret
 }
