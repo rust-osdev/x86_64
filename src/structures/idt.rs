@@ -388,8 +388,8 @@ impl Idt {
         }
     }
 
-    /// Resets all entries of the given IDT in place.
-    pub fn reset(idt: &mut Idt) {
+    /// Resets all entries of this IDT in place.
+    pub fn reset(&mut self) {
         idt.divide_by_zero = IdtEntry::missing();
         idt.debug = IdtEntry::missing();
         idt.non_maskable_interrupt = IdtEntry::missing();
