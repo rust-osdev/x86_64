@@ -27,17 +27,22 @@ pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    let already_enabled = flags().contains(Flags::IF);
+    // true if the interrupt flag is set (i.e. interrupts are enabled)
+    let saved_intpt_flag = flags().contains(Flags::IF);
 
-    if already_enabled {
+    // if interrupts are enabled, disable them for now
+    if saved_intpt_flag {
         disable();
     }
 
+    // do `f` while interrupts are disabled
     let ret = f();
 
-    if already_enabled {
+    // re-enable interrupts if they were previously enabled
+    if saved_intpt_flag {
         enable();
     }
 
+    // return the result of `f` to the caller
     ret
 }
