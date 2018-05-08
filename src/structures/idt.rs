@@ -390,31 +390,31 @@ impl Idt {
 
     /// Resets all entries of this IDT in place.
     pub fn reset(&mut self) {
-        idt.divide_by_zero = IdtEntry::missing();
-        idt.debug = IdtEntry::missing();
-        idt.non_maskable_interrupt = IdtEntry::missing();
-        idt.breakpoint = IdtEntry::missing();
-        idt.overflow = IdtEntry::missing();
-        idt.bound_range_exceeded = IdtEntry::missing();
-        idt.invalid_opcode = IdtEntry::missing();
-        idt.device_not_available = IdtEntry::missing();
-        idt.double_fault = IdtEntry::missing();
-        idt.coprocessor_segment_overrun = IdtEntry::missing();
-        idt.invalid_tss = IdtEntry::missing();
-        idt.segment_not_present = IdtEntry::missing();
-        idt.stack_segment_fault = IdtEntry::missing();
-        idt.general_protection_fault = IdtEntry::missing();
-        idt.page_fault = IdtEntry::missing();
-        idt.reserved_1 = IdtEntry::missing();
-        idt.x87_floating_point = IdtEntry::missing();
-        idt.alignment_check = IdtEntry::missing();
-        idt.machine_check = IdtEntry::missing();
-        idt.simd_floating_point = IdtEntry::missing();
-        idt.virtualization = IdtEntry::missing();
-        idt.reserved_2 = [IdtEntry::missing(); 9];
-        idt.security_exception = IdtEntry::missing();
-        idt.reserved_3 = IdtEntry::missing();
-        idt.interrupts = [IdtEntry::missing(); 256 - 32];
+        self.divide_by_zero = IdtEntry::missing();
+        self.debug = IdtEntry::missing();
+        self.non_maskable_interrupt = IdtEntry::missing();
+        self.breakpoint = IdtEntry::missing();
+        self.overflow = IdtEntry::missing();
+        self.bound_range_exceeded = IdtEntry::missing();
+        self.invalid_opcode = IdtEntry::missing();
+        self.device_not_available = IdtEntry::missing();
+        self.double_fault = IdtEntry::missing();
+        self.coprocessor_segment_overrun = IdtEntry::missing();
+        self.invalid_tss = IdtEntry::missing();
+        self.segment_not_present = IdtEntry::missing();
+        self.stack_segment_fault = IdtEntry::missing();
+        self.general_protection_fault = IdtEntry::missing();
+        self.page_fault = IdtEntry::missing();
+        self.reserved_1 = IdtEntry::missing();
+        self.x87_floating_point = IdtEntry::missing();
+        self.alignment_check = IdtEntry::missing();
+        self.machine_check = IdtEntry::missing();
+        self.simd_floating_point = IdtEntry::missing();
+        self.virtualization = IdtEntry::missing();
+        self.reserved_2 = [IdtEntry::missing(); 9];
+        self.security_exception = IdtEntry::missing();
+        self.reserved_3 = IdtEntry::missing();
+        self.interrupts = [IdtEntry::missing(); 256 - 32];
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
