@@ -357,8 +357,7 @@ pub struct Idt {
 
 impl Idt {
     /// Creates a new IDT filled with non-present entries.
-    pub fn new() -> Idt {
-        debug_assert_eq!(mem::size_of::<Self>(), 256 * 16);
+    pub const fn new() -> Idt {
         Idt {
             divide_by_zero: IdtEntry::missing(),
             debug: IdtEntry::missing(),
@@ -511,7 +510,7 @@ pub type PageFaultHandlerFunc =
 
 impl<F> IdtEntry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
-    fn missing() -> Self {
+    const fn missing() -> Self {
         IdtEntry {
             gdt_selector: 0,
             pointer_low: 0,
@@ -572,10 +571,8 @@ pub struct EntryOptions(u16);
 
 impl EntryOptions {
     /// Creates a minimal options field with all the must-be-one bits set.
-    fn minimal() -> Self {
-        let mut options = 0;
-        options.set_bits(9..12, 0b111); // 'must-be-one' bits
-        EntryOptions(options)
+    const fn minimal() -> Self {
+        EntryOptions(0b1110_0000_0000)
     }
 
     /// Set or reset the preset bit.
@@ -693,5 +690,6 @@ mod test {
     fn size_test() {
         use core::mem::size_of;
         assert_eq!(size_of::<IdtEntry<HandlerFunc>>(), 16);
+        assert_eq!(size_of::<Idt>(), 256 * 16);
     }
 }
