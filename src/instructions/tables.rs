@@ -1,3 +1,5 @@
+//! Functions to load GDT, IDT, and TSS structures.
+
 use structures::gdt::SegmentSelector;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).

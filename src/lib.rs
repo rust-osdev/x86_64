@@ -18,6 +18,10 @@ extern crate bitflags;
 extern crate bit_field;
 extern crate os_bootinfo;
 extern crate usize_conversions;
+
+/// Provides the non-standard-width integer types `u2`–`u63`.
+///
+/// We use these integer types in various APIs, for example `u9` for page tables indices.
 pub extern crate ux;
 
 pub use addr::{align_down, align_up, PhysAddr, VirtAddr};

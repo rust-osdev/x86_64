@@ -3,6 +3,7 @@
 use structures::gdt::SegmentSelector;
 
 /// Reload code segment register.
+///
 /// Note this is special since we can not directly move
 /// to %cs. Instead we push the new segment selector
 /// and return value on the stack and use lretq

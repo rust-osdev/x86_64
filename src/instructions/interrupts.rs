@@ -7,26 +7,44 @@ pub fn are_enabled() -> bool {
     flags().contains(Flags::IF)
 }
 
+/// Enable interrupts.
+///
+/// This is a wrapper around the `sti` instruction.
 pub fn enable() {
     unsafe {
         asm!("sti");
     }
 }
 
-/// Disable interrupts. This is a wrapper around `cli`.
+/// Disable interrupts.
+///
+/// This is a wrapper around the `cli` instruction.
 pub fn disable() {
     unsafe {
         asm!("cli");
     }
 }
 
-/// Run the given closure, disabling interrupts before running it (if they aren't already disabled)
-/// and enabling interrupts afterwards if they were enabled before.
+/// Run a closue with disabled interrupts.
 ///
-/// # Note
+/// Run the given closure, disabling interrupts before running it (if they aren't already disabled).
+/// Afterwards, interrupts are enabling again if they were enabled before.
 ///
-/// This function basically just does `disable`, runs the closure, the does `enable`. If you have
-/// other `enable` and `disable` calls _within_ the closure, things may not work as expected.
+/// If you have other `enable` and `disable` calls _within_ the closure, things may not work as expected.
+///
+/// # Examples
+///
+/// ```rust
+/// // interrupts are enabled
+/// without_interrupts(|| {
+///     // interrupts are disabled
+///     without_interrupts(|| {
+///         // interrupts are disabled
+///     });
+///     // interrupts are still disabled
+/// });
+/// // interrupts are enabled again
+/// ```
 pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,

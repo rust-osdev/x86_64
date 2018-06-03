@@ -2,8 +2,21 @@
 
 use core::marker::PhantomData;
 
+/// A helper trait that implements the actual port operations.
+///
+/// On x86, I/O ports operate on either `u8` (via `inb`/`outb`), `u16` (via `inw`/`outw`),
+/// or `u32` (via `inl`/`outl`). Therefore this trait is implemented for exactly these types.
 pub trait PortReadWrite {
+    /// Reads a `Self` value from the given port.
+    ///
+    /// This function is unsafe because the I/O port could have side effects that violate memory
+    /// safety.
     unsafe fn read_from_port(port: u16) -> Self;
+
+    /// Writes a `Self` value to the given port.
+    ///
+    /// This function is unsafe because the I/O port could have side effects that violate memory
+    /// safety.
     unsafe fn write_to_port(port: u16, value: Self);
 }
 
@@ -49,12 +62,14 @@ impl PortReadWrite for u32 {
     }
 }
 
+/// An I/O port.
 pub struct Port<T: PortReadWrite> {
     port: u16,
     phantom: PhantomData<T>,
 }
 
 impl<T: PortReadWrite> Port<T> {
+    /// Creates an I/O port with the given port number.
     pub const fn new(port: u16) -> Port<T> {
         Port {
             port: port,
@@ -62,11 +77,19 @@ impl<T: PortReadWrite> Port<T> {
         }
     }
 
+    /// Reads from the port.
+    ///
+    /// This function is unsafe because the I/O port could have side effects that violate memory
+    /// safety.
     #[inline]
     pub unsafe fn read(&self) -> T {
         T::read_from_port(self.port)
     }
 
+    /// Writes to the port.
+    ///
+    /// This function is unsafe because the I/O port could have side effects that violate memory
+    /// safety.
     #[inline]
     pub unsafe fn write(&mut self, value: T) {
         T::write_to_port(self.port, value)
