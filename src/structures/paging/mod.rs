@@ -6,9 +6,9 @@ pub use self::recursive::*;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
+use os_bootinfo;
 use ux::*;
 use {PhysAddr, VirtAddr};
-use os_bootinfo;
 
 mod page_table;
 mod recursive;
@@ -397,7 +397,10 @@ impl From<os_bootinfo::FrameRange> for PhysFrameRange {
 
 impl Into<os_bootinfo::FrameRange> for PhysFrameRange {
     fn into(self) -> os_bootinfo::FrameRange {
-        os_bootinfo::FrameRange::new(self.start.start_address().as_u64(), self.end.start_address().as_u64())
+        os_bootinfo::FrameRange::new(
+            self.start.start_address().as_u64(),
+            self.end.start_address().as_u64(),
+        )
     }
 }
 
