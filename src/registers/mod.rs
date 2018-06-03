@@ -3,4 +3,4 @@
 pub mod control;
 pub mod model_specific;
 // pub mod msr;
-pub mod flags;
+pub mod rflags;
