@@ -1,8 +1,12 @@
 //! Enabling and disabling interrupts
 
-use registers::flags::{flags, Flags};
+/// Returns whether interrupts are enabled.
+pub fn are_enabled() -> bool {
+    use registers::flags::{flags, Flags};
 
-/// Enable interrupts. This is a wrapper around `sti`.
+    flags().contains(Flags::IF)
+}
+
 pub fn enable() {
     unsafe {
         asm!("sti");
@@ -28,7 +32,7 @@ where
     F: FnOnce() -> R,
 {
     // true if the interrupt flag is set (i.e. interrupts are enabled)
-    let saved_intpt_flag = flags().contains(Flags::IF);
+    let saved_intpt_flag = are_enabled();
 
     // if interrupts are enabled, disable them for now
     if saved_intpt_flag {
