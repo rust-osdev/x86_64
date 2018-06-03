@@ -34,7 +34,7 @@ pub fn disable() {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```ignore
 /// // interrupts are enabled
 /// without_interrupts(|| {
 ///     // interrupts are disabled
