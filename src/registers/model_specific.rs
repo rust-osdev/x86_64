@@ -33,17 +33,32 @@ impl Efer {
 
     /// Read the current EFER flags.
     pub fn read() -> EferFlags {
-        EferFlags::from_bits_truncate(unsafe { Self::MSR.read() })
+        EferFlags::from_bits_truncate(Self::read_raw())
     }
 
-    /// Write the EFER flags.
+    /// Read the current raw EFER flags.
+    pub fn read_raw() -> u64 {
+        unsafe { Self::MSR.read() }
+    }
+
+    /// Write the EFER flags, preserving reserved values.
     ///
     /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
     /// safety, e.g. by disabling long mode.
     pub unsafe fn write(flags: EferFlags) {
-        let mut value = Self::MSR.read();
-        value |= flags.bits();
-        Self::MSR.write(value);
+        let old_value = Self::read_raw();
+        let reserved = old_value & !(EferFlags::all().bits());
+        let new_value = reserved | flags.bits();
+
+        Self::write_raw(new_value);
+    }
+
+    /// Write the EFER flags.
+    ///
+    /// Does not preserve any bits, including reserved fields. Unsafe because it's possible to
+    /// break memory safety, e.g. by disabling long mode.
+    pub unsafe fn write_raw(flags: u64) {
+        Self::MSR.write(flags);
     }
 
     /// Update EFER flags.
