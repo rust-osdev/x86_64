@@ -28,10 +28,11 @@ impl Cr0 {
     /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
     /// safety by e.g. disabling paging.
     pub unsafe fn write(flags: Cr0Flags) {
-        let mut value = Self::read_raw();
-        value |= flags.bits();
+        let old_value = Self::read_raw();
+        let reserved = old_value & !(Cr0Flags::all().bits());
+        let new_value = reserved | flags.bits();
 
-        asm!("mov $0, %cr0" :: "r" (value) : "memory")
+        asm!("mov $0, %cr0" :: "r" (new_value) : "memory")
     }
 
     /// Updates CR0 flags.
