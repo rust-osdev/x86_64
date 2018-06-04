@@ -1,13 +1,16 @@
 //! This crate provides x86_64 specific functions and data structures,
 //! and access to various system registers.
 
-#![warn(missing_docs)]
 #![feature(const_fn)]
 #![feature(asm)]
 #![feature(abi_x86_interrupt)]
 #![feature(try_from)]
 #![feature(repr_transparent)]
 #![no_std]
+
+#![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
+#![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]
 
 #[cfg(test)]
 #[macro_use]

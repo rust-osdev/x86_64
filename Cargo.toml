@@ -33,3 +33,6 @@ os_bootinfo = "0.2.0"
 [dependencies.ux]
 default-features = false
 version = "0.1.0"
+
+[features]
+deny-warnings = []
