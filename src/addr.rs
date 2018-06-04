@@ -90,10 +90,12 @@ impl VirtAddr {
         self.0
     }
 
+    /// Converts the address to a raw pointer.
     pub fn as_ptr<T>(self) -> *const T {
         usize_from(self.as_u64()) as *const T
     }
 
+    /// Converts the address to a mutable raw pointer.
     pub fn as_mut_ptr<T>(self) -> *mut T {
         self.as_ptr::<T>() as *mut T
     }
