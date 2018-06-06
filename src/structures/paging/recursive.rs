@@ -36,7 +36,7 @@ pub trait Mapper<S: PageSize> {
 
     fn unmap<A>(&mut self, page: Page<S>, allocator: &mut A) -> Result<MapperFlush<S>, UnmapError>
     where
-        A: FnMut(PhysFrame<S>);
+        A: FnOnce(PhysFrame<S>);
 
     fn update_flags(
         &mut self,
@@ -175,7 +175,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, UnmapError>
     where
-        A: FnMut(PhysFrame<Size1GiB>),
+        A: FnOnce(PhysFrame<Size1GiB>),
     {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -283,7 +283,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, UnmapError>
     where
-        A: FnMut(PhysFrame<Size2MiB>),
+        A: FnOnce(PhysFrame<Size2MiB>),
     {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -416,7 +416,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, UnmapError>
     where
-        A: FnMut(PhysFrame<Size4KiB>),
+        A: FnOnce(PhysFrame<Size4KiB>),
     {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
