@@ -20,7 +20,7 @@ impl<S: PageSize> MapperFlush<S> {
         tlb::flush(self.0.start_address());
     }
 
-    pub unsafe fn ignore(self) {}
+    pub fn ignore(self) {}
 }
 
 pub trait Mapper<S: PageSize> {
