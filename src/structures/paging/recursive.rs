@@ -1,7 +1,7 @@
 use instructions::tlb;
 use registers::control::Cr3;
 use structures::paging::page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags};
-use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GB, Size2MB, Size4KB};
+use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB};
 use ux::u9;
 use VirtAddr;
 
@@ -141,14 +141,14 @@ impl<'a> RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
+impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
     fn map_to<A>(
         &mut self,
-        page: Page<Size1GB>,
-        frame: PhysFrame<Size1GB>,
+        page: Page<Size1GiB>,
+        frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GB>, MapToError>
+    ) -> Result<MapperFlush<Size1GiB>, MapToError>
     where
         A: FnMut() -> Option<PhysFrame>,
     {
@@ -171,11 +171,11 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
 
     fn unmap<A>(
         &mut self,
-        page: Page<Size1GB>,
+        page: Page<Size1GiB>,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GB>, UnmapError>
+    ) -> Result<MapperFlush<Size1GiB>, UnmapError>
     where
-        A: FnMut(PhysFrame<Size1GB>),
+        A: FnMut(PhysFrame<Size1GiB>),
     {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -205,9 +205,9 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
 
     fn update_flags(
         &mut self,
-        page: Page<Size1GB>,
+        page: Page<Size1GiB>,
         flags: PageTableFlags,
-    ) -> Result<MapperFlush<Size1GB>, FlagUpdateError> {
+    ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
         use structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
@@ -225,7 +225,7 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate(&self, page: Page<Size1GB>) -> Option<PhysFrame<Size1GB>> {
+    fn translate(&self, page: Page<Size1GiB>) -> Option<PhysFrame<Size1GiB>> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -243,14 +243,14 @@ impl<'a> Mapper<Size1GB> for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
+impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
     fn map_to<A>(
         &mut self,
-        page: Page<Size2MB>,
-        frame: PhysFrame<Size2MB>,
+        page: Page<Size2MiB>,
+        frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MB>, MapToError>
+    ) -> Result<MapperFlush<Size2MiB>, MapToError>
     where
         A: FnMut() -> Option<PhysFrame>,
     {
@@ -279,11 +279,11 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
 
     fn unmap<A>(
         &mut self,
-        page: Page<Size2MB>,
+        page: Page<Size2MiB>,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MB>, UnmapError>
+    ) -> Result<MapperFlush<Size2MiB>, UnmapError>
     where
-        A: FnMut(PhysFrame<Size2MB>),
+        A: FnMut(PhysFrame<Size2MiB>),
     {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -319,9 +319,9 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
 
     fn update_flags(
         &mut self,
-        page: Page<Size2MB>,
+        page: Page<Size2MiB>,
         flags: PageTableFlags,
-    ) -> Result<MapperFlush<Size2MB>, FlagUpdateError> {
+    ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
         use structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
@@ -346,7 +346,7 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate(&self, page: Page<Size2MB>) -> Option<PhysFrame<Size2MB>> {
+    fn translate(&self, page: Page<Size2MiB>) -> Option<PhysFrame<Size2MiB>> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -371,14 +371,14 @@ impl<'a> Mapper<Size2MB> for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
+impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     fn map_to<A>(
         &mut self,
-        page: Page<Size4KB>,
-        frame: PhysFrame<Size4KB>,
+        page: Page<Size4KiB>,
+        frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KB>, MapToError>
+    ) -> Result<MapperFlush<Size4KiB>, MapToError>
     where
         A: FnMut() -> Option<PhysFrame>,
     {
@@ -412,11 +412,11 @@ impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
 
     fn unmap<A>(
         &mut self,
-        page: Page<Size4KB>,
+        page: Page<Size4KiB>,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KB>, UnmapError>
+    ) -> Result<MapperFlush<Size4KiB>, UnmapError>
     where
-        A: FnMut(PhysFrame<Size4KB>),
+        A: FnMut(PhysFrame<Size4KiB>),
     {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -453,9 +453,9 @@ impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
 
     fn update_flags(
         &mut self,
-        page: Page<Size4KB>,
+        page: Page<Size4KiB>,
         flags: PageTableFlags,
-    ) -> Result<MapperFlush<Size4KB>, FlagUpdateError> {
+    ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -485,7 +485,7 @@ impl<'a> Mapper<Size4KB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate(&self, page: Page<Size4KB>) -> Option<PhysFrame<Size4KB>> {
+    fn translate(&self, page: Page<Size4KiB>) -> Option<PhysFrame<Size4KiB>> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -537,7 +537,7 @@ fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: u9) -> *mut PageT
         .as_mut_ptr()
 }
 
-fn p1_ptr(page: Page<Size4KB>, recursive_index: u9) -> *mut PageTable {
+fn p1_ptr(page: Page<Size4KiB>, recursive_index: u9) -> *mut PageTable {
     Page::from_page_table_indices(
         recursive_index,
         page.p4_index(),

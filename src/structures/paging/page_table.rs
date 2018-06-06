@@ -1,7 +1,7 @@
 use core::fmt;
 use core::ops::{Index, IndexMut};
 
-use super::{PageSize, PhysFrame, Size4KB};
+use super::{PageSize, PhysFrame, Size4KiB};
 use addr::PhysAddr;
 
 use usize_conversions::usize_from;
@@ -47,7 +47,7 @@ impl PageTableEntry {
     }
 
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
-        assert!(addr.is_aligned(Size4KB::SIZE));
+        assert!(addr.is_aligned(Size4KiB::SIZE));
         self.entry = (addr.as_u64()) | flags.bits();
     }
 

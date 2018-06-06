@@ -21,32 +21,32 @@ pub trait PageSize: Copy + Eq + PartialOrd + Ord {
 pub trait NotGiantPageSize: PageSize {}
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Size4KB {}
+pub enum Size4KiB {}
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Size2MB {}
+pub enum Size2MiB {}
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Size1GB {}
+pub enum Size1GiB {}
 
-impl PageSize for Size4KB {
+impl PageSize for Size4KiB {
     const SIZE: u64 = 4096;
     const SIZE_AS_DEBUG_STR: &'static str = "4KB";
 }
-impl NotGiantPageSize for Size4KB {}
+impl NotGiantPageSize for Size4KiB {}
 
-impl PageSize for Size2MB {
-    const SIZE: u64 = Size4KB::SIZE * 512;
+impl PageSize for Size2MiB {
+    const SIZE: u64 = Size4KiB::SIZE * 512;
     const SIZE_AS_DEBUG_STR: &'static str = "2MB";
 }
-impl NotGiantPageSize for Size2MB {}
+impl NotGiantPageSize for Size2MiB {}
 
-impl PageSize for Size1GB {
-    const SIZE: u64 = Size2MB::SIZE * 512;
+impl PageSize for Size1GiB {
+    const SIZE: u64 = Size2MiB::SIZE * 512;
     const SIZE_AS_DEBUG_STR: &'static str = "1GB";
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
-pub struct Page<S: PageSize = Size4KB> {
+pub struct Page<S: PageSize = Size4KiB> {
     start_address: VirtAddr,
     size: PhantomData<S>,
 }
@@ -106,7 +106,7 @@ impl<S: NotGiantPageSize> Page<S> {
     }
 }
 
-impl Page<Size1GB> {
+impl Page<Size1GiB> {
     pub fn from_page_table_indices_1gb(p4_index: u9, p3_index: u9) -> Self {
         use bit_field::BitField;
 
@@ -117,7 +117,7 @@ impl Page<Size1GB> {
     }
 }
 
-impl Page<Size2MB> {
+impl Page<Size2MiB> {
     pub fn from_page_table_indices_2mb(p4_index: u9, p3_index: u9, p2_index: u9) -> Self {
         use bit_field::BitField;
 
@@ -129,7 +129,7 @@ impl Page<Size2MB> {
     }
 }
 
-impl Page<Size4KB> {
+impl Page<Size4KiB> {
     pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9) -> Self {
         use bit_field::BitField;
 
@@ -192,7 +192,7 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-pub struct PageRange<S: PageSize = Size4KB> {
+pub struct PageRange<S: PageSize = Size4KiB> {
     pub start: Page<S>,
     pub end: Page<S>,
 }
@@ -217,8 +217,8 @@ impl<S: PageSize> Iterator for PageRange<S> {
     }
 }
 
-impl PageRange<Size2MB> {
-    pub fn as_4kb_page_range(self) -> PageRange<Size4KB> {
+impl PageRange<Size2MiB> {
+    pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
         PageRange {
             start: Page::containing_address(self.start.start_address()),
             end: Page::containing_address(self.end.start_address()),
@@ -237,7 +237,7 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-pub struct PageRangeInclusive<S: PageSize = Size4KB> {
+pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
     pub start: Page<S>,
     pub end: Page<S>,
 }
@@ -273,7 +273,7 @@ impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
-pub struct PhysFrame<S: PageSize = Size4KB> {
+pub struct PhysFrame<S: PageSize = Size4KiB> {
     start_address: PhysAddr,
     size: PhantomData<S>,
 }
@@ -361,7 +361,7 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-pub struct PhysFrameRange<S: PageSize = Size4KB> {
+pub struct PhysFrameRange<S: PageSize = Size4KiB> {
     pub start: PhysFrame<S>,
     pub end: PhysFrame<S>,
 }
@@ -415,7 +415,7 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-pub struct PhysFrameRangeInclusive<S: PageSize = Size4KB> {
+pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
     pub start: PhysFrame<S>,
     pub end: PhysFrame<S>,
 }
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     pub fn test_page_ranges() {
-        let page_size = Size4KB::SIZE;
+        let page_size = Size4KiB::SIZE;
         let number = 1000;
 
         let start_addr = VirtAddr::new(0xdeadbeaf);
