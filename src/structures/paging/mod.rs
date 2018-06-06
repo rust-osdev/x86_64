@@ -1,4 +1,6 @@
 //! Abstractions for page tables and other paging related structures.
+//!
+//! Page tables translate virtual memory “pages” to physical memory “frames”.
 
 pub use self::page_table::*;
 pub use self::recursive::*;
@@ -13,37 +15,52 @@ use {PhysAddr, VirtAddr};
 mod page_table;
 mod recursive;
 
+/// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
 pub trait PageSize: Copy + Eq + PartialOrd + Ord {
+    /// The page size in bytes.
     const SIZE: u64;
+
+    /// A string representation of the page size for debug output.
     const SIZE_AS_DEBUG_STR: &'static str;
 }
 
+/// This trait is implemented for 4KiB and 2MiB pages, but not for 1GiB pages.
 pub trait NotGiantPageSize: PageSize {}
 
+/// A standard 4KiB page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size4KiB {}
+
+/// A “huge” 2MiB page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size2MiB {}
+
+/// A giant” 4GiB page.
+///
+/// (Only available on newer x86_64 CPUs.)
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size1GiB {}
 
 impl PageSize for Size4KiB {
     const SIZE: u64 = 4096;
-    const SIZE_AS_DEBUG_STR: &'static str = "4KB";
+    const SIZE_AS_DEBUG_STR: &'static str = "4KiB";
 }
+
 impl NotGiantPageSize for Size4KiB {}
 
 impl PageSize for Size2MiB {
     const SIZE: u64 = Size4KiB::SIZE * 512;
-    const SIZE_AS_DEBUG_STR: &'static str = "2MB";
+    const SIZE_AS_DEBUG_STR: &'static str = "2MiB";
 }
+
 impl NotGiantPageSize for Size2MiB {}
 
 impl PageSize for Size1GiB {
     const SIZE: u64 = Size2MiB::SIZE * 512;
-    const SIZE_AS_DEBUG_STR: &'static str = "1GB";
+    const SIZE_AS_DEBUG_STR: &'static str = "1GiB";
 }
 
+/// A virtual memory page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Page<S: PageSize = Size4KiB> {
@@ -90,10 +107,12 @@ impl<S: PageSize> Page<S> {
         self.start_address().p3_index()
     }
 
+    /// Returns a range of pages, exclusive `end`.
     pub fn range(start: Self, end: Self) -> PageRange<S> {
         PageRange { start, end }
     }
 
+    /// Returns a range of pages, inclusive `end`.
     pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
         PageRangeInclusive { start, end }
     }
@@ -107,7 +126,8 @@ impl<S: NotGiantPageSize> Page<S> {
 }
 
 impl Page<Size1GiB> {
-    pub fn from_page_table_indices_1gb(p4_index: u9, p3_index: u9) -> Self {
+    /// Returns the 1GiB memory page with the specified page table indices.
+    pub fn from_page_table_indices_1gib(p4_index: u9, p3_index: u9) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -118,7 +138,8 @@ impl Page<Size1GiB> {
 }
 
 impl Page<Size2MiB> {
-    pub fn from_page_table_indices_2mb(p4_index: u9, p3_index: u9, p2_index: u9) -> Self {
+    /// Returns the 2MiB memory page with the specified page table indices.
+    pub fn from_page_table_indices_2mib(p4_index: u9, p3_index: u9, p2_index: u9) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -130,6 +151,7 @@ impl Page<Size2MiB> {
 }
 
 impl Page<Size4KiB> {
+    /// Returns the 4KiB memory page with the specified page table indices.
     pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9) -> Self {
         use bit_field::BitField;
 
@@ -190,14 +212,18 @@ impl<S: PageSize> Sub<Self> for Page<S> {
     }
 }
 
+/// A range of pages with exclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct PageRange<S: PageSize = Size4KiB> {
+    /// The start of the range, inclusive.
     pub start: Page<S>,
+    /// The end of the range, exclusive.
     pub end: Page<S>,
 }
 
 impl<S: PageSize> PageRange<S> {
+    /// Returns wether this range contains no pages.
     pub fn is_empty(&self) -> bool {
         !(self.start < self.end)
     }
@@ -218,6 +244,7 @@ impl<S: PageSize> Iterator for PageRange<S> {
 }
 
 impl PageRange<Size2MiB> {
+    /// Converts the range of 2MiB pages to a range of 4KiB pages.
     pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
         PageRange {
             start: Page::containing_address(self.start.start_address()),
@@ -235,14 +262,18 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
     }
 }
 
+/// A range of pages with inclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
+    /// The start of the range, inclusive.
     pub start: Page<S>,
+    /// The end of the range, inclusive.
     pub end: Page<S>,
 }
 
 impl<S: PageSize> PageRangeInclusive<S> {
+    /// Returns wether this range contains no pages.
     pub fn is_empty(&self) -> bool {
         !(self.start <= self.end)
     }
@@ -271,6 +302,7 @@ impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
     }
 }
 
+/// A physical memory frame.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
@@ -297,7 +329,7 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
-    /// Returns the start address of the page.
+    /// Returns the start address of the frame.
     pub fn start_address(&self) -> PhysAddr {
         self.start_address
     }
@@ -307,10 +339,12 @@ impl<S: PageSize> PhysFrame<S> {
         S::SIZE
     }
 
+    /// Returns a range of frames, exclusive `end`.
     pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
         PhysFrameRange { start, end }
     }
 
+    /// Returns a range of frames, inclusive `end`.
     pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
         PhysFrameRangeInclusive { start, end }
     }
@@ -359,14 +393,18 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     }
 }
 
+/// An range of physical memory frames, exclusive the upper bound.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct PhysFrameRange<S: PageSize = Size4KiB> {
+    /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
+    /// The end of the range, exclusive.
     pub end: PhysFrame<S>,
 }
 
 impl<S: PageSize> PhysFrameRange<S> {
+    /// Returns whether the range contains no frames.
     pub fn is_empty(&self) -> bool {
         !(self.start < self.end)
     }
@@ -413,14 +451,18 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
     }
 }
 
+/// An range of physical memory frames, inclusive the upper bound.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
+    /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
+    /// The start of the range, exclusive.
     pub end: PhysFrame<S>,
 }
 
 impl<S: PageSize> PhysFrameRangeInclusive<S> {
+    /// Returns whether the range contains no frames.
     pub fn is_empty(&self) -> bool {
         !(self.start <= self.end)
     }
