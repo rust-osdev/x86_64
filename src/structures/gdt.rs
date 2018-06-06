@@ -15,7 +15,7 @@ impl SegmentSelector {
     /// Creates a new SegmentSelector
     ///
     /// # Arguments
-    ///  * `index`: index in GDT or LDT array.
+    ///  * `index`: index in GDT or LDT array (not the offset)
     ///  * `rpl`: the requested privilege level
     pub const fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
         SegmentSelector(index << 3 | (rpl as u16))

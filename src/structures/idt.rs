@@ -12,11 +12,20 @@
 use bit_field::BitField;
 use core::fmt;
 use core::marker::PhantomData;
-use core::mem;
 use core::ops::{Index, IndexMut};
 use {PrivilegeLevel, VirtAddr};
 
 /// An Interrupt Descriptor Table with 256 entries.
+///
+/// The first 32 entries are used for CPU exceptions. These entries can be either accessed through
+/// fields on this struct or through an index operation, e.g. `idt[0]` returns the
+/// first entry, the entry for the `divide_by_zero` exception. Note that the index access is
+/// not possible for entries for which an error code is pushed.
+///
+/// The remaining entries are used for interrupts. They can be accesed through index
+/// operations on the idt, e.g. `idt[32]` returns the first interrupt entry, which is the 32th IDT
+/// entry).
+///
 ///
 /// The field descriptions are taken from the
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
@@ -432,6 +441,11 @@ impl Idt {
 
 impl Index<usize> for Idt {
     type Output = IdtEntry<HandlerFunc>;
+
+    /// Returns the IDT entry with the specified index.
+    ///
+    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
+    /// exception that pushes an error code (use the struct fields for accessing these entries).
     fn index(&self, index: usize) -> &Self::Output {
         match index {
             0 => &self.divide_by_zero,
@@ -458,6 +472,10 @@ impl Index<usize> for Idt {
 }
 
 impl IndexMut<usize> for Idt {
+    /// Returns a mutable reference to the IDT entry with the specified index.
+    ///
+    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
+    /// exception that pushes an error code (use the struct fields for accessing these entries).
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
             0 => &mut self.divide_by_zero,
