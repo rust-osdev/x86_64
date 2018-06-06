@@ -44,7 +44,7 @@ pub trait Mapper<S: PageSize> {
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
-    fn translate(&self, page: Page<S>) -> Option<PhysFrame<S>>;
+    fn translate_page(&self, page: Page<S>) -> Option<PhysFrame<S>>;
 }
 
 pub struct RecursivePageTable<'a> {
@@ -225,7 +225,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate(&self, page: Page<Size1GiB>) -> Option<PhysFrame<Size1GiB>> {
+    fn translate_page(&self, page: Page<Size1GiB>) -> Option<PhysFrame<Size1GiB>> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -346,7 +346,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate(&self, page: Page<Size2MiB>) -> Option<PhysFrame<Size2MiB>> {
+    fn translate_page(&self, page: Page<Size2MiB>) -> Option<PhysFrame<Size2MiB>> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -485,7 +485,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate(&self, page: Page<Size4KiB>) -> Option<PhysFrame<Size4KiB>> {
+    fn translate_page(&self, page: Page<Size4KiB>) -> Option<PhysFrame<Size4KiB>> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
