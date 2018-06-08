@@ -78,6 +78,19 @@ pub trait Mapper<S: PageSize> {
     }
 }
 
+/// A recursive page table is a last level page table with an entry mapped to the table itself.
+///
+/// This recursive mapping allows accessing all page tables in the hierarchy:
+///
+/// - To access the level 4 page table, we “loop“ (i.e. follow the recursively mapped entry) four
+///   times.
+/// - To access a level 3 page table, we “loop” three times and then use the level 4 index.
+/// - To access a level 2 page table, we “loop” two times, then use the level 4 index, then the
+///   level 3 index.
+/// - To access a level 1 page table, we “loop” once, then use the level 4 index, then the
+///   level 3 index, then the level 2 index.
+///
+/// This struct implements the `Mapper` trait.
 pub struct RecursivePageTable<'a> {
     p4: &'a mut PageTable,
     recursive_index: u9,
