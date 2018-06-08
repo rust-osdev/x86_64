@@ -60,6 +60,22 @@ pub trait Mapper<S: PageSize> {
 
     /// Return the frame that the specified page is mapped to.
     fn translate_page(&self, page: Page<S>) -> Option<PhysFrame<S>>;
+
+    /// Maps the given frame to the virtual page with the same address.
+    fn identity_map<A>(
+        &mut self,
+        frame: PhysFrame<S>,
+        flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlush<S>, MapToError>
+    where
+        A: FnMut() -> Option<PhysFrame>,
+        S: PageSize,
+        Self: Mapper<S>,
+    {
+        let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
+        self.map_to(page, frame, flags, allocator)
+    }
 }
 
 pub struct RecursivePageTable<'a> {
@@ -132,21 +148,6 @@ impl<'a> RecursivePageTable<'a> {
             p4: table,
             recursive_index,
         }
-    }
-
-    pub fn identity_map<A, S>(
-        &mut self,
-        frame: PhysFrame<S>,
-        flags: PageTableFlags,
-        allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError>
-    where
-        A: FnMut() -> Option<PhysFrame>,
-        S: PageSize,
-        Self: Mapper<S>,
-    {
-        let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
-        self.map_to(page, frame, flags, allocator)
     }
 
     fn create_next_table<'b, A>(
