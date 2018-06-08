@@ -3,7 +3,7 @@ use registers::control::Cr3;
 use structures::paging::page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags};
 use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB};
 use ux::u9;
-use VirtAddr;
+use {PhysAddr, VirtAddr};
 
 /// This type represents a page whose mapping has changed in the page table.
 ///
@@ -83,28 +83,41 @@ pub struct RecursivePageTable<'a> {
     recursive_index: u9,
 }
 
-/// An error indicating that the passed page table is not recursively mapped.
+/// An error indicating that the given page table is not recursively mapped.
 ///
 /// Returned from `RecursivePageTable::new`.
 #[derive(Debug)]
 pub struct NotRecursivelyMapped;
 
+/// This error is returned from `map_to` and similar methods.
 #[derive(Debug)]
 pub enum MapToError {
+    /// An additional frame was needed for the mapping process, but the frame allocator
+    /// returned `None`.
     FrameAllocationFailed,
-    EntryWithInvalidFlagsPresent,
-    PageAlreadyInUse,
+    /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
+    /// given page is part of an already mapped huge page.
+    ParentEntryHugePage,
+    /// The given page is already mapped to a physical frame.
+    PageAlreadyMapped,
 }
 
+/// An error indicating that an `unmap` call failed.
 #[derive(Debug)]
 pub enum UnmapError {
-    EntryWithInvalidFlagsPresent(PageTableFlags),
+    /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
+    /// given page is part of a huge page and can't be freed individually.
+    ParentEntryHugePage,
+    /// The given page is not mapped to a physical frame.
     PageNotMapped,
-    InvalidFrameAddressInPageTable,
+    /// The page table entry for the given page points to an invalid physical address.
+    InvalidFrameAddress(PhysAddr),
 }
 
+/// An error indicating that an `update_flags` call failed.
 #[derive(Debug)]
 pub enum FlagUpdateError {
+    /// The given page is not mapped to a physical frame.
     PageNotMapped,
 }
 
@@ -173,7 +186,7 @@ impl<'a> RecursivePageTable<'a> {
             created = false;
         }
         if entry.flags().contains(Flags::HUGE_PAGE) {
-            return Err(MapToError::EntryWithInvalidFlagsPresent);
+            return Err(MapToError::ParentEntryHugePage);
         }
 
         let page_table_ptr = next_table_page.start_address().as_mut_ptr();
@@ -203,7 +216,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         let p3 = Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)?;
 
         if !p3[page.p3_index()].is_unused() {
-            return Err(MapToError::PageAlreadyInUse);
+            return Err(MapToError::PageAlreadyMapped);
         }
         p3[page.p3_index()].set_addr(frame.start_address(), flags | Flags::HUGE_PAGE);
 
@@ -223,7 +236,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
 
         p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p4_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
@@ -234,11 +247,11 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
             return Err(UnmapError::PageNotMapped);
         }
         if !flags.contains(PageTableFlags::HUGE_PAGE) {
-            return Err(UnmapError::EntryWithInvalidFlagsPresent(p3_entry.flags()));
+            return Err(UnmapError::ParentEntryHugePage);
         }
 
         let frame = PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|()| UnmapError::InvalidFrameAddressInPageTable)?;
+            .map_err(|()| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
         allocator(frame);
         p3_entry.set_unused();
         Ok(MapperFlush::new(page))
@@ -305,7 +318,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         let p2 = Self::create_next_table(&mut p3[page.p3_index()], p2_page, &mut allocator)?;
 
         if !p2[page.p2_index()].is_unused() {
-            return Err(MapToError::PageAlreadyInUse);
+            return Err(MapToError::PageAlreadyMapped);
         }
         p2[page.p2_index()].set_addr(frame.start_address(), flags | Flags::HUGE_PAGE);
 
@@ -324,14 +337,14 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         let p4_entry = &p4[page.p4_index()];
         p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p4_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
         p3_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p3_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
@@ -342,11 +355,11 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
             return Err(UnmapError::PageNotMapped);
         }
         if !flags.contains(PageTableFlags::HUGE_PAGE) {
-            return Err(UnmapError::EntryWithInvalidFlagsPresent(p2_entry.flags()));
+            return Err(UnmapError::ParentEntryHugePage);
         }
 
         let frame = PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|()| UnmapError::InvalidFrameAddressInPageTable)?;
+            .map_err(|()| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
         allocator(frame);
         p2_entry.set_unused();
         Ok(MapperFlush::new(page))
@@ -429,7 +442,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         let p1 = Self::create_next_table(&mut p2[page.p2_index()], p1_page, &mut allocator)?;
 
         if !p1[page.p1_index()].is_unused() {
-            return Err(MapToError::PageAlreadyInUse);
+            return Err(MapToError::PageAlreadyMapped);
         }
         p1[page.p1_index()].set_frame(frame, flags);
 
@@ -448,21 +461,21 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         let p4_entry = &p4[page.p4_index()];
         p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p4_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
         p3_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p3_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[page.p2_index()];
         p2_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p3_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         let p1 = unsafe { &mut *(p1_ptr(page, self.recursive_index)) };
@@ -470,7 +483,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
 
         let frame = p1_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::EntryWithInvalidFlagsPresent(p3_entry.flags()),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
         allocator(frame);
         p1_entry.set_unused();
