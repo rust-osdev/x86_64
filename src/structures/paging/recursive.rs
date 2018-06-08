@@ -5,8 +5,12 @@ use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, 
 use ux::u9;
 use VirtAddr;
 
-/// This type must be used and will either flush the modified page or can be unsafely ignored.
-#[must_use = "Page Table changes must be flushed or unsafely ignored."]
+/// This type represents a page whose mapping has changed in the page table.
+///
+/// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
+/// to be flushed from the TLB before it's accessed. This type is returned from function that
+/// change the mapping of a page to ensure that the TLB flush is not forgotten.
+#[must_use = "Page Table changes must be flushed or ignored."]
 pub struct MapperFlush<S: PageSize>(Page<S>);
 
 impl<S: PageSize> MapperFlush<S> {
@@ -15,15 +19,21 @@ impl<S: PageSize> MapperFlush<S> {
         MapperFlush(page)
     }
 
-    // Flush
+    /// Flush the page from the TLB to ensure that the newest mapping is used.
     pub fn flush(self) {
         tlb::flush(self.0.start_address());
     }
 
+    /// Don't flush the TLB and silence the “must be used” warning.
     pub fn ignore(self) {}
 }
 
+/// A trait for common page table operations.
 pub trait Mapper<S: PageSize> {
+    /// Creates a new mapping in the page table.
+    ///
+    /// This function might need additional physical frames to create new page tables. These
+    /// frames are allocated from the `allocator` argument. At most three frames are required.
     fn map_to<A>(
         &mut self,
         page: Page<S>,
@@ -34,16 +44,21 @@ pub trait Mapper<S: PageSize> {
     where
         A: FnMut() -> Option<PhysFrame>;
 
+    /// Removes a mapping from the page table.
+    ///
+    /// If this function is successful, it deallocates the mapped frame via the passed `allocator`.
     fn unmap<A>(&mut self, page: Page<S>, allocator: &mut A) -> Result<MapperFlush<S>, UnmapError>
     where
         A: FnOnce(PhysFrame<S>);
 
+    /// Updates the flags of an existing mapping.
     fn update_flags(
         &mut self,
         page: Page<S>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
+    /// Return the frame that the specified page is mapped to.
     fn translate_page(&self, page: Page<S>) -> Option<PhysFrame<S>>;
 }
 
