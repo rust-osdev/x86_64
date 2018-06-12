@@ -7,7 +7,6 @@
 #![feature(try_from)]
 #![feature(repr_transparent)]
 #![no_std]
-
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
 #![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]

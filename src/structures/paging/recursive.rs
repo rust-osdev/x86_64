@@ -1,7 +1,9 @@
 use instructions::tlb;
 use registers::control::Cr3;
 use structures::paging::page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags};
-use structures::paging::{NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB};
+use structures::paging::{
+    NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+};
 use ux::u9;
 use {PhysAddr, VirtAddr};
 
@@ -251,9 +253,8 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
-        let p3 = unsafe{
-            Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)?
-        };
+        let p3 =
+            unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)? };
 
         if !p3[page.p3_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped);
@@ -352,14 +353,12 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
-        let p3 = unsafe {
-            Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)?
-        };
+        let p3 =
+            unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)? };
 
         let p2_page = p2_page(page, self.recursive_index);
-        let p2 = unsafe {
-            Self::create_next_table(&mut p3[page.p3_index()], p2_page, &mut allocator)?
-        };
+        let p2 =
+            unsafe { Self::create_next_table(&mut p3[page.p3_index()], p2_page, &mut allocator)? };
 
         if !p2[page.p2_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped);
@@ -477,19 +476,16 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
-        let p3 = unsafe {
-            Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)?
-        };
+        let p3 =
+            unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, &mut allocator)? };
 
         let p2_page = p2_page(page, self.recursive_index);
-        let p2 = unsafe {
-            Self::create_next_table(&mut p3[page.p3_index()], p2_page, &mut allocator)?
-        };
+        let p2 =
+            unsafe { Self::create_next_table(&mut p3[page.p3_index()], p2_page, &mut allocator)? };
 
         let p1_page = p1_page(page, self.recursive_index);
-        let p1 = unsafe {
-            Self::create_next_table(&mut p2[page.p2_index()], p1_page, &mut allocator)?
-        };
+        let p1 =
+            unsafe { Self::create_next_table(&mut p2[page.p2_index()], p1_page, &mut allocator)? };
 
         if !p1[page.p1_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped);

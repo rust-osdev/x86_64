@@ -4,9 +4,9 @@
 
 extern crate x86_64;
 
+use core::fmt::Write;
 #[cfg(not(test))]
 use core::panic::PanicInfo;
-use core::fmt::Write;
 use x86_64::testing::{exit_qemu, serial};
 
 /// This function is the entry point, since the linker looks for a function
@@ -17,10 +17,11 @@ pub extern "C" fn _start() -> ! {
     let mut serial = unsafe { serial() };
     writeln!(serial, "ok").unwrap();
 
-    unsafe { exit_qemu(); }
+    unsafe {
+        exit_qemu();
+    }
     loop {}
 }
-
 
 /// This function is called on panic.
 #[cfg(not(test))]
@@ -32,6 +33,8 @@ pub fn panic(info: &PanicInfo) -> ! {
 
     writeln!(serial, "{}", info).unwrap();
 
-    unsafe { exit_qemu(); }
+    unsafe {
+        exit_qemu();
+    }
     loop {}
 }
