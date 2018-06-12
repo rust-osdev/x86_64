@@ -12,6 +12,7 @@ use os_bootinfo;
 use ux::*;
 use {PhysAddr, VirtAddr};
 
+mod frame_alloc;
 mod page_table;
 mod recursive;
 
