@@ -4,4 +4,5 @@ rust: nightly
 script:
   - cargo build
   - cargo test
+  - bootimage test
   - cargo build --features deny-warnings

@@ -36,3 +36,6 @@ version = "0.1.0"
 
 [features]
 deny-warnings = []
+
+[package.metadata.bootimage]
+default-target = "x86_64-bare-metal.json"
