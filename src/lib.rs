@@ -31,8 +31,6 @@ pub use addr::{align_down, align_up, PhysAddr, VirtAddr};
 pub mod instructions;
 pub mod registers;
 pub mod structures;
-#[doc(hidden)]
-pub mod testing;
 
 mod addr;
 

@@ -1,5 +1,6 @@
 language: rust
 rust: nightly
+cache: cargo
 
 before_script:
   - rustup component add rust-src
@@ -11,5 +12,5 @@ before_script:
 script:
   - cargo build
   - cargo test
-  - bootimage test
   - cargo build --features deny-warnings
+  - bootimage test --manifest-path testing/Cargo.toml
