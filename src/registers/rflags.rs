@@ -60,11 +60,13 @@ bitflags! {
 /// Returns the current value of the RFLAGS register.
 ///
 /// Drops any unknown bits.
+#[cfg(target_pointer_width = "64")]
 pub fn read() -> RFlags {
     RFlags::from_bits_truncate(read_raw())
 }
 
 /// Returns the raw current value of the RFLAGS register.
+#[cfg(target_pointer_width = "64")]
 pub fn read_raw() -> u64 {
     let r: u64;
     unsafe { asm!("pushfq; popq $0" : "=r"(r) :: "memory") };
@@ -72,6 +74,7 @@ pub fn read_raw() -> u64 {
 }
 
 /// Writes the RFLAGS register, preserves reserved bits.
+#[cfg(target_pointer_width = "64")]
 pub fn write(flags: RFlags) {
     let old_value = read_raw();
     let reserved = old_value & !(RFlags::all().bits());
@@ -83,6 +86,7 @@ pub fn write(flags: RFlags) {
 /// Writes the RFLAGS register.
 ///
 /// Does not preserve any bits, including reserved bits.
+#[cfg(target_pointer_width = "64")]
 pub fn write_raw(val: u64) {
     unsafe { asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags") };
 }

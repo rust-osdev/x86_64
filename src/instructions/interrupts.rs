@@ -1,6 +1,7 @@
 //! Enabling and disabling interrupts
 
 /// Returns whether interrupts are enabled.
+#[cfg(target_pointer_width = "64")]
 pub fn are_enabled() -> bool {
     use registers::rflags::{self, RFlags};
 
@@ -45,6 +46,7 @@ pub fn disable() {
 /// });
 /// // interrupts are enabled again
 /// ```
+#[cfg(target_pointer_width = "64")]
 pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
