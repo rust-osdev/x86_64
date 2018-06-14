@@ -1,3 +1,5 @@
+#![cfg(target_pointer_width = "64")]
+
 use instructions::tlb;
 use registers::control::Cr3;
 use structures::paging::{

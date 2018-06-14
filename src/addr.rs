@@ -3,7 +3,7 @@ use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 use bit_field::BitField;
-use usize_conversions::{usize_from, FromUsize};
+use usize_conversions::FromUsize;
 use ux::*;
 
 /// A canonical 64-bit virtual memory address.
@@ -91,11 +91,15 @@ impl VirtAddr {
     }
 
     /// Converts the address to a raw pointer.
+    #[cfg(target_pointer_width = "64")]
     pub fn as_ptr<T>(self) -> *const T {
+        use usize_conversions::usize_from;
+
         usize_from(self.as_u64()) as *const T
     }
 
     /// Converts the address to a mutable raw pointer.
+    #[cfg(target_pointer_width = "64")]
     pub fn as_mut_ptr<T>(self) -> *mut T {
         self.as_ptr::<T>() as *mut T
     }
