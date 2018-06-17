@@ -1,5 +1,6 @@
 use core::fmt;
 use core::ops::{Index, IndexMut};
+use core::slice;
 
 use super::{PageSize, PhysFrame, Size4KiB};
 use addr::PhysAddr;
@@ -173,6 +174,16 @@ impl PageTable {
         for entry in self.entries.iter_mut() {
             entry.set_unused();
         }
+    }
+
+    /// Returns an iterator over all `PageTableEntry`s in this page table.
+    pub fn iter(&self) -> slice::Iter<PageTableEntry> {
+        self.entries.iter()
+    }
+
+    /// Returns a mutable iterator over all `PageTableEntry`s in this page table.
+    pub fn iter_mut(&mut self) -> slice::IterMut<PageTableEntry> {
+        self.entries.iter_mut()
     }
 }
 

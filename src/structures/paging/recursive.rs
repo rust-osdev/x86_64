@@ -65,11 +65,12 @@ pub trait Mapper<S: PageSize> {
     /// function, since it is being used. Thus, if you need to reclaim a p4 table, you must do so
     /// from another address space.
     ///
-    /// Finally, note that all pages in the given range should have page size `S`.
+    /// We only try to reclaim page tables whose mappings would lie entirely within the range.
     ///
     /// # Panics
     ///
-    /// If one of the range enpoints is `Unbounded`.
+    /// - If one of the range enpoints is `Unbounded`.
+    /// - If one of the page tables in the range has a used page table entry.
     unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
     where
         D: FrameDeallocator<Size4KiB>,
@@ -344,6 +345,10 @@ impl<'a> RecursivePageTable<'a> {
                 Err(FrameError::HugeFrame) => unreachable!(),
             };
 
+            // Sanity check: all page table entries should be not-present.
+            let p1 = &mut *(p1_ptr(page, self.recursive_index));
+            assert!(p1.iter().all(|pte| pte.is_unused()));
+
             p2_entry.set_unused();
             deallocator.dealloc(p1_frame);
         }
@@ -391,6 +396,10 @@ impl<'a> RecursivePageTable<'a> {
                 Err(FrameError::HugeFrame) => unreachable!(),
             };
 
+            // All page tables in the range should be completely unused.
+            let p2 = &mut *(p2_ptr(page, self.recursive_index));
+            assert!(p2.iter().all(|pte| pte.is_unused()));
+
             p3_entry.set_unused();
             deallocator.dealloc(p2_frame);
         }
@@ -422,6 +431,10 @@ impl<'a> RecursivePageTable<'a> {
                 }
                 Err(FrameError::HugeFrame) => unreachable!(),
             };
+
+            // All page tables in the range should be completely unused.
+            let p3 = &mut *(p3_ptr(page, self.recursive_index));
+            assert!(p3.iter().all(|pte| pte.is_unused()));
 
             p4_entry.set_unused();
             deallocator.dealloc(p3_frame);
