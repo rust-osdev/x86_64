@@ -9,7 +9,7 @@ pub use self::recursive::*;
 
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Bound, RangeBounds, Sub, SubAssign};
 use os_bootinfo;
 use ux::*;
 use {PhysAddr, VirtAddr};
@@ -246,6 +246,16 @@ impl<S: PageSize> Iterator for PageRange<S> {
     }
 }
 
+impl<S: PageSize> RangeBounds<Page<S>> for PageRange<S> {
+    fn start_bound(&self) -> Bound<&Page<S>> {
+        Bound::Included(&self.start)
+    }
+
+    fn end_bound(&self) -> Bound<&Page<S>> {
+        Bound::Excluded(&self.end)
+    }
+}
+
 impl PageRange<Size2MiB> {
     /// Converts the range of 2MiB pages to a range of 4KiB pages.
     pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
@@ -293,6 +303,16 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
         } else {
             None
         }
+    }
+}
+
+impl<S: PageSize> RangeBounds<Page<S>> for PageRangeInclusive<S> {
+    fn start_bound(&self) -> Bound<&Page<S>> {
+        Bound::Included(&self.start)
+    }
+
+    fn end_bound(&self) -> Bound<&Page<S>> {
+        Bound::Included(&self.end)
     }
 }
 

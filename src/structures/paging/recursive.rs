@@ -1,5 +1,6 @@
 #![cfg(target_pointer_width = "64")]
 
+use core::ops::{Bound, RangeBounds};
 use instructions::tlb;
 use registers::control::Cr3;
 use structures::paging::{
@@ -54,8 +55,8 @@ pub trait Mapper<S: PageSize> {
     /// Note that no page tables or other frames are deallocated.
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
-    /// Reclaim all page tables for virtual addresses between `start` (inclusive) and `end`
-    /// (exclusive). The page tables are returned to the given `deallocator`.
+    /// Reclaim all page tables for virtual addresses corresponding to the given range of pages.
+    /// The page tables are returned to the given `deallocator`.
     ///
     /// Note that it is the caller's responsibility to make sure the page tables are not in use.
     /// Don't forget to check shared mappings!
@@ -65,13 +66,14 @@ pub trait Mapper<S: PageSize> {
     /// from another address space.
     ///
     /// Finally, note that all pages in the given range should have page size `S`.
-    unsafe fn reclaim_page_tables<D>(
-        &mut self,
-        start: Page<Size4KiB>,
-        end: Page<Size4KiB>,
-        deallocator: &mut D,
-    ) where
-        D: FrameDeallocator<Size4KiB>;
+    ///
+    /// # Panics
+    ///
+    /// If one of the range enpoints is `Unbounded`.
+    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>;
 
     /// Updates the flags of an existing mapping.
     fn update_flags(
@@ -259,14 +261,27 @@ impl<'a> RecursivePageTable<'a> {
 
     /// This is a common implementation of `reclaim_page_tables`. See the docs for
     /// `Mapper::reclaim_page_tables`.
-    unsafe fn reclaim_page_tables_common<D>(
-        &mut self,
-        start: Page<Size4KiB>,
-        end: Page<Size4KiB>,
-        deallocator: &mut D,
-    ) where
+    unsafe fn reclaim_page_tables_common<D, R>(&mut self, range: R, deallocator: &mut D)
+    where
         D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
     {
+        // Get the page ranges.
+        let start = match range.start_bound() {
+            Bound::Included(endpoint) => *endpoint,
+            Bound::Excluded(endpoint) => *endpoint + 1,
+            Bound::Unbounded => {
+                panic!("Attempt to reclaim page tables for unbounded region of memory.")
+            }
+        };
+        let end = match range.end_bound() {
+            Bound::Included(endpoint) => *endpoint + 1,
+            Bound::Excluded(endpoint) => *endpoint,
+            Bound::Unbounded => {
+                panic!("Attempt to reclaim page tables for unbounded region of memory.")
+            }
+        };
+
         let p4 = &mut self.p4;
 
         // Starting at the leaf page tables (p1), we reclaim page tables. Then we do p2 and p3.
@@ -469,15 +484,12 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    unsafe fn reclaim_page_tables<D>(
-        &mut self,
-        start: Page<Size4KiB>,
-        end: Page<Size4KiB>,
-        deallocator: &mut D,
-    ) where
+    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
+    where
         D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
     {
-        self.reclaim_page_tables_common(start, end, deallocator)
+        self.reclaim_page_tables_common(range, deallocator)
     }
 
     fn update_flags(
@@ -584,15 +596,12 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    unsafe fn reclaim_page_tables<D>(
-        &mut self,
-        start: Page<Size4KiB>,
-        end: Page<Size4KiB>,
-        deallocator: &mut D,
-    ) where
+    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
+    where
         D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
     {
-        self.reclaim_page_tables_common(start, end, deallocator)
+        self.reclaim_page_tables_common(range, deallocator)
     }
 
     fn update_flags(
@@ -716,15 +725,12 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    unsafe fn reclaim_page_tables<D>(
-        &mut self,
-        start: Page<Size4KiB>,
-        end: Page<Size4KiB>,
-        deallocator: &mut D,
-    ) where
+    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
+    where
         D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
     {
-        self.reclaim_page_tables_common(start, end, deallocator)
+        self.reclaim_page_tables_common(range, deallocator)
     }
 
     fn update_flags(
