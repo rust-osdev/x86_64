@@ -3,7 +3,7 @@
 use instructions::tlb;
 use registers::control::Cr3;
 use structures::paging::{
-    frame_alloc::{FrameAllocator},
+    frame_alloc::FrameAllocator,
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
     NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
