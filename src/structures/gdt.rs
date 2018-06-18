@@ -44,12 +44,19 @@ impl fmt::Debug for SegmentSelector {
     }
 }
 
+/// A 64-bit mode global descriptor table (GDT).
+///
+/// In 64-bit mode, segmentation is not supported. The GDT is used nonetheless, for example for
+/// switching between user and kernel mode or for loading a TSS.
+///
+/// The GDT has a fixed size of 8 entries, trying to add more entries will panic.
 pub struct GlobalDescriptorTable {
     table: [u64; 8],
     next_free: usize,
 }
 
 impl GlobalDescriptorTable {
+    /// Creates an empty GDT.
     pub fn new() -> GlobalDescriptorTable {
         GlobalDescriptorTable {
             table: [0; 8],
@@ -57,6 +64,9 @@ impl GlobalDescriptorTable {
         }
     }
 
+    /// Adds the given segment descriptor to the GDT, returning the segment selector.
+    ///
+    /// Panics if the GDT has no free entries left.
     pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
             Descriptor::UserSegment(value) => self.push(value),
@@ -69,6 +79,7 @@ impl GlobalDescriptorTable {
         SegmentSelector::new(index as u16, PrivilegeLevel::Ring0)
     }
 
+    /// Loads the GDT in the CPU using the `lgdt` instruction.
     pub fn load(&'static self) {
         use core::mem::size_of;
         use instructions::tables::{lgdt, DescriptorTablePointer};
@@ -93,22 +104,39 @@ impl GlobalDescriptorTable {
     }
 }
 
+/// A 64-bit mode segment descriptor.
+///
+/// Segmentation is no longer supported in 64-bit mode, so most of the descriptor
+/// contents are ignored.
 pub enum Descriptor {
+    /// Descriptor for a code or data segment.
+    ///
+    /// Since segmentation is no longer supported in 64-bit mode, almost all of
+    /// code and data descriptors is ignored. Only some flags are still used.
     UserSegment(u64),
+    /// A system segment descriptor such as a LDT or TSS descriptor.
     SystemSegment(u64, u64),
 }
 
 bitflags! {
+    /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
     pub struct DescriptorFlags: u64 {
+        /// Marks a code segment as “conforming”. This influences the privilege checks that
+        /// occur on control transfers.
         const CONFORMING        = 1 << 42;
+        /// This flag must be set for code segments.
         const EXECUTABLE        = 1 << 43;
+        /// This flag must be set for user segments (in contrast to system segments).
         const USER_SEGMENT      = 1 << 44;
+        /// Must be set for any segment, causes a segment not present exception if not set.
         const PRESENT           = 1 << 47;
+        /// Must be set for long mode code segments.
         const LONG_MODE         = 1 << 53;
     }
 }
 
 impl Descriptor {
+    /// Creates a segment descriptor for a long mode kernel code segment.
     pub fn kernel_code_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 
@@ -116,6 +144,7 @@ impl Descriptor {
         Descriptor::UserSegment(flags.bits())
     }
 
+    /// Creates a TSS system descriptor for the given TSS.
     pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {
         use self::DescriptorFlags as Flags;
         use bit_field::BitField;
