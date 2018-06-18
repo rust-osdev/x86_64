@@ -10,6 +10,8 @@ use PrivilegeLevel;
 /// with some additional flags).
 ///
 /// See Intel 3a, Section 3.4.2 "Segment Selectors"
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
 pub struct SegmentSelector(pub u16);
 
 impl SegmentSelector {
