@@ -34,6 +34,16 @@ impl<S: PageSize> MapperFlush<S> {
     pub fn ignore(self) {}
 }
 
+/// The mode for `reclaim_page_tables`. This determines the behavior when we come across a page
+/// table entry that is used (i.e. not 0).
+pub enum ReclaimPageTablesMode {
+    /// Only reclaim page tables whose entries are all empty. Skip non-empty tables.
+    Skip,
+
+    /// Panic if there is a non-empty page table entry mapping a virtual address in the range.
+    Panic,
+}
+
 /// A trait for common page table operations.
 pub trait Mapper<S: PageSize> {
     /// Creates a new mapping in the page table.
@@ -55,8 +65,11 @@ pub trait Mapper<S: PageSize> {
     /// Note that no page tables or other frames are deallocated.
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
-    /// Reclaim all page tables for virtual addresses corresponding to the given range of pages.
-    /// The page tables are returned to the given `deallocator`.
+    /// Reclaim page tables for virtual addresses corresponding to the given range of pages.
+    /// The page tables are returned to the given `deallocator`. We reclaim page tables according
+    /// to `mode`, which describes what behvior to take when we encounter a page table entirely in
+    /// the given range with a used (i.e. non-zero) page table entry. See the docs for
+    /// `ReclaimPageTablesMode` for more info on modes.
     ///
     /// Note that it is the caller's responsibility to make sure the page tables are not in use.
     /// Don't forget to check shared mappings!
@@ -65,14 +78,18 @@ pub trait Mapper<S: PageSize> {
     /// function, since it is being used. Thus, if you need to reclaim a p4 table, you must do so
     /// from another address space.
     ///
-    /// We only try to reclaim page tables whose mappings would lie entirely within the range.
+    /// We only try to reclaim page tables whose mappings would all lie entirely within the range.
     ///
     /// # Panics
     ///
     /// - If one of the range enpoints is `Unbounded`.
-    /// - If one of the page tables in the range has a used page table entry.
-    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
-    where
+    /// - If the `mode` specifies that we should.
+    unsafe fn reclaim_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
         D: FrameDeallocator<Size4KiB>,
         R: RangeBounds<Page<Size4KiB>>;
 
@@ -262,8 +279,12 @@ impl<'a> RecursivePageTable<'a> {
 
     /// This is a common implementation of `reclaim_page_tables`. See the docs for
     /// `Mapper::reclaim_page_tables`.
-    unsafe fn reclaim_page_tables_common<D, R>(&mut self, range: R, deallocator: &mut D)
-    where
+    unsafe fn reclaim_page_tables_common<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
         D: FrameDeallocator<Size4KiB>,
         R: RangeBounds<Page<Size4KiB>>,
     {
@@ -345,9 +366,20 @@ impl<'a> RecursivePageTable<'a> {
                 Err(FrameError::HugeFrame) => unreachable!(),
             };
 
-            // Sanity check: all page table entries should be not-present.
+            // Depending on mode, we behave differently
             let p1 = &mut *(p1_ptr(page, self.recursive_index));
-            assert!(p1.iter().all(|pte| pte.is_unused()));
+            match mode {
+                ReclaimPageTablesMode::Skip => {
+                    // Skip non-empty page tables.
+                    if p1.iter().any(|pte| !pte.is_unused()) {
+                        continue;
+                    }
+                }
+                ReclaimPageTablesMode::Panic => {
+                    // Don't allow non-empty page tables.
+                    assert!(p1.iter().all(|pte| pte.is_unused()));
+                }
+            }
 
             p2_entry.set_unused();
             deallocator.dealloc(p1_frame);
@@ -396,9 +428,20 @@ impl<'a> RecursivePageTable<'a> {
                 Err(FrameError::HugeFrame) => unreachable!(),
             };
 
-            // All page tables in the range should be completely unused.
+            // Depending on mode, we behave differently
             let p2 = &mut *(p2_ptr(page, self.recursive_index));
-            assert!(p2.iter().all(|pte| pte.is_unused()));
+            match mode {
+                ReclaimPageTablesMode::Skip => {
+                    // Skip non-empty page tables.
+                    if p2.iter().any(|pte| !pte.is_unused()) {
+                        continue;
+                    }
+                }
+                ReclaimPageTablesMode::Panic => {
+                    // Don't allow non-empty page tables.
+                    assert!(p2.iter().all(|pte| pte.is_unused()));
+                }
+            }
 
             p3_entry.set_unused();
             deallocator.dealloc(p2_frame);
@@ -432,9 +475,20 @@ impl<'a> RecursivePageTable<'a> {
                 Err(FrameError::HugeFrame) => unreachable!(),
             };
 
-            // All page tables in the range should be completely unused.
+            // Depending on mode, we behave differently
             let p3 = &mut *(p3_ptr(page, self.recursive_index));
-            assert!(p3.iter().all(|pte| pte.is_unused()));
+            match mode {
+                ReclaimPageTablesMode::Skip => {
+                    // Skip non-empty page tables.
+                    if p3.iter().any(|pte| !pte.is_unused()) {
+                        continue;
+                    }
+                }
+                ReclaimPageTablesMode::Panic => {
+                    // Don't allow non-empty page tables.
+                    assert!(p3.iter().all(|pte| pte.is_unused()));
+                }
+            }
 
             p4_entry.set_unused();
             deallocator.dealloc(p3_frame);
@@ -497,12 +551,16 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
-    where
+    unsafe fn reclaim_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
         D: FrameDeallocator<Size4KiB>,
         R: RangeBounds<Page<Size4KiB>>,
     {
-        self.reclaim_page_tables_common(range, deallocator)
+        self.reclaim_page_tables_common(range, deallocator, mode)
     }
 
     fn update_flags(
@@ -609,12 +667,16 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
-    where
+    unsafe fn reclaim_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
         D: FrameDeallocator<Size4KiB>,
         R: RangeBounds<Page<Size4KiB>>,
     {
-        self.reclaim_page_tables_common(range, deallocator)
+        self.reclaim_page_tables_common(range, deallocator, mode)
     }
 
     fn update_flags(
@@ -738,12 +800,16 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    unsafe fn reclaim_page_tables<D, R>(&mut self, range: R, deallocator: &mut D)
-    where
+    unsafe fn reclaim_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
         D: FrameDeallocator<Size4KiB>,
         R: RangeBounds<Page<Size4KiB>>,
     {
-        self.reclaim_page_tables_common(range, deallocator)
+        self.reclaim_page_tables_common(range, deallocator, mode)
     }
 
     fn update_flags(
