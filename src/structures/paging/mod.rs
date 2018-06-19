@@ -455,22 +455,20 @@ mod tests {
         let start: Page = Page::containing_address(start_addr);
         let end = start.clone() + number;
 
-        let mut range = Page::range(start.clone(), end.clone());
-        for i in 0..number {
+        for (i, page) in (start..end).enumerate() {
             assert_eq!(
-                range.next(),
-                Some(Page::containing_address(start_addr + page_size * i))
+                page,
+                Page::containing_address(start_addr + page_size * i as u64)
             );
+            assert!((i as u64) < number);
         }
-        assert_eq!(range.next(), None);
 
-        let mut range_inclusive = Page::range_inclusive(start, end);
-        for i in 0..=number {
+        for (i, page) in (start..=end).enumerate() {
             assert_eq!(
-                range_inclusive.next(),
-                Some(Page::containing_address(start_addr + page_size * i))
+                page,
+                Page::containing_address(start_addr + page_size * i as u64)
             );
+            assert!((i as u64) <= number);
         }
-        assert_eq!(range_inclusive.next(), None);
     }
 }
