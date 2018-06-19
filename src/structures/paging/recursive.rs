@@ -312,7 +312,7 @@ impl<'a> RecursivePageTable<'a> {
         );
 
         // Free all the page tables!
-        for page in Page::range(p1_start, p1_end) {
+        for page in p1_start..p1_end {
             let p4_entry = &mut p4[page.p4_index()];
 
             match p4_entry.frame() {
@@ -374,7 +374,7 @@ impl<'a> RecursivePageTable<'a> {
         );
 
         // Free all the page tables!
-        for page in Page::range(p2_start, p2_end) {
+        for page in p2_start..p2_end {
             let p4_entry = &mut p4[page.p4_index()];
 
             match p4_entry.frame() {
@@ -421,7 +421,7 @@ impl<'a> RecursivePageTable<'a> {
             Page::from_page_table_indices(end.p4_index(), u9::new(0), u9::new(0), u9::new(0));
 
         // Free all the page tables!
-        for page in Page::range(p3_start, p3_end) {
+        for page in p3_start..p3_end {
             let p4_entry = &mut p4[page.p4_index()];
 
             let p3_frame = match p4_entry.frame() {

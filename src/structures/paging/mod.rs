@@ -7,9 +7,13 @@ pub use self::page_table::*;
 #[cfg(target_pointer_width = "64")]
 pub use self::recursive::*;
 
-use core::fmt;
-use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Bound, RangeBounds, Sub, SubAssign};
+use core::{
+    fmt,
+    iter::Step,
+    marker::PhantomData,
+    mem,
+    ops::{Add, AddAssign, Range, Sub, SubAssign},
+};
 use os_bootinfo;
 use ux::*;
 use {PhysAddr, VirtAddr};
@@ -109,16 +113,6 @@ impl<S: PageSize> Page<S> {
     pub fn p3_index(&self) -> u9 {
         self.start_address().p3_index()
     }
-
-    /// Returns a range of pages, exclusive `end`.
-    pub fn range(start: Self, end: Self) -> PageRange<S> {
-        PageRange { start, end }
-    }
-
-    /// Returns a range of pages, inclusive `end`.
-    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
-        PageRangeInclusive { start, end }
-    }
 }
 
 impl<S: NotGiantPageSize> Page<S> {
@@ -215,113 +209,57 @@ impl<S: PageSize> Sub<Self> for Page<S> {
     }
 }
 
-/// A range of pages with exclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(C)]
-pub struct PageRange<S: PageSize = Size4KiB> {
-    /// The start of the range, inclusive.
-    pub start: Page<S>,
-    /// The end of the range, exclusive.
-    pub end: Page<S>,
-}
-
-impl<S: PageSize> PageRange<S> {
-    /// Returns wether this range contains no pages.
-    pub fn is_empty(&self) -> bool {
-        !(self.start < self.end)
-    }
-}
-
-impl<S: PageSize> Iterator for PageRange<S> {
-    type Item = Page<S>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            let page = self.start.clone();
-            self.start += 1;
-            Some(page)
+impl<S: PageSize> Step for Page<S> {
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        if start.start_address < end.start_address {
+            Some((*end - *start) as usize)
         } else {
+            Some(0)
+        }
+    }
+
+    fn replace_one(&mut self) -> Self {
+        let page_one = Page {
+            start_address: VirtAddr::new(S::SIZE),
+            size: PhantomData,
+        };
+
+        mem::replace(self, page_one)
+    }
+
+    fn replace_zero(&mut self) -> Self {
+        let page_zero = Page {
+            start_address: VirtAddr::new(0),
+            size: PhantomData,
+        };
+
+        mem::replace(self, page_zero)
+    }
+
+    fn add_one(&self) -> Self {
+        *self + 1
+    }
+
+    fn sub_one(&self) -> Self {
+        *self - 1
+    }
+
+    fn add_usize(&self, n: usize) -> Option<Self> {
+        if *self < (Page::containing_address(VirtAddr::new(!0)) - n as u64) {
+            // Would overflow.
             None
-        }
-    }
-}
-
-impl<S: PageSize> RangeBounds<Page<S>> for PageRange<S> {
-    fn start_bound(&self) -> Bound<&Page<S>> {
-        Bound::Included(&self.start)
-    }
-
-    fn end_bound(&self) -> Bound<&Page<S>> {
-        Bound::Excluded(&self.end)
-    }
-}
-
-impl PageRange<Size2MiB> {
-    /// Converts the range of 2MiB pages to a range of 4KiB pages.
-    pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
-        PageRange {
-            start: Page::containing_address(self.start.start_address()),
-            end: Page::containing_address(self.end.start_address()),
-        }
-    }
-}
-
-impl<S: PageSize> fmt::Debug for PageRange<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PageRange")
-            .field("start", &self.start)
-            .field("end", &self.end)
-            .finish()
-    }
-}
-
-/// A range of pages with inclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(C)]
-pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
-    /// The start of the range, inclusive.
-    pub start: Page<S>,
-    /// The end of the range, inclusive.
-    pub end: Page<S>,
-}
-
-impl<S: PageSize> PageRangeInclusive<S> {
-    /// Returns wether this range contains no pages.
-    pub fn is_empty(&self) -> bool {
-        !(self.start <= self.end)
-    }
-}
-
-impl<S: PageSize> Iterator for PageRangeInclusive<S> {
-    type Item = Page<S>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let page = self.start.clone();
-            self.start += 1;
-            Some(page)
         } else {
-            None
+            Some(*self + (n as u64))
         }
     }
 }
 
-impl<S: PageSize> RangeBounds<Page<S>> for PageRangeInclusive<S> {
-    fn start_bound(&self) -> Bound<&Page<S>> {
-        Bound::Included(&self.start)
-    }
-
-    fn end_bound(&self) -> Bound<&Page<S>> {
-        Bound::Included(&self.end)
-    }
-}
-
-impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PageRangeInclusive")
-            .field("start", &self.start)
-            .field("end", &self.end)
-            .finish()
+/// Converts a range of 2MiB pages into a range of 4KiB pages. This doesn't change the range; it
+/// just changes the page size.
+pub fn as_4kib_page_range(Range { start, end }: Range<Page<Size2MiB>>) -> Range<Page<Size4KiB>> {
+    Range {
+        start: Page::from_start_address(start.start_address()).unwrap(),
+        end: Page::from_start_address(end.start_address()).unwrap(),
     }
 }
 
@@ -360,16 +298,6 @@ impl<S: PageSize> PhysFrame<S> {
     /// Returns the size the frame (4KB, 2MB or 1GB).
     pub fn size(&self) -> u64 {
         S::SIZE
-    }
-
-    /// Returns a range of frames, exclusive `end`.
-    pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
-        PhysFrameRange { start, end }
-    }
-
-    /// Returns a range of frames, inclusive `end`.
-    pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
-        PhysFrameRangeInclusive { start, end }
     }
 }
 
