@@ -5,6 +5,7 @@
 #![feature(asm)]
 #![feature(abi_x86_interrupt)]
 #![feature(try_from)]
+#![feature(repr_transparent)]
 #![no_std]
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
