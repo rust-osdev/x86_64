@@ -31,7 +31,7 @@ use {PrivilegeLevel, VirtAddr};
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
 #[repr(C)]
-pub struct Idt {
+pub struct InterruptDescriptorTable {
     /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
     /// represented in the destination.
@@ -39,7 +39,7 @@ pub struct Idt {
     /// The saved instruction pointer points to the instruction that caused the `#DE`.
     ///
     /// The vector number of the `#DE` exception is 0.
-    pub divide_by_zero: IdtEntry<HandlerFunc>,
+    pub divide_by_zero: Entry<HandlerFunc>,
 
     /// When the debug-exception mechanism is enabled, a `#DB` exception can occur under any
     /// of the following circumstances:
@@ -71,7 +71,7 @@ pub struct Idt {
     /// instruction pointer points to the instruction after the one that caused the `#DB`.
     ///
     /// The vector number of the `#DB` exception is 1.
-    pub debug: IdtEntry<HandlerFunc>,
+    pub debug: Entry<HandlerFunc>,
 
     /// An non maskable interrupt exception (NMI) occurs as a result of system logic
     /// signaling a non-maskable interrupt to the processor.
@@ -81,7 +81,7 @@ pub struct Idt {
     /// boundary where the NMI was recognized.
     ///
     /// The vector number of the NMI exception is 2.
-    pub non_maskable_interrupt: IdtEntry<HandlerFunc>,
+    pub non_maskable_interrupt: Entry<HandlerFunc>,
 
     /// A breakpoint (`#BP`) exception occurs when an `INT3` instruction is executed. The
     /// `INT3` is normally used by debug software to set instruction breakpoints by replacing
@@ -89,7 +89,7 @@ pub struct Idt {
     /// The saved instruction pointer points to the byte after the `INT3` instruction.
     ///
     /// The vector number of the `#BP` exception is 3.
-    pub breakpoint: IdtEntry<HandlerFunc>,
+    pub breakpoint: Entry<HandlerFunc>,
 
     /// An overflow exception (`#OF`) occurs as a result of executing an `INTO` instruction
     /// while the overflow bit in `RFLAGS` is set to 1.
@@ -98,7 +98,7 @@ pub struct Idt {
     /// instruction that caused the `#OF`.
     ///
     /// The vector number of the `#OF` exception is 4.
-    pub overflow: IdtEntry<HandlerFunc>,
+    pub overflow: Entry<HandlerFunc>,
 
     /// A bound-range exception (`#BR`) exception can occur as a result of executing
     /// the `BOUND` instruction. The `BOUND` instruction compares an array index (first
@@ -108,7 +108,7 @@ pub struct Idt {
     /// The saved instruction pointer points to the `BOUND` instruction that caused the `#BR`.
     ///
     /// The vector number of the `#BR` exception is 5.
-    pub bound_range_exceeded: IdtEntry<HandlerFunc>,
+    pub bound_range_exceeded: Entry<HandlerFunc>,
 
     /// An invalid opcode exception (`#UD`) occurs when an attempt is made to execute an
     /// invalid or undefined opcode. The validity of an opcode often depends on the
@@ -142,7 +142,7 @@ pub struct Idt {
     /// The saved instruction pointer points to the instruction that caused the `#UD`.
     ///
     /// The vector number of the `#UD` exception is 6.
-    pub invalid_opcode: IdtEntry<HandlerFunc>,
+    pub invalid_opcode: Entry<HandlerFunc>,
 
     /// A device not available exception (`#NM`) occurs under any of the following conditions:
     ///
@@ -159,7 +159,7 @@ pub struct Idt {
     /// The saved instruction pointer points to the instruction that caused the `#NM`.
     ///
     /// The vector number of the `#NM` exception is 7.
-    pub device_not_available: IdtEntry<HandlerFunc>,
+    pub device_not_available: Entry<HandlerFunc>,
 
     /// A double fault (`#DF`) exception can occur when a second exception occurs during
     /// the handling of a prior (first) exception or interrupt handler.
@@ -193,14 +193,14 @@ pub struct Idt {
     /// and the program cannot be restarted.
     ///
     /// The vector number of the `#DF` exception is 8.
-    pub double_fault: IdtEntry<HandlerFuncWithErrCode>,
+    pub double_fault: Entry<HandlerFuncWithErrCode>,
 
     /// This interrupt vector is reserved. It is for a discontinued exception originally used
     /// by processors that supported external x87-instruction coprocessors. On those processors,
     /// the exception condition is caused by an invalid-segment or invalid-page access on an
     /// x87-instruction coprocessor-instruction operand. On current processors, this condition
     /// causes a general-protection exception to occur.
-    coprocessor_segment_overrun: IdtEntry<HandlerFunc>,
+    coprocessor_segment_overrun: Entry<HandlerFunc>,
 
     /// An invalid TSS exception (`#TS`) occurs only as a result of a control transfer through
     /// a gate descriptor that results in an invalid stack-segment reference using an `SS`
@@ -210,7 +210,7 @@ pub struct Idt {
     /// points to the control-transfer instruction that caused the `#TS`.
     ///
     /// The vector number of the `#TS` exception is 10.
-    pub invalid_tss: IdtEntry<HandlerFuncWithErrCode>,
+    pub invalid_tss: Entry<HandlerFuncWithErrCode>,
 
     /// An segment-not-present exception (`#NP`) occurs when an attempt is made to load a
     /// segment or gate with a clear present bit.
@@ -220,7 +220,7 @@ pub struct Idt {
     /// that loaded the segment selector resulting in the `#NP`.
     ///
     /// The vector number of the `#NP` exception is 11.
-    pub segment_not_present: IdtEntry<HandlerFuncWithErrCode>,
+    pub segment_not_present: Entry<HandlerFuncWithErrCode>,
 
     /// An stack segment exception (`#SS`) can occur in the following situations:
     ///
@@ -237,7 +237,7 @@ pub struct Idt {
     /// caused the `#SS`.
     ///
     /// The vector number of the `#NP` exception is 12.
-    pub stack_segment_fault: IdtEntry<HandlerFuncWithErrCode>,
+    pub stack_segment_fault: Entry<HandlerFuncWithErrCode>,
 
     /// A general protection fault (`#GP`) can occur in various situations. Common causes include:
     ///
@@ -253,7 +253,7 @@ pub struct Idt {
     /// the instruction that caused the `#GP`.
     ///
     /// The vector number of the `#GP` exception is 13.
-    pub general_protection_fault: IdtEntry<HandlerFuncWithErrCode>,
+    pub general_protection_fault: Entry<HandlerFuncWithErrCode>,
 
     /// A page fault (`#PF`) can occur during a memory access in any of the following situations:
     ///
@@ -274,10 +274,10 @@ pub struct Idt {
     /// [`PageFaultErrorCode`](struct.PageFaultErrorCode.html) struct.
     ///
     /// The vector number of the `#PF` exception is 14.
-    pub page_fault: IdtEntry<PageFaultHandlerFunc>,
+    pub page_fault: Entry<PageFaultHandlerFunc>,
 
     /// vector nr. 15
-    reserved_1: IdtEntry<HandlerFunc>,
+    reserved_1: Entry<HandlerFunc>,
 
     /// The x87 Floating-Point Exception-Pending exception (`#MF`) is used to handle unmasked x87
     /// floating-point exceptions. In 64-bit mode, the x87 floating point unit is not used
@@ -285,7 +285,7 @@ pub struct Idt {
     /// compatibility mode.
     ///
     /// The vector number of the `#MF` exception is 16.
-    pub x87_floating_point: IdtEntry<HandlerFunc>,
+    pub x87_floating_point: Entry<HandlerFunc>,
 
     /// An alignment check exception (`#AC`) occurs when an unaligned-memory data reference
     /// is performed while alignment checking is enabled. An `#AC` can occur only when CPL=3.
@@ -294,7 +294,7 @@ pub struct Idt {
     /// instruction that caused the `#AC`.
     ///
     /// The vector number of the `#AC` exception is 17.
-    pub alignment_check: IdtEntry<HandlerFuncWithErrCode>,
+    pub alignment_check: Entry<HandlerFuncWithErrCode>,
 
     /// The machine check exception (`#MC`) is model specific. Processor implementations
     /// are not required to support the `#MC` exception, and those implementations that do
@@ -303,7 +303,7 @@ pub struct Idt {
     /// There is no reliable way to restart the program.
     ///
     /// The vector number of the `#MC` exception is 18.
-    pub machine_check: IdtEntry<HandlerFunc>,
+    pub machine_check: Entry<HandlerFunc>,
 
     /// The SIMD Floating-Point Exception (`#XF`) is used to handle unmasked SSE
     /// floating-point exceptions. The SSE floating-point exceptions reported by
@@ -319,13 +319,13 @@ pub struct Idt {
     /// The saved instruction pointer points to the instruction that caused the `#XF`.
     ///
     /// The vector number of the `#XF` exception is 19.
-    pub simd_floating_point: IdtEntry<HandlerFunc>,
+    pub simd_floating_point: Entry<HandlerFunc>,
 
     /// vector nr. 20
-    pub virtualization: IdtEntry<HandlerFunc>,
+    pub virtualization: Entry<HandlerFunc>,
 
     /// vector nr. 21-29
-    reserved_2: [IdtEntry<HandlerFunc>; 9],
+    reserved_2: [Entry<HandlerFunc>; 9],
 
     /// The Security Exception (`#SX`) signals security-sensitive events that occur while
     /// executing the VMM, in the form of an exception so that the VMM may take appropriate
@@ -336,10 +336,10 @@ pub struct Idt {
     /// The only error code currently defined is 1, and indicates redirection of INIT has occurred.
     ///
     /// The vector number of the ``#SX`` exception is 30.
-    pub security_exception: IdtEntry<HandlerFuncWithErrCode>,
+    pub security_exception: Entry<HandlerFuncWithErrCode>,
 
     /// vector nr. 31
-    reserved_3: IdtEntry<HandlerFunc>,
+    reserved_3: Entry<HandlerFunc>,
 
     /// User-defined interrupts can be initiated either by system logic or software. They occur
     /// when:
@@ -361,68 +361,68 @@ pub struct Idt {
     ///   external interrupt was recognized.
     /// - If the interrupt occurs as a result of executing the INTn instruction, the saved
     ///   instruction pointer points to the instruction after the INTn.
-    interrupts: [IdtEntry<HandlerFunc>; 256 - 32],
+    interrupts: [Entry<HandlerFunc>; 256 - 32],
 }
 
-impl Idt {
+impl InterruptDescriptorTable {
     /// Creates a new IDT filled with non-present entries.
-    pub const fn new() -> Idt {
-        Idt {
-            divide_by_zero: IdtEntry::missing(),
-            debug: IdtEntry::missing(),
-            non_maskable_interrupt: IdtEntry::missing(),
-            breakpoint: IdtEntry::missing(),
-            overflow: IdtEntry::missing(),
-            bound_range_exceeded: IdtEntry::missing(),
-            invalid_opcode: IdtEntry::missing(),
-            device_not_available: IdtEntry::missing(),
-            double_fault: IdtEntry::missing(),
-            coprocessor_segment_overrun: IdtEntry::missing(),
-            invalid_tss: IdtEntry::missing(),
-            segment_not_present: IdtEntry::missing(),
-            stack_segment_fault: IdtEntry::missing(),
-            general_protection_fault: IdtEntry::missing(),
-            page_fault: IdtEntry::missing(),
-            reserved_1: IdtEntry::missing(),
-            x87_floating_point: IdtEntry::missing(),
-            alignment_check: IdtEntry::missing(),
-            machine_check: IdtEntry::missing(),
-            simd_floating_point: IdtEntry::missing(),
-            virtualization: IdtEntry::missing(),
-            reserved_2: [IdtEntry::missing(); 9],
-            security_exception: IdtEntry::missing(),
-            reserved_3: IdtEntry::missing(),
-            interrupts: [IdtEntry::missing(); 256 - 32],
+    pub const fn new() -> InterruptDescriptorTable {
+        InterruptDescriptorTable {
+            divide_by_zero: Entry::missing(),
+            debug: Entry::missing(),
+            non_maskable_interrupt: Entry::missing(),
+            breakpoint: Entry::missing(),
+            overflow: Entry::missing(),
+            bound_range_exceeded: Entry::missing(),
+            invalid_opcode: Entry::missing(),
+            device_not_available: Entry::missing(),
+            double_fault: Entry::missing(),
+            coprocessor_segment_overrun: Entry::missing(),
+            invalid_tss: Entry::missing(),
+            segment_not_present: Entry::missing(),
+            stack_segment_fault: Entry::missing(),
+            general_protection_fault: Entry::missing(),
+            page_fault: Entry::missing(),
+            reserved_1: Entry::missing(),
+            x87_floating_point: Entry::missing(),
+            alignment_check: Entry::missing(),
+            machine_check: Entry::missing(),
+            simd_floating_point: Entry::missing(),
+            virtualization: Entry::missing(),
+            reserved_2: [Entry::missing(); 9],
+            security_exception: Entry::missing(),
+            reserved_3: Entry::missing(),
+            interrupts: [Entry::missing(); 256 - 32],
         }
     }
 
     /// Resets all entries of this IDT in place.
     pub fn reset(&mut self) {
-        self.divide_by_zero = IdtEntry::missing();
-        self.debug = IdtEntry::missing();
-        self.non_maskable_interrupt = IdtEntry::missing();
-        self.breakpoint = IdtEntry::missing();
-        self.overflow = IdtEntry::missing();
-        self.bound_range_exceeded = IdtEntry::missing();
-        self.invalid_opcode = IdtEntry::missing();
-        self.device_not_available = IdtEntry::missing();
-        self.double_fault = IdtEntry::missing();
-        self.coprocessor_segment_overrun = IdtEntry::missing();
-        self.invalid_tss = IdtEntry::missing();
-        self.segment_not_present = IdtEntry::missing();
-        self.stack_segment_fault = IdtEntry::missing();
-        self.general_protection_fault = IdtEntry::missing();
-        self.page_fault = IdtEntry::missing();
-        self.reserved_1 = IdtEntry::missing();
-        self.x87_floating_point = IdtEntry::missing();
-        self.alignment_check = IdtEntry::missing();
-        self.machine_check = IdtEntry::missing();
-        self.simd_floating_point = IdtEntry::missing();
-        self.virtualization = IdtEntry::missing();
-        self.reserved_2 = [IdtEntry::missing(); 9];
-        self.security_exception = IdtEntry::missing();
-        self.reserved_3 = IdtEntry::missing();
-        self.interrupts = [IdtEntry::missing(); 256 - 32];
+        self.divide_by_zero = Entry::missing();
+        self.debug = Entry::missing();
+        self.non_maskable_interrupt = Entry::missing();
+        self.breakpoint = Entry::missing();
+        self.overflow = Entry::missing();
+        self.bound_range_exceeded = Entry::missing();
+        self.invalid_opcode = Entry::missing();
+        self.device_not_available = Entry::missing();
+        self.double_fault = Entry::missing();
+        self.coprocessor_segment_overrun = Entry::missing();
+        self.invalid_tss = Entry::missing();
+        self.segment_not_present = Entry::missing();
+        self.stack_segment_fault = Entry::missing();
+        self.general_protection_fault = Entry::missing();
+        self.page_fault = Entry::missing();
+        self.reserved_1 = Entry::missing();
+        self.x87_floating_point = Entry::missing();
+        self.alignment_check = Entry::missing();
+        self.machine_check = Entry::missing();
+        self.simd_floating_point = Entry::missing();
+        self.virtualization = Entry::missing();
+        self.reserved_2 = [Entry::missing(); 9];
+        self.security_exception = Entry::missing();
+        self.reserved_3 = Entry::missing();
+        self.interrupts = [Entry::missing(); 256 - 32];
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
@@ -439,8 +439,8 @@ impl Idt {
     }
 }
 
-impl Index<usize> for Idt {
-    type Output = IdtEntry<HandlerFunc>;
+impl Index<usize> for InterruptDescriptorTable {
+    type Output = Entry<HandlerFunc>;
 
     /// Returns the IDT entry with the specified index.
     ///
@@ -471,7 +471,7 @@ impl Index<usize> for Idt {
     }
 }
 
-impl IndexMut<usize> for Idt {
+impl IndexMut<usize> for InterruptDescriptorTable {
     /// Returns a mutable reference to the IDT entry with the specified index.
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
@@ -507,7 +507,7 @@ impl IndexMut<usize> for Idt {
 /// on the interrupt vector.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct IdtEntry<F> {
+pub struct Entry<F> {
     pointer_low: u16,
     gdt_selector: u16,
     options: EntryOptions,
@@ -526,10 +526,10 @@ pub type HandlerFuncWithErrCode =
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: PageFaultErrorCode);
 
-impl<F> IdtEntry<F> {
+impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
     const fn missing() -> Self {
-        IdtEntry {
+        Entry {
             gdt_selector: 0,
             pointer_low: 0,
             pointer_middle: 0,
@@ -563,7 +563,7 @@ impl<F> IdtEntry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
-        impl IdtEntry<$h> {
+        impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
             /// For the code selector field, this function uses the code segment selector currently
@@ -642,7 +642,7 @@ pub struct ExceptionStackFrame {
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
-    /// return. See the documentation of the `Idt` fields for more details.
+    /// return. See the documentation of the `InterruptDescriptorTable` fields for more details.
     pub instruction_pointer: VirtAddr,
     /// The code segment selector, padded with zeros.
     pub code_segment: u64,
@@ -707,7 +707,7 @@ mod test {
     #[test]
     fn size_test() {
         use core::mem::size_of;
-        assert_eq!(size_of::<IdtEntry<HandlerFunc>>(), 16);
-        assert_eq!(size_of::<Idt>(), 256 * 16);
+        assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
+        assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
     }
 }
