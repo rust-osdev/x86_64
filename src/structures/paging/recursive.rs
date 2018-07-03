@@ -65,34 +65,6 @@ pub trait Mapper<S: PageSize> {
     /// Note that no page tables or other frames are deallocated.
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
-    /// Reclaim page tables for virtual addresses corresponding to the given range of pages.
-    /// The page tables are returned to the given `deallocator`. We reclaim page tables according
-    /// to `mode`, which describes what behvior to take when we encounter a page table entirely in
-    /// the given range with a used (i.e. non-zero) page table entry. See the docs for
-    /// `ReclaimPageTablesMode` for more info on modes.
-    ///
-    /// Note that it is the caller's responsibility to make sure the page tables are not in use.
-    /// Don't forget to check shared mappings!
-    ///
-    /// It's also worth noting that the p4 table currently in use can never be reclaimed by this
-    /// function, since it is being used. Thus, if you need to reclaim a p4 table, you must do so
-    /// from another address space.
-    ///
-    /// We only try to reclaim page tables whose mappings would all lie entirely within the range.
-    ///
-    /// # Panics
-    ///
-    /// - If one of the range enpoints is `Unbounded`.
-    /// - If the `mode` specifies that we should.
-    unsafe fn reclaim_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>;
-
     /// Updates the flags of an existing mapping.
     fn update_flags(
         &mut self,
@@ -277,9 +249,43 @@ impl<'a> RecursivePageTable<'a> {
         inner(entry, next_table_page, allocator)
     }
 
-    /// This is a common implementation of `reclaim_page_tables`. See the docs for
-    /// `Mapper::reclaim_page_tables`.
-    unsafe fn reclaim_page_tables_common<D, R>(
+    /// Reclaim page tables for virtual addresses corresponding to the given range of pages.
+    /// The page tables are returned to the given `deallocator`. We reclaim page tables according
+    /// to `mode`, which describes what behvior to take when we encounter a page table entirely in
+    /// the given range with a used (i.e. non-zero) page table entry. See the docs for
+    /// `ReclaimPageTablesMode` for more info on modes.
+    ///
+    /// Note that it is the caller's responsibility to make sure the page tables are not in use.
+    /// Don't forget to check shared mappings!
+    ///
+    /// It's also worth noting that the p4 table currently in use can never be reclaimed by this
+    /// function, since it is being used. Thus, if you need to reclaim a p4 table, you must do so
+    /// from another address space.
+    ///
+    /// We only try to reclaim page tables whose mappings would all lie entirely within the range.
+    ///
+    /// # Panics
+    ///
+    /// - If one of the range enpoints is `Unbounded`.
+    /// - If the `mode` specifies that we should.
+    pub unsafe fn reclaim_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
+    {
+        // Reclaim tables starting from the leaves (P1) and moving towards the root (P4).
+        self.reclaim_p1_page_tables(range);
+        self.reclaim_p2_page_tables(range);
+        self.reclaim_p3_page_tables(range);
+    }
+
+    /// Reclaims all P1 page tables whose mappings are entirely contained inside the given range of
+    /// pages.
+    unsafe fn reclaim_p1_page_tables<D, R>(
         &mut self,
         range: R,
         deallocator: &mut D,
@@ -291,15 +297,26 @@ impl<'a> RecursivePageTable<'a> {
         // Get the page ranges.
         let start = match range.start_bound() {
             Bound::Included(endpoint) => *endpoint,
-            Bound::Excluded(endpoint) => *endpoint + 1,
+            Bound::Excluded(endpoint) => if endpoint == last {
+                panic!("Starting after end of address space!");
+            } else {
+                *endpoint + 1
+            },
             Bound::Unbounded => {
+                // TODO: maybe allow this?
                 panic!("Attempt to reclaim page tables for unbounded region of memory.")
             }
         };
+        // TODO: switch everything else to handle inclusive endpoints.
         let end = match range.end_bound() {
-            Bound::Included(endpoint) => *endpoint + 1,
-            Bound::Excluded(endpoint) => *endpoint,
+            Bound::Included(endpoint) => *endpoint,
+            Bound::Excluded(endpoint) => if endpoint == 0 {
+                panic!("Ending before start of address space!");
+            } else {
+                *endpoint-1
+            },
             Bound::Unbounded => {
+                // TODO: maybe allow this?
                 panic!("Attempt to reclaim page tables for unbounded region of memory.")
             }
         };
@@ -320,20 +337,20 @@ impl<'a> RecursivePageTable<'a> {
             Page::from_page_table_indices(
                 start.p4_index(),
                 start.p3_index(),
-                start.p2_index(),
-                start.p1_index() + u9::new(1),
+                start.p2_index() + u9::new(1),
+                u9::new(0),
             )
         };
 
-        let p1_end = Page::from_page_table_indices(
-            start.p4_index(),
-            start.p3_index(),
-            start.p2_index(),
+        let p1_end = Page::from_page_table_indices(//TODO: make this inclusive
+            end.p4_index(),
+            end.p3_index(),
+            end.p2_index(),
             u9::new(0),
         );
 
         // Free all the page tables!
-        for page in p1_start..p1_end {
+        for page in p1_start..=p1_end {
             let p4_entry = &mut p4[page.p4_index()];
 
             match p4_entry.frame() {
@@ -384,23 +401,35 @@ impl<'a> RecursivePageTable<'a> {
             p2_entry.set_unused();
             deallocator.dealloc(p1_frame);
         }
+    }
 
-        // Now do p2 level page tables
+    /// Reclaims all P2 page tables whose mappings are entirely contained inside the given range of
+    /// pages.
+    unsafe fn reclaim_p2_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
+    {
+        let p4 = &mut self.p4;
 
         let p2_start = if start.p2_index() == u9::new(0) {
             start
         } else {
             Page::from_page_table_indices(
                 start.p4_index(),
-                start.p3_index(),
-                start.p2_index() + u9::new(1),
+                start.p3_index() + u9::new(1),
+                u9::new(0),
                 u9::new(0),
             )
         };
 
         let p2_end = Page::from_page_table_indices(
-            start.p4_index(),
-            start.p3_index(),
+            end.p4_index(),
+            end.p3_index(),
             u9::new(0),
             u9::new(0),
         );
@@ -446,15 +475,45 @@ impl<'a> RecursivePageTable<'a> {
             p3_entry.set_unused();
             deallocator.dealloc(p2_frame);
         }
+    }
 
-        // Now do p3 level page tables.
+    /// Reclaims all P3 page tables whose mappings are entirely contained inside the given range of
+    /// pages.
+    unsafe fn reclaim_p3_page_tables<D, R>(
+        &mut self,
+        range: R,
+        deallocator: &mut D,
+        mode: ReclaimPageTablesMode,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+        R: RangeBounds<Page<Size4KiB>>,
+    {
+        // Get the page ranges.
+        let start = match range.start_bound() {
+            Bound::Included(endpoint) => *endpoint,
+            Bound::Excluded(endpoint) => *endpoint + 1,
+            Bound::Unbounded => {
+                // TODO: maybe allow this?
+                panic!("Attempt to reclaim page tables for unbounded region of memory.")
+            }
+        };
+        let end = match range.end_bound() {
+            Bound::Included(endpoint) => *endpoint + 1,
+            Bound::Excluded(endpoint) => *endpoint,
+            Bound::Unbounded => {
+                // TODO: maybe allow this?
+                panic!("Attempt to reclaim page tables for unbounded region of memory.")
+            }
+        };
+
+        let p4 = &mut self.p4;
 
         let p3_start = if start.p3_index() == u9::new(0) {
             start
         } else {
             Page::from_page_table_indices(
-                start.p4_index(),
-                start.p3_index() + u9::new(1),
+                start.p4_index() + u9::new(1),
+                u9::new(0),
                 u9::new(0),
                 u9::new(0),
             )
@@ -549,18 +608,6 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
 
         p3_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
-    }
-
-    unsafe fn reclaim_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>,
-    {
-        self.reclaim_page_tables_common(range, deallocator, mode)
     }
 
     fn update_flags(
@@ -665,18 +712,6 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
 
         p2_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
-    }
-
-    unsafe fn reclaim_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>,
-    {
-        self.reclaim_page_tables_common(range, deallocator, mode)
     }
 
     fn update_flags(
@@ -798,18 +833,6 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
 
         p1_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
-    }
-
-    unsafe fn reclaim_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>,
-    {
-        self.reclaim_page_tables_common(range, deallocator, mode)
     }
 
     fn update_flags(
