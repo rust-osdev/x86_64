@@ -1,6 +1,6 @@
 #![cfg(target_pointer_width = "64")]
 
-use core::ops::{Bound, RangeBounds};
+use core::ops::RangeBounds;
 use instructions::tlb;
 use registers::control::Cr3;
 use structures::paging::{
@@ -148,6 +148,285 @@ pub enum FlagUpdateError {
     PageNotMapped,
 }
 
+/// A trait for types that walk recursive page tables. Each method can be implemented optionally to
+/// do something with the parts of the page table it takes. The default implementations are noops.
+pub trait RecursivePageTableVisitor {
+    /// Visit this recursive page table.
+    fn visit(&mut self, page_tables: &mut RecursivePageTable) {
+        let p4 = &mut page_tables.p4;
+        self.visit_p4(page_tables.recursive_index, p4);
+    }
+
+    /// Visit the given `p4` page table.
+    fn visit_p4(&mut self, recursive_index: u9, p4: &mut PageTable) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p4[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... skip.
+                Err(FrameError::FrameNotPresent) => continue,
+                // Cannot have 512GiB huge pages (yet)!
+                Err(FrameError::HugeFrame) => unreachable!(),
+                Ok(_) => {}
+            }
+
+            let p3 = unsafe {
+                &mut *Page::from_page_table_indices(
+                    recursive_index,
+                    recursive_index,
+                    recursive_index,
+                    entry_idx,
+                ).start_address()
+                    .as_mut_ptr()
+            };
+            self.visit_p3(recursive_index, entry_idx, entry, p3);
+        }
+    }
+
+    /// Visit the given `p3` page table. `p3_pte` is a reference to the entry in `p4` that points
+    /// to this `p3`.
+    fn visit_p3(
+        &mut self,
+        recursive_index: u9,
+        p4_idx: u9,
+        _p3_pte: &mut PageTableEntry,
+        p3: &mut PageTable,
+    ) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p3[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... skip.
+                Err(FrameError::FrameNotPresent) => continue,
+                // This is a 1GiB page. Visit it; then exit.
+                Err(FrameError::HugeFrame) => {
+                    let frame = unsafe {
+                        &mut *Page::from_page_table_indices_1gib(p4_idx, entry_idx)
+                            .start_address()
+                            .as_mut_ptr()
+                    };
+                    self.visit_1gib_page(entry, frame);
+                    return;
+                }
+                Ok(_) => {}
+            }
+
+            let p2 = unsafe {
+                &mut *Page::from_page_table_indices(
+                    recursive_index,
+                    recursive_index,
+                    p4_idx,
+                    entry_idx,
+                ).start_address()
+                    .as_mut_ptr()
+            };
+            self.visit_p2(recursive_index, p4_idx, entry_idx, entry, p2);
+        }
+    }
+
+    /// Visit the given 1GiB `page` pointed to by `page_pte` in a p3 page table.
+    fn visit_1gib_page(&mut self, _page_pte: &mut PageTableEntry, _page: &Page<Size1GiB>) {
+        // noop
+    }
+
+    /// Visit the given `p2` page table, pointed to by `p2_pte` in a p3 page table.
+    fn visit_p2(
+        &mut self,
+        recursive_index: u9,
+        p4_idx: u9,
+        p3_idx: u9,
+        _p2_pte: &mut PageTableEntry,
+        p2: &mut PageTable,
+    ) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p2[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... skip.
+                Err(FrameError::FrameNotPresent) => continue,
+                // This is a 2MiB page. Visit it; then exit.
+                Err(FrameError::HugeFrame) => {
+                    let frame = unsafe {
+                        &mut *Page::from_page_table_indices_2mib(p4_idx, p3_idx, entry_idx)
+                            .start_address()
+                            .as_mut_ptr()
+                    };
+                    self.visit_2mib_page(entry, frame);
+                    return;
+                }
+                Ok(_) => {}
+            }
+
+            let p1 = unsafe {
+                &mut *Page::from_page_table_indices(recursive_index, p4_idx, p3_idx, entry_idx)
+                    .start_address()
+                    .as_mut_ptr()
+            };
+            self.visit_p1(recursive_index, p4_idx, p3_idx, entry_idx, entry, p1);
+        }
+    }
+
+    /// Visit the given 2MiB `page` pointed to by a `page_pte` in a p2 page table.
+    fn visit_2mib_page(&mut self,_page_pte: &mut PageTableEntry, _page: &Page<Size2MiB>) {
+        // noop
+    }
+
+    /// Visit the given `p1` page table, pointed to by `p1_pte` in a p2 page table.
+    fn visit_p1(
+        &mut self,
+        _recursive_index: u9,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        _p1_pte: &mut PageTableEntry,
+        p1: &mut PageTable,
+    ) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p1[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... skip.
+                Err(FrameError::FrameNotPresent) => continue,
+                // We are already at 4KiB. No huge pages here.
+                Err(FrameError::HugeFrame) => unreachable!(),
+                Ok(_) => {}
+            }
+
+            let page = unsafe {
+                &mut *Page::from_page_table_indices(p4_idx, p3_idx, p2_idx, entry_idx)
+                    .start_address()
+                    .as_mut_ptr()
+            };
+            self.visit_4kib_page(entry, page);
+        }
+    }
+
+    /// Visit the given 4KiB `page`, pointed to by `page_pte` in a p1 page table.
+    fn visit_4kib_page(&mut self, _page_pte: &mut PageTableEntry, _page: &Page<Size4KiB>) {
+        // noop
+    }
+}
+
+/// Page table visitor that visits the page tables mapping a certain range of memory and
+/// deallocates them.
+pub struct DeletePageTablesVisitor<'d, R, D>
+where
+    D: FrameDeallocator<Size4KiB> + 'd,
+    R: RangeBounds<Page<Size4KiB>>,
+{
+    /// The range to visit.
+    range: R,
+    /// The deallocator to deallocate frames to.
+    deallocator: &'d mut D,
+    /// The mode of operation: what to do when we encounter a non-empty page/page table?
+    mode: ReclaimPageTablesMode,
+}
+
+impl<'d, R, D> DeletePageTablesVisitor<'d, R, D>
+where
+    D: FrameDeallocator<Size4KiB> + 'd,
+    R: RangeBounds<Page<Size4KiB>>,
+{
+    /// Create a new `DeletePageTablesVisitor` over the given the `range`. The `deallocator` is
+    /// used to free page tables. `mode` is used to determines the behavior when we come across a
+    /// page table entry that is used (i.e. not 0). See the docs for `ReclaimPageTablesMode`.
+    pub fn new(range: R, deallocator: &'d mut D, mode: ReclaimPageTablesMode) -> Self {
+        DeletePageTablesVisitor {
+            range,
+            deallocator,
+            mode,
+        }
+    }
+}
+
+impl<'d, R, D> RecursivePageTableVisitor for DeletePageTablesVisitor<'d, R, D>
+where
+    D: FrameDeallocator<Size4KiB> + 'd,
+    R: RangeBounds<Page<Size4KiB>>,
+{
+    /*
+    fn visit_p3(&mut self, p3_pte: &mut PageTableEntry, p3: &mut PageTable) {
+        for entry in p3 {
+            if entry is present and in self.range{
+                // Clearly, this P3 page table is not empty.
+                match self.mode {
+                    ReclaimPageTablesMode::Skip => {
+                        return; // Skip the rest.
+                    }
+                    ReclaimPageTablesMode::Panic => {
+                        panic!("Attempt to reclaim a non-empty p3 page table");
+                    }
+                }
+            }
+        }
+
+        if p3 is partially out of self.range {
+            return;
+        }
+
+        // TODO: free this P3
+    }
+
+    fn visit_p2(&mut self, p2_pte: &mut PageTableEntry, p2: &mut PageTable) {
+        for entry in p2 {
+            if entry is present and in self.range {
+                // Clearly, this P2 page table is not empty.
+                match self.mode {
+                    ReclaimPageTablesMode::Skip => {
+                        return; // Skip the rest.
+                    }
+                    ReclaimPageTablesMode::Panic => {
+                        panic!("Attempt to reclaim a non-empty p2 page table");
+                    }
+                }
+            }
+        }
+
+        if p2 is partially out of self.range {
+            return;
+        }
+
+        // TODO: free this P2
+    }
+
+    fn visit_p1(&mut self, p1_pte: &mut PageTableEntry, p1: &mut PageTable) {
+        for entry in p1 {
+            // TODO: assert not huge page
+
+            if entry is present and in self.range {
+                // Clearly, this P1 page table is not empty.
+                match self.mode {
+                    ReclaimPageTablesMode::Skip => {
+                        return; // Skip the rest.
+                    }
+                    ReclaimPageTablesMode::Panic => {
+                        panic!("Attempt to reclaim a non-empty p1 page table");
+                    }
+                }
+            }
+        }
+        
+        if p1 is partially out of self.range {
+            return;
+        }
+
+        // TODO: free this P1
+    }
+    */
+}
+
 impl<'a> RecursivePageTable<'a> {
     /// Creates a new RecursivePageTable from the passed level 4 PageTable.
     ///
@@ -277,282 +556,359 @@ impl<'a> RecursivePageTable<'a> {
         D: FrameDeallocator<Size4KiB>,
         R: RangeBounds<Page<Size4KiB>>,
     {
+        DeletePageTablesVisitor::new(range, deallocator, mode).visit(self);
+
+        /*
         // Reclaim tables starting from the leaves (P1) and moving towards the root (P4).
         self.reclaim_p1_page_tables(range);
         self.reclaim_p2_page_tables(range);
         self.reclaim_p3_page_tables(range);
+        */
     }
 
-    /// Reclaims all P1 page tables whose mappings are entirely contained inside the given range of
-    /// pages.
-    unsafe fn reclaim_p1_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>,
-    {
-        // Get the page ranges.
-        let start = match range.start_bound() {
-            Bound::Included(endpoint) => *endpoint,
-            Bound::Excluded(endpoint) => if endpoint == last {
-                panic!("Starting after end of address space!");
-            } else {
-                *endpoint + 1
-            },
-            Bound::Unbounded => {
-                // TODO: maybe allow this?
-                panic!("Attempt to reclaim page tables for unbounded region of memory.")
-            }
-        };
-        // TODO: switch everything else to handle inclusive endpoints.
-        let end = match range.end_bound() {
-            Bound::Included(endpoint) => *endpoint,
-            Bound::Excluded(endpoint) => if endpoint == 0 {
-                panic!("Ending before start of address space!");
-            } else {
-                *endpoint-1
-            },
-            Bound::Unbounded => {
-                // TODO: maybe allow this?
-                panic!("Attempt to reclaim page tables for unbounded region of memory.")
-            }
-        };
+    // /// Reclaims all P1 page tables whose mappings are entirely contained inside the given range of
+    // /// pages.
+    // unsafe fn reclaim_p1_page_tables<D, R>(
+    //     &mut self,
+    //     range: R,
+    //     deallocator: &mut D,
+    //     mode: ReclaimPageTablesMode,
+    // ) where
+    //     D: FrameDeallocator<Size4KiB>,
+    //     R: RangeBounds<Page<Size4KiB>>,
+    // {
+    //     // We can only reclaim a page table if all of its possible children are in the given range,
+    //     // so round `start` and `end` to exclude page tables that are only partial in range.
+    //     //
+    //     // That is, we round `start` up to the nearest 512 * Size4KiB = 2MiB boundary, and we round
+    //     // `end` down to the nearest boundary.
 
-        let p4 = &mut self.p4;
+    //     let p4 = &mut self.p4;
 
-        // Starting at the leaf page tables (p1), we reclaim page tables. Then we do p2 and p3.
+    //     for page_1gib in align_outward_inclusive_1gib(range) {
+    //         let p4_entry = &mut p4[page_1gib.p4_index()];
 
-        // We can only reclaim a page table if all of its possible children are in the given range,
-        // so round `start` and `end` to exclude page tables that are only partial in range.
-        //
-        // That is, we round `start` up to the nearest 512 * Size4KiB boundary, and we round `end`
-        // down to the nearest boundary.
+    //         match p4_entry.frame() {
+    //             // If this is a huge page or not mapped, skip it. No P1 page tables to reclaim.
+    //             Err(FrameError::FrameNotPresent) | Err(FrameError::HugeFrame) => {
+    //                 continue;
+    //             }
+    //             _ => {}
+    //         };
 
-        let p1_start = if start.p1_index() == u9::new(0) {
-            start
-        } else {
-            Page::from_page_table_indices(
-                start.p4_index(),
-                start.p3_index(),
-                start.p2_index() + u9::new(1),
-                u9::new(0),
-            )
-        };
+    //         for page_2mib in align_outward_inclusive_2mib(range) {
+    //             let p3 = &mut *(p3_ptr(page_2mib, self.recursive_index));
+    //             let p3_entry = &mut p3[page_2mib.p3_index()];
 
-        let p1_end = Page::from_page_table_indices(//TODO: make this inclusive
-            end.p4_index(),
-            end.p3_index(),
-            end.p2_index(),
-            u9::new(0),
-        );
+    //             match p3_entry.frame() {
+    //                 // If this is a huge page or not mapped, skip it. No P1 page tables to reclaim.
+    //                 Err(FrameError::FrameNotPresent) | Err(FrameError::HugeFrame) => {
+    //                     continue;
+    //                 }
+    //                 _ => {}
+    //             };
 
-        // Free all the page tables!
-        for page in p1_start..=p1_end {
-            let p4_entry = &mut p4[page.p4_index()];
+    //             for page_4kib in align_outward_inclusive_4kib(range) {
+    //                 let p2 = &mut *(p2_ptr(page_4kib, self.recursive_index));
+    //                 let p2_entry = &mut p2[page_4kib.p2_index()];
 
-            match p4_entry.frame() {
-                Err(FrameError::FrameNotPresent) => {
-                    continue;
-                }
-                Err(FrameError::HugeFrame) => unreachable!(),
-                _ => {}
-            };
+    //                 let p1_frame = match p2_entry.frame() {
+    //                     // If this is a huge page or not mapped, skip it. No P1 page tables to reclaim.
+    //                     Err(FrameError::FrameNotPresent) | Err(FrameError::HugeFrame) => {
+    //                         continue;
+    //                     }
+    //                     Ok(frame) => frame,
+    //                 };
 
-            let p3 = &mut *(p3_ptr(page, self.recursive_index));
-            let p3_entry = &mut p3[page.p3_index()];
+    //                 // Depending on mode, we behave differently
+    //                 let p1 = &mut *(p1_ptr(page, self.recursive_index));
+    //                 match mode {
+    //                     ReclaimPageTablesMode::Skip => {
+    //                         // Skip non-empty page tables.
+    //                         if p1.iter().any(|pte| !pte.is_unused()) {
+    //                             continue;
+    //                         }
+    //                     }
+    //                     ReclaimPageTablesMode::Panic => {
+    //                         // Don't allow non-empty page tables.
+    //                         assert!(p1.iter().all(|pte| pte.is_unused()));
+    //                     }
+    //                 }
 
-            match p3_entry.frame() {
-                Err(FrameError::FrameNotPresent) => {
-                    continue;
-                }
-                Err(FrameError::HugeFrame) => unreachable!(),
-                _ => {}
-            };
+    //                 p2_entry.set_unused();
+    //                 deallocator.dealloc(p1_frame);
+    //             }
+    //         }
+    //     }
+    // }
 
-            let p2 = &mut *(p2_ptr(page, self.recursive_index));
-            let p2_entry = &mut p2[page.p2_index()];
+    // /// Reclaims all P1 page tables whose mappings are entirely contained inside the given range of
+    // /// pages.
+    // unsafe fn reclaim_p1_page_tables<D, R>(
+    //     &mut self,
+    //     range: R,
+    //     deallocator: &mut D,
+    //     mode: ReclaimPageTablesMode,
+    // ) where
+    //     D: FrameDeallocator<Size4KiB>,
+    //     R: RangeBounds<Page<Size4KiB>>,
+    // {
+    //     // Get the page ranges.
+    //     let start = match range.start_bound() {
+    //         Bound::Included(endpoint) => *endpoint,
+    //         Bound::Excluded(endpoint) => if endpoint == last {
+    //             panic!("Starting after end of address space!");
+    //         } else {
+    //             *endpoint + 1
+    //         },
+    //         Bound::Unbounded => {
+    //             // TODO: maybe allow this?
+    //             panic!("Attempt to reclaim page tables for unbounded region of memory.")
+    //         }
+    //     };
+    //     // TODO: switch everything else to handle inclusive endpoints.
+    //     let end = match range.end_bound() {
+    //         Bound::Included(endpoint) => *endpoint,
+    //         Bound::Excluded(endpoint) => if endpoint == 0 {
+    //             panic!("Ending before start of address space!");
+    //         } else {
+    //             *endpoint - 1
+    //         },
+    //         Bound::Unbounded => {
+    //             // TODO: maybe allow this?
+    //             panic!("Attempt to reclaim page tables for unbounded region of memory.")
+    //         }
+    //     };
 
-            let p1_frame = match p2_entry.frame() {
-                Ok(frame) => frame,
-                Err(FrameError::FrameNotPresent) => {
-                    continue;
-                }
-                Err(FrameError::HugeFrame) => unreachable!(),
-            };
+    //     let p4 = &mut self.p4;
 
-            // Depending on mode, we behave differently
-            let p1 = &mut *(p1_ptr(page, self.recursive_index));
-            match mode {
-                ReclaimPageTablesMode::Skip => {
-                    // Skip non-empty page tables.
-                    if p1.iter().any(|pte| !pte.is_unused()) {
-                        continue;
-                    }
-                }
-                ReclaimPageTablesMode::Panic => {
-                    // Don't allow non-empty page tables.
-                    assert!(p1.iter().all(|pte| pte.is_unused()));
-                }
-            }
+    //     // Starting at the leaf page tables (p1), we reclaim page tables. Then we do p2 and p3.
 
-            p2_entry.set_unused();
-            deallocator.dealloc(p1_frame);
-        }
-    }
+    //     // We can only reclaim a page table if all of its possible children are in the given range,
+    //     // so round `start` and `end` to exclude page tables that are only partial in range.
+    //     //
+    //     // That is, we round `start` up to the nearest 512 * Size4KiB boundary, and we round `end`
+    //     // down to the nearest boundary.
 
-    /// Reclaims all P2 page tables whose mappings are entirely contained inside the given range of
-    /// pages.
-    unsafe fn reclaim_p2_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>,
-    {
-        let p4 = &mut self.p4;
+    //     let p1_start = if start.p1_index() == u9::new(0) {
+    //         start
+    //     } else {
+    //         Page::from_page_table_indices(
+    //             start.p4_index(),
+    //             start.p3_index(),
+    //             start.p2_index() + u9::new(1),
+    //             u9::new(0),
+    //         )
+    //     };
 
-        let p2_start = if start.p2_index() == u9::new(0) {
-            start
-        } else {
-            Page::from_page_table_indices(
-                start.p4_index(),
-                start.p3_index() + u9::new(1),
-                u9::new(0),
-                u9::new(0),
-            )
-        };
+    //     let p1_end = Page::from_page_table_indices(
+    //         //TODO: make this inclusive
+    //         end.p4_index(),
+    //         end.p3_index(),
+    //         end.p2_index(),
+    //         u9::new(0),
+    //     );
 
-        let p2_end = Page::from_page_table_indices(
-            end.p4_index(),
-            end.p3_index(),
-            u9::new(0),
-            u9::new(0),
-        );
+    //     // Free all the page tables!
+    //     for page in p1_start..=p1_end {
+    //         let p4_entry = &mut p4[page.p4_index()];
 
-        // Free all the page tables!
-        for page in p2_start..p2_end {
-            let p4_entry = &mut p4[page.p4_index()];
+    //         match p4_entry.frame() {
+    //             Err(FrameError::FrameNotPresent) => {
+    //                 continue;
+    //             }
+    //             Err(FrameError::HugeFrame) => unreachable!(),
+    //             _ => {}
+    //         };
 
-            match p4_entry.frame() {
-                Err(FrameError::FrameNotPresent) => {
-                    continue;
-                }
-                Err(FrameError::HugeFrame) => unreachable!(),
-                _ => {}
-            };
+    //         let p3 = &mut *(p3_ptr(page, self.recursive_index));
+    //         let p3_entry = &mut p3[page.p3_index()];
 
-            let p3 = &mut *(p3_ptr(page, self.recursive_index));
-            let p3_entry = &mut p3[page.p3_index()];
+    //         match p3_entry.frame() {
+    //             Err(FrameError::FrameNotPresent) => {
+    //                 continue;
+    //             }
+    //             Err(FrameError::HugeFrame) => unreachable!(),
+    //             _ => {}
+    //         };
 
-            let p2_frame = match p3_entry.frame() {
-                Ok(frame) => frame,
-                Err(FrameError::FrameNotPresent) => {
-                    continue;
-                }
-                Err(FrameError::HugeFrame) => unreachable!(),
-            };
+    //         let p2 = &mut *(p2_ptr(page, self.recursive_index));
+    //         let p2_entry = &mut p2[page.p2_index()];
 
-            // Depending on mode, we behave differently
-            let p2 = &mut *(p2_ptr(page, self.recursive_index));
-            match mode {
-                ReclaimPageTablesMode::Skip => {
-                    // Skip non-empty page tables.
-                    if p2.iter().any(|pte| !pte.is_unused()) {
-                        continue;
-                    }
-                }
-                ReclaimPageTablesMode::Panic => {
-                    // Don't allow non-empty page tables.
-                    assert!(p2.iter().all(|pte| pte.is_unused()));
-                }
-            }
+    //         let p1_frame = match p2_entry.frame() {
+    //             Ok(frame) => frame,
+    //             Err(FrameError::FrameNotPresent) => {
+    //                 continue;
+    //             }
+    //             Err(FrameError::HugeFrame) => unreachable!(),
+    //         };
 
-            p3_entry.set_unused();
-            deallocator.dealloc(p2_frame);
-        }
-    }
+    //         // Depending on mode, we behave differently
+    //         let p1 = &mut *(p1_ptr(page, self.recursive_index));
+    //         match mode {
+    //             ReclaimPageTablesMode::Skip => {
+    //                 // Skip non-empty page tables.
+    //                 if p1.iter().any(|pte| !pte.is_unused()) {
+    //                     continue;
+    //                 }
+    //             }
+    //             ReclaimPageTablesMode::Panic => {
+    //                 // Don't allow non-empty page tables.
+    //                 assert!(p1.iter().all(|pte| pte.is_unused()));
+    //             }
+    //         }
 
-    /// Reclaims all P3 page tables whose mappings are entirely contained inside the given range of
-    /// pages.
-    unsafe fn reclaim_p3_page_tables<D, R>(
-        &mut self,
-        range: R,
-        deallocator: &mut D,
-        mode: ReclaimPageTablesMode,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-        R: RangeBounds<Page<Size4KiB>>,
-    {
-        // Get the page ranges.
-        let start = match range.start_bound() {
-            Bound::Included(endpoint) => *endpoint,
-            Bound::Excluded(endpoint) => *endpoint + 1,
-            Bound::Unbounded => {
-                // TODO: maybe allow this?
-                panic!("Attempt to reclaim page tables for unbounded region of memory.")
-            }
-        };
-        let end = match range.end_bound() {
-            Bound::Included(endpoint) => *endpoint + 1,
-            Bound::Excluded(endpoint) => *endpoint,
-            Bound::Unbounded => {
-                // TODO: maybe allow this?
-                panic!("Attempt to reclaim page tables for unbounded region of memory.")
-            }
-        };
+    //         p2_entry.set_unused();
+    //         deallocator.dealloc(p1_frame);
+    //     }
+    // }
 
-        let p4 = &mut self.p4;
+    // /// Reclaims all P2 page tables whose mappings are entirely contained inside the given range of
+    // /// pages.
+    // unsafe fn reclaim_p2_page_tables<D, R>(
+    //     &mut self,
+    //     range: R,
+    //     deallocator: &mut D,
+    //     mode: ReclaimPageTablesMode,
+    // ) where
+    //     D: FrameDeallocator<Size4KiB>,
+    //     R: RangeBounds<Page<Size4KiB>>,
+    // {
+    //     let p4 = &mut self.p4;
 
-        let p3_start = if start.p3_index() == u9::new(0) {
-            start
-        } else {
-            Page::from_page_table_indices(
-                start.p4_index() + u9::new(1),
-                u9::new(0),
-                u9::new(0),
-                u9::new(0),
-            )
-        };
+    //     let p2_start = if start.p2_index() == u9::new(0) {
+    //         start
+    //     } else {
+    //         Page::from_page_table_indices(
+    //             start.p4_index(),
+    //             start.p3_index() + u9::new(1),
+    //             u9::new(0),
+    //             u9::new(0),
+    //         )
+    //     };
 
-        let p3_end =
-            Page::from_page_table_indices(end.p4_index(), u9::new(0), u9::new(0), u9::new(0));
+    //     let p2_end =
+    //         Page::from_page_table_indices(end.p4_index(), end.p3_index(), u9::new(0), u9::new(0));
 
-        // Free all the page tables!
-        for page in p3_start..p3_end {
-            let p4_entry = &mut p4[page.p4_index()];
+    //     // Free all the page tables!
+    //     for page in p2_start..p2_end {
+    //         let p4_entry = &mut p4[page.p4_index()];
 
-            let p3_frame = match p4_entry.frame() {
-                Ok(frame) => frame,
-                Err(FrameError::FrameNotPresent) => {
-                    continue;
-                }
-                Err(FrameError::HugeFrame) => unreachable!(),
-            };
+    //         match p4_entry.frame() {
+    //             Err(FrameError::FrameNotPresent) => {
+    //                 continue;
+    //             }
+    //             Err(FrameError::HugeFrame) => unreachable!(),
+    //             _ => {}
+    //         };
 
-            // Depending on mode, we behave differently
-            let p3 = &mut *(p3_ptr(page, self.recursive_index));
-            match mode {
-                ReclaimPageTablesMode::Skip => {
-                    // Skip non-empty page tables.
-                    if p3.iter().any(|pte| !pte.is_unused()) {
-                        continue;
-                    }
-                }
-                ReclaimPageTablesMode::Panic => {
-                    // Don't allow non-empty page tables.
-                    assert!(p3.iter().all(|pte| pte.is_unused()));
-                }
-            }
+    //         let p3 = &mut *(p3_ptr(page, self.recursive_index));
+    //         let p3_entry = &mut p3[page.p3_index()];
 
-            p4_entry.set_unused();
-            deallocator.dealloc(p3_frame);
-        }
-    }
+    //         let p2_frame = match p3_entry.frame() {
+    //             Ok(frame) => frame,
+    //             Err(FrameError::FrameNotPresent) => {
+    //                 continue;
+    //             }
+    //             Err(FrameError::HugeFrame) => unreachable!(),
+    //         };
+
+    //         // Depending on mode, we behave differently
+    //         let p2 = &mut *(p2_ptr(page, self.recursive_index));
+    //         match mode {
+    //             ReclaimPageTablesMode::Skip => {
+    //                 // Skip non-empty page tables.
+    //                 if p2.iter().any(|pte| !pte.is_unused()) {
+    //                     continue;
+    //                 }
+    //             }
+    //             ReclaimPageTablesMode::Panic => {
+    //                 // Don't allow non-empty page tables.
+    //                 assert!(p2.iter().all(|pte| pte.is_unused()));
+    //             }
+    //         }
+
+    //         p3_entry.set_unused();
+    //         deallocator.dealloc(p2_frame);
+    //     }
+    // }
+
+    // /// Reclaims all P3 page tables whose mappings are entirely contained inside the given range of
+    // /// pages.
+    // unsafe fn reclaim_p3_page_tables<D, R>(
+    //     &mut self,
+    //     range: R,
+    //     deallocator: &mut D,
+    //     mode: ReclaimPageTablesMode,
+    // ) where
+    //     D: FrameDeallocator<Size4KiB>,
+    //     R: RangeBounds<Page<Size4KiB>>,
+    // {
+    //     // Get the page ranges.
+    //     let start = match range.start_bound() {
+    //         Bound::Included(endpoint) => *endpoint,
+    //         Bound::Excluded(endpoint) => *endpoint + 1,
+    //         Bound::Unbounded => {
+    //             // TODO: maybe allow this?
+    //             panic!("Attempt to reclaim page tables for unbounded region of memory.")
+    //         }
+    //     };
+    //     let end = match range.end_bound() {
+    //         Bound::Included(endpoint) => *endpoint + 1,
+    //         Bound::Excluded(endpoint) => *endpoint,
+    //         Bound::Unbounded => {
+    //             // TODO: maybe allow this?
+    //             panic!("Attempt to reclaim page tables for unbounded region of memory.")
+    //         }
+    //     };
+
+    //     let p4 = &mut self.p4;
+
+    //     let p3_start = if start.p3_index() == u9::new(0) {
+    //         start
+    //     } else {
+    //         Page::from_page_table_indices(
+    //             start.p4_index() + u9::new(1),
+    //             u9::new(0),
+    //             u9::new(0),
+    //             u9::new(0),
+    //         )
+    //     };
+
+    //     let p3_end =
+    //         Page::from_page_table_indices(end.p4_index(), u9::new(0), u9::new(0), u9::new(0));
+
+    //     // Free all the page tables!
+    //     for page in p3_start..p3_end {
+    //         let p4_entry = &mut p4[page.p4_index()];
+
+    //         let p3_frame = match p4_entry.frame() {
+    //             Ok(frame) => frame,
+    //             Err(FrameError::FrameNotPresent) => {
+    //                 continue;
+    //             }
+    //             Err(FrameError::HugeFrame) => unreachable!(),
+    //         };
+
+    //         // Depending on mode, we behave differently
+    //         let p3 = &mut *(p3_ptr(page, self.recursive_index));
+    //         match mode {
+    //             ReclaimPageTablesMode::Skip => {
+    //                 // Skip non-empty page tables.
+    //                 if p3.iter().any(|pte| !pte.is_unused()) {
+    //                     continue;
+    //                 }
+    //             }
+    //             ReclaimPageTablesMode::Panic => {
+    //                 // Don't allow non-empty page tables.
+    //                 assert!(p3.iter().all(|pte| pte.is_unused()));
+    //             }
+    //         }
+
+    //         p4_entry.set_unused();
+    //         deallocator.dealloc(p3_frame);
+    //     }
+    // }
 }
 
 impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
