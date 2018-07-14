@@ -53,6 +53,7 @@ pub fn pt_index(addr: VAddr) -> usize {
 
 /// PML4 Entry bits description.
 bitflags! {
+    #[repr(transparent)]
     pub struct PML4Entry: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
         const P       = bit!(0);
@@ -76,7 +77,6 @@ bitflags! {
     }
 }
 
-
 impl PML4Entry {
     /// Creates a new PML4Entry.
     ///
@@ -87,7 +87,9 @@ impl PML4Entry {
     pub fn new(pdpt: PAddr, flags: PML4Entry) -> PML4Entry {
         let pdpt_val = pdpt;
         assert!(pdpt_val % BASE_PAGE_SIZE == 0);
-        PML4Entry { bits: pdpt_val | flags.bits }
+        PML4Entry {
+            bits: pdpt_val | flags.bits,
+        }
     }
 
     /// Retrieves the physical address in this entry.
@@ -104,14 +106,19 @@ impl PML4Entry {
                 is_page_write_through, PML4Entry::PWT);
     check_flag!(doc = "Page-level cache disable; indirectly determines the memory type used to access the page-directory-pointer table referenced by this entry.",
                 is_page_level_cache_disabled, PML4Entry::PCD);
-    check_flag!(doc = "Accessed; indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PML4Entry::A);
+    check_flag!(
+        doc =
+            "Accessed; indicates whether this entry has been used for linear-address translation.",
+        is_accessed,
+        PML4Entry::A
+    );
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
                 is_instruction_fetching_disabled, PML4Entry::XD);
 }
 
 /// PDPT Entry bits description.
 bitflags! {
+    #[repr(transparent)]
     pub struct PDPTEntry: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
         const P       = bit!(0);
@@ -153,7 +160,9 @@ impl PDPTEntry {
     pub fn new(pd: PAddr, flags: PDPTEntry) -> PDPTEntry {
         let pd_val = pd;
         assert!(pd_val % BASE_PAGE_SIZE == 0);
-        PDPTEntry { bits: pd_val | flags.bits }
+        PDPTEntry {
+            bits: pd_val | flags.bits,
+        }
     }
 
     /// Retrieves the physical address in this entry.
@@ -166,12 +175,22 @@ impl PDPTEntry {
                 is_writeable, PDPTEntry::RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 1-GByte region controlled by this entry.",
                 is_user_mode_allowed, PDPTEntry::US);
-    check_flag!(doc = "Page-level write-through.",
-                is_page_write_through, PDPTEntry::PWT);
-    check_flag!(doc = "Page-level cache disable.",
-                is_page_level_cache_disabled, PDPTEntry::PCD);
-    check_flag!(doc = "Accessed; indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PDPTEntry::A);
+    check_flag!(
+        doc = "Page-level write-through.",
+        is_page_write_through,
+        PDPTEntry::PWT
+    );
+    check_flag!(
+        doc = "Page-level cache disable.",
+        is_page_level_cache_disabled,
+        PDPTEntry::PCD
+    );
+    check_flag!(
+        doc =
+            "Accessed; indicates whether this entry has been used for linear-address translation.",
+        is_accessed,
+        PDPTEntry::A
+    );
     check_flag!(doc = "Indirectly determines the memory type used to access the 1-GByte page referenced by this entry. if not PS this is ignored.",
                 is_pat, PDPTEntry::PAT);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
@@ -180,6 +199,7 @@ impl PDPTEntry {
 
 /// PD Entry bits description.
 bitflags! {
+    #[repr(transparent)]
     pub struct PDEntry: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
         const P       = bit!(0);
@@ -221,7 +241,9 @@ impl PDEntry {
     pub fn new(pt: PAddr, flags: PDEntry) -> PDEntry {
         let pt_val = pt;
         assert!(pt_val % BASE_PAGE_SIZE == 0);
-        PDEntry { bits: pt_val | flags.bits }
+        PDEntry {
+            bits: pt_val | flags.bits,
+        }
     }
 
     /// Retrieves the physical address in this entry.
@@ -229,16 +251,25 @@ impl PDEntry {
         self.bits & ADDRESS_MASK
     }
 
-    check_flag!(doc = "Present; must be 1 to map a 2-MByte page or reference a page table.",
-                is_present, PDEntry::P);
+    check_flag!(
+        doc = "Present; must be 1 to map a 2-MByte page or reference a page table.",
+        is_present,
+        PDEntry::P
+    );
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 2-MByte region controlled by this entry",
                 is_writeable, PDEntry::RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 2-MByte region controlled by this entry.",
                 is_user_mode_allowed, PDEntry::US);
-    check_flag!(doc = "Page-level write-through.",
-                is_page_write_through, PDEntry::PWT);
-    check_flag!(doc = "Page-level cache disable.",
-                is_page_level_cache_disabled, PDEntry::PCD);
+    check_flag!(
+        doc = "Page-level write-through.",
+        is_page_write_through,
+        PDEntry::PWT
+    );
+    check_flag!(
+        doc = "Page-level cache disable.",
+        is_page_level_cache_disabled,
+        PDEntry::PCD
+    );
     check_flag!(doc = "Accessed; if PS set indicates whether software has accessed the 2-MByte page else indicates whether this entry has been used for linear-address translation.",
                 is_accessed, PDEntry::A);
     check_flag!(doc = "Dirty; if PS set indicates whether software has written to the 2-MByte page referenced by this entry else ignored.",
@@ -255,6 +286,7 @@ impl PDEntry {
 
 /// PT Entry bits description.
 bitflags! {
+    #[repr(transparent)]
     pub struct PTEntry: u64 {
         /// Present; must be 1 to map a 4-KByte page.
         const P       = bit!(0);
@@ -278,7 +310,6 @@ bitflags! {
     }
 }
 
-
 impl PTEntry {
     /// Creates a new PTEntry.
     ///
@@ -289,7 +320,9 @@ impl PTEntry {
     pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
         let page_val = page;
         assert!(page_val % BASE_PAGE_SIZE == 0);
-        PTEntry { bits: page_val | flags.bits }
+        PTEntry {
+            bits: page_val | flags.bits,
+        }
     }
 
     /// Retrieves the physical address in this entry.
@@ -297,16 +330,25 @@ impl PTEntry {
         self.bits & ADDRESS_MASK
     }
 
-    check_flag!(doc = "Present; must be 1 to map a 4-KByte page or reference a page table.",
-                is_present, PTEntry::P);
+    check_flag!(
+        doc = "Present; must be 1 to map a 4-KByte page or reference a page table.",
+        is_present,
+        PTEntry::P
+    );
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 4-KByte region controlled by this entry",
                 is_writeable, PTEntry::RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 4-KByte region controlled by this entry.",
                 is_user_mode_allowed, PTEntry::US);
-    check_flag!(doc = "Page-level write-through.",
-                is_page_write_through, PTEntry::PWT);
-    check_flag!(doc = "Page-level cache disable.",
-                is_page_level_cache_disabled, PTEntry::PCD);
+    check_flag!(
+        doc = "Page-level write-through.",
+        is_page_write_through,
+        PTEntry::PWT
+    );
+    check_flag!(
+        doc = "Page-level cache disable.",
+        is_page_level_cache_disabled,
+        PTEntry::PCD
+    );
     check_flag!(doc = "Accessed; if PS set indicates whether software has accessed the 4-KByte page else indicates whether this entry has been used for linear-address translation.",
                 is_accessed, PTEntry::A);
     check_flag!(doc = "Dirty; if PD_PS set indicates whether software has written to the 4-KByte page referenced by this entry else ignored.",
