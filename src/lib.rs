@@ -3,7 +3,6 @@
 #![feature(asm)]
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]
-#![deny(warnings)]
 
 #[macro_use]
 extern crate bitflags;
