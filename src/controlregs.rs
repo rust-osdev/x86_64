@@ -56,7 +56,6 @@ bitflags! {
     }
 }
 
-
 /// Read cr0
 pub unsafe fn cr0() -> Cr0 {
     let ret: usize;

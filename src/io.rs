@@ -36,7 +36,6 @@ pub unsafe fn inl(port: u16) -> u32 {
     ret
 }
 
-
 // Write 8-bit array to port
 pub unsafe fn outsb(port: u16, buf: &[u8]) {
     asm!("rep outsb (%esi), %dx"

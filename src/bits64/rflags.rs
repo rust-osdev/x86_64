@@ -1,10 +1,10 @@
 //! Processor state stored in the RFLAGS register.
 //!
-//! In 64-bit mode, EFLAGS is extended to 64 bits and called RFLAGS. 
-//! The upper 32 bits of RFLAGS register is reserved. 
+//! In 64-bit mode, EFLAGS is extended to 64 bits and called RFLAGS.
+//! The upper 32 bits of RFLAGS register is reserved.
 //! The lower 32 bits of RFLAGS is the same as EFLAGS.
 
-use ::Ring;
+use Ring;
 
 /// The RFLAGS register.
 /// This is duplicated code from bits32 eflags.rs.
@@ -63,18 +63,20 @@ impl RFlags {
 
     /// Creates a new Flags with the given I/O privilege level.
     pub const fn from_priv(iopl: Ring) -> RFlags {
-        RFlags { bits: (iopl as u64) << 12 }
+        RFlags {
+            bits: (iopl as u64) << 12,
+        }
     }
 }
 
-#[cfg(target_arch="x86-64")]
+#[cfg(target_arch = "x86-64")]
 pub unsafe fn read() -> RFlags {
     let r: u64;
     asm!("pushfq; popq $0" : "=r"(r) :: "memory");
     RFlags::from_bits_truncate(r)
 }
 
-#[cfg(target_arch="x86-64")]
+#[cfg(target_arch = "x86-64")]
 pub unsafe fn set(val: RFlags) {
     asm!("pushq $0; popfq" :: "r"(val.bits()) : "memory" "flags");
 }

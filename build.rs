@@ -9,22 +9,24 @@ fn main() {
 #[cfg(feature = "performance-counter")]
 mod performance_counter {
 
+    extern crate csv;
     extern crate phf_codegen;
     extern crate serde_json;
-    extern crate csv;
 
     use std::ascii::AsciiExt;
+    use std::collections::HashMap;
     use std::env;
     use std::fs::File;
-    use std::io::{BufWriter, BufReader, Write};
-    use std::path::Path;
-    use std::collections::HashMap;
+    use std::io::{BufReader, BufWriter, Write};
     use std::mem;
+    use std::path::Path;
 
     use self::serde_json::Value;
 
-    include!(concat!(env!("CARGO_MANIFEST_DIR"),
-                     "/src/shared/perfcnt/intel/description.rs"));
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/src/shared/perfcnt/intel/description.rs"
+    ));
 
     /// HACK: We need to convert parsed strings to static because we're reusing
     /// the struct definition which declare strings as static in the generated code.
@@ -45,7 +47,8 @@ mod performance_counter {
     }
 
     fn parse_hex_numbers(split_str_parts: Vec<&str>) -> Vec<u64> {
-        split_str_parts.iter()
+        split_str_parts
+            .iter()
             .map(|x| {
                 assert!(x.starts_with("0x"));
                 match u64::from_str_radix(&x[2..], 16) {
@@ -71,7 +74,8 @@ mod performance_counter {
     }
 
     fn parse_counter_values(value_str: &str) -> u64 {
-        value_str.split(",")
+        value_str
+            .split(",")
             .map(|x| x.trim())
             .filter(|x| x.len() > 0)
             .map(|x| match u64::from_str_radix(&x, 10) {
@@ -127,7 +131,6 @@ mod performance_counter {
         if data.is_array() {
             let entries = data.as_array().unwrap();
             for entry in entries.iter() {
-
                 if !entry.is_object() {
                     panic!("Expected JSON object.");
                 }
@@ -195,8 +198,8 @@ mod performance_counter {
                                 2 => {
                                     assert!(split_parts[0] <= u8::max_value() as u64);
                                     assert!(split_parts[1] <= u8::max_value() as u64);
-                                    event_code = Tuple::Two(split_parts[0] as u8,
-                                                            split_parts[1] as u8)
+                                    event_code =
+                                        Tuple::Two(split_parts[0] as u8, split_parts[1] as u8)
                                 }
                                 _ => panic!("More than two event codes?"),
                             }
@@ -229,7 +232,8 @@ mod performance_counter {
                         "PEBScounters" => pebs_counters = Some(parse_counters(value_str)),
                         "SampleAfterValue" => sample_after_value = parse_number(value_str),
                         "MSRIndex" => {
-                            let split_parts: Vec<u64> = value_str.split(",")
+                            let split_parts: Vec<u64> = value_str
+                                .split(",")
                                 .map(|x| x.trim())
                                 .map(|x| parse_number(x))
                                 .collect();
@@ -268,32 +272,34 @@ mod performance_counter {
                     };
                 }
 
-                let ipcd = EventDescription::new(event_code,
-                                                 umask,
-                                                 event_name,
-                                                 brief_description,
-                                                 public_description,
-                                                 counter,
-                                                 counter_ht_off,
-                                                 pebs_counters,
-                                                 sample_after_value,
-                                                 msr_index,
-                                                 msr_value,
-                                                 taken_alone,
-                                                 counter_mask,
-                                                 invert,
-                                                 any_thread,
-                                                 edge_detect,
-                                                 pebs,
-                                                 precise_store,
-                                                 collect_pebs_record,
-                                                 data_la,
-                                                 l1_hit_indication,
-                                                 errata,
-                                                 offcore,
-                                                 unit,
-                                                 filter,
-                                                 extsel);
+                let ipcd = EventDescription::new(
+                    event_code,
+                    umask,
+                    event_name,
+                    brief_description,
+                    public_description,
+                    counter,
+                    counter_ht_off,
+                    pebs_counters,
+                    sample_after_value,
+                    msr_index,
+                    msr_value,
+                    taken_alone,
+                    counter_mask,
+                    invert,
+                    any_thread,
+                    edge_detect,
+                    pebs,
+                    precise_store,
+                    collect_pebs_record,
+                    data_la,
+                    l1_hit_indication,
+                    errata,
+                    offcore,
+                    unit,
+                    filter,
+                    extsel,
+                );
 
                 //println!("{:?}", ipcd.event_name);
                 if do_insert == true {
@@ -304,11 +310,11 @@ mod performance_counter {
             panic!("JSON data is not an array.");
         }
 
-
-        write!(file,
-               "pub const {}: phf::Map<&'static str, EventDescription<'static>> = ",
-               variable)
-            .unwrap();
+        write!(
+            file,
+            "pub const {}: phf::Map<&'static str, EventDescription<'static>> = ",
+            variable
+        ).unwrap();
         builder.build(file).unwrap();
         write!(file, ";\n").unwrap();
     }
@@ -358,14 +364,20 @@ mod performance_counter {
 
         // Parse CSV
         for record in rdr.decode() {
-            let (family_model, version, file_name, event_type): (String, String, String, String) =
-                record.unwrap();
+            let (family_model, version, file_name, event_type): (
+                String,
+                String,
+                String,
+                String,
+            ) = record.unwrap();
             // TODO: Parse offcore counter descriptions.
             if !data_files.contains_key(&file_name) {
                 let suffix = get_file_suffix(file_name.clone());
                 if suffix == "core" || suffix == "uncore" {
-                    data_files.insert(file_name.clone(),
-                                      (family_model + "-" + suffix, version, event_type));
+                    data_files.insert(
+                        file_name.clone(),
+                        (family_model + "-" + suffix, version, event_type),
+                    );
                 }
             }
         }
@@ -379,15 +391,18 @@ mod performance_counter {
             let (ref family_model, _, _): (String, String, String) = *data;
             let path = Path::new(file.as_str());
             let (_, ref variable_upper) = make_file_name(&path);
-            builder.entry(family_model.as_str(),
-                          format!("{}", variable_upper.as_str()).as_str());
+            builder.entry(
+                family_model.as_str(),
+                format!("{}", variable_upper.as_str()).as_str(),
+            );
         }
 
-        write!(&mut filewriter,
-               "pub static {}: phf::Map<&'static str, phf::Map<&'static str, \
-                EventDescription<'static>>> = ",
-               "COUNTER_MAP")
-            .unwrap();
+        write!(
+            &mut filewriter,
+            "pub static {}: phf::Map<&'static str, phf::Map<&'static str, \
+             EventDescription<'static>>> = ",
+            "COUNTER_MAP"
+        ).unwrap();
         builder.build(&mut filewriter).unwrap();
         write!(&mut filewriter, ";\n").unwrap();
 
@@ -395,19 +410,23 @@ mod performance_counter {
         for (file, data) in &data_files {
             let suffix = get_file_suffix(file.clone());
             if suffix == "core" || suffix == "uncore" {
-                let (ref family_model, ref version, ref event_type): (String, String, String) =
-                    *data;
-                println!("Processing {:?} {} {} {}",
-                         file,
-                         family_model,
-                         version,
-                         event_type);
+                let (ref family_model, ref version, ref event_type): (
+                    String,
+                    String,
+                    String,
+                ) = *data;
+                println!(
+                    "Processing {:?} {} {} {}",
+                    file, family_model, version, event_type
+                );
 
                 let path = Path::new(file.as_str());
                 let (_, ref variable_upper) = make_file_name(&path);
-                parse_performance_counters(format!("x86data/perfmon_data{}", file).as_str(),
-                                           variable_upper,
-                                           &mut filewriter);
+                parse_performance_counters(
+                    format!("x86data/perfmon_data{}", file).as_str(),
+                    variable_upper,
+                    &mut filewriter,
+                );
             }
         }
     }

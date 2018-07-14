@@ -3,12 +3,12 @@ pub mod counters;
 // The types need to be in a spearate file so we don't get circular
 // dependencies with build.rs include:
 mod description;
-pub use self::description::{EventDescription, Counter, PebsType, Tuple, MSRIndex};
+pub use self::description::{Counter, EventDescription, MSRIndex, PebsType, Tuple};
 
+use core::fmt::{Error, Result, Write};
+use core::str;
 use phf;
 use shared::cpuid;
-use core::fmt::{Write, Result, Error};
-use core::str;
 
 const MODEL_LEN: usize = 30;
 
@@ -40,13 +40,14 @@ impl Write for ModelWriter {
 
 // Format must be a string literal
 macro_rules! get_counters {
-    ($format:expr) => ({
+    ($format:expr) => {{
         let cpuid = cpuid::CpuId::new();
 
         cpuid.get_vendor_info().map_or(None, |vf| {
             cpuid.get_feature_info().map_or(None, |fi| {
                 let vendor = vf.as_string();
-                let (family, extended_model, model) = (fi.family_id(), fi.extended_model_id(), fi.model_id());
+                let (family, extended_model, model) =
+                    (fi.family_id(), fi.extended_model_id(), fi.model_id());
 
                 let mut writer: ModelWriter = Default::default();
                 // Should work as long as it fits in MODEL_LEN bytes:
@@ -56,7 +57,7 @@ macro_rules! get_counters {
                 counters::COUNTER_MAP.get(key)
             })
         })
-    });
+    }};
 }
 
 /// Return all core performance counters for the running micro-architecture.

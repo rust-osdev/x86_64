@@ -45,7 +45,7 @@ pub struct TaskStateSegment {
     reserved9: u16,
     pub ldtr: u16,
     reserved10: u32,
-    pub iobp_offset: u16
+    pub iobp_offset: u16,
 }
 
 impl TaskStateSegment {
@@ -87,7 +87,7 @@ impl TaskStateSegment {
             reserved9: 0,
             ldtr: 0,
             reserved10: 0,
-            iobp_offset: size_of::<TaskStateSegment>() as u16
+            iobp_offset: size_of::<TaskStateSegment>() as u16,
         }
     }
 }

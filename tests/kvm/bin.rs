@@ -1,8 +1,8 @@
 #![feature(proc_macro)]
 // RUSTFLAGS="-C relocation-model=dynamic-no-pic -C code-model=kernel" RUST_BACKTRACE=1 cargo test --verbose --test kvm -- --nocapture
 
-extern crate x86;
 extern crate core;
+extern crate x86;
 #[macro_use]
 extern crate klogger;
 

@@ -27,7 +27,7 @@ pub type PD = [PDEntry; 512];
 pub type PT = [PTEntry; 512];
 
 /// Given virtual address calculate corresponding entry in PML4.
-#[cfg(target_arch="x86_64")]
+#[cfg(target_arch = "x86_64")]
 #[inline]
 pub fn pml4_index(addr: VAddr) -> usize {
     (addr >> 39) & 0b111111111

@@ -1,6 +1,6 @@
 //! Processor state stored in the EFLAGS register.
 
-use ::Ring;
+use Ring;
 
 /// The EFLAGS register.
 bitflags! {
@@ -58,18 +58,20 @@ impl EFlags {
 
     /// Creates a new Flags with the given I/O privilege level.
     pub const fn from_priv(iopl: Ring) -> EFlags {
-        EFlags { bits: (iopl as u32) << 12 }
+        EFlags {
+            bits: (iopl as u32) << 12,
+        }
     }
 }
 
-#[cfg(target_arch="x86")]
+#[cfg(target_arch = "x86")]
 pub unsafe fn read() -> EFlags {
     let r: u32;
     asm!("pushfl; popl $0" : "=r"(r) :: "memory");
     EFlags::from_bits_truncate(r)
 }
 
-#[cfg(target_arch="x86")]
+#[cfg(target_arch = "x86")]
 pub unsafe fn set(val: EFlags) {
     asm!("pushl $0; popfl" :: "r"(val.bits()) : "memory" "flags");
 }

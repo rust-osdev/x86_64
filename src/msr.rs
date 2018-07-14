@@ -15,7 +15,6 @@ pub unsafe fn rdmsr(msr: u32) -> u64 {
     ((high as u64) << 32) | (low as u64)
 }
 
-
 // What follows is a long list of all MSR register taken from Intel's manual.
 // Some of the register values appear duplicated as they may be
 // called differently for different architectures or they just have
