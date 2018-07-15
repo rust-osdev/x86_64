@@ -38,7 +38,7 @@ pub enum Size4KiB {}
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size2MiB {}
 
-/// A giant” 4GiB page.
+/// A “giant” 1GiB page.
 ///
 /// (Only available on newer x86_64 CPUs.)
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
