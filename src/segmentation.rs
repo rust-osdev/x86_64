@@ -600,7 +600,6 @@ mod test {
                 .db()
                 .dpl(Ring::Ring3)
                 .finish();
-        println!("GDT.code_kernel = {}", code_kernel);
 
         assert_eq!(0x0000000000000000u64, null.as_u64());
         assert_eq!(

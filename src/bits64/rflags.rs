@@ -67,6 +67,10 @@ impl RFlags {
             bits: (iopl as u64) << 12,
         }
     }
+
+    pub const fn from_raw(bits: u64) -> RFlags {
+        RFlags { bits: bits }
+    }
 }
 
 #[cfg(target_arch = "x86-64")]
