@@ -350,13 +350,11 @@ impl SegmentDescriptorBuilder<u32> for DescriptorBuilder {
     fn code_descriptor(base: u32, limit: u32, cst: CodeSegmentType) -> DescriptorBuilder {
         DescriptorBuilder::with_base_limit(base.into(), limit.into())
             .set_type(DescriptorType::Code(cst))
-            .db()
     }
 
     fn data_descriptor(base: u32, limit: u32, dst: DataSegmentType) -> DescriptorBuilder {
         DescriptorBuilder::with_base_limit(base.into(), limit.into())
             .set_type(DescriptorType::Data(dst))
-            .db()
     }
 }
 
@@ -397,14 +395,24 @@ impl BuildDescriptor<Descriptor> for DescriptorBuilder {
 ///
 /// See Intel 3a, Section 3.4.5 "Segment Descriptors", and Section 3.5.2
 #[derive(Copy, Clone, Debug, Default)]
-#[repr(C, packed)]
+#[repr(packed)]
 pub struct Descriptor {
     pub lower: u32,
     pub upper: u32,
 }
 
+impl fmt::Display for Descriptor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Descriptor(0x{:x})", self.as_u64())
+    }
+}
+
 impl Descriptor {
     pub const NULL: Descriptor = Descriptor { lower: 0, upper: 0 };
+
+    pub fn as_u64(&self) -> u64 {
+        (self.upper as u64) << 32 | self.lower as u64
+    }
 
     pub(crate) fn apply_builder_settings(&mut self, builder: &DescriptorBuilder) {
         builder.dpl.map(|ring| self.set_dpl(ring));
@@ -554,4 +562,74 @@ pub fn cs() -> SegmentSelector {
     let segment: u16;
     unsafe { asm!("mov %cs, $0" : "=r" (segment) ) };
     SegmentSelector::from_raw(segment)
+}
+
+#[cfg(test)]
+mod test {
+    use segmentation::*;
+    use Ring;
+
+    #[test]
+    fn test_x86_64_default_gdt() {
+        let null: Descriptor = Default::default();
+        let code_kernel: Descriptor =
+            DescriptorBuilder::code_descriptor(0, 0xFFFFF, CodeSegmentType::ExecuteRead)
+                .present()
+                .dpl(Ring::Ring0)
+                .limit_granularity_4kb()
+                .db()
+                .finish();
+        let stack_kernel: Descriptor =
+            DescriptorBuilder::data_descriptor(0, 0xFFFFF, DataSegmentType::ReadWrite)
+                .present()
+                .dpl(Ring::Ring0)
+                .limit_granularity_4kb()
+                .db()
+                .finish();
+        let code_user: Descriptor =
+            DescriptorBuilder::code_descriptor(0, 0xFFFFF, CodeSegmentType::ExecuteRead)
+                .present()
+                .limit_granularity_4kb()
+                .db()
+                .dpl(Ring::Ring3)
+                .finish();
+        let stack_user: Descriptor =
+            DescriptorBuilder::data_descriptor(0, 0xFFFFF, DataSegmentType::ReadWrite)
+                .present()
+                .limit_granularity_4kb()
+                .db()
+                .dpl(Ring::Ring3)
+                .finish();
+        println!("GDT.code_kernel = {}", code_kernel);
+
+        assert_eq!(0x0000000000000000u64, null.as_u64());
+        assert_eq!(
+            0x00CF9A000000FFFFu64,
+            code_kernel.as_u64(),
+            "code_kernel: {:#b} first bit to differ is {}",
+            (code_kernel.as_u64() ^ 0x00CF9A000000FFFFu64),
+            (code_kernel.as_u64() ^ 0x00CF9A000000FFFFu64).trailing_zeros()
+        );
+        assert_eq!(
+            0x00CF92000000FFFFu64,
+            stack_kernel.as_u64(),
+            "stack_kernel: {:#b} first bit to differ is {}",
+            (stack_kernel.as_u64() ^ 0x00CF92000000FFFFu64),
+            (stack_kernel.as_u64() ^ 0x00CF92000000FFFFu64).trailing_zeros()
+        );
+        assert_eq!(
+            0x00CFFA000000FFFFu64,
+            code_user.as_u64(),
+            "code_user: {:#b} first bit to differ is {}",
+            (code_user.as_u64() ^ 0x00CFFA000000FFFFu64),
+            (code_user.as_u64() ^ 0x00CFFA000000FFFFu64).trailing_zeros()
+        );
+        assert_eq!(
+            0x00CFF2000000FFFFu64,
+            stack_user.as_u64(),
+            "stack_user: {:#b} first bit to differ is {}",
+            (stack_user.as_u64() ^ 0x00CFF2000000FFFFu64),
+            (stack_user.as_u64() ^ 0x00CFF2000000FFFFu64).trailing_zeros()
+        );
+    }
 }

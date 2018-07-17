@@ -11,6 +11,10 @@ extern crate raw_cpuid;
 #[macro_use]
 extern crate phf;
 
+#[cfg(test)]
+#[macro_use]
+extern crate std;
+
 macro_rules! check_flag {
     ($doc:meta, $fun:ident, $flag:expr) => (
         #[$doc]
@@ -54,6 +58,7 @@ pub mod cpuid {
     pub use raw_cpuid::*;
 }
 
+#[cfg(not(test))]
 mod std {
     pub use core::fmt;
     pub use core::ops;
