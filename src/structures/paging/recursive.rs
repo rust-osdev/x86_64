@@ -164,6 +164,10 @@ pub trait RecursivePageTableVisitor {
             let entry_idx = u9::new(entry_idx);
             let entry = &mut p4[entry_idx];
 
+            if !self.before_visit_p4_entry(entry_idx, entry) {
+                continue;
+            }
+
             // Check if the frame is present.
             match entry.frame() {
                 // No entry... skip.
@@ -182,23 +186,29 @@ pub trait RecursivePageTableVisitor {
                 ).start_address()
                     .as_mut_ptr()
             };
-            self.visit_p3(recursive_index, entry_idx, entry, p3);
+            self.visit_p3(recursive_index, entry_idx, p3);
+            self.after_visit_p3(entry_idx, entry);
         }
+    }
+
+    // TODO: better doc comments
+    /// If false, skip processing this p4 entry. Take the entry and index in P4 we are about to
+    /// visit.
+    fn before_visit_p4_entry(&mut self, _entry_idx: u9, _entry: &mut PageTableEntry) -> bool {
+        true
     }
 
     /// Visit the given `p3` page table. `p3_pte` is a reference to the entry in `p4` that points
     /// to this `p3`.
-    fn visit_p3(
-        &mut self,
-        recursive_index: u9,
-        p4_idx: u9,
-        _p3_pte: &mut PageTableEntry,
-        p3: &mut PageTable,
-    ) {
+    fn visit_p3(&mut self, recursive_index: u9, p4_idx: u9, p3: &mut PageTable) {
         let max_idx: u16 = u9::MAX.into();
         for entry_idx in 0..=max_idx {
             let entry_idx = u9::new(entry_idx);
             let entry = &mut p3[entry_idx];
+
+            if !self.before_visit_p3_entry(p4_idx, entry_idx, entry) {
+                continue;
+            }
 
             // Check if the frame is present.
             match entry.frame() {
@@ -206,12 +216,17 @@ pub trait RecursivePageTableVisitor {
                 Err(FrameError::FrameNotPresent) => continue,
                 // This is a 1GiB page. Visit it; then exit.
                 Err(FrameError::HugeFrame) => {
+                    if !self.before_visit_1gib_page(p4_idx, entry_idx, entry) {
+                        continue;
+                    }
+
                     let frame = unsafe {
                         &mut *Page::from_page_table_indices_1gib(p4_idx, entry_idx)
                             .start_address()
                             .as_mut_ptr()
                     };
-                    self.visit_1gib_page(entry, frame);
+                    self.visit_1gib_page(p4_idx, entry_idx, frame);
+                    self.after_visit_1gib_page(p4_idx, entry_idx, entry);
                     return;
                 }
                 Ok(_) => {}
@@ -226,28 +241,53 @@ pub trait RecursivePageTableVisitor {
                 ).start_address()
                     .as_mut_ptr()
             };
-            self.visit_p2(recursive_index, p4_idx, entry_idx, entry, p2);
+
+            self.visit_p2(recursive_index, p4_idx, entry_idx, p2);
+            self.after_visit_p2(p4_idx, entry_idx, entry);
         }
     }
 
-    /// Visit the given 1GiB `page` pointed to by `page_pte` in a p3 page table.
-    fn visit_1gib_page(&mut self, _page_pte: &mut PageTableEntry, _page: &Page<Size1GiB>) {
-        // noop
-    }
+    /// Takes index and entry in P4 of the P3 we just visited
+    fn after_visit_p3(&mut self, p4_idx: u9, _p4_pte: &mut PageTableEntry) {}
 
-    /// Visit the given `p2` page table, pointed to by `p2_pte` in a p3 page table.
-    fn visit_p2(
+    /// Takes index into p3 and p4, entry in p3 of the p2/huge page we are about to visit.
+    /// False if we should skip.
+    fn before_visit_p3_entry(
         &mut self,
-        recursive_index: u9,
         p4_idx: u9,
         p3_idx: u9,
-        _p2_pte: &mut PageTableEntry,
-        p2: &mut PageTable,
-    ) {
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        true
+    }
+
+    /// Takes index into p3 and p4, entry in p3 of the huge page we are about to visit.
+    /// False if we should skip.
+    fn before_visit_1gib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        true
+    }
+
+    /// Takes index into p3 and p4 and the page itself.
+    fn visit_1gib_page(&mut self, p4_idx: u9, p3_idx: u9, _page: &Page<Size1GiB>) {}
+
+    /// Takes index into p3 and p4, and P3 entry for huge page we just visited
+    fn after_visit_1gib_page(&mut self, p4_idx: u9, p3_idx: u9, entry: &mut PageTableEntry) {}
+
+    /// Visit the given `p2` page table, pointed to by `p2_pte` in a p3 page table.
+    fn visit_p2(&mut self, recursive_index: u9, p4_idx: u9, p3_idx: u9, p2: &mut PageTable) {
         let max_idx: u16 = u9::MAX.into();
         for entry_idx in 0..=max_idx {
             let entry_idx = u9::new(entry_idx);
             let entry = &mut p2[entry_idx];
+
+            if !self.before_visit_p2_entry(p4_idx, p3_idx, entry_idx, entry) {
+                continue;
+            }
 
             // Check if the frame is present.
             match entry.frame() {
@@ -255,12 +295,17 @@ pub trait RecursivePageTableVisitor {
                 Err(FrameError::FrameNotPresent) => continue,
                 // This is a 2MiB page. Visit it; then exit.
                 Err(FrameError::HugeFrame) => {
+                    if !self.before_visit_2mib_page(p4_idx, p3_idx, entry_idx, entry) {
+                        continue;
+                    }
+
                     let frame = unsafe {
                         &mut *Page::from_page_table_indices_2mib(p4_idx, p3_idx, entry_idx)
                             .start_address()
                             .as_mut_ptr()
                     };
-                    self.visit_2mib_page(entry, frame);
+                    self.visit_2mib_page(p4_idx, p3_idx, entry_idx, frame);
+                    self.after_visit_2mib_page(p4_idx, p3_idx, entry_idx, entry);
                     return;
                 }
                 Ok(_) => {}
@@ -271,13 +316,44 @@ pub trait RecursivePageTableVisitor {
                     .start_address()
                     .as_mut_ptr()
             };
-            self.visit_p1(recursive_index, p4_idx, p3_idx, entry_idx, entry, p1);
+            self.visit_p1(recursive_index, p4_idx, p3_idx, entry_idx, p1);
+            self.after_visit_p1(p4_idx, p3_idx, entry_idx, entry);
         }
     }
 
+    /// Takes index into p3 and p4, and P3 entry for P2 we just visited
+    fn after_visit_p2(&mut self, p4_idx: u9, p3_idx: u9, entry: &mut PageTableEntry) {}
+
+    fn before_visit_p2_entry(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        true
+    }
+
+    fn before_visit_2mib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        true
+    }
+
     /// Visit the given 2MiB `page` pointed to by a `page_pte` in a p2 page table.
-    fn visit_2mib_page(&mut self,_page_pte: &mut PageTableEntry, _page: &Page<Size2MiB>) {
-        // noop
+    fn visit_2mib_page(&mut self, p4_idx: u9, p3_idx: u9, p2_idx: u9, _page: &Page<Size2MiB>) {}
+
+    fn after_visit_2mib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        entry: &mut PageTableEntry,
+    ) {
     }
 
     /// Visit the given `p1` page table, pointed to by `p1_pte` in a p2 page table.
@@ -287,13 +363,16 @@ pub trait RecursivePageTableVisitor {
         p4_idx: u9,
         p3_idx: u9,
         p2_idx: u9,
-        _p1_pte: &mut PageTableEntry,
         p1: &mut PageTable,
     ) {
         let max_idx: u16 = u9::MAX.into();
         for entry_idx in 0..=max_idx {
             let entry_idx = u9::new(entry_idx);
             let entry = &mut p1[entry_idx];
+
+            if !self.before_visit_4kib_page(p4_idx, p3_idx, p2_idx, entry_idx, entry) {
+                continue;
+            }
 
             // Check if the frame is present.
             match entry.frame() {
@@ -309,14 +388,44 @@ pub trait RecursivePageTableVisitor {
                     .start_address()
                     .as_mut_ptr()
             };
-            self.visit_4kib_page(entry, page);
+            self.visit_4kib_page(p4_idx, p3_idx, p2_idx, entry_idx, page);
+            self.after_visit_4kib_page(p4_idx, p3_idx, p2_idx, entry_idx, entry);
         }
     }
 
-    /// Visit the given 4KiB `page`, pointed to by `page_pte` in a p1 page table.
-    fn visit_4kib_page(&mut self, _page_pte: &mut PageTableEntry, _page: &Page<Size4KiB>) {
-        // noop
+    fn before_visit_4kib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        p1_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        true
     }
+
+    /// Visit the given 4KiB `page`, pointed to by `page_pte` in a p1 page table.
+    fn visit_4kib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        p1_idx: u9,
+        _page: &Page<Size4KiB>,
+    ) {
+    }
+
+    fn after_visit_4kib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        p1_idx: u9,
+        entry: &mut PageTableEntry,
+    ) {
+    }
+
+    fn after_visit_p1(&mut self, p4_idx: u9, p3_idx: u9, p2_idx: u9, entry: &mut PageTableEntry) {}
 }
 
 /// Page table visitor that visits the page tables mapping a certain range of memory and
@@ -356,76 +465,228 @@ where
     D: FrameDeallocator<Size4KiB> + 'd,
     R: RangeBounds<Page<Size4KiB>>,
 {
-    /*
-    fn visit_p3(&mut self, p3_pte: &mut PageTableEntry, p3: &mut PageTable) {
-        for entry in p3 {
-            if entry is present and in self.range{
-                // Clearly, this P3 page table is not empty.
-                match self.mode {
-                    ReclaimPageTablesMode::Skip => {
-                        return; // Skip the rest.
+    fn after_visit_p3(&mut self, p4_idx: u9, _p4_pte: &mut PageTableEntry) {
+        if partially_out_of_range(p3, self.range) {
+            return;
+        } else {
+            // TODO: if all freed, then free this P3
+        }
+    }
+
+    fn before_visit_1gib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        // TODO: skip if out of range
+        false
+    }
+
+    fn visit_1gib_page(&mut self, p4_idx: u9, p3_idx: u9, _page: &Page<Size1GiB>) {
+        // TODO: check mode
+    }
+
+    fn after_visit_p2(&mut self, p4_idx: u9, p3_idx: u9, entry: &mut PageTableEntry) {
+        if partially_out_of_range(p2, self.range) {
+            return;
+        } else {
+            // TODO: if all freed, then free this P2
+        }
+    }
+
+    fn before_visit_2mib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        // TODO: skip if out of range
+        false
+    }
+
+    fn visit_2mib_page(&mut self, p4_idx: u9, p3_idx: u9, p2_idx: u9, _page: &Page<Size2MiB>) {
+        // TODO: check mode
+    }
+
+    fn after_visit_p1(&mut self, p4_idx: u9, p3_idx: u9, p2_idx: u9, entry: &mut PageTableEntry) {
+        if partially_out_of_range(p1, self.range) {
+            return;
+        } else {
+            // TODO: if all freed, then free this P1
+        }
+    }
+
+    fn before_visit_4kib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        p1_idx: u9,
+        entry: &mut PageTableEntry,
+    ) -> bool {
+        // TODO: skip if out of range
+        false
+    }
+
+    fn visit_4kib_page(
+        &mut self,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        p1_idx: u9,
+        _page: &Page<Size4KiB>,
+    ) {
+        // TODO: check mode
+    }
+}
+
+/*
+impl<'d, R, D> RecursivePageTableVisitor for DeletePageTablesVisitor<'d, R, D>
+where
+    D: FrameDeallocator<Size4KiB> + 'd,
+    R: RangeBounds<Page<Size4KiB>>,
+{
+    fn visit_p3(
+        &mut self,
+        recursive_index: u9,
+        p4_idx: u9,
+        _p3_pte: &mut PageTableEntry,
+        p3: &mut PageTable,
+    ) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p3[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... this is fine.
+                Err(FrameError::FrameNotPresent) => continue,
+                // This is a 1GiB page. Check the mode to see what we should do.
+                Err(FrameError::HugeFrame) => if entry_in_range(page(entry), self.range) {
+                    // TODO
+                    match self.mode {
+                        ReclaimPageTablesMode::Skip => return,
+                        ReclaimPageTablesMode::Panic => {
+                            panic!("Attempt to reclaim a non-empty p3 page table");
+                        }
                     }
-                    ReclaimPageTablesMode::Panic => {
-                        panic!("Attempt to reclaim a non-empty p3 page table");
-                    }
-                }
+                } else {
+                    // skip it.
+                    continue;
+                },
+                Ok(_) => {}
             }
+
+            let p2 = unsafe {
+                &mut *Page::from_page_table_indices(
+                    recursive_index,
+                    recursive_index,
+                    p4_idx,
+                    entry_idx,
+                ).start_address()
+                    .as_mut_ptr()
+            };
+            self.visit_p2(recursive_index, p4_idx, entry_idx, entry, p2);
         }
 
-        if p3 is partially out of self.range {
+        if partially_out_of_range(p3, self.range) {
+            return;
+        } else {
+            // TODO: if all freed, then free this P3
+        }
+    }
+
+    fn visit_p2(
+        &mut self,
+        recursive_index: u9,
+        p4_idx: u9,
+        p3_idx: u9,
+        _p2_pte: &mut PageTableEntry,
+        p2: &mut PageTable,
+    ) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p2[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... skip.
+                Err(FrameError::FrameNotPresent) => continue,
+                // This is a 2MiB page. Visit it; then exit.
+                Err(FrameError::HugeFrame) => if entry_in_range(entry, self.range) {
+                    // TODO
+                    match self.mode {
+                        ReclaimPageTablesMode::Skip => return,
+                        ReclaimPageTablesMode::Panic => {
+                            panic!("Attempt to reclaim a non-empty p2 page table");
+                        }
+                    }
+                } else {
+                    // skip it.
+                    continue;
+                },
+                Ok(_) => {}
+            }
+
+            let p1 = unsafe {
+                &mut *Page::from_page_table_indices(recursive_index, p4_idx, p3_idx, entry_idx)
+                    .start_address()
+                    .as_mut_ptr()
+            };
+            self.visit_p1(recursive_index, p4_idx, p3_idx, entry_idx, entry, p1);
+        }
+
+        if partially_out_of_range(p2, self.range) {
             return;
         }
 
-        // TODO: free this P3
+        // TODO: if all freed, then free this P2
     }
 
-    fn visit_p2(&mut self, p2_pte: &mut PageTableEntry, p2: &mut PageTable) {
-        for entry in p2 {
-            if entry is present and in self.range {
-                // Clearly, this P2 page table is not empty.
-                match self.mode {
-                    ReclaimPageTablesMode::Skip => {
-                        return; // Skip the rest.
-                    }
-                    ReclaimPageTablesMode::Panic => {
-                        panic!("Attempt to reclaim a non-empty p2 page table");
-                    }
+    fn visit_p1(
+        &mut self,
+        _recursive_index: u9,
+        p4_idx: u9,
+        p3_idx: u9,
+        p2_idx: u9,
+        _p1_pte: &mut PageTableEntry,
+        p1: &mut PageTable,
+    ) {
+        let max_idx: u16 = u9::MAX.into();
+        for entry_idx in 0..=max_idx {
+            let entry_idx = u9::new(entry_idx);
+            let entry = &mut p1[entry_idx];
+
+            // Check if the frame is present.
+            match entry.frame() {
+                // No entry... skip.
+                Err(FrameError::FrameNotPresent) => continue,
+                // We are already at 4KiB. No huge pages here.
+                Err(FrameError::HugeFrame) => unreachable!(),
+                Ok(_) => {}
+            }
+
+            // TODO: should this be below the range check?
+            match self.mode {
+                ReclaimPageTablesMode::Skip => return,
+                ReclaimPageTablesMode::Panic => {
+                    panic!("Attempt to reclaim a non-empty p1 page table");
                 }
             }
         }
 
-        if p2 is partially out of self.range {
-            return;
-        }
-
-        // TODO: free this P2
-    }
-
-    fn visit_p1(&mut self, p1_pte: &mut PageTableEntry, p1: &mut PageTable) {
-        for entry in p1 {
-            // TODO: assert not huge page
-
-            if entry is present and in self.range {
-                // Clearly, this P1 page table is not empty.
-                match self.mode {
-                    ReclaimPageTablesMode::Skip => {
-                        return; // Skip the rest.
-                    }
-                    ReclaimPageTablesMode::Panic => {
-                        panic!("Attempt to reclaim a non-empty p1 page table");
-                    }
-                }
-            }
-        }
-        
-        if p1 is partially out of self.range {
+        if partially_out_of_range(p1, self.range) {
             return;
         }
 
         // TODO: free this P1
     }
-    */
 }
+*/
 
 impl<'a> RecursivePageTable<'a> {
     /// Creates a new RecursivePageTable from the passed level 4 PageTable.
