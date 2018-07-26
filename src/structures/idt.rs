@@ -712,10 +712,14 @@ mod test {
     }
 }
 
-#[deprecated(note="type was renamed to `InterruptDescriptorTable`, the old name will removed in the next major version")]
+#[deprecated(
+    note = "type was renamed to `InterruptDescriptorTable`, the old name will removed in the next major version"
+)]
 /// See `InterruptDescriptorTable`
 pub type Idt = InterruptDescriptorTable;
 
-#[deprecated(note="type was renamed to `Entry`, the old name will removed in the next major version")]
+#[deprecated(
+    note = "type was renamed to `Entry`, the old name will removed in the next major version"
+)]
 /// See `Entry`
 pub type IdtEntry<F> = Entry<F>;
