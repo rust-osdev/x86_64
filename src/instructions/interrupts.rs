@@ -13,7 +13,7 @@ pub fn are_enabled() -> bool {
 /// This is a wrapper around the `sti` instruction.
 pub fn enable() {
     unsafe {
-        asm!("sti");
+        asm!("sti" :::: "volatile");
     }
 }
 
@@ -22,7 +22,7 @@ pub fn enable() {
 /// This is a wrapper around the `cli` instruction.
 pub fn disable() {
     unsafe {
-        asm!("cli");
+        asm!("cli" :::: "volatile");
     }
 }
 

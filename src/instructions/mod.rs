@@ -9,7 +9,7 @@ pub mod tlb;
 /// Cause a breakpoint exception by invoking the `int3` instruction.
 pub fn int3() {
     unsafe {
-        asm!("int3");
+        asm!("int3" :::: "volatile");
     }
 }
 
