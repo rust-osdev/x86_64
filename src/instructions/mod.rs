@@ -15,6 +15,8 @@ pub fn int3() {
 
 /// Halts the CPU until the next interrupt arrives.
 #[inline(always)]
-pub unsafe fn hlt() {
-    asm!("hlt" :::: "volatile");
+pub fn hlt() {
+    unsafe {
+        asm!("hlt" :::: "volatile");
+    }
 }
