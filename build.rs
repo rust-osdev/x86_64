@@ -13,7 +13,6 @@ mod performance_counter {
     extern crate phf_codegen;
     extern crate serde_json;
 
-    use std::ascii::AsciiExt;
     use std::collections::HashMap;
     use std::env;
     use std::fs::File;
@@ -25,7 +24,7 @@ mod performance_counter {
 
     include!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/shared/perfcnt/intel/description.rs"
+        "/src/perfcnt/intel/description.rs"
     ));
 
     /// HACK: We need to convert parsed strings to static because we're reusing
