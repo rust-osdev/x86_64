@@ -3,6 +3,7 @@
 pub type PAddr = u64;
 pub type VAddr = usize;
 
+pub const BASE_PAGE_SHIFT: u64 = 12;
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
 pub const LARGE_PAGE_SIZE: u64 = 1024 * 1024 * 2; // 2 MiB
 pub const HUGE_PAGE_SIZE: u64 = 1024 * 1024 * 1024; // 1 GiB
