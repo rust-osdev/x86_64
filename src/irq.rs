@@ -36,7 +36,7 @@ pub static EXCEPTIONS: [InterruptDescription; 21] = [
         vector: 1,
         mnemonic: "#DB",
         description: "Debug",
-        irqtype: "Fault/ Trap",
+        irqtype: "Fault / Trap",
         source: "Debug condition",
     },
     InterruptDescription {
