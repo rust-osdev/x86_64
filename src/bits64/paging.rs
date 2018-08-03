@@ -1,7 +1,311 @@
 //! Description of the data-structures for IA-32e paging mode.
+use core::convert::{From, Into};
+use core::fmt;
+use core::ops;
 
-pub type PAddr = u64;
-pub type VAddr = usize;
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct PAddr(u64);
+
+impl PAddr {
+    /// Convert to `u64`
+    pub const fn as_u64(&self) -> u64 {
+        self.0
+    }
+    /// Convert from `64`
+    pub const fn from_u64(p: u64) -> Self {
+        PAddr(p)
+    }
+}
+
+impl From<u64> for PAddr {
+    fn from(num: u64) -> Self {
+        PAddr(num)
+    }
+}
+
+impl Into<u64> for PAddr {
+    fn into(self) -> u64 {
+        self.0
+    }
+}
+
+impl ops::Add for PAddr {
+    type Output = PAddr;
+
+    fn add(self, rhs: PAddr) -> Self::Output {
+        PAddr(self.0 + rhs.0)
+    }
+}
+
+impl ops::Add<u64> for PAddr {
+    type Output = PAddr;
+
+    fn add(self, rhs: u64) -> Self::Output {
+        PAddr::from(self.0 + rhs)
+    }
+}
+
+impl ops::Add<usize> for PAddr {
+    type Output = PAddr;
+
+    fn add(self, rhs: usize) -> Self::Output {
+        PAddr::from(self.0 + rhs as u64)
+    }
+}
+
+impl ops::AddAssign for PAddr {
+    fn add_assign(&mut self, other: PAddr) {
+        *self = PAddr::from(self.0 + other.0);
+    }
+}
+
+impl ops::AddAssign<u64> for PAddr {
+    fn add_assign(&mut self, offset: u64) {
+        *self = PAddr::from(self.0 + offset);
+    }
+}
+
+impl ops::Sub for PAddr {
+    type Output = PAddr;
+
+    fn sub(self, rhs: PAddr) -> Self::Output {
+        PAddr::from(self.0 - rhs.0)
+    }
+}
+
+impl ops::Sub<u64> for PAddr {
+    type Output = PAddr;
+
+    fn sub(self, rhs: u64) -> Self::Output {
+        PAddr::from(self.0 - rhs)
+    }
+}
+
+impl ops::Sub<usize> for PAddr {
+    type Output = PAddr;
+
+    fn sub(self, rhs: usize) -> Self::Output {
+        PAddr::from(self.0 - rhs as u64)
+    }
+}
+
+impl ops::Rem for PAddr {
+    type Output = PAddr;
+
+    fn rem(self, rhs: PAddr) -> Self::Output {
+        PAddr(self.0 % rhs.0)
+    }
+}
+
+impl ops::Rem<u64> for PAddr {
+    type Output = u64;
+
+    fn rem(self, rhs: u64) -> Self::Output {
+        self.0 % rhs
+    }
+}
+
+impl ops::BitOr for PAddr {
+    type Output = PAddr;
+
+    fn bitor(self, rhs: PAddr) -> Self::Output {
+        PAddr(self.0 | rhs.0)
+    }
+}
+
+impl ops::BitOr<u64> for PAddr {
+    type Output = u64;
+
+    fn bitor(self, rhs: u64) -> Self::Output {
+        self.0 | rhs
+    }
+}
+
+impl ops::Shr<u64> for PAddr {
+    type Output = u64;
+
+    fn shr(self, rhs: u64) -> Self::Output {
+        self.0 >> rhs
+    }
+}
+
+impl fmt::Binary for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Display for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::LowerHex for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Octal for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::UpperHex for PAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct VAddr(usize);
+
+impl VAddr {
+    /// Convert to `usize`
+    pub const fn as_usize(&self) -> usize {
+        self.0
+    }
+    /// Convert from `usize`
+    pub const fn from_usize(v: usize) -> Self {
+        VAddr(v)
+    }
+
+    pub const fn as_ptr(&self) -> *const u8 {
+        self.0 as *const u8
+    }
+}
+
+impl From<usize> for VAddr {
+    fn from(num: usize) -> Self {
+        VAddr(num)
+    }
+}
+
+impl Into<usize> for VAddr {
+    fn into(self) -> usize {
+        self.0
+    }
+}
+
+impl ops::Add for VAddr {
+    type Output = VAddr;
+
+    fn add(self, rhs: VAddr) -> Self::Output {
+        VAddr(self.0 + rhs.0)
+    }
+}
+
+impl ops::Add<u64> for VAddr {
+    type Output = VAddr;
+
+    fn add(self, rhs: u64) -> Self::Output {
+        VAddr(self.0 + rhs as usize)
+    }
+}
+
+impl ops::Add<usize> for VAddr {
+    type Output = VAddr;
+
+    fn add(self, rhs: usize) -> Self::Output {
+        VAddr::from(self.0 + rhs)
+    }
+}
+
+impl ops::Sub for VAddr {
+    type Output = VAddr;
+
+    fn sub(self, rhs: VAddr) -> Self::Output {
+        VAddr::from(self.0 - rhs.0)
+    }
+}
+
+impl ops::Sub<u64> for VAddr {
+    type Output = VAddr;
+
+    fn sub(self, rhs: u64) -> Self::Output {
+        VAddr::from(self.0 - rhs as usize)
+    }
+}
+
+impl ops::Sub<usize> for VAddr {
+    type Output = VAddr;
+
+    fn sub(self, rhs: usize) -> Self::Output {
+        VAddr::from(self.0 - rhs)
+    }
+}
+
+impl ops::Rem for VAddr {
+    type Output = VAddr;
+
+    fn rem(self, rhs: VAddr) -> Self::Output {
+        VAddr(self.0 % rhs.0)
+    }
+}
+
+impl ops::Rem<usize> for VAddr {
+    type Output = usize;
+
+    fn rem(self, rhs: usize) -> Self::Output {
+        self.0 % rhs
+    }
+}
+
+impl ops::BitOr for VAddr {
+    type Output = VAddr;
+
+    fn bitor(self, rhs: VAddr) -> VAddr {
+        VAddr(self.0 | rhs.0)
+    }
+}
+
+impl ops::BitOr<usize> for VAddr {
+    type Output = usize;
+
+    fn bitor(self, rhs: usize) -> Self::Output {
+        self.0 | rhs
+    }
+}
+
+impl ops::Shr<usize> for VAddr {
+    type Output = usize;
+
+    fn shr(self, rhs: usize) -> Self::Output {
+        self.0 >> rhs
+    }
+}
+
+impl fmt::Binary for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Display for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::LowerHex for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::Octal for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl fmt::UpperHex for VAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 pub const BASE_PAGE_SHIFT: u64 = 12;
 pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
@@ -95,7 +399,7 @@ impl PML4Entry {
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Is page present?", is_present, PML4Entry::P);
@@ -168,7 +472,7 @@ impl PDPTEntry {
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(doc = "Is page present?", is_present, PDPTEntry::P);
@@ -249,7 +553,7 @@ impl PDEntry {
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(
@@ -328,7 +632,7 @@ impl PTEntry {
 
     /// Retrieves the physical address in this entry.
     pub fn get_address(self) -> PAddr {
-        self.bits & ADDRESS_MASK
+        PAddr::from(self.bits & ADDRESS_MASK)
     }
 
     check_flag!(
