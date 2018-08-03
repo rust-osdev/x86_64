@@ -105,6 +105,14 @@ impl ops::Rem<u64> for PAddr {
     }
 }
 
+impl ops::Rem<usize> for PAddr {
+    type Output = usize;
+
+    fn rem(self, rhs: usize) -> Self::Output {
+        self.0 as usize % rhs
+    }
+}
+
 impl ops::BitOr for PAddr {
     type Output = PAddr;
 
@@ -160,32 +168,55 @@ impl fmt::UpperHex for PAddr {
 }
 
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct VAddr(usize);
+pub struct VAddr(u64);
 
 impl VAddr {
-    /// Convert to `usize`
-    pub const fn as_usize(&self) -> usize {
-        self.0
-    }
-    /// Convert from `usize`
-    pub const fn from_usize(v: usize) -> Self {
+    /// Convert from `u64`
+    pub const fn from_u64(v: u64) -> Self {
         VAddr(v)
     }
 
-    pub const fn as_ptr(&self) -> *const u8 {
-        self.0 as *const u8
+    /// Convert from `usize`
+    pub const fn from_usize(v: usize) -> Self {
+        VAddr(v as u64)
+    }
+
+    /// Convert to `u64`
+    pub const fn as_u64(&self) -> u64 {
+        self.0
+    }
+
+    /// Convert to `usize`
+    pub const fn as_usize(&self) -> usize {
+        self.0 as usize
+    }
+
+    pub fn as_ptr(&self) -> *mut u8 {
+        self.0 as *mut u8
+    }
+}
+
+impl From<u64> for VAddr {
+    fn from(num: u64) -> Self {
+        VAddr(num)
+    }
+}
+
+impl Into<u64> for VAddr {
+    fn into(self) -> u64 {
+        self.0
     }
 }
 
 impl From<usize> for VAddr {
     fn from(num: usize) -> Self {
-        VAddr(num)
+        VAddr(num as u64)
     }
 }
 
 impl Into<usize> for VAddr {
     fn into(self) -> usize {
-        self.0
+        self.0 as usize
     }
 }
 
@@ -201,7 +232,7 @@ impl ops::Add<u64> for VAddr {
     type Output = VAddr;
 
     fn add(self, rhs: u64) -> Self::Output {
-        VAddr(self.0 + rhs as usize)
+        VAddr(self.0 + rhs)
     }
 }
 
@@ -209,7 +240,7 @@ impl ops::Add<usize> for VAddr {
     type Output = VAddr;
 
     fn add(self, rhs: usize) -> Self::Output {
-        VAddr::from(self.0 + rhs)
+        VAddr::from(self.0 + rhs as u64)
     }
 }
 
@@ -225,7 +256,7 @@ impl ops::Sub<u64> for VAddr {
     type Output = VAddr;
 
     fn sub(self, rhs: u64) -> Self::Output {
-        VAddr::from(self.0 - rhs as usize)
+        VAddr::from(self.0 - rhs)
     }
 }
 
@@ -233,7 +264,7 @@ impl ops::Sub<usize> for VAddr {
     type Output = VAddr;
 
     fn sub(self, rhs: usize) -> Self::Output {
-        VAddr::from(self.0 - rhs)
+        VAddr::from(self.0 - rhs as u64)
     }
 }
 
@@ -245,11 +276,19 @@ impl ops::Rem for VAddr {
     }
 }
 
+impl ops::Rem<u64> for VAddr {
+    type Output = u64;
+
+    fn rem(self, rhs: Self::Output) -> Self::Output {
+        self.0 % rhs
+    }
+}
+
 impl ops::Rem<usize> for VAddr {
     type Output = usize;
 
-    fn rem(self, rhs: usize) -> Self::Output {
-        self.0 % rhs
+    fn rem(self, rhs: Self::Output) -> Self::Output {
+        self.as_usize() % rhs
     }
 }
 
@@ -261,19 +300,35 @@ impl ops::BitOr for VAddr {
     }
 }
 
+impl ops::BitOr<u64> for VAddr {
+    type Output = u64;
+
+    fn bitor(self, rhs: Self::Output) -> Self::Output {
+        self.0 | rhs
+    }
+}
+
 impl ops::BitOr<usize> for VAddr {
     type Output = usize;
 
-    fn bitor(self, rhs: usize) -> Self::Output {
-        self.0 | rhs
+    fn bitor(self, rhs: Self::Output) -> Self::Output {
+        self.as_usize() | rhs
+    }
+}
+
+impl ops::Shr<u64> for VAddr {
+    type Output = u64;
+
+    fn shr(self, rhs: Self::Output) -> Self::Output {
+        self.0 >> rhs
     }
 }
 
 impl ops::Shr<usize> for VAddr {
     type Output = usize;
 
-    fn shr(self, rhs: usize) -> Self::Output {
-        self.0 >> rhs
+    fn shr(self, rhs: Self::Output) -> Self::Output {
+        self.as_usize() >> rhs
     }
 }
 
@@ -307,11 +362,15 @@ impl fmt::UpperHex for VAddr {
     }
 }
 
-pub const BASE_PAGE_SHIFT: u64 = 12;
-pub const BASE_PAGE_SIZE: u64 = 4096; // 4 KiB
-pub const LARGE_PAGE_SIZE: u64 = 1024 * 1024 * 2; // 2 MiB
-pub const HUGE_PAGE_SIZE: u64 = 1024 * 1024 * 1024; // 1 GiB
+pub const BASE_PAGE_SHIFT: usize = 12;
+pub const BASE_PAGE_SIZE: usize = 4096; // 4 KiB
+pub const LARGE_PAGE_SIZE: usize = 1024 * 1024 * 2; // 2 MiB
+pub const HUGE_PAGE_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
 pub const CACHE_LINE_SIZE: usize = 64; // 64 Bytes
+
+pub struct Page([u8; BASE_PAGE_SIZE]);
+pub struct LargePage([u8; LARGE_PAGE_SIZE]);
+pub struct HugePage([u8; HUGE_PAGE_SIZE]);
 
 /// MAXPHYADDR, which is at most 52; (use CPUID for finding system value).
 pub const MAXPHYADDR: u64 = 52;
@@ -335,25 +394,25 @@ pub type PT = [PTEntry; 512];
 #[cfg(target_arch = "x86_64")]
 #[inline]
 pub fn pml4_index(addr: VAddr) -> usize {
-    (addr >> 39) & 0b111111111
+    (addr >> 39usize) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PDPT.
 #[inline]
 pub fn pdpt_index(addr: VAddr) -> usize {
-    (addr >> 30) & 0b111111111
+    (addr >> 30usize) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PD.
 #[inline]
 pub fn pd_index(addr: VAddr) -> usize {
-    (addr >> 21) & 0b111111111
+    (addr >> 21usize) & 0b111111111
 }
 
 /// Given virtual address calculate corresponding entry in PT.
 #[inline]
 pub fn pt_index(addr: VAddr) -> usize {
-    (addr >> 12) & 0b111111111
+    (addr >> 12usize) & 0b111111111
 }
 
 /// PML4 Entry bits description.
