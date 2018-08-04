@@ -47,7 +47,7 @@ optional = true
 features = ["core"]
 
 [dev-dependencies]
-klogger = { git = "https://github.com/gz/rust-klogger.git" }
+#klogger = { git = "https://github.com/gz/rust-klogger.git" }
 libc = "*"
 #test = { path = "test_harness" }
 #test-macros = { path = "test_macros" }
