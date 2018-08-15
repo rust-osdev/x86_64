@@ -3,6 +3,7 @@ use core::convert::{From, Into};
 use core::fmt;
 use core::ops;
 
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PAddr(u64);
 
@@ -167,6 +168,7 @@ impl fmt::UpperHex for PAddr {
     }
 }
 
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct VAddr(u64);
 
