@@ -54,8 +54,7 @@ mod performance_counter {
                     Ok(u) => u,
                     Err(e) => panic!("{}: Can not parse {}", e, x),
                 }
-            })
-            .collect()
+            }).collect()
     }
 
     fn parse_number(value_str: &str) -> u64 {
@@ -80,8 +79,7 @@ mod performance_counter {
             .map(|x| match u64::from_str_radix(&x, 10) {
                 Ok(u) => u,
                 Err(e) => panic!("{}: Can not parse {} in {}", e, x, value_str),
-            })
-            .fold(0, |acc, c| {
+            }).fold(0, |acc, c| {
                 assert!(c < 8);
                 acc | 1 << c
             })
