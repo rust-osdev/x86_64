@@ -15,6 +15,11 @@ extern crate phf;
 #[macro_use]
 extern crate std;
 
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
+
 macro_rules! check_flag {
     ($doc:meta, $fun:ident, $flag:expr) => (
         #[$doc]
