@@ -1,6 +1,5 @@
 //! Functions to read time stamp counters on x86.
 
-use core::mem;
 use arch::{_rdtsc, __rdtscp};
 
 /// Read the time stamp counter.
@@ -17,7 +16,7 @@ use arch::{_rdtsc, __rdtscp};
 /// * Causes a GP fault if the TSD flag in register CR4 is set and the CPL
 ///   is greater than 0.
 pub unsafe fn rdtsc() -> u64 {
-    mem::transmute(_rdtsc())
+    _rdtsc() as u64
 }
 
 /// Read the time stamp counter.
