@@ -1,6 +1,8 @@
 //! Functions to read and write control registers.
 //! See Intel Vol. 3a Section 2.5, especially Figure 2-7.
 
+use arch::{_xgetbv, _xsetbv};
+
 bitflags! {
     pub struct Cr0: usize {
         const CR0_ENABLE_PAGING = 1 << 31;
@@ -102,16 +104,11 @@ pub unsafe fn cr4_write(val: Cr4) {
 /// Read Extended Control Register XCR0.
 /// Only supported if CR4_ENABLE_OS_XSAVE is set.
 pub unsafe fn xcr0() -> Xcr0 {
-    let high: u32;
-    let low: u32;
-    asm!("xgetbv" : "={eax}"(low), "={edx}"(high) : "{ecx}"(0));
-    Xcr0::from_bits_truncate((high as u64) << 32 | low as u64)
+    Xcr0::from_bits_truncate(_xgetbv(0))
 }
 
 /// Write to Extended Control Register XCR0.
 /// Only supported if CR4_ENABLE_OS_XSAVE is set.
 pub unsafe fn xcr0_write(val: Xcr0) {
-    let high: u32 = (val.bits >> 32) as u32;
-    let low: u32 = val.bits as u32;
-    asm!("xsetbv" :: "{eax}"(low), "{ecx}"(0), "{edx}"(high));
+    _xsetbv(0, val.bits);
 }

@@ -1,5 +1,8 @@
 //! Functions to read time stamp counters on x86.
 
+use core::mem;
+use arch::{_rdtsc, __rdtscp};
+
 /// Read the time stamp counter.
 ///
 /// The RDTSC instruction is not a serializing instruction.
@@ -13,13 +16,8 @@
 /// # Safety
 /// * Causes a GP fault if the TSD flag in register CR4 is set and the CPL
 ///   is greater than 0.
-#[allow(unused_mut)]
 pub unsafe fn rdtsc() -> u64 {
-    let mut low: u32;
-    let mut high: u32;
-
-    asm!("rdtsc" : "={eax}" (low), "={edx}" (high));
-    ((high as u64) << 32) | (low as u64)
+    mem::transmute(_rdtsc())
 }
 
 /// Read the time stamp counter.
@@ -35,11 +33,7 @@ pub unsafe fn rdtsc() -> u64 {
 /// # Safety
 /// * Causes a GP fault if the TSD flag in register CR4 is set and the
 ///   CPL is greater than 0.
-#[allow(unused_mut)]
 pub unsafe fn rdtscp() -> u64 {
-    let mut low: u32;
-    let mut high: u32;
-
-    asm!("rdtscp" : "={eax}" (low), "={edx}" (high) ::: "volatile");
-    ((high as u64) << 32) | (low as u64)
+    let mut _aux = 0;
+    __rdtscp(&mut _aux)
 }
