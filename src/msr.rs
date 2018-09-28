@@ -1777,6 +1777,18 @@ pub const MSR_IA32_ADDR1_START: u32 = 0x582;
 /// Trace End Address 1
 pub const MSR_IA32_ADDR1_END: u32 = 0x583;
 
+/// Trace Start Address 3
+pub const MSR_IA32_ADDR2_START: u32 = 0x584;
+
+/// Trace End Address 3
+pub const MSR_IA32_ADDR2_END: u32 = 0x585;
+
+/// Trace Start Address 4
+pub const MSR_IA32_ADDR3_START: u32 = 0x586;
+
+/// Trace End Address 4
+pub const MSR_IA32_ADDR3_END: u32 = 0x587;
+
 /// DS Save Area (R/W) See Table 35-2. Points to the DS buffer management area, which is used to manage the  BTS and PEBS buffers. See Section 18.12.4, Debug Store (DS)  Mechanism.
 pub const IA32_DS_AREA: u32 = 0x600;
 
