@@ -155,7 +155,8 @@ pub unsafe fn encls_eldb(pageinfo: u64, epc_page: u64, verion_array_slot: u64) -
         pageinfo,
         epc_page,
         verion_array_slot
-    ).0
+    )
+    .0
 }
 
 /// Loads, verifies an EPC page and marks the page as unblocked.
@@ -171,7 +172,8 @@ pub unsafe fn encls_eldu(pageinfo: u64, epc_page: u64, verion_array_slot: u64) -
         pageinfo,
         epc_page,
         verion_array_slot
-    ).0
+    )
+    .0
 }
 
 /// Restrict the Permissions of an EPC Page.
@@ -306,7 +308,8 @@ pub unsafe fn enclu_eacceptcopy(
         secinfo,
         destination_epc_page,
         source_epc_page
-    ).0
+    )
+    .0
 }
 
 /// Enters an Enclave.

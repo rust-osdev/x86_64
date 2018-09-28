@@ -54,7 +54,8 @@ mod performance_counter {
                     Ok(u) => u,
                     Err(e) => panic!("{}: Can not parse {}", e, x),
                 }
-            }).collect()
+            })
+            .collect()
     }
 
     fn parse_number(value_str: &str) -> u64 {
@@ -79,7 +80,8 @@ mod performance_counter {
             .map(|x| match u64::from_str_radix(&x, 10) {
                 Ok(u) => u,
                 Err(e) => panic!("{}: Can not parse {} in {}", e, x, value_str),
-            }).fold(0, |acc, c| {
+            })
+            .fold(0, |acc, c| {
                 assert!(c < 8);
                 acc | 1 << c
             })
@@ -311,7 +313,8 @@ mod performance_counter {
             file,
             "pub const {}: phf::Map<&'static str, EventDescription<'static>> = ",
             variable
-        ).unwrap();
+        )
+        .unwrap();
         builder.build(file).unwrap();
         write!(file, ";\n").unwrap();
     }
@@ -399,7 +402,8 @@ mod performance_counter {
             "pub static {}: phf::Map<&'static str, phf::Map<&'static str, \
              EventDescription<'static>>> = ",
             "COUNTER_MAP"
-        ).unwrap();
+        )
+        .unwrap();
         builder.build(&mut filewriter).unwrap();
         write!(&mut filewriter, ";\n").unwrap();
 
