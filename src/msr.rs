@@ -1750,6 +1750,33 @@ pub const MSR_SMM_DELAYED: u32 = 0x4e2;
 /// SMM Blocked (SMM-RO) Reports the blocked state of all logical processors in the package .  Available only while in SMM.
 pub const MSR_SMM_BLOCKED: u32 = 0x4e3;
 
+/// Trace Output Base Register (R/W)
+pub const MSR_IA32_RTIT_OUTPUT_BASE: u32 = 0x560;
+
+/// Trace Output Mask Pointers Register (R/W)
+pub const MSR_IA32_RTIT_OUTPUT_MASK_PTRS: u32 = 0x561;
+
+/// Trace Control Register (R/W)
+pub const MSR_IA32_RTIT_CTL: u32 = 0x570;
+
+/// Tracing Status Register (R/W)
+pub const MSR_IA32_RTIT_STATUS: u32 = 0x571;
+
+/// Trace Filter CR3 Match Register (R/W)
+pub const MSR_IA32_CR3_MATCH: u32 = 0x572;
+
+/// Trace Start Address 0
+pub const MSR_IA32_ADDR0_START: u32 = 0x580;
+
+/// Trace End Address 0
+pub const MSR_IA32_ADDR0_END: u32 = 0x581;
+
+/// Trace Start Address 1
+pub const MSR_IA32_ADDR1_START: u32 = 0x582;
+
+/// Trace End Address 1
+pub const MSR_IA32_ADDR1_END: u32 = 0x583;
+
 /// DS Save Area (R/W) See Table 35-2. Points to the DS buffer management area, which is used to manage the  BTS and PEBS buffers. See Section 18.12.4, Debug Store (DS)  Mechanism.
 pub const IA32_DS_AREA: u32 = 0x600;
 
