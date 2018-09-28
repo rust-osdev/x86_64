@@ -15,23 +15,23 @@
 #[macro_export]
 macro_rules! syscall {
     ($arg0:expr) => {
-        $crate::syscall::syscall0($arg0 as u64)
+        x86::bits64::syscall::syscall0($arg0 as u64)
     };
 
     ($arg0:expr, $arg1:expr) => {
-        $crate::syscall::syscall1($arg0 as u64, $arg1 as u64)
+        x86::bits64::syscall::syscall1($arg0 as u64, $arg1 as u64)
     };
 
     ($arg0:expr, $arg1:expr, $arg2:expr) => {
-        $crate::syscall::syscall2($arg0 as u64, $arg1 as u64, $arg2 as u64)
+        x86::bits64::syscall::syscall2($arg0 as u64, $arg1 as u64, $arg2 as u64)
     };
 
     ($arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr) => {
-        $crate::syscall::syscall3($arg0 as u64, $arg1 as u64, $arg2 as u64, $arg3 as u64)
+        x86::bits64::syscall::syscall3($arg0 as u64, $arg1 as u64, $arg2 as u64, $arg3 as u64)
     };
 
     ($arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr, $arg4:expr) => {
-        $crate::syscall::syscall4(
+        x86::bits64::syscall::syscall4(
             $arg0 as u64,
             $arg1 as u64,
             $arg2 as u64,
@@ -41,7 +41,7 @@ macro_rules! syscall {
     };
 
     ($arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr, $arg4:expr, $arg5:expr) => {
-        $crate::syscall::syscall5(
+        x86::bits64::syscall::syscall5(
             $arg0 as u64,
             $arg1 as u64,
             $arg2 as u64,
@@ -52,7 +52,7 @@ macro_rules! syscall {
     };
 
     ($arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr, $arg4:expr, $arg5:expr, $arg6:expr) => {
-        $crate::syscall::syscall6(
+        x86::bits64::syscall::syscall6(
             $arg0 as u64,
             $arg1 as u64,
             $arg2 as u64,
@@ -73,7 +73,7 @@ macro_rules! syscall {
         $arg6:expr,
         $arg7:expr
     ) => {
-        $crate::syscall::syscall7(
+        x86::bits64::syscall::syscall7(
             $arg0 as u64,
             $arg1 as u64,
             $arg2 as u64,
