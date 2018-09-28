@@ -1,6 +1,6 @@
 //! Functions to read time stamp counters on x86.
 
-use arch::{_rdtsc, __rdtscp};
+use arch::{__rdtscp, _rdtsc};
 
 /// Read the time stamp counter.
 ///
