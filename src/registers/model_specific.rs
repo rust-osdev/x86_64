@@ -1,6 +1,7 @@
 //! Functions to read and write control registers.
 
 /// A model specific register.
+#[derive(Debug)]
 pub struct Msr(u32);
 
 impl Msr {
@@ -25,6 +26,7 @@ impl Msr {
 }
 
 /// The Extended Feature Enable Register.
+#[derive(Debug)]
 pub struct Efer;
 
 impl Efer {

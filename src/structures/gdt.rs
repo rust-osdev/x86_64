@@ -50,6 +50,7 @@ impl fmt::Debug for SegmentSelector {
 /// switching between user and kernel mode or for loading a TSS.
 ///
 /// The GDT has a fixed size of 8 entries, trying to add more entries will panic.
+#[derive(Debug)]
 pub struct GlobalDescriptorTable {
     table: [u64; 8],
     next_free: usize,
@@ -108,6 +109,7 @@ impl GlobalDescriptorTable {
 ///
 /// Segmentation is no longer supported in 64-bit mode, so most of the descriptor
 /// contents are ignored.
+#[derive(Debug)]
 pub enum Descriptor {
     /// Descriptor for a code or data segment.
     ///

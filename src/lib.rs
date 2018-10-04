@@ -11,6 +11,8 @@
 #![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
 #![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]
 
+#![deny(missing_debug_implementations)]
+
 #[cfg(test)]
 #[macro_use]
 extern crate std;
