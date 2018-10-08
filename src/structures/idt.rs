@@ -31,6 +31,7 @@ use {PrivilegeLevel, VirtAddr};
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
 #[allow(missing_debug_implementations)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct InterruptDescriptorTable {
     /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
@@ -637,6 +638,7 @@ impl EntryOptions {
 }
 
 /// Represents the exception stack frame pushed by the CPU on exception entry.
+#[derive(Clone)]
 #[repr(C)]
 pub struct ExceptionStackFrame {
     /// This value points to the instruction that should be executed when the interrupt
