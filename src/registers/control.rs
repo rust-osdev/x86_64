@@ -6,6 +6,7 @@ use structures::paging::PhysFrame;
 use PhysAddr;
 
 /// Various control flags modifying the basic operation of the CPU.
+#[derive(Debug)]
 pub struct Cr0;
 
 impl Cr0 {
@@ -91,6 +92,7 @@ bitflags! {
 }
 
 /// Contains the physical address of the level 4 page table.
+#[derive(Debug)]
 pub struct Cr3;
 
 impl Cr3 {

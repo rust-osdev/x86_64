@@ -31,17 +31,17 @@ pub trait PageSize: Copy + Eq + PartialOrd + Ord {
 pub trait NotGiantPageSize: PageSize {}
 
 /// A standard 4KiB page.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size4KiB {}
 
 /// A “huge” 2MiB page.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size2MiB {}
 
 /// A “giant” 1GiB page.
 ///
 /// (Only available on newer x86_64 CPUs.)
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Size1GiB {}
 
 impl PageSize for Size4KiB {

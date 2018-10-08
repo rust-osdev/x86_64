@@ -30,6 +30,7 @@ use {PrivilegeLevel, VirtAddr};
 /// The field descriptions are taken from the
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
+#[allow(missing_debug_implementations)]
 #[repr(C)]
 pub struct InterruptDescriptorTable {
     /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
@@ -505,7 +506,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,

@@ -15,6 +15,7 @@ use {PhysAddr, VirtAddr};
 /// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
 /// to be flushed from the TLB before it's accessed. This type is returned from function that
 /// change the mapping of a page to ensure that the TLB flush is not forgotten.
+#[derive(Debug)]
 #[must_use = "Page Table changes must be flushed or ignored."]
 pub struct MapperFlush<S: PageSize>(Page<S>);
 
@@ -94,6 +95,7 @@ pub trait Mapper<S: PageSize> {
 ///   level 3 index, then the level 2 index.
 ///
 /// This struct implements the `Mapper` trait.
+#[derive(Debug)]
 pub struct RecursivePageTable<'a> {
     p4: &'a mut PageTable,
     recursive_index: u9,
