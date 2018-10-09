@@ -63,7 +63,7 @@ impl PortReadWrite for u32 {
 }
 
 /// An I/O port.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Port<T: PortReadWrite> {
     port: u16,
     phantom: PhantomData<T>,
