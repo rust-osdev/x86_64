@@ -561,6 +561,8 @@ impl PDPTEntry {
                 is_pat, PDPTEntry::PAT);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
                 is_instruction_fetching_disabled, PDPTEntry::XD);
+    check_flag!(doc = "Page size; if set this entry maps a 1-GByte page; otherwise, this entry references a page directory.",
+                is_page, PDPTEntry::PS);
 }
 
 /// PD Entry bits description.
