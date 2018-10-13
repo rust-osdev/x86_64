@@ -1,4 +1,5 @@
 #![cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#![allow(stable_features)]
 #![feature(const_fn, asm, repr_transparent)]
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]
