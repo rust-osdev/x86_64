@@ -1,6 +1,5 @@
 #![cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-#![feature(const_fn)]
-#![feature(asm)]
+#![feature(const_fn, asm, repr_transparent)]
 #![no_std]
 #![cfg_attr(test, allow(unused_features))]
 
@@ -19,15 +18,6 @@ extern crate std;
 use core::arch::x86 as arch;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64 as arch;
-
-macro_rules! check_flag {
-    ($doc:meta, $fun:ident, $flag:expr) => (
-        #[$doc]
-        pub fn $fun(&self) -> bool {
-            self.contains($flag)
-        }
-    )
-}
 
 macro_rules! bit {
     ($x:expr) => {

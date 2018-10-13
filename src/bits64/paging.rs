@@ -3,6 +3,16 @@ use core::convert::{From, Into};
 use core::fmt;
 use core::ops;
 
+macro_rules! check_flag {
+    ($doc:meta, $fun:ident, $flag:expr) => (
+        #[$doc]
+        pub fn $fun(self) -> bool {
+            self.flags().contains($flag)
+        }
+    )
+}
+
+/// A wrapper for a physical address.
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PAddr(u64);
@@ -114,6 +124,22 @@ impl ops::Rem<usize> for PAddr {
     }
 }
 
+impl ops::BitAnd for PAddr {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self {
+        PAddr(self.0 & rhs.0)
+    }
+}
+
+impl ops::BitAnd<u64> for PAddr {
+    type Output = u64;
+
+    fn bitand(self, rhs: u64) -> Self::Output {
+        self.as_u64() & rhs
+    }
+}
+
 impl ops::BitOr for PAddr {
     type Output = PAddr;
 
@@ -168,6 +194,7 @@ impl fmt::UpperHex for PAddr {
     }
 }
 
+/// A wrapper for a virtual address.
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct VAddr(u64);
@@ -294,6 +321,22 @@ impl ops::Rem<usize> for VAddr {
     }
 }
 
+impl ops::BitAnd for VAddr {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        VAddr(self.0 & rhs.0)
+    }
+}
+
+impl ops::BitAnd<usize> for VAddr {
+    type Output = usize;
+
+    fn bitand(self, rhs: usize) -> Self::Output {
+        self.as_usize() & rhs
+    }
+}
+
 impl ops::BitOr for VAddr {
     type Output = VAddr;
 
@@ -364,14 +407,31 @@ impl fmt::UpperHex for VAddr {
     }
 }
 
+/// Log2 of base page size (12 bits).
 pub const BASE_PAGE_SHIFT: usize = 12;
-pub const BASE_PAGE_SIZE: usize = 4096; // 4 KiB
-pub const LARGE_PAGE_SIZE: usize = 1024 * 1024 * 2; // 2 MiB
-pub const HUGE_PAGE_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
-pub const CACHE_LINE_SIZE: usize = 64; // 64 Bytes
 
+/// Size of a base page (4 KiB)
+pub const BASE_PAGE_SIZE: usize = 4096;
+
+/// Size of a large page (2 MiB)
+pub const LARGE_PAGE_SIZE: usize = 1024 * 1024 * 2;
+
+/// Size of a huge page (1 GiB)
+pub const HUGE_PAGE_SIZE: usize = 1024 * 1024 * 1024;
+
+/// Size of a region covered by a PML4 Entry (512 GiB)
+pub const PML4_SLOT_SIZE: usize = HUGE_PAGE_SIZE * 512;
+
+/// Size of a cache-line
+pub const CACHE_LINE_SIZE: usize = 64;
+
+/// A type wrapping a base page with a 4 KiB buffer.
 pub struct Page([u8; BASE_PAGE_SIZE]);
+
+/// A type wrapping a large page with a 2 MiB buffer.
 pub struct LargePage([u8; LARGE_PAGE_SIZE]);
+
+/// A type wrapping a huge page with a 1 GiB buffer.
 pub struct HugePage([u8; HUGE_PAGE_SIZE]);
 
 /// MAXPHYADDR, which is at most 52; (use CPUID for finding system value).
@@ -380,17 +440,20 @@ pub const MAXPHYADDR: u64 = 52;
 /// Mask to find the physical address of an entry in a page-table.
 const ADDRESS_MASK: u64 = ((1 << MAXPHYADDR) - 1) & !0xfff;
 
+/// Page tables have 512 = 4096 / 64 entries.
+pub const PAGE_SIZE_ENTRIES: usize = 512;
+
 /// A PML4 table.
-pub type PML4 = [PML4Entry; 512];
+pub type PML4 = [PML4Entry; PAGE_SIZE_ENTRIES];
 
 /// A page directory pointer table.
-pub type PDPT = [PDPTEntry; 512];
+pub type PDPT = [PDPTEntry; PAGE_SIZE_ENTRIES];
 
 /// A page directory.
-pub type PD = [PDEntry; 512];
+pub type PD = [PDEntry; PAGE_SIZE_ENTRIES];
 
 /// A page table.
-pub type PT = [PTEntry; 512];
+pub type PT = [PTEntry; PAGE_SIZE_ENTRIES];
 
 /// Given virtual address calculate corresponding entry in PML4.
 #[cfg(target_arch = "x86_64")]
@@ -417,10 +480,10 @@ pub fn pt_index(addr: VAddr) -> usize {
     (addr >> 12usize) & 0b111111111
 }
 
-/// PML4 Entry bits description.
 bitflags! {
+    /// PML4 configuration bit description.
     #[repr(transparent)]
-    pub struct PML4Entry: u64 {
+    pub struct PML4Flags: u64 {
         /// Present; must be 1 to reference a page-directory-pointer table
         const P       = bit!(0);
         /// Read/write; if 0, writes may not be allowed to the 512-GByte region
@@ -443,6 +506,22 @@ bitflags! {
     }
 }
 
+/// A PML4 Entry consists of an address and a bunch of flags.
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct PML4Entry(pub u64);
+
+impl fmt::Debug for PML4Entry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "PML4Entry {{ {:#x}, {:?} }}",
+            self.address(),
+            self.flags()
+        )
+    }
+}
+
 impl PML4Entry {
     /// Creates a new PML4Entry.
     ///
@@ -450,42 +529,45 @@ impl PML4Entry {
     ///
     ///  * `pdpt` - The physical address of the pdpt table.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(pdpt: PAddr, flags: PML4Entry) -> PML4Entry {
-        let pdpt_val = pdpt;
-        assert!(pdpt_val % BASE_PAGE_SIZE == 0);
-        PML4Entry {
-            bits: pdpt_val | flags.bits,
-        }
+    pub fn new(pml4: PAddr, flags: PML4Flags) -> PML4Entry {
+        let pml4_val = pml4 & ADDRESS_MASK;
+        assert!(pml4_val == pml4.into());
+        assert!(pml4 % BASE_PAGE_SIZE == 0);
+        PML4Entry(pml4_val | flags.bits)
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from(self.bits & ADDRESS_MASK)
+    pub fn address(self) -> PAddr {
+        PAddr::from(self.0 & ADDRESS_MASK)
     }
 
-    check_flag!(doc = "Is page present?", is_present, PML4Entry::P);
+    pub fn flags(self) -> PML4Flags {
+        PML4Flags::from_bits_truncate(self.0)
+    }
+
+    check_flag!(doc = "Is page present?", is_present, PML4Flags::P);
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 512-GByte region, controlled by this entry (see Section 4.6)",
-                is_writeable, PML4Entry::RW);
+                is_writeable, PML4Flags::RW);
     check_flag!(doc = "User/supervisor; if 0, user-mode accesses are not allowed to the 512-GByte region controlled by this entry.",
-                is_user_mode_allowed, PML4Entry::US);
+                is_user_mode_allowed, PML4Flags::US);
     check_flag!(doc = "Page-level write-through; indirectly determines the memory type used to access the page-directory-pointer table referenced by this entry.",
-                is_page_write_through, PML4Entry::PWT);
+                is_page_write_through, PML4Flags::PWT);
     check_flag!(doc = "Page-level cache disable; indirectly determines the memory type used to access the page-directory-pointer table referenced by this entry.",
-                is_page_level_cache_disabled, PML4Entry::PCD);
+                is_page_level_cache_disabled, PML4Flags::PCD);
     check_flag!(
         doc =
             "Accessed; indicates whether this entry has been used for linear-address translation.",
         is_accessed,
-        PML4Entry::A
+        PML4Flags::A
     );
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
-                is_instruction_fetching_disabled, PML4Entry::XD);
+                is_instruction_fetching_disabled, PML4Flags::XD);
 }
 
-/// PDPT Entry bits description.
 bitflags! {
+    /// PDPT configuration bit description.
     #[repr(transparent)]
-    pub struct PDPTEntry: u64 {
+    pub struct PDPTFlags: u64 {
         /// Present; must be 1 to map a 1-GByte page or reference a page directory.
         const P       = bit!(0);
         /// Read/write; if 0, writes may not be allowed to the 1-GByte region controlled by this entry
@@ -516,6 +598,22 @@ bitflags! {
     }
 }
 
+/// A PDPT Entry consists of an address and a bunch of flags.
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct PDPTEntry(pub u64);
+
+impl fmt::Debug for PDPTEntry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "PDPTEntry {{ {:#x}, {:?} }}",
+            self.address(),
+            self.flags()
+        )
+    }
+}
+
 impl PDPTEntry {
     /// Creates a new PDPTEntry.
     ///
@@ -523,52 +621,57 @@ impl PDPTEntry {
     ///
     ///  * `pd` - The physical address of the page directory.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(pd: PAddr, flags: PDPTEntry) -> PDPTEntry {
-        let pd_val = pd;
-        assert!(pd_val % BASE_PAGE_SIZE == 0);
-        PDPTEntry {
-            bits: pd_val | flags.bits,
-        }
+    pub fn new(pd: PAddr, flags: PDPTFlags) -> PDPTEntry {
+        let pd_val = pd & ADDRESS_MASK;
+        assert!(pd_val == pd.into());
+        assert!(pd % BASE_PAGE_SIZE == 0);
+        PDPTEntry(pd_val | flags.bits)
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from(self.bits & ADDRESS_MASK)
+    pub fn address(self) -> PAddr {
+        PAddr::from(self.0 & ADDRESS_MASK)
     }
 
-    check_flag!(doc = "Is page present?", is_present, PDPTEntry::P);
+    /// Returns the flags corresponding to this entry.
+    pub fn flags(self) -> PDPTFlags {
+        PDPTFlags::from_bits_truncate(self.0)
+    }
+
+    check_flag!(doc = "Is page present?", is_present, PDPTFlags::P);
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 1-GByte region controlled by this entry.",
-                is_writeable, PDPTEntry::RW);
+                is_writeable, PDPTFlags::RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 1-GByte region controlled by this entry.",
-                is_user_mode_allowed, PDPTEntry::US);
+                is_user_mode_allowed, PDPTFlags::US);
     check_flag!(
         doc = "Page-level write-through.",
         is_page_write_through,
-        PDPTEntry::PWT
+        PDPTFlags::PWT
     );
     check_flag!(
         doc = "Page-level cache disable.",
         is_page_level_cache_disabled,
-        PDPTEntry::PCD
+        PDPTFlags::PCD
     );
     check_flag!(
         doc =
             "Accessed; indicates whether this entry has been used for linear-address translation.",
         is_accessed,
-        PDPTEntry::A
+        PDPTFlags::A
     );
     check_flag!(doc = "Indirectly determines the memory type used to access the 1-GByte page referenced by this entry. if not PS this is ignored.",
-                is_pat, PDPTEntry::PAT);
+                is_pat, PDPTFlags::PAT);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 512-GByte region.",
-                is_instruction_fetching_disabled, PDPTEntry::XD);
+                is_instruction_fetching_disabled, PDPTFlags::XD);
     check_flag!(doc = "Page size; if set this entry maps a 1-GByte page; otherwise, this entry references a page directory.",
-                is_page, PDPTEntry::PS);
+                is_page, PDPTFlags::PS);
 }
 
-/// PD Entry bits description.
+/// PD configuration bits description.
 bitflags! {
+    /// PDPT configuration bit description.
     #[repr(transparent)]
-    pub struct PDEntry: u64 {
+    pub struct PDFlags: u64 {
         /// Present; must be 1 to map a 2-MByte page or reference a page table.
         const P       = bit!(0);
         /// Read/write; if 0, writes may not be allowed to the 2-MByte region controlled by this entry
@@ -599,6 +702,17 @@ bitflags! {
     }
 }
 
+/// A PD Entry consists of an address and a bunch of flags.
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct PDEntry(pub u64);
+
+impl fmt::Debug for PDEntry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PDEntry {{ {:#x}, {:?} }}", self.address(), self.flags())
+    }
+}
+
 impl PDEntry {
     /// Creates a new PDEntry.
     ///
@@ -606,56 +720,61 @@ impl PDEntry {
     ///
     ///  * `pt` - The physical address of the page table.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(pt: PAddr, flags: PDEntry) -> PDEntry {
-        let pt_val = pt;
-        assert!(pt_val % BASE_PAGE_SIZE == 0);
-        PDEntry {
-            bits: pt_val | flags.bits,
-        }
+    pub fn new(pt: PAddr, flags: PDFlags) -> PDEntry {
+        let pt_val = pt & ADDRESS_MASK;
+        assert!(pt_val == pt.into());
+        assert!(pt % BASE_PAGE_SIZE == 0);
+        PDEntry(pt_val | flags.bits)
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from(self.bits & ADDRESS_MASK)
+    pub fn address(self) -> PAddr {
+        PAddr::from(self.0 & ADDRESS_MASK)
+    }
+
+    /// Returns the flags corresponding to this entry.
+    pub fn flags(self) -> PDFlags {
+        PDFlags::from_bits_truncate(self.0)
     }
 
     check_flag!(
         doc = "Present; must be 1 to map a 2-MByte page or reference a page table.",
         is_present,
-        PDEntry::P
+        PDFlags::P
     );
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 2-MByte region controlled by this entry",
-                is_writeable, PDEntry::RW);
+                is_writeable, PDFlags::RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 2-MByte region controlled by this entry.",
-                is_user_mode_allowed, PDEntry::US);
+                is_user_mode_allowed, PDFlags::US);
     check_flag!(
         doc = "Page-level write-through.",
         is_page_write_through,
-        PDEntry::PWT
+        PDFlags::PWT
     );
     check_flag!(
         doc = "Page-level cache disable.",
         is_page_level_cache_disabled,
-        PDEntry::PCD
+        PDFlags::PCD
     );
     check_flag!(doc = "Accessed; if PS set indicates whether software has accessed the 2-MByte page else indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PDEntry::A);
+                is_accessed, PDFlags::A);
     check_flag!(doc = "Dirty; if PS set indicates whether software has written to the 2-MByte page referenced by this entry else ignored.",
-                is_dirty, PDEntry::D);
+                is_dirty, PDFlags::D);
     check_flag!(doc = "Page size; if set this entry maps a 2-MByte page; otherwise, this entry references a page directory.",
-                is_page, PDEntry::PS);
+                is_page, PDFlags::PS);
     check_flag!(doc = "Global; if PS && CR4.PGE = 1, determines whether the translation is global; ignored otherwise if not PS this is ignored.",
-                is_global, PDEntry::G);
+                is_global, PDFlags::G);
     check_flag!(doc = "Indirectly determines the memory type used to access the 2-MByte page referenced by this entry. if not PS this is ignored.",
-                is_pat, PDEntry::PAT);
+                is_pat, PDFlags::PAT);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 2-Mbyte region.",
-                is_instruction_fetching_disabled, PDEntry::XD);
+                is_instruction_fetching_disabled, PDFlags::XD);
 }
 
 /// PT Entry bits description.
 bitflags! {
+    /// PT configuration bit description.
     #[repr(transparent)]
-    pub struct PTEntry: u64 {
+    pub struct PTFlags: u64 {
         /// Present; must be 1 to map a 4-KByte page.
         const P       = bit!(0);
         /// Read/write; if 0, writes may not be allowed to the 4-KByte region controlled by this entry
@@ -678,6 +797,17 @@ bitflags! {
     }
 }
 
+/// A PT Entry consists of an address and a bunch of flags.
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct PTEntry(pub u64);
+
+impl fmt::Debug for PTEntry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PTEntry {{ {:#x}, {:?} }}", self.address(), self.flags())
+    }
+}
+
 impl PTEntry {
     /// Creates a new PTEntry.
     ///
@@ -685,44 +815,48 @@ impl PTEntry {
     ///
     ///  * `page` - The physical address of the backing 4 KiB page.
     ///  * `flags`- Additional flags for the entry.
-    pub fn new(page: PAddr, flags: PTEntry) -> PTEntry {
-        let page_val = page;
-        assert!(page_val % BASE_PAGE_SIZE == 0);
-        PTEntry {
-            bits: page_val | flags.bits,
-        }
+    pub fn new(page: PAddr, flags: PTFlags) -> PTEntry {
+        let page_val = page & ADDRESS_MASK;
+        assert!(page_val == page.into());
+        assert!(page % BASE_PAGE_SIZE == 0);
+        PTEntry(page_val | flags.bits)
     }
 
     /// Retrieves the physical address in this entry.
-    pub fn get_address(self) -> PAddr {
-        PAddr::from(self.bits & ADDRESS_MASK)
+    pub fn address(self) -> PAddr {
+        PAddr::from(self.0 & ADDRESS_MASK)
+    }
+
+    /// Returns the flags corresponding to this entry.
+    pub fn flags(self) -> PTFlags {
+        PTFlags::from_bits_truncate(self.0)
     }
 
     check_flag!(
         doc = "Present; must be 1 to map a 4-KByte page or reference a page table.",
         is_present,
-        PTEntry::P
+        PTFlags::P
     );
     check_flag!(doc = "Read/write; if 0, writes may not be allowed to the 4-KByte region controlled by this entry",
-                is_writeable, PTEntry::RW);
+                is_writeable, PTFlags::RW);
     check_flag!(doc = "User/supervisor; user-mode accesses are not allowed to the 4-KByte region controlled by this entry.",
-                is_user_mode_allowed, PTEntry::US);
+                is_user_mode_allowed, PTFlags::US);
     check_flag!(
         doc = "Page-level write-through.",
         is_page_write_through,
-        PTEntry::PWT
+        PTFlags::PWT
     );
     check_flag!(
         doc = "Page-level cache disable.",
         is_page_level_cache_disabled,
-        PTEntry::PCD
+        PTFlags::PCD
     );
     check_flag!(doc = "Accessed; if PS set indicates whether software has accessed the 4-KByte page else indicates whether this entry has been used for linear-address translation.",
-                is_accessed, PTEntry::A);
+                is_accessed, PTFlags::A);
     check_flag!(doc = "Dirty; if PD_PS set indicates whether software has written to the 4-KByte page referenced by this entry else ignored.",
-                is_dirty, PTEntry::D);
+                is_dirty, PTFlags::D);
     check_flag!(doc = "Global; if PS && CR4.PGE = 1, determines whether the translation is global; ignored otherwise if not PS this is ignored.",
-                is_global, PTEntry::G);
+                is_global, PTFlags::G);
     check_flag!(doc = "If IA32_EFER.NXE = 1, execute-disable. If 1, instruction fetches are not allowed from the 4-KByte region.",
-                is_instruction_fetching_disabled, PTEntry::XD);
+                is_instruction_fetching_disabled, PTFlags::XD);
 }
