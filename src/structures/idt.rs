@@ -33,6 +33,7 @@ use {PrivilegeLevel, VirtAddr};
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
 #[repr(C)]
+#[repr(align(16))]
 pub struct InterruptDescriptorTable {
     /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
