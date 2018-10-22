@@ -4,7 +4,7 @@
 
 pub use self::frame_alloc::*;
 pub use self::page_table::*;
-#[cfg(target_pointer_width = "64")]
+#[cfg(target_arch = "x86_64")]
 pub use self::recursive::*;
 
 use core::fmt;

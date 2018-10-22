@@ -1,5 +1,8 @@
 //! Processor state stored in the RFLAGS register.
 
+#[cfg(target_arch = "x86_64")]
+pub use self::x86_64::*;
+
 bitflags! {
     /// The RFLAGS register.
     pub struct RFlags: u64 {
@@ -57,36 +60,37 @@ bitflags! {
     }
 }
 
-/// Returns the current value of the RFLAGS register.
-///
-/// Drops any unknown bits.
-#[cfg(target_pointer_width = "64")]
-pub fn read() -> RFlags {
-    RFlags::from_bits_truncate(read_raw())
-}
+#[cfg(target_arch = "x86_64")]
+mod x86_64 {
+    use super::*;
 
-/// Returns the raw current value of the RFLAGS register.
-#[cfg(target_pointer_width = "64")]
-pub fn read_raw() -> u64 {
-    let r: u64;
-    unsafe { asm!("pushfq; popq $0" : "=r"(r) :: "memory") };
-    r
-}
+    /// Returns the current value of the RFLAGS register.
+    ///
+    /// Drops any unknown bits.
+    pub fn read() -> RFlags {
+        RFlags::from_bits_truncate(read_raw())
+    }
 
-/// Writes the RFLAGS register, preserves reserved bits.
-#[cfg(target_pointer_width = "64")]
-pub fn write(flags: RFlags) {
-    let old_value = read_raw();
-    let reserved = old_value & !(RFlags::all().bits());
-    let new_value = reserved | flags.bits();
+    /// Returns the raw current value of the RFLAGS register.
+    pub fn read_raw() -> u64 {
+        let r: u64;
+        unsafe { asm!("pushfq; popq $0" : "=r"(r) :: "memory") };
+        r
+    }
 
-    write_raw(new_value);
-}
+    /// Writes the RFLAGS register, preserves reserved bits.
+    pub fn write(flags: RFlags) {
+        let old_value = read_raw();
+        let reserved = old_value & !(RFlags::all().bits());
+        let new_value = reserved | flags.bits();
 
-/// Writes the RFLAGS register.
-///
-/// Does not preserve any bits, including reserved bits.
-#[cfg(target_pointer_width = "64")]
-pub fn write_raw(val: u64) {
-    unsafe { asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags") };
+        write_raw(new_value);
+    }
+
+    /// Writes the RFLAGS register.
+    ///
+    /// Does not preserve any bits, including reserved bits.
+    pub fn write_raw(val: u64) {
+        unsafe { asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags") };
+    }
 }

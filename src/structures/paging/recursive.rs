@@ -1,4 +1,4 @@
-#![cfg(target_pointer_width = "64")]
+#![cfg(target_arch = "x86_64")]
 
 use instructions::tlb;
 use registers::control::Cr3;

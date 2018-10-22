@@ -81,6 +81,7 @@ impl GlobalDescriptorTable {
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction.
+    #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
         use core::mem::size_of;
         use instructions::tables::{lgdt, DescriptorTablePointer};

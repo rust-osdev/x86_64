@@ -5,6 +5,8 @@ cache:
   - $TRAVIS_BUILD_DIR/testing/target
 
 before_script:
+  - rustup target add i686-unknown-linux-gnu
+  - rustup target add thumbv7em-none-eabihf
   - rustup component add rust-src
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
   - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
@@ -16,6 +18,8 @@ script:
   - cargo test
   - cargo build --features deny-warnings
   - bootimage test --manifest-path testing/Cargo.toml
+  - cargo build --target i686-unknown-linux-gnu
+  - cargo build --target thumbv7em-none-eabihf
 
 addons:
   apt:
