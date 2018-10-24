@@ -1,3 +1,5 @@
+#![cfg(target_arch = "x86_64")]
+
 //! Special x86_64 instructions.
 
 pub mod interrupts;

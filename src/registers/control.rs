@@ -2,61 +2,9 @@
 
 pub use super::model_specific::{Efer, EferFlags};
 
-use structures::paging::PhysFrame;
-use PhysAddr;
-
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
 pub struct Cr0;
-
-impl Cr0 {
-    /// Read the current set of CR0 flags.
-    pub fn read() -> Cr0Flags {
-        Cr0Flags::from_bits_truncate(Self::read_raw())
-    }
-
-    /// Read the current raw CR0 value.
-    pub fn read_raw() -> u64 {
-        let value: u64;
-        unsafe {
-            asm!("mov %cr0, $0" : "=r" (value));
-        }
-        value
-    }
-
-    /// Write CR0 flags.
-    ///
-    /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
-    /// safety by e.g. disabling paging.
-    pub unsafe fn write(flags: Cr0Flags) {
-        let old_value = Self::read_raw();
-        let reserved = old_value & !(Cr0Flags::all().bits());
-        let new_value = reserved | flags.bits();
-
-        Self::write_raw(new_value);
-    }
-
-    /// Write raw CR0 flags.
-    ///
-    /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
-    /// safety by e.g. disabling paging.
-    pub unsafe fn write_raw(value: u64) {
-        asm!("mov $0, %cr0" :: "r" (value) : "memory")
-    }
-
-    /// Updates CR0 flags.
-    ///
-    /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
-    /// safety by e.g. disabling paging.
-    pub unsafe fn update<F>(f: F)
-    where
-        F: FnOnce(&mut Cr0Flags),
-    {
-        let mut flags = Self::read();
-        f(&mut flags);
-        Self::write(flags);
-    }
-}
 
 bitflags! {
     /// Configuration flags of the Cr0 register.
@@ -95,31 +43,6 @@ bitflags! {
 #[derive(Debug)]
 pub struct Cr3;
 
-impl Cr3 {
-    /// Read the current P4 table address from the CR3 register.
-    pub fn read() -> (PhysFrame, Cr3Flags) {
-        let value: u64;
-        unsafe {
-            asm!("mov %cr3, $0" : "=r" (value));
-        }
-        let flags = Cr3Flags::from_bits_truncate(value);
-        let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
-        let frame = PhysFrame::containing_address(addr);
-        (frame, flags)
-    }
-
-    /// Write a new P4 table address into the CR3 register.
-    ///
-    /// ## Safety
-    /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
-    /// changing the page mapping.
-    pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
-        let addr = frame.start_address();
-        let value = addr.as_u64() | flags.bits();
-        asm!("mov $0, %cr3" :: "r" (value) : "memory")
-    }
-}
-
 bitflags! {
     /// Controls cache settings for the level 4 page table.
     pub struct Cr3Flags: u64 {
@@ -127,5 +50,86 @@ bitflags! {
         const PAGE_LEVEL_WRITETHROUGH = 1 << 3;
         /// Disable caching for the P4 table.
         const PAGE_LEVEL_CACHE_DISABLE = 1 << 4;
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+mod x86_64 {
+    use super::*;
+    use structures::paging::PhysFrame;
+    use PhysAddr;
+
+    impl Cr0 {
+        /// Read the current set of CR0 flags.
+        pub fn read() -> Cr0Flags {
+            Cr0Flags::from_bits_truncate(Self::read_raw())
+        }
+
+        /// Read the current raw CR0 value.
+        pub fn read_raw() -> u64 {
+            let value: u64;
+            unsafe {
+                asm!("mov %cr0, $0" : "=r" (value));
+            }
+            value
+        }
+
+        /// Write CR0 flags.
+        ///
+        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
+        /// safety by e.g. disabling paging.
+        pub unsafe fn write(flags: Cr0Flags) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !(Cr0Flags::all().bits());
+            let new_value = reserved | flags.bits();
+
+            Self::write_raw(new_value);
+        }
+
+        /// Write raw CR0 flags.
+        ///
+        /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
+        /// safety by e.g. disabling paging.
+        pub unsafe fn write_raw(value: u64) {
+            asm!("mov $0, %cr0" :: "r" (value) : "memory")
+        }
+
+        /// Updates CR0 flags.
+        ///
+        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
+        /// safety by e.g. disabling paging.
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut Cr0Flags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            Self::write(flags);
+        }
+    }
+
+    impl Cr3 {
+        /// Read the current P4 table address from the CR3 register.
+        pub fn read() -> (PhysFrame, Cr3Flags) {
+            let value: u64;
+            unsafe {
+                asm!("mov %cr3, $0" : "=r" (value));
+            }
+            let flags = Cr3Flags::from_bits_truncate(value);
+            let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
+            let frame = PhysFrame::containing_address(addr);
+            (frame, flags)
+        }
+
+        /// Write a new P4 table address into the CR3 register.
+        ///
+        /// ## Safety
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
+            let addr = frame.start_address();
+            let value = addr.as_u64() | flags.bits();
+            asm!("mov $0, %cr3" :: "r" (value) : "memory")
+        }
     }
 }
