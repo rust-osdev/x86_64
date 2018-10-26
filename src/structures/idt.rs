@@ -532,7 +532,7 @@ pub type PageFaultHandlerFunc =
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
-    const fn missing() -> Self {
+    pub const fn missing() -> Self {
         Entry {
             gdt_selector: 0,
             pointer_low: 0,
