@@ -509,7 +509,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
@@ -532,7 +532,7 @@ pub type PageFaultHandlerFunc =
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
-    const fn missing() -> Self {
+    pub const fn missing() -> Self {
         Entry {
             gdt_selector: 0,
             pointer_low: 0,
@@ -590,7 +590,7 @@ impl_set_handler_fn!(PageFaultHandlerFunc);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct EntryOptions(u16);
 
 impl EntryOptions {
