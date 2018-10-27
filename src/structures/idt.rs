@@ -509,7 +509,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
