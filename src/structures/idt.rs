@@ -590,7 +590,7 @@ impl_set_handler_fn!(PageFaultHandlerFunc);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct EntryOptions(u16);
 
 impl EntryOptions {
