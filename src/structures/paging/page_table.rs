@@ -25,6 +25,13 @@ pub struct PageTableEntry {
 }
 
 impl PageTableEntry {
+    /// Creates an unused page table entry.
+    pub fn new() -> Self {
+        PageTableEntry {
+            entry: 0,
+        }
+    }
+
     /// Returns whether this entry is zero.
     pub fn is_unused(&self) -> bool {
         self.entry == 0
@@ -168,6 +175,15 @@ pub struct PageTable {
 }
 
 impl PageTable {
+    /// Creates an empty page table.
+    pub fn new() -> Self {
+        use array_init::array_init;
+
+        PageTable {
+            entries: array_init(|_| PageTableEntry::new()),
+        }
+    }
+
     /// Clears all entries.
     pub fn zero(&mut self) {
         for entry in self.entries.iter_mut() {
