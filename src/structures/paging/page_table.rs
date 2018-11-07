@@ -162,7 +162,7 @@ const ENTRY_COUNT: usize = 512;
 ///
 /// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed
 /// through index operations. For example, `page_table[15]` returns the 15th page table entry.
-#[repr(transparent)]
+#[repr(align(4096))]
 pub struct PageTable {
     entries: [PageTableEntry; ENTRY_COUNT],
 }
