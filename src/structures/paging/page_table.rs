@@ -27,9 +27,7 @@ pub struct PageTableEntry {
 impl PageTableEntry {
     /// Creates an unused page table entry.
     pub fn new() -> Self {
-        PageTableEntry {
-            entry: 0,
-        }
+        PageTableEntry { entry: 0 }
     }
 
     /// Returns whether this entry is zero.

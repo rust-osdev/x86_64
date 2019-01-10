@@ -39,6 +39,12 @@ bitflags! {
     }
 }
 
+/// Contains the Page Fault Linear Address (PFLA).
+///
+/// When page fault occurs, the CPU sets this register to the accessed address.
+#[derive(Debug)]
+pub struct Cr2;
+
 /// Contains the physical address of the level 4 page table.
 #[derive(Debug)]
 pub struct Cr3;
@@ -57,7 +63,7 @@ bitflags! {
 mod x86_64 {
     use super::*;
     use structures::paging::PhysFrame;
-    use PhysAddr;
+    use {PhysAddr, VirtAddr};
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
@@ -105,6 +111,17 @@ mod x86_64 {
             let mut flags = Self::read();
             f(&mut flags);
             Self::write(flags);
+        }
+    }
+
+    impl Cr2 {
+        /// Read the current page fault linear address from the CR3 register.
+        pub fn read() -> VirtAddr {
+            let value: u64;
+            unsafe {
+                asm!("mov %cr2, $0" : "=r" (value));
+            }
+            VirtAddr::new(value)
         }
     }
 

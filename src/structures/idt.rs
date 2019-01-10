@@ -682,6 +682,7 @@ impl fmt::Debug for ExceptionStackFrame {
 
 bitflags! {
     /// Describes an page fault error code.
+    #[repr(transparent)]
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.
