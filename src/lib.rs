@@ -9,7 +9,6 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
 #![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]
-
 #![deny(missing_debug_implementations)]
 
 #[cfg(test)]
@@ -18,10 +17,10 @@ extern crate std;
 
 #[macro_use]
 extern crate bitflags;
+extern crate array_init;
 extern crate bit_field;
 extern crate os_bootinfo;
 extern crate usize_conversions;
-extern crate array_init;
 
 /// Provides the non-standard-width integer types `u2`–`u63`.
 ///
