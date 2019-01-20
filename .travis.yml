@@ -8,10 +8,10 @@ before_script:
   - rustup target add i686-unknown-linux-gnu
   - rustup target add thumbv7em-none-eabihf
   - rustup component add rust-src
-  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
+  - (test -x $HOME/.cargo/bin/cargo-update-installed || cargo install cargo-update-installed)
   - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
   - (test -x $HOME/.cargo/bin/bootimage || cargo install bootimage)
-  - cargo install-update -a
+  - cargo update-installed
 
 script:
   - cargo build
