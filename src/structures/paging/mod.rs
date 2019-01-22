@@ -72,6 +72,9 @@ pub struct Page<S: PageSize = Size4KiB> {
 }
 
 impl<S: PageSize> Page<S> {
+    /// The page size in bytes.
+    pub const SIZE: u64 = S::SIZE;
+
     /// Returns the page that starts at the given virtual address.
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
