@@ -19,7 +19,6 @@ extern crate std;
 extern crate bitflags;
 extern crate array_init;
 extern crate bit_field;
-extern crate os_bootinfo;
 extern crate usize_conversions;
 
 /// Provides the non-standard-width integer types `u2`–`u63`.

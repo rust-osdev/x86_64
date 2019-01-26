@@ -2,6 +2,9 @@
 
 - Make `Mapper::map_to` and `Mapper::identity_map` unsafe because it is possible to break memory safety by passing invalid arguments.
 - Rename `FrameAllocator::alloc` to `allocate_frame` and `FrameDeallocator::dealloc` to `deallocate_frame`.
+- Remove `From<os_bootinfo::FrameRange>` implementation for `PhysFrameRange`
+  - The `os_bootinfo` crate is no longer used by the `bootloader` crate.
+  - It is not possible to provide an implementation for all `os_bootinfo` versions.
 
 # 0.3.6
 
