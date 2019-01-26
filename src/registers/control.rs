@@ -2,6 +2,8 @@
 
 pub use super::model_specific::{Efer, EferFlags};
 
+use bitflags::bitflags;
+
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
 pub struct Cr0;
@@ -62,8 +64,8 @@ bitflags! {
 #[cfg(target_arch = "x86_64")]
 mod x86_64 {
     use super::*;
-    use structures::paging::PhysFrame;
-    use {PhysAddr, VirtAddr};
+    use crate::structures::paging::PhysFrame;
+    use crate::{PhysAddr, VirtAddr};
 
     impl Cr0 {
         /// Read the current set of CR0 flags.

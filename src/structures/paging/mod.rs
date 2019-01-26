@@ -11,7 +11,7 @@ use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
-use {PhysAddr, VirtAddr};
+use crate::{PhysAddr, VirtAddr};
 
 mod frame_alloc;
 mod page_table;

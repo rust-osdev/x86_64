@@ -1,6 +1,6 @@
 //! Traits for abstracting away frame allocation and deallocation.
 
-use structures::paging::{PageSize, PhysFrame};
+use crate::structures::paging::{PageSize, PhysFrame};
 
 /// A trait for types that can allocate a frame of memory.
 pub trait FrameAllocator<S: PageSize> {

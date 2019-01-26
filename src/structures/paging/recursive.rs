@@ -1,14 +1,14 @@
 #![cfg(target_arch = "x86_64")]
 
-use instructions::tlb;
-use registers::control::Cr3;
-use structures::paging::{
+use crate::instructions::tlb;
+use crate::registers::control::Cr3;
+use crate::structures::paging::{
     frame_alloc::FrameAllocator,
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
     NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use ux::u9;
-use {PhysAddr, VirtAddr};
+use crate::{PhysAddr, VirtAddr};
 
 /// This type represents a page whose mapping has changed in the page table.
 ///
@@ -221,7 +221,7 @@ impl<'a> RecursivePageTable<'a> {
         where
             A: FrameAllocator<Size4KiB>,
         {
-            use structures::paging::PageTableFlags as Flags;
+            use crate::structures::paging::PageTableFlags as Flags;
 
             let created;
 
@@ -262,7 +262,7 @@ impl<'a> RecursivePageTable<'a> {
     where
         A: FrameAllocator<Size4KiB>,
     {
-        use structures::paging::PageTableFlags as Flags;
+        use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
@@ -288,7 +288,7 @@ impl<'a> RecursivePageTable<'a> {
     where
         A: FrameAllocator<Size4KiB>,
     {
-        use structures::paging::PageTableFlags as Flags;
+        use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
@@ -386,7 +386,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
-        use structures::paging::PageTableFlags as Flags;
+        use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -476,7 +476,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
-        use structures::paging::PageTableFlags as Flags;
+        use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {

@@ -13,7 +13,8 @@ use bit_field::BitField;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Index, IndexMut};
-use {PrivilegeLevel, VirtAddr};
+use crate::{PrivilegeLevel, VirtAddr};
+use bitflags::bitflags;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -432,7 +433,7 @@ impl InterruptDescriptorTable {
     #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
         use core::mem::size_of;
-        use instructions::tables::{lidt, DescriptorTablePointer};
+        use crate::instructions::tables::{lidt, DescriptorTablePointer};
 
         let ptr = DescriptorTablePointer {
             base: self as *const _ as u64,
@@ -553,7 +554,7 @@ impl<F> Entry<F> {
     /// further customization.
     #[cfg(target_arch = "x86_64")]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use instructions::segmentation;
+        use crate::instructions::segmentation;
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;

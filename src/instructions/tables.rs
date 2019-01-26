@@ -1,8 +1,8 @@
 //! Functions to load GDT, IDT, and TSS structures.
 
-use structures::gdt::SegmentSelector;
+use crate::structures::gdt::SegmentSelector;
 
-pub use structures::DescriptorTablePointer;
+pub use crate::structures::DescriptorTablePointer;
 
 /// Load GDT table.
 pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {

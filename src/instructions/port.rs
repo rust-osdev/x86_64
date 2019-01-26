@@ -2,7 +2,7 @@
 
 use core::marker::PhantomData;
 
-pub use structures::port::PortReadWrite;
+pub use crate::structures::port::PortReadWrite;
 
 impl PortReadWrite for u8 {
     #[inline]

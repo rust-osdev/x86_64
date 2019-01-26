@@ -3,6 +3,8 @@
 #[cfg(target_arch = "x86_64")]
 pub use self::x86_64::*;
 
+use bitflags::bitflags;
+
 bitflags! {
     /// The RFLAGS register.
     pub struct RFlags: u64 {

@@ -6,6 +6,10 @@
   - The `os_bootinfo` crate is no longer used by the `bootloader` crate.
   - It is not possible to provide an implementation for all `os_bootinfo` versions.
 
+## Other
+
+- Update to 2018 edition
+
 # 0.3.6
 
 - Add a `SIZE` constant to the `Page` type

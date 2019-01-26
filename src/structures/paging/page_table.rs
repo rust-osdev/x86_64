@@ -2,10 +2,11 @@ use core::fmt;
 use core::ops::{Index, IndexMut};
 
 use super::{PageSize, PhysFrame, Size4KiB};
-use addr::PhysAddr;
+use crate::addr::PhysAddr;
 
 use usize_conversions::usize_from;
 use ux::*;
+use bitflags::bitflags;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
