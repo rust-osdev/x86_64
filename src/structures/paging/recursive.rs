@@ -226,7 +226,7 @@ impl<'a> RecursivePageTable<'a> {
             let created;
 
             if entry.is_unused() {
-                if let Some(frame) = allocator.alloc() {
+                if let Some(frame) = allocator.allocate_frame() {
                     entry.set_frame(frame, Flags::PRESENT | Flags::WRITABLE);
                     created = true;
                 } else {
