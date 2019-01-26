@@ -7,11 +7,11 @@ pub use self::page_table::*;
 #[cfg(target_arch = "x86_64")]
 pub use self::recursive::*;
 
+use crate::{PhysAddr, VirtAddr};
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use ux::*;
-use crate::{PhysAddr, VirtAddr};
 
 mod frame_alloc;
 mod page_table;

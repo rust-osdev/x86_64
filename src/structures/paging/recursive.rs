@@ -7,8 +7,8 @@ use crate::structures::paging::{
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
     NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
-use ux::u9;
 use crate::{PhysAddr, VirtAddr};
+use ux::u9;
 
 /// This type represents a page whose mapping has changed in the page table.
 ///

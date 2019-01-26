@@ -1,10 +1,10 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
-use bit_field::BitField;
-use core::fmt;
 use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
+use bit_field::BitField;
 use bitflags::bitflags;
+use core::fmt;
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
@@ -84,8 +84,8 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction.
     #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
-        use core::mem::size_of;
         use crate::instructions::tables::{lgdt, DescriptorTablePointer};
+        use core::mem::size_of;
 
         let ptr = DescriptorTablePointer {
             base: self.table.as_ptr() as u64,

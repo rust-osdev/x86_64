@@ -4,9 +4,9 @@ use core::ops::{Index, IndexMut};
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 
+use bitflags::bitflags;
 use usize_conversions::usize_from;
 use ux::*;
-use bitflags::bitflags;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
