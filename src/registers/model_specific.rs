@@ -1,5 +1,7 @@
 //! Functions to read and write control registers.
 
+use bitflags::bitflags;
+
 /// A model specific register.
 #[derive(Debug)]
 pub struct Msr(u32);

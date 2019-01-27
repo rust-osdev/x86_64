@@ -9,11 +9,12 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
+use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
+use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Index, IndexMut};
-use {PrivilegeLevel, VirtAddr};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -431,8 +432,8 @@ impl InterruptDescriptorTable {
     /// Loads the IDT in the CPU using the `lidt` command.
     #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
+        use crate::instructions::tables::{lidt, DescriptorTablePointer};
         use core::mem::size_of;
-        use instructions::tables::{lidt, DescriptorTablePointer};
 
         let ptr = DescriptorTablePointer {
             base: self as *const _ as u64,
@@ -553,7 +554,7 @@ impl<F> Entry<F> {
     /// further customization.
     #[cfg(target_arch = "x86_64")]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use instructions::segmentation;
+        use crate::instructions::segmentation;
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;

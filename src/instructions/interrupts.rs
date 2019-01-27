@@ -2,7 +2,7 @@
 
 /// Returns whether interrupts are enabled.
 pub fn are_enabled() -> bool {
-    use registers::rflags::{self, RFlags};
+    use crate::registers::rflags::{self, RFlags};
 
     rflags::read().contains(RFlags::INTERRUPT_FLAG)
 }
