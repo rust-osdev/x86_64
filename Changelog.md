@@ -1,3 +1,5 @@
+# 0.4.0
+
 ## Breaking
 
 - Make `Mapper::map_to` and `Mapper::identity_map` unsafe because it is possible to break memory safety by passing invalid arguments.
