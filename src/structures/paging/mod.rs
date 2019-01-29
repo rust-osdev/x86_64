@@ -3,7 +3,7 @@
 //! Page tables translate virtual memory “pages” to physical memory “frames”.
 
 pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
-pub use self::page_table::*;
+pub use self::page_table::{PageTable, PageTableFlags};
 #[cfg(target_arch = "x86_64")]
 pub use self::recursive::*;
 pub use self::page::{Page, PageSize, Size4KiB, Size2MiB, Size1GiB};
@@ -17,6 +17,6 @@ use ux::*;
 
 pub mod page;
 pub mod frame;
+pub mod page_table;
 mod frame_alloc;
-mod page_table;
 mod recursive;
