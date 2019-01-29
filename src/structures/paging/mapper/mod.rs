@@ -14,6 +14,8 @@ use ux::u9;
 
 pub mod recursive;
 
+pub trait MapperAllSizes = Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB>;
+
 /// A trait for common page table operations.
 pub trait Mapper<S: PageSize> {
     /// Creates a new mapping in the page table.
