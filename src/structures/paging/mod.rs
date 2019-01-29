@@ -2,7 +2,7 @@
 //!
 //! Page tables translate virtual memory “pages” to physical memory “frames”.
 
-pub use self::frame_alloc::*;
+pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
 pub use self::page_table::*;
 #[cfg(target_arch = "x86_64")]
 pub use self::recursive::*;
