@@ -5,9 +5,9 @@
 pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
 pub use self::page_table::{PageTable, PageTableFlags};
 #[cfg(target_arch = "x86_64")]
-pub use self::recursive::*;
 pub use self::page::{Page, PageSize, Size4KiB, Size2MiB, Size1GiB};
 pub use self::frame::PhysFrame;
+pub use self::mapper::{Mapper, RecursivePageTable};
 
 use crate::{PhysAddr, VirtAddr};
 use core::fmt;
@@ -18,5 +18,5 @@ use ux::*;
 pub mod page;
 pub mod frame;
 pub mod page_table;
+pub mod mapper;
 mod frame_alloc;
-mod recursive;
