@@ -12,7 +12,7 @@ use crate::structures::paging::{
 use crate::{PhysAddr, VirtAddr};
 use ux::u9;
 
-pub mod recursive;
+mod recursive;
 
 /// A trait for common page table operations.
 pub trait Mapper<S: PageSize> {
