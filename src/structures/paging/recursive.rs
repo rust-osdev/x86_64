@@ -5,7 +5,7 @@ use crate::registers::control::Cr3;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator,
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    page::NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 use ux::u9;
