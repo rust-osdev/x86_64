@@ -1,6 +1,7 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
 pub use self::recursive::RecursivePageTable;
+pub use self::offset::OffsetMapper;
 
 use crate::instructions::tlb;
 use crate::registers::control::Cr3;
@@ -12,6 +13,7 @@ use crate::structures::paging::{
 use crate::{PhysAddr, VirtAddr};
 use ux::u9;
 
+mod offset;
 mod recursive;
 
 /// A trait for common page table operations.
