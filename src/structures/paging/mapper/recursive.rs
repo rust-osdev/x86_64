@@ -33,12 +33,6 @@ pub struct RecursivePageTable<'a> {
     recursive_index: u9,
 }
 
-/// An error indicating that the given page table is not recursively mapped.
-///
-/// Returned from `RecursivePageTable::new`.
-#[derive(Debug)]
-pub struct NotRecursivelyMapped;
-
 impl<'a> RecursivePageTable<'a> {
     /// Creates a new RecursivePageTable from the passed level 4 PageTable.
     ///
@@ -50,8 +44,8 @@ impl<'a> RecursivePageTable<'a> {
     ///       where `xxx` is the recursive entry.
     /// - The page table must be active, i.e. the CR3 register must contain its physical address.
     ///
-    /// Otherwise `Err(NotRecursivelyMapped)` is returned.
-    pub fn new(table: &'a mut PageTable) -> Result<Self, NotRecursivelyMapped> {
+    /// Otherwise `Err(())` is returned.
+    pub fn new(table: &'a mut PageTable) -> Result<Self, ()> {
         let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
         let recursive_index = page.p4_index();
 
@@ -59,10 +53,10 @@ impl<'a> RecursivePageTable<'a> {
             || page.p2_index() != recursive_index
             || page.p1_index() != recursive_index
         {
-            return Err(NotRecursivelyMapped);
+            return Err(());
         }
         if Ok(Cr3::read().0) != table[recursive_index].frame() {
-            return Err(NotRecursivelyMapped);
+            return Err(());
         }
 
         Ok(RecursivePageTable {
