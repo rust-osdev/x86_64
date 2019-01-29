@@ -293,21 +293,22 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate_page(&self, page: Page<Size1GiB>) -> Option<PhysFrame<Size1GiB>> {
+    fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
 
         if p3_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
-        PhysFrame::from_start_address(p3_entry.addr()).ok()
+        PhysFrame::from_start_address(p3_entry.addr())
+            .map_err(|()| TranslateError::InvalidFrameAddress(p3_entry.addr()))
     }
 }
 
@@ -390,28 +391,29 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate_page(&self, page: Page<Size2MiB>) -> Option<PhysFrame<Size2MiB>> {
+    fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
 
         if p3_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[page.p2_index()];
 
         if p2_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
-        PhysFrame::from_start_address(p2_entry.addr()).ok()
+        PhysFrame::from_start_address(p2_entry.addr())
+            .map_err(|()| TranslateError::InvalidFrameAddress(p2_entry.addr()))
     }
 }
 
@@ -500,35 +502,36 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate_page(&self, page: Page<Size4KiB>) -> Option<PhysFrame<Size4KiB>> {
+    fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
 
         if p3_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[page.p2_index()];
 
         if p2_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
         let p1_entry = &p1[page.p1_index()];
 
         if p1_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
-        PhysFrame::from_start_address(p1_entry.addr()).ok()
+        PhysFrame::from_start_address(p1_entry.addr())
+            .map_err(|()| TranslateError::InvalidFrameAddress(p1_entry.addr()))
     }
 }
 

@@ -48,7 +48,7 @@ pub trait Mapper<S: PageSize> {
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
     /// Return the frame that the specified page is mapped to.
-    fn translate_page(&self, page: Page<S>) -> Option<PhysFrame<S>>;
+    fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
     ///
@@ -126,4 +126,19 @@ pub enum UnmapError {
 pub enum FlagUpdateError {
     /// The given page is not mapped to a physical frame.
     PageNotMapped,
+    /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
+    /// given page is part of a huge page and can't be freed individually.
+    ParentEntryHugePage,
+}
+
+/// An error indicating that an `translate` call failed.
+#[derive(Debug)]
+pub enum TranslateError {
+    /// The given page is not mapped to a physical frame.
+    PageNotMapped,
+    /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
+    /// given page is part of a huge page and can't be freed individually.
+    ParentEntryHugePage,
+    /// The page table entry for the given page points to an invalid physical address.
+    InvalidFrameAddress(PhysAddr),
 }
