@@ -7,7 +7,7 @@ pub use self::page_table::{PageTable, PageTableFlags};
 #[cfg(target_arch = "x86_64")]
 pub use self::page::{Page, PageSize, Size4KiB, Size2MiB, Size1GiB};
 pub use self::frame::PhysFrame;
-pub use self::mapper::{Mapper, RecursivePageTable};
+pub use self::mapper::{Mapper, RecursivePageTable, OffsetMapper};
 
 use crate::{PhysAddr, VirtAddr};
 use core::fmt;
