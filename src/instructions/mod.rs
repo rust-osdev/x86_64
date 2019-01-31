@@ -22,3 +22,26 @@ pub fn hlt() {
         asm!("hlt" :::: "volatile");
     }
 }
+
+/// Uniformly sampled Some(u64) if RdRand opcode is supported, None otherwise
+#[inline]
+pub fn rdrand() -> Option<u64> {
+	let cpuid = raw_cpuid::CpuId::new();
+
+	let has_rdrand = match cpuid.get_feature_info() {
+		Some(finfo) => finfo.has_rdrand(),
+		None => false
+	};
+
+	if has_rdrand {
+		let res: u64;
+
+		unsafe {
+			asm!("rdrand %rax" : "={rax}"(res) ::: "volatile");
+		}
+
+		Some(res)
+	} else {
+		None
+	}
+}
