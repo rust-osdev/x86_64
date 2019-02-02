@@ -33,6 +33,7 @@ steps:
         *) "$BUILD_REASON" ;;
     esac
   displayName: 'Build Info'
+  continueOnError: true
 
 - script: |
     curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
@@ -52,6 +53,7 @@ steps:
     rustc -Vv
     cargo -V
   displayName: 'Print Rust Version'
+  continueOnError: true
 
 - script: cargo build
   displayName: 'cargo build'
@@ -87,11 +89,10 @@ steps:
   displayName: 'Install QEMU (macOS)'
 
 - script: |
-    choco install qemu --verbose
-    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+    choco  install qemu --verbose
+    echo "##vso[task.setvariable variable=PATH;]$PATH:C:\Program Files\qemu"
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install QEMU (Windows)'
 
 - script: bootimage test --manifest-path testing/Cargo.toml
   displayName: 'Integration Tests'
-
