@@ -6,14 +6,18 @@ trigger:
 strategy:
   matrix:
     linux:
-      imageName: 'ubuntu-16.04'
+      pool_name: 'Linux'
+      image_ame: 'ubuntu-16.04'
     mac:
-      imageName: 'macos-10.13'
+      pool_name: 'macOS'
+      image_name: 'macos-10.13'
     windows:
-      imageName: 'vs2017-win2016'
+      pool_name: 'Windows'
+      image_name: 'vs2017-win2016'
 
 pool:
-  vmImage: $(imageName)
+  name: $(pool_name)
+  vmImage: $(image_name)
 
 steps:
 - script: echo Hello, world!
@@ -21,5 +25,7 @@ steps:
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
+    echo This is pipeline $(System.DefinitionId)
+    echo OS: $(variables['Agent.OS'])
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
