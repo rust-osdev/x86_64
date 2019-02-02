@@ -72,7 +72,7 @@ steps:
   condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Install QEMU (Linux)'
 
-- script: brew install qemu-system-x86
+- script: brew install qemu
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install QEMU (macOS)'
 
@@ -86,4 +86,4 @@ steps:
 - script: |
     cargo build --target i686-unknown-linux-gnu
     cargo build --target thumbv7em-none-eabihf
-    displayName: 'Build on non x86_64 platforms'
+  displayName: 'Build on non x86_64 platforms'
