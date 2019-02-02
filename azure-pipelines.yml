@@ -1,7 +1,10 @@
 # Documentation: https://aka.ms/yaml
 
 trigger:
-- master
+  batch: true
+  branches:
+    include:
+    - master
 
 strategy:
   matrix:
@@ -24,7 +27,7 @@ steps:
     echo "Reason: $BUILD_REASON"
     case "$BUILD_REASON" in
             "Manual") echo "$BUILD_REQUESTEDFOR manually queued the build." ;;
-            "PullRequest") echo "This is a pull request CI build for $BUILD_REQUESTEDFOR." ;;
+            "PullRequest") echo "This is a CI build for a pull request on $BUILD_REQUESTEDFOR." ;;
             "IndividualCI") echo "This is a CI build for $BUILD_REQUESTEDFOR." ;;
             "BatchedCI") echo "This is a batched CI build for $BUILD_REQUESTEDFOR." ;;
         *) "$BUILD_REASON" ;;
@@ -60,6 +63,12 @@ steps:
   displayName: 'Deny Warnings'
 
 - script: |
+    rustup target add i686-unknown-linux-gnu
+    rustup target add thumbv7em-none-eabihf
+    rustup component add rust-src
+  displayName: 'Install Rustup Targets/Components'
+
+- script: |
     cargo build --target i686-unknown-linux-gnu
     cargo build --target thumbv7em-none-eabihf
   displayName: 'Build on non x86_64 platforms'
@@ -68,12 +77,6 @@ steps:
     cargo install cargo-xbuild --debug
     cargo install bootimage --debug
   displayName: 'Install cargo-xbuild and bootimage'
-
-- script: |
-    rustup target add i686-unknown-linux-gnu
-    rustup target add thumbv7em-none-eabihf
-    rustup component add rust-src
-  displayName: 'Install Rustup Targets/Components'
 
 - script: sudo apt install qemu-system-x86
   condition: eq( variables['Agent.OS'], 'Linux' )
