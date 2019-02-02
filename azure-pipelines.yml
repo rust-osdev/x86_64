@@ -27,17 +27,63 @@ steps:
             "BatchedCI") echo "This is a batched CI build for $BUILD_REQUESTEDFOR." ;;
         *) $BUILD_REASON ;;
     esac
-  displayName: 'Build info'
+  displayName: 'Build Info'
 
 - script: |
     curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
     echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
   condition: or(eq( variables['Agent.OS'], 'Linux' ),  eq( variables['Agent.OS'], 'Darwin' ))
-  displayName: Install Rust (Linux/macOS)
+  displayName: 'Install Rust (Linux/macOS)'
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo This is pipeline $(System.DefinitionId)
-    echo OS: $(variables['Agent.OS'])
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    curl -sSf -o rustup-init.exe https://win.rustup.rs
+    rustup-init.exe -y --default-toolchain %RUSTUP_TOOLCHAIN%
+    set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+    echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Install Rust (Windows)'
+
+- script: |
+    rustc -Vv
+    cargo -V
+  displayName: 'Print Rust Version'
+
+- script: cargo build
+  displayName: 'cargo build'
+
+- script: cargo test
+  displayName: 'cargo test'
+
+- script: cargo build --features deny-warnings
+  displayName: 'Deny Warnings'
+
+- script: |
+    cargo install cargo-xbuild --debug
+    cargo install bootimage --debug
+  displayName: 'Install cargo-xbuild and bootimage'
+
+- script: |
+    rustup target add i686-unknown-linux-gnu
+    rustup target add thumbv7em-none-eabihf
+    rustup component add rust-src
+  displayName: 'Install Rustup Targets/Components'
+
+- script: sudo apt install qemu-system-x86
+  condition: eq( variables['Agent.OS'], 'Linux )
+  displayName: 'Install QEMU (Linux)'
+
+- script: brew install qemu-system-x86
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install QEMU (macOS)'
+
+- script: choco install qemu
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Install QEMU (Windows)'
+
+- script: bootimage test --manifest-path testing/Cargo.toml
+  displayName: 'Integration Tests'
+
+- script: |
+    cargo build --target i686-unknown-linux-gnu
+    cargo build --target thumbv7em-none-eabihf
+    displayName: 'Build on non x86_64 platforms'
