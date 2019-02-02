@@ -58,6 +58,11 @@ steps:
   displayName: 'Deny Warnings'
 
 - script: |
+    cargo build --target i686-unknown-linux-gnu
+    cargo build --target thumbv7em-none-eabihf
+  displayName: 'Build on non x86_64 platforms'
+
+- script: |
     cargo install cargo-xbuild --debug
     cargo install bootimage --debug
   displayName: 'Install cargo-xbuild and bootimage'
@@ -76,14 +81,12 @@ steps:
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install QEMU (macOS)'
 
-- script: choco install qemu
+- script: |
+    choco install qemu --verbose
+    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install QEMU (Windows)'
 
 - script: bootimage test --manifest-path testing/Cargo.toml
   displayName: 'Integration Tests'
 
-- script: |
-    cargo build --target i686-unknown-linux-gnu
-    cargo build --target thumbv7em-none-eabihf
-  displayName: 'Build on non x86_64 platforms'
