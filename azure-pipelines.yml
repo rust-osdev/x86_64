@@ -69,7 +69,7 @@ steps:
   displayName: 'Install Rustup Targets/Components'
 
 - script: sudo apt install qemu-system-x86
-  condition: eq( variables['Agent.OS'], 'Linux )
+  condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Install QEMU (Linux)'
 
 - script: brew install qemu-system-x86
