@@ -36,11 +36,11 @@ steps:
   continueOnError: true
 
 - script: |
-    choco install qemu
-    set PATH=%PATH%;C:\ProgramData\qemu
+    choco install qemu --limit-output
+    set PATH='%PATH%;C:\Program Files (x86)\qemu'
     dir C:\
-    dir C:\ProgramData
-    dir C:\ProgramData\qemu
+    dir 'C:\Program Files (x86)'
+    dir 'C:\Program Files (x86)\qemu'
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install QEMU (Windows)'
 
