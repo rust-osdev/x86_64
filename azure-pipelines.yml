@@ -7,25 +7,18 @@ strategy:
   matrix:
     linux:
       image_name: 'ubuntu-16.04'
+      rustup_toolchain: nightly
     mac:
       image_name: 'macos-10.13'
+      rustup_toolchain: nightly
     windows:
       image_name: 'vs2017-win2016'
+      rustup_toolchain: nightly
 
 pool:
   vmImage: $(image_name)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo This is pipeline $(System.DefinitionId)
-    echo OS: $(variables['Agent.OS'])
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
-
 - bash: |
     echo "Hello world from $AGENT_NAME running on $AGENT_OS"
     case $BUILD_REASON in
@@ -34,5 +27,17 @@ steps:
             "BatchedCI") echo "This is a batched CI build for $BUILD_REQUESTEDFOR." ;;
         *) $BUILD_REASON ;;
     esac
-  displayName: Hello world
+  displayName: 'Build info'
 
+- script: |
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
+    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+  condition: or(eq( variables['Agent.OS'], 'Linux' ),  eq( variables['Agent.OS'], 'Darwin' ))
+  displayName: Install Rust (Linux/macOS)
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo This is pipeline $(System.DefinitionId)
+    echo OS: $(variables['Agent.OS'])
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
