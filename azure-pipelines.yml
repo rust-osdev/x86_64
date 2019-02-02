@@ -36,6 +36,15 @@ steps:
   continueOnError: true
 
 - script: |
+    choco install qemu
+    set PATH=%PATH%;C:\ProgramData\qemu
+    dir C:\
+    dir C:\ProgramData
+    dir C:\ProgramData\qemu
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Install QEMU (Windows)'
+
+- script: |
     curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
     echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
   condition: or(eq( variables['Agent.OS'], 'Linux' ),  eq( variables['Agent.OS'], 'Darwin' ))
@@ -91,15 +100,6 @@ steps:
     brew install qemu
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install QEMU (macOS)'
-
-- script: |
-    choco install qemu
-    set PATH=%PATH%;C:\ProgramData\qemu
-    dir C:\
-    dir C:\ProgramData
-    dir C:\ProgramData\qemu
-  condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: 'Install QEMU (Windows)'
 
 - script: bootimage test --manifest-path testing/Cargo.toml
   displayName: 'Integration Tests'
