@@ -94,7 +94,8 @@ steps:
 
 - script: |
     choco install qemu
-    set PATH=%PATH%;C:\Program Files\qemu
+    set PATH=%PATH%;C:\ProgramData\qemu
+    type C:\ProgramData\chocolatey\logs\chocolatey.log
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install QEMU (Windows)'
 
