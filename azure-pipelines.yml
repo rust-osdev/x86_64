@@ -6,7 +6,7 @@ trigger:
 strategy:
   matrix:
     linux:
-      image_ame: 'ubuntu-16.04'
+      image_name: 'ubuntu-16.04'
     mac:
       image_name: 'macos-10.13'
     windows:
