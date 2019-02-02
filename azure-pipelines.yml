@@ -3,27 +3,23 @@
 trigger:
 - master
 
-jobs:
-  - job: build
-    displayName: ""
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-16.04'
+    mac:
+      imageName: 'macos-10.13'
+    windows:
+      imageName: 'vs2017-win2016'
 
-    strategy:
-      matrix:
-        Windows:
-          image: 'vs2017-win2016'
-        macOS:
-          image: 'macOS-10.13'
-        Linux:
-          image: 'Ubuntu-16.04'
+pool:
+  vmImage: $(imageName)
 
-    pool:
-      vmImage: ${{ image }}
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
 
-    steps:
-    - script: echo Hello, world!
-      displayName: 'Run a one-line script'
-
-    - script: |
-        echo Add other tasks to build, test, and deploy your project.
-        echo See https://aka.ms/yaml
-      displayName: 'Run a multi-line script'
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
