@@ -37,8 +37,8 @@ steps:
 
 - script: |
     choco install qemu --limit-output --no-progress
+    echo "##vso[task.setvariable variable=PATH;]%PATH%;C:\Program Files\qemu
     set PATH=%PATH%;C:\Program Files\qemu
-    echo "##vso[task.setvariable variable=PATH;]%PATH%;C:\Program Files\qemu"
     echo %PATH%
     qemu-system-x86_64 --help
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
@@ -53,9 +53,9 @@ steps:
 - script: |
     curl -sSf -o rustup-init.exe https://win.rustup.rs
     rustup-init.exe -y --default-toolchain %RUSTUP_TOOLCHAIN%
-    set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-    echo %PATH%
     echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+    echo %PATH%
+    set PATH=%PATH%;%USERPROFILE%\.cargo\bin
     echo %PATH%
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install Rust (Windows)'
