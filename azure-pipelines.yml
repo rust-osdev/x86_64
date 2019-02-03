@@ -107,4 +107,4 @@ steps:
     echo %PATH%
     qemu-system-x86_64 --help
     bootimage test --manifest-path testing/Cargo.toml
-displayName: 'Integration Tests'
+  displayName: 'Integration Tests'
