@@ -1,4 +1,6 @@
-0.4.1
+# 0.4.1
+
+- Add support for the RdRand instruction (random number generation)
 
 # 0.4.0
 
