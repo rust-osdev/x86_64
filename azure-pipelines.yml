@@ -38,6 +38,7 @@ steps:
 - script: |
     choco install qemu --limit-output --no-progress
     set PATH=%PATH%;C:\Program Files\qemu
+    echo "##vso[task.setvariable variable=PATH;]%PATH%;C:\Program Files\qemu"
     echo %PATH%
     qemu-system-x86_64 --help
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
