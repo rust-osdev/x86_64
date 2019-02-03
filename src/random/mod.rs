@@ -1,3 +1,5 @@
+//! Support for build-in RNGs
+
 #[derive(Debug)]
 /// Used to obtain random numbers using x86_64's RDRAND opcode
 pub struct RdRand(());
@@ -18,7 +20,7 @@ impl RdRand {
         }
     }
 
-    /// Uniformly sampled Some(u64) if RdRand opcode is supported, None otherwise
+    /// Uniformly sampled u64
     #[inline]
     #[cfg(target_arch = "x86_64")]
     pub fn get(&self) -> u64 {
