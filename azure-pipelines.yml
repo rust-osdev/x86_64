@@ -95,13 +95,9 @@ steps:
     choco install qemu --limit-output --no-progress
     echo ##vso[task.setvariable variable=PATH;]%PATH%;C:\Program Files\qemu
     set PATH=%PATH%;C:\Program Files\qemu
-    echo %PATH%
-    qemu-system-x86_64 --help
+    qemu-system-x86_64 --version
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install QEMU (Windows)'
 
-- script: |
-    echo %PATH%
-    qemu-system-x86_64 --version
-    bootimage test --manifest-path testing/Cargo.toml
+- script: bootimage test --manifest-path testing/Cargo.toml
   displayName: 'Integration Tests'
