@@ -23,25 +23,35 @@ pub fn hlt() {
     }
 }
 
-/// Uniformly sampled Some(u64) if RdRand opcode is supported, None otherwise
-#[inline]
-pub fn rdrand() -> Option<u64> {
-    let cpuid = raw_cpuid::CpuId::new();
+#[derive(Debug)]
+/// Used to obtain random numbers using x86_64's RDRAND opcode
+pub struct RdRand(());
 
-    let has_rdrand = match cpuid.get_feature_info() {
-        Some(finfo) => finfo.has_rdrand(),
-        None => false
-    };
+impl RdRand {
+    /// Creates Some(RdRand) if RDRAND is supported, None otherwise
+    #[cfg(target_arch = "x86_64")]
+    pub fn new() -> Option<Self> {
+        let cpuid = raw_cpuid::CpuId::new();
+        let has_rdrand = match cpuid.get_feature_info() {
+            Some(finfo) => finfo.has_rdrand(),
+            None => false
+        };
 
-    if has_rdrand {
+        match has_rdrand {
+            true => Some(RdRand(())),
+            false => None
+        }
+    }
+
+    /// Uniformly sampled Some(u64) if RdRand opcode is supported, None otherwise
+    #[inline]
+    #[cfg(target_arch = "x86_64")]
+    pub fn get(&self) -> u64 {
         let res: u64;
-
         unsafe {
             asm!("rdrand %rax" : "={rax}"(res) ::: "volatile");
         }
 
-        Some(res)
-    } else {
-        None
+        res
     }
 }
