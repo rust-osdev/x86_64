@@ -41,6 +41,10 @@ steps:
     echo %PATH%
     echo "##vso[task.setvariable variable=PATH;]%PATH%;C:\Program Files\qemu"
     echo %PATH%
+    dir "C:\Program Files\qemu\"
+    "C:\Program Files\qemu\qemu-system-x86_64.exe" --help
+    C:\Program Files\qemu\qemu-system-x86_64.exe --help
+    qemu-system-x86_64.exe --help
     qemu-system-x86_64 --help
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install QEMU (Windows)'
