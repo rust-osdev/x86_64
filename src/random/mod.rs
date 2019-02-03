@@ -11,12 +11,12 @@ impl RdRand {
         let cpuid = raw_cpuid::CpuId::new();
         let has_rdrand = match cpuid.get_feature_info() {
             Some(finfo) => finfo.has_rdrand(),
-            None => false
+            None => false,
         };
 
         match has_rdrand {
             true => Some(RdRand(())),
-            false => None
+            false => None,
         }
     }
 
