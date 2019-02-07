@@ -2,8 +2,9 @@ use core::fmt;
 use core::ops::{Index, IndexMut};
 
 use super::{PageSize, PhysFrame, Size4KiB};
-use addr::PhysAddr;
+use crate::addr::PhysAddr;
 
+use bitflags::bitflags;
 use usize_conversions::usize_from;
 use ux::*;
 
@@ -25,6 +26,11 @@ pub struct PageTableEntry {
 }
 
 impl PageTableEntry {
+    /// Creates an unused page table entry.
+    pub fn new() -> Self {
+        PageTableEntry { entry: 0 }
+    }
+
     /// Returns whether this entry is zero.
     pub fn is_unused(&self) -> bool {
         self.entry == 0
@@ -162,12 +168,22 @@ const ENTRY_COUNT: usize = 512;
 ///
 /// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed
 /// through index operations. For example, `page_table[15]` returns the 15th page table entry.
-#[repr(transparent)]
+#[repr(align(4096))]
+#[repr(C)]
 pub struct PageTable {
     entries: [PageTableEntry; ENTRY_COUNT],
 }
 
 impl PageTable {
+    /// Creates an empty page table.
+    pub fn new() -> Self {
+        use array_init::array_init;
+
+        PageTable {
+            entries: array_init(|_| PageTableEntry::new()),
+        }
+    }
+
     /// Clears all entries.
     pub fn zero(&mut self) {
         for entry in self.entries.iter_mut() {

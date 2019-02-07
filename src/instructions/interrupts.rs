@@ -1,9 +1,8 @@
 //! Enabling and disabling interrupts
 
 /// Returns whether interrupts are enabled.
-#[cfg(target_pointer_width = "64")]
 pub fn are_enabled() -> bool {
-    use registers::rflags::{self, RFlags};
+    use crate::registers::rflags::{self, RFlags};
 
     rflags::read().contains(RFlags::INTERRUPT_FLAG)
 }
@@ -46,7 +45,6 @@ pub fn disable() {
 /// });
 /// // interrupts are enabled again
 /// ```
-#[cfg(target_pointer_width = "64")]
 pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,

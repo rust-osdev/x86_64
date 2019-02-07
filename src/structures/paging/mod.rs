@@ -4,15 +4,14 @@
 
 pub use self::frame_alloc::*;
 pub use self::page_table::*;
-#[cfg(target_pointer_width = "64")]
+#[cfg(target_arch = "x86_64")]
 pub use self::recursive::*;
 
+use crate::{PhysAddr, VirtAddr};
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-use os_bootinfo;
 use ux::*;
-use {PhysAddr, VirtAddr};
 
 mod frame_alloc;
 mod page_table;
@@ -72,6 +71,9 @@ pub struct Page<S: PageSize = Size4KiB> {
 }
 
 impl<S: PageSize> Page<S> {
+    /// The page size in bytes.
+    pub const SIZE: u64 = S::SIZE;
+
     /// Returns the page that starts at the given virtual address.
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
@@ -424,24 +426,6 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
         } else {
             None
         }
-    }
-}
-
-impl From<os_bootinfo::FrameRange> for PhysFrameRange {
-    fn from(range: os_bootinfo::FrameRange) -> Self {
-        PhysFrameRange {
-            start: PhysFrame::from_start_address(PhysAddr::new(range.start_addr())).unwrap(),
-            end: PhysFrame::from_start_address(PhysAddr::new(range.end_addr())).unwrap(),
-        }
-    }
-}
-
-impl Into<os_bootinfo::FrameRange> for PhysFrameRange {
-    fn into(self) -> os_bootinfo::FrameRange {
-        os_bootinfo::FrameRange::new(
-            self.start.start_address().as_u64(),
-            self.end.start_address().as_u64(),
-        )
     }
 }
 

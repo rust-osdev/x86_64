@@ -1,6 +1,6 @@
 //! Provides a type for the task state segment structure.
 
-use VirtAddr;
+use crate::VirtAddr;
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,

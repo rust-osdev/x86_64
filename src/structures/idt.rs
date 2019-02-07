@@ -9,11 +9,12 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
+use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
+use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Index, IndexMut};
-use {PrivilegeLevel, VirtAddr};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -33,6 +34,7 @@ use {PrivilegeLevel, VirtAddr};
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
 #[repr(C)]
+#[repr(align(16))]
 pub struct InterruptDescriptorTable {
     /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
@@ -428,9 +430,10 @@ impl InterruptDescriptorTable {
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
+    #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
+        use crate::instructions::tables::{lidt, DescriptorTablePointer};
         use core::mem::size_of;
-        use instructions::tables::{lidt, DescriptorTablePointer};
 
         let ptr = DescriptorTablePointer {
             base: self as *const _ as u64,
@@ -507,7 +510,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
@@ -530,7 +533,7 @@ pub type PageFaultHandlerFunc =
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
-    const fn missing() -> Self {
+    pub const fn missing() -> Self {
         Entry {
             gdt_selector: 0,
             pointer_low: 0,
@@ -549,8 +552,9 @@ impl<F> Entry<F> {
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
+    #[cfg(target_arch = "x86_64")]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use instructions::segmentation;
+        use crate::instructions::segmentation;
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
@@ -565,6 +569,7 @@ impl<F> Entry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
+        #[cfg(target_arch = "x86_64")]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
@@ -586,7 +591,7 @@ impl_set_handler_fn!(PageFaultHandlerFunc);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct EntryOptions(u16);
 
 impl EntryOptions {
@@ -678,6 +683,7 @@ impl fmt::Debug for ExceptionStackFrame {
 
 bitflags! {
     /// Describes an page fault error code.
+    #[repr(transparent)]
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.

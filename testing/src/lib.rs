@@ -7,6 +7,7 @@ extern crate x86_64;
 extern crate lazy_static;
 
 pub mod serial;
+pub mod gdt;
 
 use x86_64::instructions::port::Port;
 
