@@ -4,6 +4,7 @@
 
 pub mod interrupts;
 pub mod port;
+pub mod random;
 pub mod segmentation;
 pub mod tables;
 pub mod tlb;
