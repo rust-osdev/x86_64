@@ -6,17 +6,16 @@ pub struct RdRand(());
 
 mod private {
     /// Trait for types that can be returned by the RDRAND instruction
-    pub trait RdRandPrimitive: Sized {}
+    pub trait RdRandPrimitive {}
     impl RdRandPrimitive for u16 {}
     impl RdRandPrimitive for u32 {}
-    #[cfg(target_arch = "x86_64")]
     impl RdRandPrimitive for u64 {}
 }
 use private::RdRandPrimitive;
 
+#[cfg(target_arch = "x86_64")]
 impl RdRand {
     /// Creates Some(RdRand) if RDRAND is supported, None otherwise
-    #[cfg(target_arch = "x86_64")] // <-- raw_cpuid is only a dep for x86_64 targets
     pub fn new() -> Option<Self> {
         let cpuid = raw_cpuid::CpuId::new();
         let has_rdrand = match cpuid.get_feature_info() {
@@ -30,9 +29,21 @@ impl RdRand {
         }
     }
 
+    /// Uniformly sampled u64
+    #[deprecated(note = "This method does not check for errors and will be removed in the next breaking release. Use get_u64() instead.")]
+    #[inline]
+    pub fn get(&self) -> u64 {
+        let res: u64;
+        unsafe {
+            asm!("rdrand %rax" : "={rax}"(res) ::: "volatile");
+        }
+
+        res
+    }
+
     /// Uniformly sampled u64, u32, or u16
     #[inline]
-    pub fn get<T: RdRandPrimitive>(&self) -> Option<T> {
+    pub fn rand<T: RdRandPrimitive>(&self) -> Option<T> {
         let res: T;
         let ok: u8;
         unsafe {
@@ -45,20 +56,20 @@ impl RdRand {
             _ => None
         }
     }
+
     /// Uniformly sampled u64
-    #[cfg(target_arch = "x86_64")]
     #[inline]
     pub fn get_u64(&self) -> Option<u64> {
-        self.get()
+        self.rand()
     }
     /// Uniformly sampled u32
     #[inline]
     pub fn get_u32(&self) -> Option<u32> {
-        self.get()
+        self.rand()
     }
     /// Uniformly sampled u16
     #[inline]
     pub fn get_u16(&self) -> Option<u16> {
-        self.get()
+        self.rand()
     }
 }
