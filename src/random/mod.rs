@@ -4,12 +4,15 @@
 /// Used to obtain random numbers using x86_64's RDRAND opcode
 pub struct RdRand(());
 
-/// Trait for types that can be returned by the RDRAND instruction
-pub trait RdRandPrimitive: Sized {}
-impl RdRandPrimitive for u16 {}
-impl RdRandPrimitive for u32 {}
-#[cfg(target_arch = "x86_64")]
-impl RdRandPrimitive for u64 {}
+mod private {
+    /// Trait for types that can be returned by the RDRAND instruction
+    pub trait RdRandPrimitive: Sized {}
+    impl RdRandPrimitive for u16 {}
+    impl RdRandPrimitive for u32 {}
+    #[cfg(target_arch = "x86_64")]
+    impl RdRandPrimitive for u64 {}
+}
+use private::RdRandPrimitive;
 
 impl RdRand {
     /// Creates Some(RdRand) if RDRAND is supported, None otherwise
