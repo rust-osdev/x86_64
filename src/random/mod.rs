@@ -41,7 +41,8 @@ impl RdRand {
         res
     }
 
-    /// Uniformly sampled u64, u32, or u16
+    /// Uniformly sampled T.
+    /// T must be one of u16, u32, or u64.
     #[inline]
     pub fn rand<T: RdRandPrimitive>(&self) -> Option<T> {
         let res: T;
