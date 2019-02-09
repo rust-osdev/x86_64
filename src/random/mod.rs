@@ -4,15 +4,6 @@
 /// Used to obtain random numbers using x86_64's RDRAND opcode
 pub struct RdRand(());
 
-mod private {
-    /// Trait for types that can be returned by the RDRAND instruction
-    pub trait RdRandPrimitive {}
-    impl RdRandPrimitive for u16 {}
-    impl RdRandPrimitive for u32 {}
-    impl RdRandPrimitive for u64 {}
-}
-use private::RdRandPrimitive;
-
 #[cfg(target_arch = "x86_64")]
 impl RdRand {
     /// Creates Some(RdRand) if RDRAND is supported, None otherwise
@@ -40,16 +31,15 @@ impl RdRand {
 
         res
     }
-
-    /// Uniformly sampled T.
-    /// T must be one of u16, u32, or u64.
+    /// Uniformly sampled u64.
+    /// May fail in rare circumstances or heavy load.
     #[inline]
-    pub fn rand<T: RdRandPrimitive>(&self) -> Option<T> {
-        let res: T;
+    pub fn get_u64(&self) -> Option<u64> {
+        let res: u64;
         let ok: u8;
         unsafe {
-            asm!("rdrand $0; setc $1;"
-                : "=r"(res) "=r"(ok)
+            asm!("rdrand %rax; setc $1;"
+                : "={rax}"(res) "=r"(ok)
                 :: "flags" : "volatile");
         }
         match ok {
@@ -57,20 +47,36 @@ impl RdRand {
             _ => None
         }
     }
-
-    /// Uniformly sampled u64
-    #[inline]
-    pub fn get_u64(&self) -> Option<u64> {
-        self.rand()
-    }
-    /// Uniformly sampled u32
+    /// Uniformly sampled u32.
+    /// May fail in rare circumstances or heavy load.
     #[inline]
     pub fn get_u32(&self) -> Option<u32> {
-        self.rand()
+        let res: u32;
+        let ok: u8;
+        unsafe {
+            asm!("rdrand %eax; setc $1;"
+                : "={eax}"(res) "=r"(ok)
+                :: "flags" : "volatile");
+        }
+        match ok {
+            1 => Some(res),
+            _ => None
+        }
     }
-    /// Uniformly sampled u16
+    /// Uniformly sampled u16.
+    /// May fail in rare circumstances or heavy load.
     #[inline]
     pub fn get_u16(&self) -> Option<u16> {
-        self.rand()
+        let res: u16;
+        let ok: u8;
+        unsafe {
+            asm!("rdrand %ax; setc $1;"
+                : "={ax}"(res) "=r"(ok)
+                :: "flags" : "volatile");
+        }
+        match ok {
+            1 => Some(res),
+            _ => None
+        }
     }
 }
