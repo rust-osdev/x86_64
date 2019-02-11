@@ -1,3 +1,5 @@
+# 0.4.2
+
 - Add `RdRand::get_u{16, 32, 64}` methods
 - Deprecate `RdRand::get` because it does not check for failure
 - Make `RdRand` Copy
