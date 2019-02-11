@@ -1,3 +1,7 @@
+- Add `RdRand::get_u{16, 32, 64}` methods
+- Deprecate `RdRand::get` because it does not check for failure
+- Make `RdRand` Copy
+
 # 0.4.1
 
 - Add support for the RdRand instruction (random number generation)
