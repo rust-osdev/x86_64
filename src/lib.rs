@@ -19,7 +19,6 @@ pub use ux;
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
 pub mod instructions;
-pub mod random;
 pub mod registers;
 pub mod structures;
 

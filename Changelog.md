@@ -1,3 +1,7 @@
+## Breaking
+
+- The `random` module is now a submodule of the `instructions` module.
+
 # 0.4.2
 
 - Add `RdRand::get_u{16, 32, 64}` methods
