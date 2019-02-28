@@ -1,6 +1,18 @@
 ## Breaking
 
 - The `random` module is now a submodule of the `instructions` module.
+- The `structures::paging` module was split into several submodules:
+    - The `NotGiantPageSize`, `PageRange`, and `PageRangeInclusive` types were moved to a new `page` submodule.
+    - The `PhysFrameRange` and `PhysFrameRangeInclusive` types were moved to a new `frame` submodule.
+    - The `FrameError` and `PageTableEntry` types were moved to a new `page_table` submodule.
+    - The `MapperFlush`, `MapToError`, `UnmapError`, and `FlagUpdateError` types were moved to a new `mapper` submodule.
+- The `structures::paging` module received the following changes:
+    - The `Mapper::translate_page` function now returns a `Result` with a new `TranslateError` error type.
+    - The `NotRecursivelyMapped` error type was removed.
+
+## Other
+
+- Add a new `structures::paging::MappedPageTable` type that implements the `Mapper` trait.
 
 # 0.4.2
 
