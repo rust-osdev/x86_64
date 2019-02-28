@@ -13,11 +13,11 @@ use crate::{
 ///
 /// This type requires that the all physical page table frames are mapped to some virtual
 /// address. Normally, this is done by mapping the complete physical address space into
-/// the virtual address space at some offset (hence the name of this type). Other mappings
-/// between physical and virtual memory are possible too, as long as they can be calculated
-/// as an `PhysAddr` to `VirtAddr` closure.
+/// the virtual address space at some offset. Other mappings between physical and virtual
+/// memory are possible too, as long as they can be calculated as an `PhysAddr` to
+/// `VirtAddr` closure.
 #[derive(Debug)]
-pub struct OffsetMapper<'a, PhysToVirt>
+pub struct MappedPageTable<'a, PhysToVirt>
 where
     PhysToVirt: Fn(PhysAddr) -> VirtAddr,
 {
@@ -25,11 +25,11 @@ where
     level_4_table: &'a mut PageTable,
 }
 
-impl<'a, PhysToVirt> OffsetMapper<'a, PhysToVirt>
+impl<'a, PhysToVirt> MappedPageTable<'a, PhysToVirt>
 where
     PhysToVirt: Fn(PhysAddr) -> VirtAddr,
 {
-    /// Creates a new `OffsetMapper` that uses the passed closure for converting virtual
+    /// Creates a new `MappedPageTable` that uses the passed closure for converting virtual
     /// to physical addresses.
     ///
     /// This function is unsafe because the caller must guarantee that the passed `phys_to_virt`
@@ -129,7 +129,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> Mapper<Size1GiB> for OffsetMapper<'a, PhysToVirt>
+impl<'a, PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, PhysToVirt>
 where
     PhysToVirt: Fn(PhysAddr) -> VirtAddr,
 {
@@ -206,7 +206,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> Mapper<Size2MiB> for OffsetMapper<'a, PhysToVirt>
+impl<'a, PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, PhysToVirt>
 where
     PhysToVirt: Fn(PhysAddr) -> VirtAddr,
 {
@@ -291,7 +291,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> Mapper<Size4KiB> for OffsetMapper<'a, PhysToVirt>
+impl<'a, PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, PhysToVirt>
 where
     PhysToVirt: Fn(PhysAddr) -> VirtAddr,
 {
