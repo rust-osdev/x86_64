@@ -523,13 +523,13 @@ pub struct Entry<F> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
-pub type HandlerFunc = extern "x86-interrupt" fn(&mut ExceptionStackFrame);
+pub type HandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame);
 /// A handler function for an exception that pushes an error code.
 pub type HandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: u64);
+    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
-    extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: PageFaultErrorCode);
+    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -642,10 +642,18 @@ impl EntryOptions {
     }
 }
 
-/// Represents the exception stack frame pushed by the CPU on exception entry.
+/// Wrapper type for the exception stack frame pushed by the CPU.
+///
+/// Identical to [`InterruptStackFrame`].
+#[deprecated(
+    note = "This type was renamed to InterruptStackFrame."
+)]
+pub type ExceptionStackFrame = InterruptStackFrame;
+
+/// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone)]
 #[repr(C)]
-pub struct ExceptionStackFrame {
+pub struct InterruptStackFrame {
     /// This value points to the instruction that should be executed when the interrupt
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
@@ -662,7 +670,7 @@ pub struct ExceptionStackFrame {
     pub stack_segment: u64,
 }
 
-impl fmt::Debug for ExceptionStackFrame {
+impl fmt::Debug for InterruptStackFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         struct Hex(u64);
         impl fmt::Debug for Hex {
@@ -671,7 +679,7 @@ impl fmt::Debug for ExceptionStackFrame {
             }
         }
 
-        let mut s = f.debug_struct("ExceptionStackFrame");
+        let mut s = f.debug_struct("InterruptStackFrame");
         s.field("instruction_pointer", &self.instruction_pointer);
         s.field("code_segment", &self.code_segment);
         s.field("cpu_flags", &Hex(self.cpu_flags));
