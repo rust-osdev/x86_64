@@ -4,14 +4,10 @@ pub use self::recursive::RecursivePageTable;
 pub use self::mapped::MappedPageTable;
 
 use crate::instructions::tlb;
-use crate::registers::control::Cr3;
 use crate::structures::paging::{
-    frame_alloc::FrameAllocator,
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    page::NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
-use ux::u9;
 
 mod mapped;
 mod recursive;

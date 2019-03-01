@@ -1,11 +1,10 @@
 //! Abstractions for default-sized and huge physical memory frames.
 
-use crate::structures::paging::page::{PageSize, Size4KiB, Size2MiB, Size1GiB};
-use crate::{PhysAddr, VirtAddr};
+use crate::structures::paging::page::{PageSize, Size4KiB};
+use crate::PhysAddr;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-use ux::*;
 
 /// A physical memory frame.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

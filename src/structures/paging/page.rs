@@ -1,6 +1,6 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
-use crate::{PhysAddr, VirtAddr};
+use crate::VirtAddr;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};

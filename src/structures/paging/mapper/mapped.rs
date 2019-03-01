@@ -4,9 +4,9 @@ use crate::{
         mapper::*,
         page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
         page::{Page,  Size1GiB, Size2MiB, Size4KiB},
-        frame::PhysFrame, VirtAddr,
-        PhysAddr
+        frame::PhysFrame,
     },
+    VirtAddr, PhysAddr,
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
