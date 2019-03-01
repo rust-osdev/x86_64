@@ -1,14 +1,16 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
+#[cfg(target_arch = "x86_64")]
 pub use self::mapped::MappedPageTable;
+#[cfg(target_arch = "x86_64")]
 pub use self::recursive::RecursivePageTable;
 
-use crate::instructions::tlb;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 
+#[cfg(target_arch = "x86_64")]
 mod mapped;
 mod recursive;
 
@@ -86,8 +88,9 @@ impl<S: PageSize> MapperFlush<S> {
     }
 
     /// Flush the page from the TLB to ensure that the newest mapping is used.
+    #[cfg(target_arch = "x86_64")]
     pub fn flush(self) {
-        tlb::flush(self.0.start_address());
+        crate::instructions::tlb::flush(self.0.start_address());
     }
 
     /// Don't flush the TLB and silence the “must be used” warning.
