@@ -1,6 +1,5 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
-#[cfg(target_arch = "x86_64")]
 pub use self::mapped::MappedPageTable;
 #[cfg(target_arch = "x86_64")]
 pub use self::recursive::RecursivePageTable;
@@ -10,7 +9,6 @@ use crate::structures::paging::{
 };
 use crate::{PhysAddr, VirtAddr};
 
-#[cfg(target_arch = "x86_64")]
 mod mapped;
 mod recursive;
 

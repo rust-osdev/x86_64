@@ -1,12 +1,9 @@
-use crate::{
-    structures::paging::{
-        frame::PhysFrame,
-        frame_alloc::FrameAllocator,
-        mapper::*,
-        page::{Page, Size1GiB, Size2MiB, Size4KiB},
-        page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    },
-    PhysAddr, VirtAddr,
+use crate::structures::paging::{
+    frame::PhysFrame,
+    frame_alloc::FrameAllocator,
+    mapper::*,
+    page::{Page, Size1GiB, Size2MiB, Size4KiB},
+    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
@@ -19,7 +16,7 @@ use crate::{
 #[derive(Debug)]
 pub struct MappedPageTable<'a, PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     page_table_walker: PageTableWalker<PhysToVirt>,
     level_4_table: &'a mut PageTable,
@@ -27,7 +24,7 @@ where
 
 impl<'a, PhysToVirt> MappedPageTable<'a, PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     /// Creates a new `MappedPageTable` that uses the passed closure for converting virtual
     /// to physical addresses.
@@ -129,7 +126,7 @@ where
 
 impl<'a, PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     unsafe fn map_to<A>(
         &mut self,
@@ -205,7 +202,7 @@ where
 
 impl<'a, PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     unsafe fn map_to<A>(
         &mut self,
@@ -289,7 +286,7 @@ where
 
 impl<'a, PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     unsafe fn map_to<A>(
         &mut self,
@@ -375,14 +372,14 @@ where
 #[derive(Debug)]
 struct PageTableWalker<PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     phys_to_virt: PhysToVirt,
 }
 
 impl<PhysToVirt> PageTableWalker<PhysToVirt>
 where
-    PhysToVirt: Fn(PhysAddr) -> VirtAddr,
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
 {
     pub unsafe fn new(phys_to_virt: PhysToVirt) -> Self {
         Self { phys_to_virt }
@@ -397,9 +394,8 @@ where
         &self,
         entry: &'b PageTableEntry,
     ) -> Result<&'b PageTable, PageTableWalkError> {
-        let virt = (self.phys_to_virt)(entry.frame()?.start_address());
-        let page: Page = Page::containing_address(virt);
-        let page_table: &PageTable = unsafe { &*page.start_address().as_mut_ptr() };
+        let page_table_ptr = (self.phys_to_virt)(entry.frame()?);
+        let page_table: &PageTable = unsafe { &*page_table_ptr };
 
         Ok(page_table)
     }
@@ -413,9 +409,8 @@ where
         &self,
         entry: &'b mut PageTableEntry,
     ) -> Result<&'b mut PageTable, PageTableWalkError> {
-        let virt = (self.phys_to_virt)(entry.frame()?.start_address());
-        let page: Page = Page::containing_address(virt);
-        let page_table: &mut PageTable = unsafe { &mut *page.start_address().as_mut_ptr() };
+        let page_table_ptr = (self.phys_to_virt)(entry.frame()?);
+        let page_table: &mut PageTable = unsafe { &mut *page_table_ptr };
 
         Ok(page_table)
     }
