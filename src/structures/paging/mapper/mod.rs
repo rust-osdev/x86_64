@@ -1,7 +1,7 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
-pub use self::recursive::RecursivePageTable;
 pub use self::mapped::MappedPageTable;
+pub use self::recursive::RecursivePageTable;
 
 use crate::instructions::tlb;
 use crate::structures::paging::{

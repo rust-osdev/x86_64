@@ -2,15 +2,15 @@
 //!
 //! Page tables translate virtual memory “pages” to physical memory “frames”.
 
-pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
-pub use self::page_table::{PageTable, PageTableFlags};
-#[cfg(target_arch = "x86_64")]
-pub use self::page::{Page, PageSize, Size4KiB, Size2MiB, Size1GiB};
 pub use self::frame::PhysFrame;
-pub use self::mapper::{Mapper, RecursivePageTable, MappedPageTable};
+pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
+pub use self::mapper::{MappedPageTable, Mapper, RecursivePageTable};
+#[cfg(target_arch = "x86_64")]
+pub use self::page::{Page, PageSize, Size1GiB, Size2MiB, Size4KiB};
+pub use self::page_table::{PageTable, PageTableFlags};
 
-pub mod page;
 pub mod frame;
-pub mod page_table;
-pub mod mapper;
 mod frame_alloc;
+pub mod mapper;
+pub mod page;
+pub mod page_table;

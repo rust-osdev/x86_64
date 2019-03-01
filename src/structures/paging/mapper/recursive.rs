@@ -2,16 +2,16 @@
 
 //! Access the page tables through a recursively mapped level 4 table.
 
+use super::*;
 use crate::registers::control::Cr3;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator,
+    page::NotGiantPageSize,
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    page::NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::VirtAddr;
 use ux::u9;
-use super::*;
-
 
 /// A recursive page table is a last level page table with an entry mapped to the table itself.
 ///

@@ -1,12 +1,12 @@
 use crate::{
     structures::paging::{
+        frame::PhysFrame,
         frame_alloc::FrameAllocator,
         mapper::*,
+        page::{Page, Size1GiB, Size2MiB, Size4KiB},
         page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-        page::{Page,  Size1GiB, Size2MiB, Size4KiB},
-        frame::PhysFrame,
     },
-    VirtAddr, PhysAddr,
+    PhysAddr, VirtAddr,
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
@@ -54,7 +54,6 @@ where
     where
         A: FrameAllocator<Size4KiB>,
     {
-
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -80,7 +79,6 @@ where
     where
         A: FrameAllocator<Size4KiB>,
     {
-
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -177,7 +175,6 @@ where
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
-
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -257,7 +254,6 @@ where
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
-
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -468,7 +464,6 @@ where
         Ok(page_table)
     }
 }
-
 
 #[derive(Debug)]
 enum PageTableWalkError {
