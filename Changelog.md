@@ -9,6 +9,7 @@
 - The `structures::paging` module received the following changes:
     - The `Mapper::translate_page` function now returns a `Result` with a new `TranslateError` error type.
     - The `NotRecursivelyMapped` error type was removed.
+- The `instructions::int3` function was moved into the `instructions::interrupts` module.
 
 ## Other
 

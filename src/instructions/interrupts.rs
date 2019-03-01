@@ -68,3 +68,10 @@ where
     // return the result of `f` to the caller
     ret
 }
+
+/// Cause a breakpoint exception by invoking the `int3` instruction.
+pub fn int3() {
+    unsafe {
+        asm!("int3" :::: "volatile");
+    }
+}
