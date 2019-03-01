@@ -75,3 +75,15 @@ pub fn int3() {
         asm!("int3" :::: "volatile");
     }
 }
+
+/// Generate a software interrupt by invoking the `int` instruction.
+///
+/// This currently needs to be a macro because the `int` argument needs to be an
+/// immediate. This macro will be replaced by a generic function when support for
+/// const generics is implemented in Rust.
+#[macro_export]
+macro_rules! software_interrupt {
+    ($x:expr) => {{
+        asm!("int $0" :: "N" ($x) :: "volatile");
+    }};
+}

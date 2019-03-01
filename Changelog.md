@@ -14,6 +14,7 @@
 ## Other
 
 - Add a new `structures::paging::MappedPageTable` type that implements the `Mapper` trait.
+- Add a `software_interrupt` macro to invoke arbitrary `int x` instructions.
 
 # 0.4.2
 
