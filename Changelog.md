@@ -11,6 +11,7 @@
     - The `NotRecursivelyMapped` error type was removed.
 - The `instructions::int3` function was moved into the `instructions::interrupts` module.
 - Removed some old deprecated functions.
+- Made modifications of the interrupt stack frame unsafe by introducing a new wrapper type and an unsafe `as_mut` method.
 
 ## Other
 

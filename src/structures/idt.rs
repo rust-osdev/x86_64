@@ -14,7 +14,7 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Index, IndexMut};
+use core::ops::{Index, IndexMut, Deref};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -650,10 +650,47 @@ impl EntryOptions {
 )]
 pub type ExceptionStackFrame = InterruptStackFrame;
 
+/// Wrapper type for the interrupt stack frame pushed by the CPU.
+///
+/// This type derefs to an [`InterruptStackFrameValue`], which allows reading the actual values.
+///
+/// This wrapper type ensures that no accidental modification of the interrupt stack frame
+/// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
+/// method for more information).
+pub struct InterruptStackFrame {
+    value: InterruptStackFrameValue
+}
+
+impl InterruptStackFrame {
+    /// Gives mutable access to the contents of the interrupt stack frame.
+    ///
+    /// This function is unsafe since modifying the content of the interrupt stack frame
+    /// can easily lead to undefined behavior. For example, by writing an invalid value to
+    /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
+    /// interrupt.
+    pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
+        &mut self.value
+    }
+}
+
+impl Deref for InterruptStackFrame {
+    type Target = InterruptStackFrameValue;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl fmt::Debug for InterruptStackFrame {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.value.fmt(f)
+    }
+}
+
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone)]
 #[repr(C)]
-pub struct InterruptStackFrame {
+pub struct InterruptStackFrameValue {
     /// This value points to the instruction that should be executed when the interrupt
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
@@ -670,7 +707,7 @@ pub struct InterruptStackFrame {
     pub stack_segment: u64,
 }
 
-impl fmt::Debug for InterruptStackFrame {
+impl fmt::Debug for InterruptStackFrameValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         struct Hex(u64);
         impl fmt::Debug for Hex {
