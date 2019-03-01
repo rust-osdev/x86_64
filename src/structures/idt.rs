@@ -720,15 +720,3 @@ mod test {
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
     }
 }
-
-#[deprecated(
-    note = "type was renamed to `InterruptDescriptorTable`, the old name will removed in the next major version"
-)]
-/// See `InterruptDescriptorTable`
-pub type Idt = InterruptDescriptorTable;
-
-#[deprecated(
-    note = "type was renamed to `Entry`, the old name will removed in the next major version"
-)]
-/// See `Entry`
-pub type IdtEntry<F> = Entry<F>;
