@@ -10,11 +10,13 @@
     - The `Mapper::translate_page` function now returns a `Result` with a new `TranslateError` error type.
     - The `NotRecursivelyMapped` error type was removed.
 - The `instructions::int3` function was moved into the `instructions::interrupts` module.
+- Removed some old deprecated functions.
 
 ## Other
 
-- Add a new `structures::paging::MappedPageTable` type that implements the `Mapper` trait.
-- Add a `software_interrupt` macro to invoke arbitrary `int x` instructions.
+- Added a new `structures::paging::MappedPageTable` type that implements the `Mapper` trait.
+- Added a `software_interrupt` macro to invoke arbitrary `int x` instructions.
+- Renamed the `ExceptionStackFrame` type to `InterruptStackFrame`.
 
 # 0.4.2
 
