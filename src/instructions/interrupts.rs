@@ -25,7 +25,7 @@ pub fn disable() {
     }
 }
 
-/// Run a closue with disabled interrupts.
+/// Run a closure with disabled interrupts.
 ///
 /// Run the given closure, disabling interrupts before running it (if they aren't already disabled).
 /// Afterwards, interrupts are enabling again if they were enabled before.
