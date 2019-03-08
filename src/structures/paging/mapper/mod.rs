@@ -1,16 +1,16 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
-pub use self::mapped::MappedPageTable;
+pub use self::mapped_page_table::MappedPageTable;
 #[cfg(target_arch = "x86_64")]
-pub use self::recursive::RecursivePageTable;
+pub use self::recursive_page_table::RecursivePageTable;
 
 use crate::structures::paging::{
     frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 
-mod mapped;
-mod recursive;
+mod mapped_page_table;
+mod recursive_page_table;
 
 /// A trait for common page table operations.
 pub trait Mapper<S: PageSize> {
