@@ -14,7 +14,7 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Index, IndexMut, Deref};
+use core::ops::{Deref, Index, IndexMut};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -645,9 +645,7 @@ impl EntryOptions {
 /// Wrapper type for the exception stack frame pushed by the CPU.
 ///
 /// Identical to [`InterruptStackFrame`].
-#[deprecated(
-    note = "This type was renamed to InterruptStackFrame."
-)]
+#[deprecated(note = "This type was renamed to InterruptStackFrame.")]
 pub type ExceptionStackFrame = InterruptStackFrame;
 
 /// Wrapper type for the interrupt stack frame pushed by the CPU.
@@ -658,7 +656,7 @@ pub type ExceptionStackFrame = InterruptStackFrame;
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
 pub struct InterruptStackFrame {
-    value: InterruptStackFrameValue
+    value: InterruptStackFrameValue,
 }
 
 impl InterruptStackFrame {
