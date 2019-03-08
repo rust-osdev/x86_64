@@ -528,6 +528,60 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     }
 }
 
+
+impl<'a> MapperAllSizes for RecursivePageTable<'a> {
+    fn translate(&self, addr: VirtAddr) -> TranslateResult {
+        let page = Page::containing_address(addr);
+
+        let p4 = &self.p4;
+        let p4_entry = &p4[addr.p4_index()];
+        if p4_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            panic!("level 4 entry has huge page bit set")
+        }
+
+        let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[addr.p3_index()];
+        if p3_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
+            let offset = addr.as_u64() & 0o_777_777_7777;
+            return TranslateResult::Frame1GiB { frame, offset };
+        }
+
+        let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
+        let p2_entry = &p2[addr.p2_index()];
+        if p2_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
+            let offset = addr.as_u64() & 0o_777_7777;
+            return TranslateResult::Frame2MiB { frame, offset };
+        }
+
+        let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
+        let p1_entry = &p1[addr.p1_index()];
+        if p1_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p1_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            panic!("level 1 entry has huge page bit set")
+        }
+
+        let frame = match PhysFrame::from_start_address(p1_entry.addr()) {
+            Ok(frame) => frame,
+            Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
+        };
+        let offset = u64::from(addr.page_offset());
+        TranslateResult::Frame4KiB { frame, offset }
+    }
+}
+
 fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: u9) -> *mut PageTable {
     p3_page(page, recursive_index).start_address().as_mut_ptr()
 }

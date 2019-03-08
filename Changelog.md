@@ -15,7 +15,8 @@
 
 ## Other
 
-- Added a new `structures::paging::MappedPageTable` type that implements the `Mapper` trait.
+- Added a new `structures::paging::MapperAllSizes` trait with generic translation methods and implement it for `MappedPageTable` and `RecursivePageTable`.
+- Added a new `structures::paging::MappedPageTable` type that implements the `Mapper` and `MapperAllSizes` traits.
 - Added a `software_interrupt` macro to invoke arbitrary `int x` instructions.
 - Renamed the `ExceptionStackFrame` type to `InterruptStackFrame`.
 

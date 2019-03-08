@@ -369,6 +369,53 @@ where
     }
 }
 
+impl<'a, PhysToVirt> MapperAllSizes for MappedPageTable<'a, PhysToVirt>
+where
+    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
+{
+    fn translate(&self, addr: VirtAddr) -> TranslateResult {
+        let p4 = &self.level_4_table;
+        let p3 = match self.page_table_walker.next_table(&p4[addr.p4_index()]) {
+            Ok(page_table) => page_table,
+            Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
+            Err(PageTableWalkError::MappedToHugePage) => {
+                panic!("level 4 entry has huge page bit set")
+            }
+        };
+        let p2 = match self.page_table_walker.next_table(&p3[addr.p3_index()]) {
+            Ok(page_table) => page_table,
+            Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
+            Err(PageTableWalkError::MappedToHugePage) => {
+                let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
+                let offset = addr.as_u64() & 0o_777_777_7777;
+                return TranslateResult::Frame1GiB { frame, offset };
+            }
+        };
+        let p1 = match self.page_table_walker.next_table(&p2[addr.p2_index()]) {
+            Ok(page_table) => page_table,
+            Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
+            Err(PageTableWalkError::MappedToHugePage) => {
+                let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
+                let offset = addr.as_u64() & 0o_777_7777;
+                return TranslateResult::Frame2MiB { frame, offset };
+            }
+        };
+
+        let p1_entry = &p1[addr.p1_index()];
+
+        if p1_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+
+        let frame = match PhysFrame::from_start_address(p1_entry.addr()) {
+            Ok(frame) => frame,
+            Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
+        };
+        let offset = u64::from(addr.page_offset());
+        TranslateResult::Frame4KiB { frame, offset }
+    }
+}
+
 #[derive(Debug)]
 struct PageTableWalker<PhysToVirt>
 where

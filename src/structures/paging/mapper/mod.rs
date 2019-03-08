@@ -5,14 +5,76 @@ pub use self::mapped_page_table::MappedPageTable;
 pub use self::recursive_page_table::RecursivePageTable;
 
 use crate::structures::paging::{
-    frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size4KiB,
+    frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size1GiB,
+    Size2MiB, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 
 mod mapped_page_table;
 mod recursive_page_table;
 
-/// A trait for common page table operations.
+/// This trait defines page table operations that work for all page sizes of the x86_64
+/// architecture.
+pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {
+    /// Return the frame that the given virtual address is mapped to and the offset within that
+    /// frame.
+    ///
+    /// If the given address has a valid mapping, the mapped frame and the offset within that
+    /// frame is returned. Otherwise an error value is returned.
+    ///
+    /// This function works with huge pages of all sizes.
+    fn translate(&self, addr: VirtAddr) -> TranslateResult;
+
+    /// Translates the given virtual address to the physical address that it maps to.
+    ///
+    /// Returns `None` if there is no valid mapping for the given address.
+    ///
+    /// This is a convenience method. For more information about a mapping see the
+    /// [`translate`](MapperAllSizes::translate) method.
+    fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
+        match self.translate(addr) {
+            TranslateResult::PageNotMapped | TranslateResult::InvalidFrameAddress(_) => None,
+            TranslateResult::Frame4KiB { frame, offset } => Some(frame.start_address() + offset),
+            TranslateResult::Frame2MiB { frame, offset } => Some(frame.start_address() + offset),
+            TranslateResult::Frame1GiB { frame, offset } => Some(frame.start_address() + offset),
+        }
+    }
+}
+
+/// The return value of the [`MapperAllSizes::translate`] function.
+///
+/// If the given address has a valid mapping, a `Frame4KiB`, `Frame2MiB`, or `Frame1GiB` variant
+/// is returned, depending on the size of the mapped page. The remaining variants indicate errors.
+#[derive(Debug)]
+pub enum TranslateResult {
+    /// The page is mapped to a physical frame of size 4KiB.
+    Frame4KiB {
+        /// The mapped frame.
+        frame: PhysFrame<Size4KiB>,
+        /// The offset whithin the mapped frame.
+        offset: u64,
+    },
+    /// The page is mapped to a physical frame of size 2MiB.
+    Frame2MiB {
+        /// The mapped frame.
+        frame: PhysFrame<Size2MiB>,
+        /// The offset whithin the mapped frame.
+        offset: u64,
+    },
+    /// The page is mapped to a physical frame of size 2MiB.
+    Frame1GiB {
+        /// The mapped frame.
+        frame: PhysFrame<Size1GiB>,
+        /// The offset whithin the mapped frame.
+        offset: u64,
+    },
+    /// The given page is not mapped to a physical frame.
+    PageNotMapped,
+    /// The page table entry for the given page points to an invalid physical address.
+    InvalidFrameAddress(PhysAddr),
+}
+
+/// A trait for common page table operations on pages of size `S`.
 pub trait Mapper<S: PageSize> {
     /// Creates a new mapping in the page table.
     ///
@@ -46,6 +108,9 @@ pub trait Mapper<S: PageSize> {
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
     /// Return the frame that the specified page is mapped to.
+    ///
+    /// This function assumes that the page is mapped to a frame of size `S` and returns an
+    /// error otherwise.
     fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
