@@ -1,3 +1,5 @@
+//! Abstractions for page tables and page table entries.
+
 use core::fmt;
 use core::ops::{Index, IndexMut};
 

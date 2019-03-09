@@ -14,7 +14,7 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Index, IndexMut};
+use core::ops::{Deref, Index, IndexMut};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -523,13 +523,13 @@ pub struct Entry<F> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
-pub type HandlerFunc = extern "x86-interrupt" fn(&mut ExceptionStackFrame);
+pub type HandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame);
 /// A handler function for an exception that pushes an error code.
 pub type HandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: u64);
+    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
-    extern "x86-interrupt" fn(&mut ExceptionStackFrame, error_code: PageFaultErrorCode);
+    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -642,10 +642,53 @@ impl EntryOptions {
     }
 }
 
-/// Represents the exception stack frame pushed by the CPU on exception entry.
+/// Wrapper type for the exception stack frame pushed by the CPU.
+///
+/// Identical to [`InterruptStackFrame`].
+#[deprecated(note = "This type was renamed to InterruptStackFrame.")]
+pub type ExceptionStackFrame = InterruptStackFrame;
+
+/// Wrapper type for the interrupt stack frame pushed by the CPU.
+///
+/// This type derefs to an [`InterruptStackFrameValue`], which allows reading the actual values.
+///
+/// This wrapper type ensures that no accidental modification of the interrupt stack frame
+/// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
+/// method for more information).
+pub struct InterruptStackFrame {
+    value: InterruptStackFrameValue,
+}
+
+impl InterruptStackFrame {
+    /// Gives mutable access to the contents of the interrupt stack frame.
+    ///
+    /// This function is unsafe since modifying the content of the interrupt stack frame
+    /// can easily lead to undefined behavior. For example, by writing an invalid value to
+    /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
+    /// interrupt.
+    pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
+        &mut self.value
+    }
+}
+
+impl Deref for InterruptStackFrame {
+    type Target = InterruptStackFrameValue;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl fmt::Debug for InterruptStackFrame {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.value.fmt(f)
+    }
+}
+
+/// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone)]
 #[repr(C)]
-pub struct ExceptionStackFrame {
+pub struct InterruptStackFrameValue {
     /// This value points to the instruction that should be executed when the interrupt
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
@@ -662,7 +705,7 @@ pub struct ExceptionStackFrame {
     pub stack_segment: u64,
 }
 
-impl fmt::Debug for ExceptionStackFrame {
+impl fmt::Debug for InterruptStackFrameValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         struct Hex(u64);
         impl fmt::Debug for Hex {
@@ -671,7 +714,7 @@ impl fmt::Debug for ExceptionStackFrame {
             }
         }
 
-        let mut s = f.debug_struct("ExceptionStackFrame");
+        let mut s = f.debug_struct("InterruptStackFrame");
         s.field("instruction_pointer", &self.instruction_pointer);
         s.field("code_segment", &self.code_segment);
         s.field("cpu_flags", &Hex(self.cpu_flags));
@@ -720,15 +763,3 @@ mod test {
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
     }
 }
-
-#[deprecated(
-    note = "type was renamed to `InterruptDescriptorTable`, the old name will removed in the next major version"
-)]
-/// See `InterruptDescriptorTable`
-pub type Idt = InterruptDescriptorTable;
-
-#[deprecated(
-    note = "type was renamed to `Entry`, the old name will removed in the next major version"
-)]
-/// See `Entry`
-pub type IdtEntry<F> = Entry<F>;

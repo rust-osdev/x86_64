@@ -68,3 +68,22 @@ where
     // return the result of `f` to the caller
     ret
 }
+
+/// Cause a breakpoint exception by invoking the `int3` instruction.
+pub fn int3() {
+    unsafe {
+        asm!("int3" :::: "volatile");
+    }
+}
+
+/// Generate a software interrupt by invoking the `int` instruction.
+///
+/// This currently needs to be a macro because the `int` argument needs to be an
+/// immediate. This macro will be replaced by a generic function when support for
+/// const generics is implemented in Rust.
+#[macro_export]
+macro_rules! software_interrupt {
+    ($x:expr) => {{
+        asm!("int $0" :: "N" ($x) :: "volatile");
+    }};
+}

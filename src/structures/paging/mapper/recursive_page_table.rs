@@ -1,96 +1,17 @@
 #![cfg(target_arch = "x86_64")]
 
-use crate::instructions::tlb;
+//! Access the page tables through a recursively mapped level 4 table.
+
+use super::*;
 use crate::registers::control::Cr3;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator,
+    page::NotGiantPageSize,
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    NotGiantPageSize, Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
-use crate::{PhysAddr, VirtAddr};
+use crate::VirtAddr;
 use ux::u9;
-
-/// This type represents a page whose mapping has changed in the page table.
-///
-/// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
-/// to be flushed from the TLB before it's accessed. This type is returned from function that
-/// change the mapping of a page to ensure that the TLB flush is not forgotten.
-#[derive(Debug)]
-#[must_use = "Page Table changes must be flushed or ignored."]
-pub struct MapperFlush<S: PageSize>(Page<S>);
-
-impl<S: PageSize> MapperFlush<S> {
-    /// Create a new flush promise
-    fn new(page: Page<S>) -> Self {
-        MapperFlush(page)
-    }
-
-    /// Flush the page from the TLB to ensure that the newest mapping is used.
-    pub fn flush(self) {
-        tlb::flush(self.0.start_address());
-    }
-
-    /// Don't flush the TLB and silence the “must be used” warning.
-    pub fn ignore(self) {}
-}
-
-/// A trait for common page table operations.
-pub trait Mapper<S: PageSize> {
-    /// Creates a new mapping in the page table.
-    ///
-    /// This function might need additional physical frames to create new page tables. These
-    /// frames are allocated from the `allocator` argument. At most three frames are required.
-    ///
-    /// This function is unsafe because the caller must guarantee the following:
-    ///
-    /// - The passed `frame` must be unused, i.e. not used for any other mappings.
-    /// - The passed `frame_allocator` must only yield unused frames.
-    unsafe fn map_to<A>(
-        &mut self,
-        page: Page<S>,
-        frame: PhysFrame<S>,
-        flags: PageTableFlags,
-        frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError>
-    where
-        A: FrameAllocator<Size4KiB>;
-
-    /// Removes a mapping from the page table and returns the frame that used to be mapped.
-    ///
-    /// Note that no page tables or pages are deallocated.
-    fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
-
-    /// Updates the flags of an existing mapping.
-    fn update_flags(
-        &mut self,
-        page: Page<S>,
-        flags: PageTableFlags,
-    ) -> Result<MapperFlush<S>, FlagUpdateError>;
-
-    /// Return the frame that the specified page is mapped to.
-    fn translate_page(&self, page: Page<S>) -> Option<PhysFrame<S>>;
-
-    /// Maps the given frame to the virtual page with the same address.
-    ///
-    /// This function is unsafe because the caller must guarantee the following:
-    ///
-    /// - The passed `frame` must be unused, i.e. not used for any other mappings.
-    /// - The passed `frame_allocator` must only yield unused frames.
-    unsafe fn identity_map<A>(
-        &mut self,
-        frame: PhysFrame<S>,
-        flags: PageTableFlags,
-        frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError>
-    where
-        A: FrameAllocator<Size4KiB>,
-        S: PageSize,
-        Self: Mapper<S>,
-    {
-        let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
-        self.map_to(page, frame, flags, frame_allocator)
-    }
-}
 
 /// A recursive page table is a last level page table with an entry mapped to the table itself.
 ///
@@ -111,44 +32,6 @@ pub struct RecursivePageTable<'a> {
     recursive_index: u9,
 }
 
-/// An error indicating that the given page table is not recursively mapped.
-///
-/// Returned from `RecursivePageTable::new`.
-#[derive(Debug)]
-pub struct NotRecursivelyMapped;
-
-/// This error is returned from `map_to` and similar methods.
-#[derive(Debug)]
-pub enum MapToError {
-    /// An additional frame was needed for the mapping process, but the frame allocator
-    /// returned `None`.
-    FrameAllocationFailed,
-    /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
-    /// given page is part of an already mapped huge page.
-    ParentEntryHugePage,
-    /// The given page is already mapped to a physical frame.
-    PageAlreadyMapped,
-}
-
-/// An error indicating that an `unmap` call failed.
-#[derive(Debug)]
-pub enum UnmapError {
-    /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
-    /// given page is part of a huge page and can't be freed individually.
-    ParentEntryHugePage,
-    /// The given page is not mapped to a physical frame.
-    PageNotMapped,
-    /// The page table entry for the given page points to an invalid physical address.
-    InvalidFrameAddress(PhysAddr),
-}
-
-/// An error indicating that an `update_flags` call failed.
-#[derive(Debug)]
-pub enum FlagUpdateError {
-    /// The given page is not mapped to a physical frame.
-    PageNotMapped,
-}
-
 impl<'a> RecursivePageTable<'a> {
     /// Creates a new RecursivePageTable from the passed level 4 PageTable.
     ///
@@ -160,8 +43,8 @@ impl<'a> RecursivePageTable<'a> {
     ///       where `xxx` is the recursive entry.
     /// - The page table must be active, i.e. the CR3 register must contain its physical address.
     ///
-    /// Otherwise `Err(NotRecursivelyMapped)` is returned.
-    pub fn new(table: &'a mut PageTable) -> Result<Self, NotRecursivelyMapped> {
+    /// Otherwise `Err(())` is returned.
+    pub fn new(table: &'a mut PageTable) -> Result<Self, ()> {
         let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
         let recursive_index = page.p4_index();
 
@@ -169,10 +52,10 @@ impl<'a> RecursivePageTable<'a> {
             || page.p2_index() != recursive_index
             || page.p1_index() != recursive_index
         {
-            return Err(NotRecursivelyMapped);
+            return Err(());
         }
         if Ok(Cr3::read().0) != table[recursive_index].frame() {
-            return Err(NotRecursivelyMapped);
+            return Err(());
         }
 
         Ok(RecursivePageTable {
@@ -403,21 +286,22 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate_page(&self, page: Page<Size1GiB>) -> Option<PhysFrame<Size1GiB>> {
+    fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
 
         if p3_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
-        PhysFrame::from_start_address(p3_entry.addr()).ok()
+        PhysFrame::from_start_address(p3_entry.addr())
+            .map_err(|()| TranslateError::InvalidFrameAddress(p3_entry.addr()))
     }
 }
 
@@ -500,28 +384,29 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate_page(&self, page: Page<Size2MiB>) -> Option<PhysFrame<Size2MiB>> {
+    fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
 
         if p3_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[page.p2_index()];
 
         if p2_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
-        PhysFrame::from_start_address(p2_entry.addr()).ok()
+        PhysFrame::from_start_address(p2_entry.addr())
+            .map_err(|()| TranslateError::InvalidFrameAddress(p2_entry.addr()))
     }
 }
 
@@ -610,35 +495,90 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
-    fn translate_page(&self, page: Page<Size4KiB>) -> Option<PhysFrame<Size4KiB>> {
+    fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
 
         if p3_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[page.p2_index()];
 
         if p2_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
         let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
         let p1_entry = &p1[page.p1_index()];
 
         if p1_entry.is_unused() {
-            return None;
+            return Err(TranslateError::PageNotMapped);
         }
 
-        PhysFrame::from_start_address(p1_entry.addr()).ok()
+        PhysFrame::from_start_address(p1_entry.addr())
+            .map_err(|()| TranslateError::InvalidFrameAddress(p1_entry.addr()))
+    }
+}
+
+
+impl<'a> MapperAllSizes for RecursivePageTable<'a> {
+    fn translate(&self, addr: VirtAddr) -> TranslateResult {
+        let page = Page::containing_address(addr);
+
+        let p4 = &self.p4;
+        let p4_entry = &p4[addr.p4_index()];
+        if p4_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            panic!("level 4 entry has huge page bit set")
+        }
+
+        let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[addr.p3_index()];
+        if p3_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
+            let offset = addr.as_u64() & 0o_777_777_7777;
+            return TranslateResult::Frame1GiB { frame, offset };
+        }
+
+        let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
+        let p2_entry = &p2[addr.p2_index()];
+        if p2_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
+            let offset = addr.as_u64() & 0o_777_7777;
+            return TranslateResult::Frame2MiB { frame, offset };
+        }
+
+        let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
+        let p1_entry = &p1[addr.p1_index()];
+        if p1_entry.is_unused() {
+            return TranslateResult::PageNotMapped;
+        }
+        if p1_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            panic!("level 1 entry has huge page bit set")
+        }
+
+        let frame = match PhysFrame::from_start_address(p1_entry.addr()) {
+            Ok(frame) => frame,
+            Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
+        };
+        let offset = u64::from(addr.page_offset());
+        TranslateResult::Frame4KiB { frame, offset }
     }
 }
 

@@ -20,17 +20,6 @@ impl RdRand {
         }
     }
 
-    /// Uniformly sampled u64
-    #[deprecated(note = "This method does not check for errors and will be removed in the next breaking release. Use get_u64() instead.")]
-    #[inline]
-    pub fn get(&self) -> u64 {
-        let res: u64;
-        unsafe {
-            asm!("rdrand %rax" : "={rax}"(res) ::: "volatile");
-        }
-
-        res
-    }
     /// Uniformly sampled u64.
     /// May fail in rare circumstances or heavy load.
     #[inline]
@@ -44,7 +33,7 @@ impl RdRand {
         }
         match ok {
             1 => Some(res),
-            _ => None
+            _ => None,
         }
     }
     /// Uniformly sampled u32.
@@ -60,7 +49,7 @@ impl RdRand {
         }
         match ok {
             1 => Some(res),
-            _ => None
+            _ => None,
         }
     }
     /// Uniformly sampled u16.
@@ -76,7 +65,7 @@ impl RdRand {
         }
         match ok {
             1 => Some(res),
-            _ => None
+            _ => None,
         }
     }
 }

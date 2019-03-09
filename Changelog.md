@@ -1,3 +1,25 @@
+## Breaking
+
+- The `random` module is now a submodule of the `instructions` module.
+- The `structures::paging` module was split into several submodules:
+    - The `NotGiantPageSize`, `PageRange`, and `PageRangeInclusive` types were moved to a new `page` submodule.
+    - The `PhysFrameRange` and `PhysFrameRangeInclusive` types were moved to a new `frame` submodule.
+    - The `FrameError` and `PageTableEntry` types were moved to a new `page_table` submodule.
+    - The `MapperFlush`, `MapToError`, `UnmapError`, and `FlagUpdateError` types were moved to a new `mapper` submodule.
+- The `structures::paging` module received the following changes:
+    - The `Mapper::translate_page` function now returns a `Result` with a new `TranslateError` error type.
+    - The `NotRecursivelyMapped` error type was removed.
+- The `instructions::int3` function was moved into the `instructions::interrupts` module.
+- Removed some old deprecated functions.
+- Made modifications of the interrupt stack frame unsafe by introducing a new wrapper type and an unsafe `as_mut` method.
+
+## Other
+
+- Added a new `structures::paging::MapperAllSizes` trait with generic translation methods and implement it for `MappedPageTable` and `RecursivePageTable`.
+- Added a new `structures::paging::MappedPageTable` type that implements the `Mapper` and `MapperAllSizes` traits.
+- Added a `software_interrupt` macro to invoke arbitrary `int x` instructions.
+- Renamed the `ExceptionStackFrame` type to `InterruptStackFrame`.
+
 # 0.4.2
 
 - Add `RdRand::get_u{16, 32, 64}` methods
