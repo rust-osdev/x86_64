@@ -528,7 +528,6 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     }
 }
 
-
 impl<'a> MapperAllSizes for RecursivePageTable<'a> {
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let page = Page::containing_address(addr);

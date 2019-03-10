@@ -192,6 +192,16 @@ impl PageTable {
             entry.set_unused();
         }
     }
+
+    /// Returns an iterator over the entries of the page table.
+    pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
+        self.entries.iter()
+    }
+
+    /// Returns an iterator that allows modifying the entries of the page table.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
+        self.entries.iter_mut()
+    }
 }
 
 impl Index<usize> for PageTable {
