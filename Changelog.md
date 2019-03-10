@@ -1,3 +1,5 @@
+# 0.5.1
+
 - Add `PageTable::{iter, iter_mut}` functions to iterate over page table entries.
 
 # 0.5.0
