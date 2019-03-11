@@ -1,3 +1,5 @@
+- Update documentation of `MappedPageTable`: Require that passed `level_4_table` is valid.
+
 # 0.5.1
 
 - Add `PageTable::{iter, iter_mut}` functions to iterate over page table entries.

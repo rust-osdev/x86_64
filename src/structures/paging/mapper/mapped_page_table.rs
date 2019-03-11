@@ -30,8 +30,9 @@ where
     /// to physical addresses.
     ///
     /// This function is unsafe because the caller must guarantee that the passed `phys_to_virt`
-    /// closure is correct. Otherwise this function might break memory safety, e.g. by writing
-    /// to an illegal memory location.
+    /// closure is correct. Also, the passed `level_4_table` must point to the level 4 page table
+    /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
+    /// by writing to an illegal memory location.
     pub unsafe fn new(level_4_table: &'a mut PageTable, phys_to_virt: PhysToVirt) -> Self {
         Self {
             level_4_table,
