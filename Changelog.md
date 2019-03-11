@@ -1,3 +1,5 @@
+# 0.5.2
+
 - Update documentation of `MappedPageTable`: Require that passed `level_4_table` is valid.
 
 # 0.5.1
