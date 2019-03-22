@@ -1,3 +1,5 @@
+- Add `PortReadOnly` and `PortWriteOnly` types in `instructions::port` module ([#66](https://github.com/rust-osdev/x86_64/pull/66)).
+
 # 0.5.2
 
 - Update documentation of `MappedPageTable`: Require that passed `level_4_table` is valid.
