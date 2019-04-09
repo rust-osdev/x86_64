@@ -151,7 +151,6 @@ impl Descriptor {
     /// Creates a TSS system descriptor for the given TSS.
     pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {
         use self::DescriptorFlags as Flags;
-        use bit_field::BitField;
         use core::mem::size_of;
 
         let ptr = tss as *const _ as u64;

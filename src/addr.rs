@@ -92,8 +92,6 @@ impl VirtAddr {
 
     /// Creates a virtual address from the given pointer
     pub fn from_ptr<T>(ptr: *const T) -> Self {
-        use usize_conversions::FromUsize;
-
         Self::new(u64::from_usize(ptr as usize))
     }
 
