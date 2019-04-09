@@ -7,6 +7,7 @@ cache:
 before_script:
   - rustup target add i686-unknown-linux-gnu
   - rustup target add thumbv7em-none-eabihf
+  - rustup component add llvm-tools-preview
   - rustup component add rust-src
   - (test -x $HOME/.cargo/bin/cargo-update-installed || cargo install cargo-update-installed)
   - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
