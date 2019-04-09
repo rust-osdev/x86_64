@@ -1,3 +1,5 @@
+- Update dependencies to latest versions (fix [#67](https://github.com/rust-osdev/x86_64/issues/67))
+
 # 0.5.3
 
 - Add `PortReadOnly` and `PortWriteOnly` types in `instructions::port` module ([#66](https://github.com/rust-osdev/x86_64/pull/66)).
