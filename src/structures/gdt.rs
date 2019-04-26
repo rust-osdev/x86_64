@@ -148,8 +148,8 @@ impl Descriptor {
         Descriptor::UserSegment(flags.bits())
     }
 
-    /// Creates a TSS system descriptor for the given TSS.
-    pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {
+    /// Creates a TSS system descriptor for the given TSS and IO permissions bitmap size.
+    pub fn tss_segment(tss: &'static TaskStateSegment, iomap_size: u16) -> Descriptor {
         use self::DescriptorFlags as Flags;
         use core::mem::size_of;
 
@@ -159,8 +159,11 @@ impl Descriptor {
         // base
         low.set_bits(16..40, ptr.get_bits(0..24));
         low.set_bits(56..64, ptr.get_bits(24..32));
-        // limit (the `-1` in needed since the bound is inclusive)
-        low.set_bits(0..16, (size_of::<TaskStateSegment>() - 1) as u64);
+        // limit (the `-2` is needed since the bound is inclusive -- -1 from TSS size and -1 from iomap size)
+        low.set_bits(
+            0..16,
+            (size_of::<TaskStateSegment>() + (tss.iomap_base + iomap_size) as usize - 2) as u64
+        );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
 
