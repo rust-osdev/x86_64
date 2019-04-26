@@ -70,15 +70,15 @@ impl GlobalDescriptorTable {
     ///
     /// Panics if the GDT has no free entries left.
     pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
-        let index = match entry {
-            Descriptor::UserSegment(value) => self.push(value),
+        let (index, privilege) = match entry {
+            Descriptor::UserSegment(value) => (self.push(value), (value >> 45) & 0b11),
             Descriptor::SystemSegment(value_low, value_high) => {
                 let index = self.push(value_low);
                 self.push(value_high);
-                index
+                (index, (value_low >> 45) & 0b11)
             }
         };
-        SegmentSelector::new(index as u16, PrivilegeLevel::Ring0)
+        SegmentSelector::new(index as u16, PrivilegeLevel::from_u16(privilege as u16))
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction.
