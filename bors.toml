@@ -1,0 +1,4 @@
+status = [
+  "rust-osdev.x86_64",
+]
+delete_merged_branches = true

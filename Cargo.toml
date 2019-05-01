@@ -28,8 +28,11 @@ edition = "2018"
 [dependencies]
 bit_field = "0.9.0"
 bitflags = "1.0.4"
-usize_conversions = "0.2.0"
 array-init = "0.0.4"
+
+[dependencies.cast]
+version = "0.2.2"
+default-features = false
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 raw-cpuid = "6.1.0"

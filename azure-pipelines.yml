@@ -4,7 +4,9 @@ trigger:
   batch: true
   branches:
     include:
-    - master
+    - '*'
+    exclude:
+    - 'staging.tmp'
 
 strategy:
   matrix:
@@ -102,3 +104,9 @@ steps:
 
 - script: bootimage test --manifest-path testing/Cargo.toml
   displayName: 'Integration Tests'
+
+- script: rustup component add rustfmt
+  displayName: 'Install Rustfmt'
+
+- script: cargo fmt -- --check
+  displayName: 'Check Formatting'
