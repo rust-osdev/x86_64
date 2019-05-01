@@ -1,3 +1,5 @@
+# 0.5.5
+
 - Use [`cast`](https://docs.rs/cast/0.2.2/cast/) crate instead of less general `usize_conversions` crate.
 
 # 0.5.4
