@@ -1,3 +1,5 @@
+- Use [`cast`](https://docs.rs/cast/0.2.2/cast/) crate instead of less general `usize_conversions` crate.
+
 # 0.5.4
 
 - Update dependencies to latest versions (fix [#67](https://github.com/rust-osdev/x86_64/issues/67))
