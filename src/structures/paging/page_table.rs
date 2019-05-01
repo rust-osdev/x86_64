@@ -7,7 +7,6 @@ use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 
 use bitflags::bitflags;
-use usize_conversions::usize_from;
 use ux::*;
 
 /// The error returned by the `PageTableEntry::frame` method.
@@ -222,13 +221,13 @@ impl Index<u9> for PageTable {
     type Output = PageTableEntry;
 
     fn index(&self, index: u9) -> &Self::Output {
-        &self.entries[usize_from(u16::from(index))]
+        &self.entries[cast::usize(u16::from(index))]
     }
 }
 
 impl IndexMut<u9> for PageTable {
     fn index_mut(&mut self, index: u9) -> &mut Self::Output {
-        &mut self.entries[usize_from(u16::from(index))]
+        &mut self.entries[cast::usize(u16::from(index))]
     }
 }
 

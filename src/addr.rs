@@ -3,7 +3,6 @@ use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 use bit_field::BitField;
-use usize_conversions::FromUsize;
 use ux::*;
 
 /// A canonical 64-bit virtual memory address.
@@ -92,15 +91,13 @@ impl VirtAddr {
 
     /// Creates a virtual address from the given pointer
     pub fn from_ptr<T>(ptr: *const T) -> Self {
-        Self::new(u64::from_usize(ptr as usize))
+        Self::new(cast::u64(ptr as usize))
     }
 
     /// Converts the address to a raw pointer.
     #[cfg(target_pointer_width = "64")]
     pub fn as_ptr<T>(self) -> *const T {
-        use usize_conversions::usize_from;
-
-        usize_from(self.as_u64()) as *const T
+        cast::usize(self.as_u64()) as *const T
     }
 
     /// Converts the address to a mutable raw pointer.
@@ -182,22 +179,18 @@ impl AddAssign<u64> for VirtAddr {
     }
 }
 
-impl Add<usize> for VirtAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl Add<usize> for VirtAddr {
     type Output = Self;
     fn add(self, rhs: usize) -> Self::Output {
-        self + u64::from_usize(rhs)
+        self + cast::u64(rhs)
     }
 }
 
-impl AddAssign<usize> for VirtAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl AddAssign<usize> for VirtAddr {
     fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(u64::from_usize(rhs))
+        self.add_assign(cast::u64(rhs))
     }
 }
 
@@ -214,22 +207,18 @@ impl SubAssign<u64> for VirtAddr {
     }
 }
 
-impl Sub<usize> for VirtAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl Sub<usize> for VirtAddr {
     type Output = Self;
     fn sub(self, rhs: usize) -> Self::Output {
-        self - u64::from_usize(rhs)
+        self - cast::u64(rhs)
     }
 }
 
-impl SubAssign<usize> for VirtAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl SubAssign<usize> for VirtAddr {
     fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(u64::from_usize(rhs))
+        self.sub_assign(cast::u64(rhs))
     }
 }
 
@@ -351,22 +340,18 @@ impl AddAssign<u64> for PhysAddr {
     }
 }
 
-impl Add<usize> for PhysAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl Add<usize> for PhysAddr {
     type Output = Self;
     fn add(self, rhs: usize) -> Self::Output {
-        self + u64::from_usize(rhs)
+        self + cast::u64(rhs)
     }
 }
 
-impl AddAssign<usize> for PhysAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl AddAssign<usize> for PhysAddr {
     fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(u64::from_usize(rhs))
+        self.add_assign(cast::u64(rhs))
     }
 }
 
@@ -383,22 +368,18 @@ impl SubAssign<u64> for PhysAddr {
     }
 }
 
-impl Sub<usize> for PhysAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl Sub<usize> for PhysAddr {
     type Output = Self;
     fn sub(self, rhs: usize) -> Self::Output {
-        self - u64::from_usize(rhs)
+        self - cast::u64(rhs)
     }
 }
 
-impl SubAssign<usize> for PhysAddr
-where
-    u64: FromUsize,
-{
+#[cfg(target_pointer_width = "64")]
+impl SubAssign<usize> for PhysAddr {
     fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(u64::from_usize(rhs))
+        self.sub_assign(cast::u64(rhs))
     }
 }
 
