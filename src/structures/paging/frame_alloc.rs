@@ -3,7 +3,10 @@
 use crate::structures::paging::{PageSize, PhysFrame};
 
 /// A trait for types that can allocate a frame of memory.
-pub trait FrameAllocator<S: PageSize> {
+///
+/// This trait is unsafe to implement because the implementer must guarantee that
+/// the `allocate_frame` method returns only unique unused frames.
+pub unsafe trait FrameAllocator<S: PageSize> {
     /// Allocate a frame of the appropriate size and return it if possible.
     fn allocate_frame(&mut self) -> Option<PhysFrame<S>>;
 }
