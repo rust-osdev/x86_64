@@ -1,3 +1,5 @@
+# 0.6.0
+
 - **Breaking**: Make the `FrameAllocator` unsafe to implement. This way, we can force the implementer to guarantee that all frame allocators are valid. See [#69](https://github.com/rust-osdev/x86_64/issues/69) for more information.
 
 # 0.5.5
