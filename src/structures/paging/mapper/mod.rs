@@ -81,10 +81,8 @@ pub trait Mapper<S: PageSize> {
     /// This function might need additional physical frames to create new page tables. These
     /// frames are allocated from the `allocator` argument. At most three frames are required.
     ///
-    /// This function is unsafe because the caller must guarantee the following:
-    ///
-    /// - The passed `frame` must be unused, i.e. not used for any other mappings.
-    /// - The passed `frame_allocator` must only yield unused frames.
+    /// This function is unsafe because the caller must guarantee that passed `frame` is
+    /// unused, i.e. not used for any other mappings.
     unsafe fn map_to<A>(
         &mut self,
         page: Page<S>,
@@ -115,10 +113,8 @@ pub trait Mapper<S: PageSize> {
 
     /// Maps the given frame to the virtual page with the same address.
     ///
-    /// This function is unsafe because the caller must guarantee the following:
-    ///
-    /// - The passed `frame` must be unused, i.e. not used for any other mappings.
-    /// - The passed `frame_allocator` must only yield unused frames.
+    /// This function is unsafe because the caller must guarantee that the passed `frame` is
+    /// unused, i.e. not used for any other mappings.
     unsafe fn identity_map<A>(
         &mut self,
         frame: PhysFrame<S>,
