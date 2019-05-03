@@ -1,6 +1,6 @@
 //! Functions to read and write control registers.
 
-use bitflags::bitflags;
+pub use x86_64_types::registers::Efer as EferFlags;
 
 /// A model specific register.
 #[derive(Debug)]
@@ -20,28 +20,6 @@ pub struct Efer;
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC0000080);
-}
-
-bitflags! {
-    /// Flags of the Extended Feature Enable Register.
-    pub struct EferFlags: u64 {
-        /// Enables the `syscall` and `sysret` instructions.
-        const SYSTEM_CALL_EXTENSIONS = 1 << 0;
-        /// Activates long mode, requires activating paging.
-        const LONG_MODE_ENABLE = 1 << 8;
-        /// Indicates that long mode is active.
-        const LONG_MODE_ACTIVE = 1 << 10;
-        /// Enables the no-execute page-protection feature.
-        const NO_EXECUTE_ENABLE = 1 << 11;
-        /// Enables SVM extensions.
-        const SECURE_VIRTUAL_MACHINE_ENABLE = 1 << 12;
-        /// Enable certain limit checks in 64-bit mode.
-        const LONG_MODE_SEGMENT_LIMIT_ENABLE = 1 << 13;
-        /// Enable the `fxsave` and `fxrstor` instructions to execute faster in 64-bit mode.
-        const FAST_FXSAVE_FXRSTOR = 1 << 14;
-        /// Changes how the `invlpg` instruction operates on TLB entries of upper-level entries.
-        const TRANSLATION_CACHE_EXTENSION = 1 << 15;
-    }
 }
 
 #[cfg(target_arch = "x86_64")]
