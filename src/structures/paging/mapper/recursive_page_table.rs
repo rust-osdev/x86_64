@@ -3,7 +3,7 @@
 //! Access the page tables through a recursively mapped level 4 table.
 
 use super::*;
-use crate::registers::control::Cr3;
+use crate::registers::*;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator,
     page::NotGiantPageSize,
@@ -54,7 +54,7 @@ impl<'a> RecursivePageTable<'a> {
         {
             return Err(());
         }
-        if Ok(Cr3::read().0) != table[recursive_index].frame() {
+        if Ok(control::Cr3::read().into()) != table[recursive_index].frame() {
             return Err(());
         }
 
