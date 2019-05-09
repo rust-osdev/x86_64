@@ -1,3 +1,5 @@
+# 0.7.0
+
 - **Breaking**: `Port::read` and `PortReadOnly::read` now take `&mut self` instead of `&self` ([#76](https://github.com/rust-osdev/x86_64/pull/76)).
 
 # 0.6.0
