@@ -91,7 +91,7 @@ impl<T: PortRead> PortReadOnly<T> {
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
     #[inline]
-    pub unsafe fn read(&self) -> T {
+    pub unsafe fn read(&mut self) -> T {
         T::read_from_port(self.port)
     }
 }
@@ -129,7 +129,7 @@ impl<T: PortReadWrite> Port<T> {
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
     #[inline]
-    pub unsafe fn read(&self) -> T {
+    pub unsafe fn read(&mut self) -> T {
         T::read_from_port(self.port)
     }
 

@@ -27,7 +27,7 @@ const TEST_VALUE: u8 = 0b10101010;
 pub extern "C" fn _start() -> ! {
     let mut crt_index_port = PortWriteOnly::<u8>::new(CRT_INDEX_PORT);
     let mut crt_read_write_data_port = Port::<u8>::new(CRT_DATA_PORT);
-    let crt_data_read_only_port = PortReadOnly::<u8>::new(CRT_DATA_PORT);
+    let mut crt_data_read_only_port = PortReadOnly::<u8>::new(CRT_DATA_PORT);
 
     unsafe {
         // Set the offset register as the index using PortWriteOnly
