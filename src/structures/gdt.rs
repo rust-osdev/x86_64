@@ -136,6 +136,9 @@ bitflags! {
         const PRESENT           = 1 << 47;
         /// Must be set for long mode code segments.
         const LONG_MODE         = 1 << 53;
+
+        /// The DPL for this descriptor is Ring 3
+        const DPL_RING_3        = 3 << 45;
     }
 }
 
@@ -145,6 +148,18 @@ impl Descriptor {
         use self::DescriptorFlags as Flags;
 
         let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::EXECUTABLE | Flags::LONG_MODE;
+        Descriptor::UserSegment(flags.bits())
+    }
+
+    /// Creates a segment descriptor for a long mode ring-3 code segment.
+    pub fn user_code_segment() -> Descriptor {
+        use self::DescriptorFlags as Flags;
+
+        let flags = Flags::USER_SEGMENT
+            | Flags::PRESENT
+            | Flags::EXECUTABLE
+            | Flags::LONG_MODE
+            | Flags::DPL_RING_3;
         Descriptor::UserSegment(flags.bits())
     }
 
