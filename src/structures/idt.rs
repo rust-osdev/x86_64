@@ -466,9 +466,9 @@ impl Index<usize> for InterruptDescriptorTable {
             18 => &self.machine_check,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
-            i @ 32...255 => &self.interrupts[i - 32],
-            i @ 15 | i @ 31 | i @ 21...29 => panic!("entry {} is reserved", i),
-            i @ 8 | i @ 10...14 | i @ 17 | i @ 30 => {
+            i @ 32..=255 => &self.interrupts[i - 32],
+            i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
+            i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i => panic!("no entry with index {}", i),
@@ -496,9 +496,9 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             18 => &mut self.machine_check,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
-            i @ 32...255 => &mut self.interrupts[i - 32],
-            i @ 15 | i @ 31 | i @ 21...29 => panic!("entry {} is reserved", i),
-            i @ 8 | i @ 10...14 | i @ 17 | i @ 30 => {
+            i @ 32..=255 => &mut self.interrupts[i - 32],
+            i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
+            i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i => panic!("no entry with index {}", i),
