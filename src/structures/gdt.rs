@@ -51,6 +51,9 @@ impl fmt::Debug for SegmentSelector {
 /// switching between user and kernel mode or for loading a TSS.
 ///
 /// The GDT has a fixed size of 8 entries, trying to add more entries will panic.
+///
+/// You do **not** need to add a null segment descriptor yourself - this is already done
+/// internally.
 #[derive(Debug, Clone)]
 pub struct GlobalDescriptorTable {
     table: [u64; 8],
@@ -81,7 +84,11 @@ impl GlobalDescriptorTable {
         SegmentSelector::new(index as u16, PrivilegeLevel::Ring0)
     }
 
-    /// Loads the GDT in the CPU using the `lgdt` instruction.
+    /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
+    /// segment registers; you **must** (re)load them yourself using [the appropriate
+    /// functions](crate::instructions::segmentation):
+    /// [load_ds](crate::instructions::segmentation::load_ds),
+    /// [set_cs](crate::instructions::segmentation::set_cs) etc.
     #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
         use crate::instructions::tables::{lgdt, DescriptorTablePointer};
@@ -125,6 +132,9 @@ pub enum Descriptor {
 bitflags! {
     /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
     pub struct DescriptorFlags: u64 {
+        /// For code segments, this flag sets the segment as readable. For data segments, this flag
+        /// sets the segment as writable.
+        const READ_WRITE        = 1 << 41;
         /// Marks a code segment as “conforming”. This influences the privilege checks that
         /// occur on control transfers.
         const CONFORMING        = 1 << 42;
@@ -148,6 +158,14 @@ impl Descriptor {
         use self::DescriptorFlags as Flags;
 
         let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::EXECUTABLE | Flags::LONG_MODE;
+        Descriptor::UserSegment(flags.bits())
+    }
+
+    /// Creates a segment descriptor for a long mode kernel data segment.
+    pub fn kernel_data_segment() -> Descriptor {
+        use self::DescriptorFlags as Flags;
+
+        let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::READ_WRITE;
         Descriptor::UserSegment(flags.bits())
     }
 
