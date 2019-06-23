@@ -87,8 +87,8 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [load_ds](crate::instructions::segmentation::load_ds),
-    /// [set_cs](crate::instructions::segmentation::set_cs) etc.
+    /// [load_ss](crate::instructions::segmentation::load_ss),
+    /// [set_cs](crate::instructions::segmentation::set_cs).
     #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
         use crate::instructions::tables::{lgdt, DescriptorTablePointer};
