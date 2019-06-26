@@ -10,6 +10,7 @@ pub fn are_enabled() -> bool {
 /// Enable interrupts.
 ///
 /// This is a wrapper around the `sti` instruction.
+#[inline]
 pub fn enable() {
     unsafe {
         asm!("sti" :::: "volatile");
@@ -19,6 +20,7 @@ pub fn enable() {
 /// Disable interrupts.
 ///
 /// This is a wrapper around the `cli` instruction.
+#[inline]
 pub fn disable() {
     unsafe {
         asm!("cli" :::: "volatile");
@@ -70,6 +72,7 @@ where
 }
 
 /// Cause a breakpoint exception by invoking the `int3` instruction.
+#[inline]
 pub fn int3() {
     unsafe {
         asm!("int3" :::: "volatile");

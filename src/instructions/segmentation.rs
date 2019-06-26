@@ -22,26 +22,31 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
 }
 
 /// Reload stack segment register.
+#[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
     asm!("movw $0, %ss " :: "r" (sel.0) : "memory");
 }
 
 /// Reload data segment register.
+#[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
     asm!("movw $0, %ds " :: "r" (sel.0) : "memory");
 }
 
 /// Reload es segment register.
+#[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     asm!("movw $0, %es " :: "r" (sel.0) : "memory");
 }
 
 /// Reload fs segment register.
+#[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
     asm!("movw $0, %fs " :: "r" (sel.0) : "memory");
 }
 
 /// Reload gs segment register.
+#[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
     asm!("movw $0, %gs " :: "r" (sel.0) : "memory");
 }
