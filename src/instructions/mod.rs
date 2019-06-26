@@ -17,27 +17,11 @@ pub fn hlt() {
     }
 }
 
-/// Emits a 'magic breakpoint' instruction for the [Bochs](http://bochs.sourceforge.net/) CPU
+/// Emits a '[magic breakpoint](https://wiki.osdev.org/Bochs#Magic_Breakpoint)' instruction for the [Bochs](http://bochs.sourceforge.net/) CPU
 /// emulator. Make sure to set `magic_break: enabled=1` in your `.bochsrc` file.
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
         asm!("xchgw %bx, %bx" :::: "volatile");
     }
-}
-
-/// Gets the current instruction pointer. Note that this is only approximate as it requires a few
-/// instructions to execute.
-#[inline]
-pub fn read_rip() -> u64 {
-    let rip: u64;
-    unsafe {
-        asm!(
-            "call .next
-            .next:
-            pop $0"
-            : "=r"(rip) ::: "volatile"
-        );
-    }
-    rip
 }
