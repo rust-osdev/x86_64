@@ -1,3 +1,6 @@
+- Add `instructions::bochs_breakpoint` and `registers::read_rip` functions ([#79](https://github.com/rust-osdev/x86_64/pull/79))
+- Mark all single instruction functions as `#[inline]` ([#79](https://github.com/rust-osdev/x86_64/pull/79))
+
 # 0.7.1
 
 - Add ring-3 flag to GDT descriptor ([#77](https://github.com/rust-osdev/x86_64/pull/77))
