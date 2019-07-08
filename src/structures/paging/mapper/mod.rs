@@ -2,6 +2,8 @@
 
 pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
 #[cfg(target_arch = "x86_64")]
+pub use self::offset_page_table::OffsetPageTable;
+#[cfg(target_arch = "x86_64")]
 pub use self::recursive_page_table::RecursivePageTable;
 
 use crate::structures::paging::{
@@ -11,6 +13,7 @@ use crate::structures::paging::{
 use crate::{PhysAddr, VirtAddr};
 
 mod mapped_page_table;
+mod offset_page_table;
 mod recursive_page_table;
 
 /// This trait defines page table operations that work for all page sizes of the x86_64

@@ -8,7 +8,7 @@ pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
 pub use self::mapper::MappedPageTable;
 #[cfg(target_arch = "x86_64")]
 #[doc(no_inline)]
-pub use self::mapper::RecursivePageTable;
+pub use self::mapper::{OffsetPageTable, RecursivePageTable};
 pub use self::mapper::{Mapper, MapperAllSizes};
 pub use self::page::{Page, PageSize, Size1GiB, Size2MiB, Size4KiB};
 pub use self::page_table::{PageTable, PageTableFlags};
