@@ -90,6 +90,7 @@ pub trait Mapper<S: PageSize> {
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError>
     where
+        Self: Sized,
         A: FrameAllocator<Size4KiB>;
 
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
@@ -118,6 +119,7 @@ pub trait Mapper<S: PageSize> {
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError>
     where
+        Self: Sized,
         A: FrameAllocator<Size4KiB>,
         S: PageSize,
         Self: Mapper<S>,
@@ -198,3 +200,5 @@ pub enum TranslateError {
     /// The page table entry for the given page points to an invalid physical address.
     InvalidFrameAddress(PhysAddr),
 }
+
+static _ASSERT_OBJECT_SAFE: Option<&(dyn MapperAllSizes + Sync)> = None;
