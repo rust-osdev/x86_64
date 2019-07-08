@@ -14,18 +14,12 @@ use crate::structures::paging::{
 /// memory are possible too, as long as they can be calculated as an `PhysAddr` to
 /// `VirtAddr` closure.
 #[derive(Debug)]
-pub struct MappedPageTable<'a, PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
-    page_table_walker: PageTableWalker<PhysToVirt>,
+pub struct MappedPageTable<'a, P: PhysToVirt> {
+    page_table_walker: PageTableWalker<P>,
     level_4_table: &'a mut PageTable,
 }
 
-impl<'a, PhysToVirt> MappedPageTable<'a, PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
+impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
     /// Creates a new `MappedPageTable` that uses the passed closure for converting virtual
     /// to physical addresses.
     ///
@@ -33,7 +27,7 @@ where
     /// closure is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
-    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_to_virt: PhysToVirt) -> Self {
+    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_to_virt: P) -> Self {
         Self {
             level_4_table,
             page_table_walker: PageTableWalker::new(phys_to_virt),
@@ -125,10 +119,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
+impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size1GiB>,
@@ -201,10 +192,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
+impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size2MiB>,
@@ -285,10 +273,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
+impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size4KiB>,
@@ -370,10 +355,7 @@ where
     }
 }
 
-impl<'a, PhysToVirt> MapperAllSizes for MappedPageTable<'a, PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
+impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let p4 = &self.level_4_table;
         let p3 = match self.page_table_walker.next_table(&p4[addr.p4_index()]) {
@@ -418,18 +400,12 @@ where
 }
 
 #[derive(Debug)]
-struct PageTableWalker<PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
-    phys_to_virt: PhysToVirt,
+struct PageTableWalker<P: PhysToVirt> {
+    phys_to_virt: P,
 }
 
-impl<PhysToVirt> PageTableWalker<PhysToVirt>
-where
-    PhysToVirt: Fn(PhysFrame) -> *mut PageTable,
-{
-    pub unsafe fn new(phys_to_virt: PhysToVirt) -> Self {
+impl<P: PhysToVirt> PageTableWalker<P> {
+    pub unsafe fn new(phys_to_virt: P) -> Self {
         Self { phys_to_virt }
     }
 
@@ -442,7 +418,7 @@ where
         &self,
         entry: &'b PageTableEntry,
     ) -> Result<&'b PageTable, PageTableWalkError> {
-        let page_table_ptr = (self.phys_to_virt)(entry.frame()?);
+        let page_table_ptr = self.phys_to_virt.phys_to_virt(entry.frame()?);
         let page_table: &PageTable = unsafe { &*page_table_ptr };
 
         Ok(page_table)
@@ -457,7 +433,7 @@ where
         &self,
         entry: &'b mut PageTableEntry,
     ) -> Result<&'b mut PageTable, PageTableWalkError> {
-        let page_table_ptr = (self.phys_to_virt)(entry.frame()?);
+        let page_table_ptr = self.phys_to_virt.phys_to_virt(entry.frame()?);
         let page_table: &mut PageTable = unsafe { &mut *page_table_ptr };
 
         Ok(page_table)
@@ -562,5 +538,23 @@ impl From<PageTableWalkError> for TranslateError {
             PageTableWalkError::MappedToHugePage => TranslateError::ParentEntryHugePage,
             PageTableWalkError::NotMapped => TranslateError::PageNotMapped,
         }
+    }
+}
+
+/// Trait for converting a physical address to a virtual one.
+///
+/// This only works if the physical address space is somehow mapped to the virtual
+/// address space, e.g. at an offset.
+pub trait PhysToVirt {
+    /// Translate the given physical frame to a virtual page table pointer.
+    fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable;
+}
+
+impl<T> PhysToVirt for T
+where
+    T: Fn(PhysFrame) -> *mut PageTable,
+{
+    fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable {
+        self(phys_frame)
     }
 }
