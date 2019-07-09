@@ -70,8 +70,9 @@ impl fmt::Debug for SegmentSelector {
 ///
 /// # Example
 /// ```
-/// let mut gdt = GlobalDescriptorTable::new();
+/// use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor};
 ///
+/// let mut gdt = GlobalDescriptorTable::new();
 /// gdt.add_entry(Descriptor::kernel_code_segment());
 /// gdt.add_entry(Descriptor::user_code_segment());
 /// gdt.add_entry(Descriptor::user_data_segment());
