@@ -1,3 +1,5 @@
+# 0.7.2
+
 - Add `instructions::bochs_breakpoint` and `registers::read_rip` functions ([#79](https://github.com/rust-osdev/x86_64/pull/79))
 - Mark all single instruction functions as `#[inline]` ([#79](https://github.com/rust-osdev/x86_64/pull/79))
 - Update GDT docs, add user_data_segment function and WRITABLE flag ([#78](https://github.com/rust-osdev/x86_64/pull/78))
