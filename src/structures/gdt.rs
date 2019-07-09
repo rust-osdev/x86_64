@@ -51,6 +51,35 @@ impl fmt::Debug for SegmentSelector {
 /// switching between user and kernel mode or for loading a TSS.
 ///
 /// The GDT has a fixed size of 8 entries, trying to add more entries will panic.
+///
+/// You do **not** need to add a null segment descriptor yourself - this is already done
+/// internally.
+///
+/// Data segment registers in ring 0 can be loaded with the null segment selector. When running in
+/// ring 3, the `ss` register must point to a valid data segment which can be obtained through the
+/// [`Descriptor::user_data_segment()`](Descriptor::user_data_segment) function. Code segments must
+/// be valid and non-null at all times and can be obtained through the
+/// [`Descriptor::kernel_code_segment()`](Descriptor::kernel_code_segment) and
+/// [`Descriptor::user_code_segment()`](Descriptor::user_code_segment) in rings 0 and 3
+/// respectively.
+///
+/// For more info, see:
+/// [x86 Instruction Reference for `mov`](https://www.felixcloutier.com/x86/mov#64-bit-mode-exceptions),
+/// [Intel Manual](https://software.intel.com/sites/default/files/managed/39/c5/325462-sdm-vol-1-2abcd-3abcd.pdf),
+/// [AMD Manual](https://www.amd.com/system/files/TechDocs/24593.pdf)
+///
+/// # Example
+/// ```
+/// use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor};
+///
+/// let mut gdt = GlobalDescriptorTable::new();
+/// gdt.add_entry(Descriptor::kernel_code_segment());
+/// gdt.add_entry(Descriptor::user_code_segment());
+/// gdt.add_entry(Descriptor::user_data_segment());
+///
+/// // Add entry for TSS, call gdt.load() then update segment registers
+/// ```
+
 #[derive(Debug, Clone)]
 pub struct GlobalDescriptorTable {
     table: [u64; 8],
@@ -81,7 +110,11 @@ impl GlobalDescriptorTable {
         SegmentSelector::new(index as u16, PrivilegeLevel::Ring0)
     }
 
-    /// Loads the GDT in the CPU using the `lgdt` instruction.
+    /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
+    /// segment registers; you **must** (re)load them yourself using [the appropriate
+    /// functions](crate::instructions::segmentation):
+    /// [load_ss](crate::instructions::segmentation::load_ss),
+    /// [set_cs](crate::instructions::segmentation::set_cs).
     #[cfg(target_arch = "x86_64")]
     pub fn load(&'static self) {
         use crate::instructions::tables::{lgdt, DescriptorTablePointer};
@@ -125,6 +158,8 @@ pub enum Descriptor {
 bitflags! {
     /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
     pub struct DescriptorFlags: u64 {
+        /// For data segments, this flag sets the segment as writable. Ignored for code segments.
+        const WRITABLE          = 1 << 41;
         /// Marks a code segment as “conforming”. This influences the privilege checks that
         /// occur on control transfers.
         const CONFORMING        = 1 << 42;
@@ -151,7 +186,15 @@ impl Descriptor {
         Descriptor::UserSegment(flags.bits())
     }
 
-    /// Creates a segment descriptor for a long mode ring-3 code segment.
+    /// Creates a segment descriptor for a long mode ring 3 data segment.
+    pub fn user_data_segment() -> Descriptor {
+        use self::DescriptorFlags as Flags;
+
+        let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::WRITABLE | Flags::DPL_RING_3;
+        Descriptor::UserSegment(flags.bits())
+    }
+
+    /// Creates a segment descriptor for a long mode ring 3 code segment.
     pub fn user_code_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 
