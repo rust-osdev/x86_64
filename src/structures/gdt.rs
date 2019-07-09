@@ -54,6 +54,32 @@ impl fmt::Debug for SegmentSelector {
 ///
 /// You do **not** need to add a null segment descriptor yourself - this is already done
 /// internally.
+///
+/// Data segment registers in ring 0 can be loaded with the null segment selector. When running in
+/// ring 3, the `ss` register must point to a valid data segment which can be obtained through the
+/// [`Descriptor::user_data_segment()`](Descriptor::user_data_segment) function. Code segments must
+/// be valid and non-null at all times and can be obtained through the
+/// [`Descriptor::kernel_code_segment()`](Descriptor::kernel_code_segment) and
+/// [`Descriptor::user_code_segment()`](Descriptor::user_code_segment) in rings 0 and 3
+/// respectively.
+///
+/// For more info, see:
+/// [x86 Instruction Reference for `mov`](https://www.felixcloutier.com/x86/mov#64-bit-mode-exceptions),
+/// [Intel Manual](https://software.intel.com/sites/default/files/managed/39/c5/325462-sdm-vol-1-2abcd-3abcd.pdf),
+/// [AMD Manual](https://www.amd.com/system/files/TechDocs/24593.pdf)
+///
+/// # Example
+/// ```
+/// let mut gdt = GlobalDescriptorTable::new();
+///
+/// gdt.add_entry(Descriptor::kernel_code_segment());
+/// gdt.add_entry(Descriptor::user_code_segment());
+/// gdt.add_entry(Descriptor::user_data_segment());
+///
+/// // Add entry for TSS, call gdt.load() then update segment registers
+/// ```
+
+
 #[derive(Debug, Clone)]
 pub struct GlobalDescriptorTable {
     table: [u64; 8],
@@ -132,9 +158,8 @@ pub enum Descriptor {
 bitflags! {
     /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
     pub struct DescriptorFlags: u64 {
-        /// For code segments, this flag sets the segment as readable. For data segments, this flag
-        /// sets the segment as writable.
-        const READ_WRITE        = 1 << 41;
+        /// For data segments, this flag sets the segment as writable. Ignored for code segments.
+        const WRITABLE          = 1 << 41;
         /// Marks a code segment as “conforming”. This influences the privilege checks that
         /// occur on control transfers.
         const CONFORMING        = 1 << 42;
@@ -161,15 +186,15 @@ impl Descriptor {
         Descriptor::UserSegment(flags.bits())
     }
 
-    /// Creates a segment descriptor for a long mode kernel data segment.
-    pub fn kernel_data_segment() -> Descriptor {
+    /// Creates a segment descriptor for a long mode ring 3 data segment.
+    pub fn user_data_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 
-        let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::READ_WRITE;
+        let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::WRITABLE | Flags::DPL_RING_3;
         Descriptor::UserSegment(flags.bits())
     }
 
-    /// Creates a segment descriptor for a long mode ring-3 code segment.
+    /// Creates a segment descriptor for a long mode ring 3 code segment.
     pub fn user_code_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 
