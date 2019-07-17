@@ -17,7 +17,7 @@ impl<'a> OffsetPageTable<'a> {
     /// is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
-    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: u64) -> Self {
+    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: VirtAddr) -> Self {
         let phys_offset = PhysOffset {
             offset: phys_offset,
         };
@@ -29,13 +29,13 @@ impl<'a> OffsetPageTable<'a> {
 
 #[derive(Debug)]
 struct PhysOffset {
-    offset: u64,
+    offset: VirtAddr,
 }
 
 impl PhysToVirt for PhysOffset {
     fn phys_to_virt(&self, frame: PhysFrame) -> *mut PageTable {
         let phys = frame.start_address().as_u64();
-        let virt = VirtAddr::new(phys + self.offset);
+        let virt = self.offset + phys;
         virt.as_mut_ptr()
     }
 }
