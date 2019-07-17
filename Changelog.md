@@ -1,3 +1,5 @@
+- Add a new `OffsetPageTable` mapper type ([#83](https://github.com/rust-osdev/x86_64/pull/83))
+
 # 0.7.2
 
 - Add `instructions::bochs_breakpoint` and `registers::read_rip` functions ([#79](https://github.com/rust-osdev/x86_64/pull/79))
