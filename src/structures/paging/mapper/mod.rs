@@ -2,10 +2,7 @@
 
 pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
 #[cfg(target_arch = "x86_64")]
-pub use self::{
-    offset_page_table::OffsetPageTable,
-    recursive_page_table::RecursivePageTable,
-};
+pub use self::{offset_page_table::OffsetPageTable, recursive_page_table::RecursivePageTable};
 
 use crate::structures::paging::{
     frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size1GiB,
