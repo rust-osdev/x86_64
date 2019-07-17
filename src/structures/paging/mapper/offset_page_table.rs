@@ -13,6 +13,12 @@ impl<'a> OffsetPageTable<'a> {
     /// Creates a new `OffsetPageTable` that uses the given offset for converting virtual
     /// to physical addresses.
     ///
+    /// The complete physical memory must be mapped in the virtual address space starting at
+    /// address `phys_offset`. This means that for example physical address `0x5000` can be
+    /// accessed through virtual address `phys_offset + 0x5000`. This mapping is required because
+    /// the mapper needs to access page tables, which are not mapped into the virtual address
+    /// space by default.
+    ///
     /// This function is unsafe because the caller must guarantee that the passed `phys_offset`
     /// is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
