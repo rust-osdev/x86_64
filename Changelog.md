@@ -1,3 +1,5 @@
+# 0.7.3
+
 - Add a new `OffsetPageTable` mapper type ([#83](https://github.com/rust-osdev/x86_64/pull/83))
 
 # 0.7.2
