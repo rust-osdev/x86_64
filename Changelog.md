@@ -1,3 +1,5 @@
+# 0.7.4
+
 - Remove raw-cpuid dependency and use rdrand intrinsics ([#85](https://github.com/rust-osdev/x86_64/pull/85))
 - Update integration tests to use new testing framework ([#86](https://github.com/rust-osdev/x86_64/pull/86))
 
