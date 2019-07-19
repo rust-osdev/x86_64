@@ -1,11 +1,10 @@
-#![feature(const_fn)]
-#![no_std] // don't link the Rust standard library
-#![cfg_attr(not(test), no_main)] // disable all Rust-level entry points
+#![feature(abi_x86_interrupt)]
+#![no_std]
+#![no_main]
 
-#[cfg(not(test))]
 use core::panic::PanicInfo;
-use testing::{exit_qemu, serial_println};
-use x86_64::instructions::port::{PortReadOnly, PortWriteOnly, Port};
+use testing::{exit_qemu, serial_print, serial_println, QemuExitCode};
+use x86_64::instructions::port::{Port, PortReadOnly, PortWriteOnly};
 
 // This port tells the data port which index to read from
 const CRT_INDEX_PORT: u16 = 0x3D4;
@@ -22,9 +21,10 @@ const TEST_VALUE: u8 = 0b10101010;
 
 /// This function is the entry point, since the linker looks for a function
 /// named `_start_` by default.
-#[cfg(not(test))]
 #[no_mangle] // don't mangle the name of this function
 pub extern "C" fn _start() -> ! {
+    serial_print!("port_read_write... ");
+
     let mut crt_index_port = PortWriteOnly::<u8>::new(CRT_INDEX_PORT);
     let mut crt_read_write_data_port = Port::<u8>::new(CRT_DATA_PORT);
     let mut crt_data_read_only_port = PortReadOnly::<u8>::new(CRT_DATA_PORT);
@@ -41,35 +41,29 @@ pub extern "C" fn _start() -> ! {
 
         // Read the test value using PortReadWrite
         let read_write_test_value = crt_read_write_data_port.read() & 0xFF;
-        
+
         if read_only_test_value != TEST_VALUE {
-            panic!("PortReadOnly: {} does not match expected value {}", read_only_test_value, TEST_VALUE);
+            panic!(
+                "PortReadOnly: {} does not match expected value {}",
+                read_only_test_value, TEST_VALUE
+            );
         }
 
         if read_write_test_value != TEST_VALUE {
-            panic!("PortReadWrite: {} does not match expected value {}", read_write_test_value, TEST_VALUE);
+            panic!(
+                "PortReadWrite: {} does not match expected value {}",
+                read_write_test_value, TEST_VALUE
+            );
         }
     }
 
-    serial_println!("ok");
-
-    unsafe {
-        exit_qemu();
-    }
+    serial_println!("[ok]");
+    exit_qemu(QemuExitCode::Success);
 
     loop {}
 }
 
-/// This function is called on panic.
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    serial_println!("failed");
-
-    serial_println!("{}", info);
-
-    unsafe {
-        exit_qemu();
-    }
-    loop {}
+    testing::test_panic_handler(info)
 }

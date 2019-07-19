@@ -18,7 +18,7 @@ script:
   - cargo build
   - cargo test
   - cargo build --features deny-warnings
-  - bootimage test --manifest-path testing/Cargo.toml
+  - cd testing && cargo xtest && cd ..
   - cargo build --target i686-unknown-linux-gnu
   - cargo build --target thumbv7em-none-eabihf
 
