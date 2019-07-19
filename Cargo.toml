@@ -34,9 +34,6 @@ array-init = "0.0.4"
 version = "0.2.2"
 default-features = false
 
-[target.'cfg(target_arch = "x86_64")'.dependencies]
-raw-cpuid = "6.1.0"
-
 [dependencies.ux]
 default-features = false
 version = "0.1.3"

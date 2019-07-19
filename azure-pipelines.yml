@@ -102,8 +102,9 @@ steps:
 - script: rustup component add llvm-tools-preview
   displayName: "Add llvm-tools-preview Rustup Component"
 
-- script: bootimage test --manifest-path testing/Cargo.toml
+- script: cargo xtest
   displayName: 'Integration Tests'
+  workingDirectory: 'testing'
 
 - script: rustup component add rustfmt
   displayName: 'Install Rustfmt'
