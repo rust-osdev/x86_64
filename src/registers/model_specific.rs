@@ -64,8 +64,8 @@ bitflags! {
 
 #[cfg(target_arch = "x86_64")]
 mod x86_64 {
-    use crate::addr::VirtAddr;
     use super::*;
+    use crate::addr::VirtAddr;
 
     impl Msr {
         /// Read 64 bits msr register.
