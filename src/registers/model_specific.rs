@@ -25,6 +25,10 @@ pub struct FSBase;
 #[derive(Debug)]
 pub struct GSBase;
 
+/// KernelGSBase Model Specific Register.
+#[derive(Debug)]
+pub struct KernelGSBase;
+
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC0000080);
@@ -38,6 +42,11 @@ impl FSBase {
 impl GSBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0101);
+}
+
+impl KernelGSBase {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0xC000_0102);
 }
 
 bitflags! {
@@ -134,7 +143,7 @@ mod x86_64 {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
-        /// Write a given virtual address to the FS.Base address.
+        /// Write a given virtual address to the FS.Base register.
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
@@ -146,7 +155,19 @@ mod x86_64 {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
-        /// Write a given virtual address to the GS.Base address.
+        /// Write a given virtual address to the GS.Base register.
+        pub fn write(address: VirtAddr) {
+            unsafe { Self::MSR.write(address.as_u64()) };
+        }
+    }
+
+    impl KernelGSBase {
+        /// Read the current KernelGSBase register.
+        pub fn read() -> VirtAddr {
+            VirtAddr::new(unsafe { Self::MSR.read() })
+        }
+
+        /// Write a given virtual address to the KernelGSBase register.
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
