@@ -51,6 +51,12 @@ pub unsafe fn load_gs(sel: SegmentSelector) {
     asm!("movw $0, %gs " :: "r" (sel.0) : "memory");
 }
 
+/// Swap `KernelGSBase` MSR and `GSBase` MSR.
+#[inline]
+pub unsafe fn swap_gs() {
+    asm!("swapgs" ::: "memory" : "volatile");
+}
+
 /// Returns the current value of the code segment register.
 pub fn cs() -> SegmentSelector {
     let segment: u16;
