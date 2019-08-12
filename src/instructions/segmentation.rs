@@ -51,7 +51,7 @@ pub unsafe fn load_gs(sel: SegmentSelector) {
     asm!("movw $0, %gs " :: "r" (sel.0) : "memory");
 }
 
-/// Swap `KernelGSBase` MSR and `GSBase` MSR.
+/// Swap `KernelGsBase` MSR and `GsBase` MSR.
 #[inline]
 pub unsafe fn swap_gs() {
     asm!("swapgs" ::: "memory" : "volatile");

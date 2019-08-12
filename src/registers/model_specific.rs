@@ -19,32 +19,32 @@ pub struct Efer;
 
 /// FS.Base Model Specific Register.
 #[derive(Debug)]
-pub struct FSBase;
+pub struct FsBase;
 
 /// GS.Base Model Specific Register.
 #[derive(Debug)]
-pub struct GSBase;
+pub struct GsBase;
 
-/// KernelGSBase Model Specific Register.
+/// KernelGsBase Model Specific Register.
 #[derive(Debug)]
-pub struct KernelGSBase;
+pub struct KernelGsBase;
 
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC0000080);
 }
 
-impl FSBase {
+impl FsBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0100);
 }
 
-impl GSBase {
+impl GsBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0101);
 }
 
-impl KernelGSBase {
+impl KernelGsBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0102);
 }
@@ -137,8 +137,8 @@ mod x86_64 {
         }
     }
 
-    impl FSBase {
-        /// Read the current FSBase register.
+    impl FsBase {
+        /// Read the current FsBase register.
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
@@ -149,8 +149,8 @@ mod x86_64 {
         }
     }
 
-    impl GSBase {
-        /// Read the current GSBase register.
+    impl GsBase {
+        /// Read the current GsBase register.
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
@@ -161,13 +161,13 @@ mod x86_64 {
         }
     }
 
-    impl KernelGSBase {
-        /// Read the current KernelGSBase register.
+    impl KernelGsBase {
+        /// Read the current KernelGsBase register.
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
-        /// Write a given virtual address to the KernelGSBase register.
+        /// Write a given virtual address to the KernelGsBase register.
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
