@@ -1,3 +1,5 @@
+# 0.7.5
+
 - Add FsBase and GsBase register support ([#87](https://github.com/rust-osdev/x86_64/pull/87))
 
 # 0.7.4
