@@ -5,8 +5,9 @@ pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
 pub use self::{offset_page_table::OffsetPageTable, recursive_page_table::RecursivePageTable};
 
 use crate::structures::paging::{
-    frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size1GiB,
-    Size2MiB, Size4KiB,
+    frame_alloc::{FrameAllocator, UnusedPhysFrame},
+    page_table::PageTableFlags,
+    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 
@@ -81,13 +82,10 @@ pub trait Mapper<S: PageSize> {
     ///
     /// This function might need additional physical frames to create new page tables. These
     /// frames are allocated from the `allocator` argument. At most three frames are required.
-    ///
-    /// This function is unsafe because the caller must guarantee that passed `frame` is
-    /// unused, i.e. not used for any other mappings.
-    unsafe fn map_to<A>(
+    fn map_to<A>(
         &mut self,
         page: Page<S>,
-        frame: PhysFrame<S>,
+        frame: UnusedPhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError>
@@ -113,12 +111,9 @@ pub trait Mapper<S: PageSize> {
     fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
-    ///
-    /// This function is unsafe because the caller must guarantee that the passed `frame` is
-    /// unused, i.e. not used for any other mappings.
     unsafe fn identity_map<A>(
         &mut self,
-        frame: PhysFrame<S>,
+        frame: UnusedPhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError>
