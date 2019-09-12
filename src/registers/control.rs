@@ -61,6 +61,33 @@ bitflags! {
     }
 }
 
+/// Contains various flags for controling extended processor settings.
+/// These settings include PCIDE, VME, etc.
+#[derive(Debug)]
+pub struct Cr4;
+
+bitflags! {
+pub struct Cr4Flags: u64 {
+const VIRTUAL_8086_MODE_EXTENSIONS = 1<<0;
+const PROTECTED_MODE_VIRTUAL_INTERRUPTS = 1<<1;
+const TIME_STAMP_RING0_ONLY = 1<<2;
+const DEBUGGING_EXTENSIONS = 1<<3;
+const PAGE_SIZE_EXTENSION = 1 << 4;
+const PHYSICAL_ADDRESS_EXTENSION = 1 << 5;
+const MACHINE_CHECK_EXCEPTION = 1 << 6;
+const PAGE_GLOBAL_ENABLE = 1 << 7;
+const PERFORMANCE_MONITORING_COUNTER_ENABLE = 1 << 8;
+const OS_SUPPORTS_FXSAVE_FXSTOR = 1 << 9;
+const OS_SUPPORTS_UNMASKED_SIMD_FP_EXCEPTIONS = 1 << 10;
+const USER_MODE_INSTRUCTION_PREVENTION = 1 << 11;
+const VIRTUAL_MACHINE_EXTENSIONS_ENABLE = 1 << 13;
+const SAFER_MODE_EXTENSIONS_ENABLE = 1 << 14;
+const PCID_ENABLE = 1 << 17;
+const XSAVE_AND_PROCESSOR_EXTENDED_STATES_ENABLE = 1 << 18;
+const SUPERVISOR_MODE_EXECUTIONS_PROTECTION_ENABLE = 1 << 20;
+const SUPERVISOR_MODE_ACCESS_PROTECTION_ENABLE = 1 << 21;
+}
+
 #[cfg(target_arch = "x86_64")]
 mod x86_64 {
     use super::*;
@@ -149,6 +176,55 @@ mod x86_64 {
             let addr = frame.start_address();
             let value = addr.as_u64() | flags.bits();
             asm!("mov $0, %cr3" :: "r" (value) : "memory")
+        }
+    }
+
+    impl Cr4 {
+        /// Read the current set of CR4 flags.
+        pub fn read() -> Cr4Flags {
+            Cr4Flags::from_bits_truncate(Self::read_raw())
+        }
+
+        /// Read the current raw CR4 value.
+        pub fn read_raw() -> u64 {
+            let value: u64;
+            unsafe {
+                asm!("mov %cr4, $0" : "=r" (value));
+            }
+            value
+        }
+
+        /// Write CR4 flags.
+        ///
+        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
+        /// safety by e.g. disabling PAE.
+        pub unsafe fn write(flags: Cr4Flags) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !(Cr4Flags::all().bits());
+            let new_value = reserved | flags.bits();
+
+            Self::write_raw(new_value);
+        }
+
+        /// Write raw CR4 flags.
+        ///
+        /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
+        /// safety by e.g. disabling PAE.
+        pub unsafe fn write_raw(value: u64) {
+            asm!("mov $0, %cr4" :: "r" (value) : "memory")
+        }
+
+        /// Updates CR4 flags.
+        ///
+        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
+        /// safety by e.g. disabling PAE.
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut Cr4Flags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            Self::write(flags);
         }
     }
 }
