@@ -7,7 +7,6 @@ use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 
 use bitflags::bitflags;
-use ux::*;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -217,16 +216,16 @@ impl IndexMut<usize> for PageTable {
     }
 }
 
-impl Index<u9> for PageTable {
+impl Index<PageTableIndex> for PageTable {
     type Output = PageTableEntry;
 
-    fn index(&self, index: u9) -> &Self::Output {
+    fn index(&self, index: PageTableIndex) -> &Self::Output {
         &self.entries[cast::usize(u16::from(index))]
     }
 }
 
-impl IndexMut<u9> for PageTable {
-    fn index_mut(&mut self, index: u9) -> &mut Self::Output {
+impl IndexMut<PageTableIndex> for PageTable {
+    fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {
         &mut self.entries[cast::usize(u16::from(index))]
     }
 }
@@ -234,5 +233,61 @@ impl IndexMut<u9> for PageTable {
 impl fmt::Debug for PageTable {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.entries[..].fmt(f)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PageTableIndex(u16);
+
+impl PageTableIndex {
+    pub fn new(index: u16) -> Self {
+        assert!(usize::from(index) < ENTRY_COUNT);
+        Self(index)
+    }
+}
+
+impl From<PageTableIndex> for u16 {
+    fn from(index: PageTableIndex) -> Self {
+        index.0
+    }
+}
+
+impl From<PageTableIndex> for u32 {
+    fn from(index: PageTableIndex) -> Self {
+        u32::from(index.0)
+    }
+}
+
+impl From<PageTableIndex> for u64 {
+    fn from(index: PageTableIndex) -> Self {
+        u64::from(index.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PageOffset(u16);
+
+impl PageOffset {
+    pub fn new(offset: u16) -> Self {
+        assert!(offset < (1 << 12));
+        Self(offset)
+    }
+}
+
+impl From<PageOffset> for u16 {
+    fn from(offset: PageOffset) -> Self {
+        offset.0
+    }
+}
+
+impl From<PageOffset> for u32 {
+    fn from(offset: PageOffset) -> Self {
+        u32::from(offset.0)
+    }
+}
+
+impl From<PageOffset> for u64 {
+    fn from(offset: PageOffset) -> Self {
+        u64::from(offset.0)
     }
 }

@@ -11,7 +11,7 @@ pub use self::mapper::{Mapper, MapperAllSizes};
 #[doc(no_inline)]
 pub use self::mapper::{OffsetPageTable, RecursivePageTable};
 pub use self::page::{Page, PageSize, Size1GiB, Size2MiB, Size4KiB};
-pub use self::page_table::{PageTable, PageTableFlags};
+pub use self::page_table::{PageOffset, PageTable, PageTableFlags, PageTableIndex};
 
 pub mod frame;
 mod frame_alloc;

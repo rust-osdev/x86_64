@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::registers::control::Cr3;
+use crate::structures::paging::PageTableIndex;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator,
     page::NotGiantPageSize,
@@ -11,7 +12,6 @@ use crate::structures::paging::{
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::VirtAddr;
-use ux::u9;
 
 /// A recursive page table is a last level page table with an entry mapped to the table itself.
 ///
@@ -29,7 +29,7 @@ use ux::u9;
 #[derive(Debug)]
 pub struct RecursivePageTable<'a> {
     p4: &'a mut PageTable,
-    recursive_index: u9,
+    recursive_index: PageTableIndex,
 }
 
 impl<'a> RecursivePageTable<'a> {
@@ -67,7 +67,7 @@ impl<'a> RecursivePageTable<'a> {
     /// Creates a new RecursivePageTable without performing any checks.
     ///
     /// The `recursive_index` parameter must be the index of the recursively mapped entry.
-    pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: u9) -> Self {
+    pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: PageTableIndex) -> Self {
         RecursivePageTable {
             p4: table,
             recursive_index,
@@ -581,11 +581,11 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
     }
 }
 
-fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: u9) -> *mut PageTable {
+fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {
     p3_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
-fn p3_page<S: PageSize>(page: Page<S>, recursive_index: u9) -> Page {
+fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
     Page::from_page_table_indices(
         recursive_index,
         recursive_index,
@@ -594,11 +594,11 @@ fn p3_page<S: PageSize>(page: Page<S>, recursive_index: u9) -> Page {
     )
 }
 
-fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: u9) -> *mut PageTable {
+fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {
     p2_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
-fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: u9) -> Page {
+fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
     Page::from_page_table_indices(
         recursive_index,
         recursive_index,
@@ -607,11 +607,11 @@ fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: u9) -> Page {
     )
 }
 
-fn p1_ptr(page: Page<Size4KiB>, recursive_index: u9) -> *mut PageTable {
+fn p1_ptr(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> *mut PageTable {
     p1_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
-fn p1_page(page: Page<Size4KiB>, recursive_index: u9) -> Page {
+fn p1_page(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> Page {
     Page::from_page_table_indices(
         recursive_index,
         page.p4_index(),

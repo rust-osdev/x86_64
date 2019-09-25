@@ -2,8 +2,8 @@ use core::convert::{Into, TryInto};
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
+use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
-use ux::*;
 
 /// A canonical 64-bit virtual memory address.
 ///
@@ -135,28 +135,28 @@ impl VirtAddr {
     }
 
     /// Returns the 12-bit page offset of this virtual address.
-    pub fn page_offset(&self) -> u12 {
-        u12::new((self.0 & 0xfff).try_into().unwrap())
+    pub fn page_offset(&self) -> PageOffset {
+        PageOffset::new((self.0 & 0xfff).try_into().unwrap())
     }
 
     /// Returns the 9-bit level 1 page table index.
-    pub fn p1_index(&self) -> u9 {
-        u9::new(((self.0 >> 12) & 0o777).try_into().unwrap())
+    pub fn p1_index(&self) -> PageTableIndex {
+        PageTableIndex::new(((self.0 >> 12) & 0o777).try_into().unwrap())
     }
 
     /// Returns the 9-bit level 2 page table index.
-    pub fn p2_index(&self) -> u9 {
-        u9::new(((self.0 >> 12 >> 9) & 0o777).try_into().unwrap())
+    pub fn p2_index(&self) -> PageTableIndex {
+        PageTableIndex::new(((self.0 >> 12 >> 9) & 0o777).try_into().unwrap())
     }
 
     /// Returns the 9-bit level 3 page table index.
-    pub fn p3_index(&self) -> u9 {
-        u9::new(((self.0 >> 12 >> 9 >> 9) & 0o777).try_into().unwrap())
+    pub fn p3_index(&self) -> PageTableIndex {
+        PageTableIndex::new(((self.0 >> 12 >> 9 >> 9) & 0o777).try_into().unwrap())
     }
 
     /// Returns the 9-bit level 4 page table index.
-    pub fn p4_index(&self) -> u9 {
-        u9::new(((self.0 >> 12 >> 9 >> 9 >> 9) & 0o777).try_into().unwrap())
+    pub fn p4_index(&self) -> PageTableIndex {
+        PageTableIndex::new(((self.0 >> 12 >> 9 >> 9 >> 9) & 0o777).try_into().unwrap())
     }
 }
 
