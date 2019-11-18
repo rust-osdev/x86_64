@@ -655,6 +655,7 @@ pub type ExceptionStackFrame = InterruptStackFrame;
 /// This wrapper type ensures that no accidental modification of the interrupt stack frame
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
+#[repr(C)]
 pub struct InterruptStackFrame {
     value: InterruptStackFrameValue,
 }
