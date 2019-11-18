@@ -1,3 +1,5 @@
+- Use repr C to suppress not-ffi-safe when used with extern handler functions ([#94](https://github.com/rust-osdev/x86_64/pull/94))
+
 # 0.7.5
 
 - Add FsBase and GsBase register support ([#87](https://github.com/rust-osdev/x86_64/pull/87))
