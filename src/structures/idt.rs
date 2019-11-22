@@ -14,7 +14,8 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Deref, Index, IndexMut};
+use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use core::ops::Bound::{Excluded, Included, Unbounded};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -365,7 +366,7 @@ pub struct InterruptDescriptorTable {
     ///   external interrupt was recognized.
     /// - If the interrupt occurs as a result of executing the INTn instruction, the saved
     ///   instruction pointer points to the instruction after the INTn.
-    pub interrupts: [Entry<HandlerFunc>; 256 - 32],
+    interrupts: [Entry<HandlerFunc>; 256 - 32],
 }
 
 impl InterruptDescriptorTable {
@@ -444,65 +445,60 @@ impl InterruptDescriptorTable {
     }
 }
 
-impl Index<usize> for InterruptDescriptorTable {
-    type Output = Entry<HandlerFunc>;
+
+impl<I: RangeBounds<usize>> Index<I> for InterruptDescriptorTable {
+    type Output = [Entry<HandlerFunc>];
 
     /// Returns the IDT entry with the specified index.
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
     /// exception that pushes an error code (use the struct fields for accessing these entries).
-    fn index(&self, index: usize) -> &Self::Output {
-        match index {
-            0 => &self.divide_by_zero,
-            1 => &self.debug,
-            2 => &self.non_maskable_interrupt,
-            3 => &self.breakpoint,
-            4 => &self.overflow,
-            5 => &self.bound_range_exceeded,
-            6 => &self.invalid_opcode,
-            7 => &self.device_not_available,
-            9 => &self.coprocessor_segment_overrun,
-            16 => &self.x87_floating_point,
-            18 => &self.machine_check,
-            19 => &self.simd_floating_point,
-            20 => &self.virtualization,
-            i @ 32..=255 => &self.interrupts[i - 32],
-            i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
-            i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
-                panic!("entry {} is an exception with error code", i)
-            }
-            i => panic!("no entry with index {}", i),
+    fn index(&self, index: I) -> &Self::Output {
+        let lower_idx = match index.start_bound() {
+            Included(start) => *start,
+            Excluded(start) => *start + 1,
+            Unbounded => 32,
+        };
+        let upper_idx = match index.end_bound() {
+            Included(end) => *end + 1,
+            Excluded(end) => *end,
+            Unbounded => 255,
+        };
+
+        if lower_idx > 255 || upper_idx > 255 {
+            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
         }
+        if lower_idx < 32 {
+            panic!("Cannot return slice from traps, faults, and exception handlers");
+        }
+        &self.interrupts[(lower_idx-32)..(upper_idx-32)]
     }
 }
 
-impl IndexMut<usize> for InterruptDescriptorTable {
+impl<I: RangeBounds<usize>> IndexMut<I> for InterruptDescriptorTable {
     /// Returns a mutable reference to the IDT entry with the specified index.
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
     /// exception that pushes an error code (use the struct fields for accessing these entries).
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        match index {
-            0 => &mut self.divide_by_zero,
-            1 => &mut self.debug,
-            2 => &mut self.non_maskable_interrupt,
-            3 => &mut self.breakpoint,
-            4 => &mut self.overflow,
-            5 => &mut self.bound_range_exceeded,
-            6 => &mut self.invalid_opcode,
-            7 => &mut self.device_not_available,
-            9 => &mut self.coprocessor_segment_overrun,
-            16 => &mut self.x87_floating_point,
-            18 => &mut self.machine_check,
-            19 => &mut self.simd_floating_point,
-            20 => &mut self.virtualization,
-            i @ 32..=255 => &mut self.interrupts[i - 32],
-            i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
-            i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
-                panic!("entry {} is an exception with error code", i)
-            }
-            i => panic!("no entry with index {}", i),
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        let lower_idx = match index.start_bound() {
+            Included(start) => *start,
+            Excluded(start) => *start + 1,
+            Unbounded => 32,
+        };
+        let upper_idx = match index.end_bound() {
+            Included(end) => *end + 1,
+            Excluded(end) => *end,
+            Unbounded => 255,
+        };
+
+        if lower_idx > 255 || upper_idx > 255 {
+            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
         }
+        if lower_idx < 32 {
+            panic!("Cannot return slice from traps, faults, and exception handlers");
+        }
+        &mut self.interrupts[(lower_idx-32)..(upper_idx-32)]
     }
 }
 
