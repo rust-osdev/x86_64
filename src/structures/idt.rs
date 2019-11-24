@@ -14,8 +14,8 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use core::ops::Bound::{Excluded, Included, Unbounded};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -445,6 +445,7 @@ impl InterruptDescriptorTable {
     }
 }
 
+
 impl<I: RangeBounds<usize>> Index<I> for InterruptDescriptorTable {
     type Output = [Entry<HandlerFunc>];
 
@@ -470,7 +471,7 @@ impl<I: RangeBounds<usize>> Index<I> for InterruptDescriptorTable {
         if lower_idx < 32 {
             panic!("Cannot return slice from traps, faults, and exception handlers");
         }
-        &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
+        &self.interrupts[(lower_idx-32)..(upper_idx-32)]
     }
 }
 
@@ -497,7 +498,7 @@ impl<I: RangeBounds<usize>> IndexMut<I> for InterruptDescriptorTable {
         if lower_idx < 32 {
             panic!("Cannot return slice from traps, faults, and exception handlers");
         }
-        &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
+        &mut self.interrupts[(lower_idx-32)..(upper_idx-32)]
     }
 }
 
