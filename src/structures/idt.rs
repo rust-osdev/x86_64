@@ -365,7 +365,7 @@ pub struct InterruptDescriptorTable {
     ///   external interrupt was recognized.
     /// - If the interrupt occurs as a result of executing the INTn instruction, the saved
     ///   instruction pointer points to the instruction after the INTn.
-    pub interrupts: [Entry<HandlerFunc>; 256 - 32],
+    interrupts: [Entry<HandlerFunc>; 256 - 32],
 }
 
 impl InterruptDescriptorTable {
