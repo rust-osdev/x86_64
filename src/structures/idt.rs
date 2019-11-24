@@ -14,7 +14,8 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Deref, Index, IndexMut};
+use core::ops::Bound::{Excluded, Included, Unbounded};
+use core::ops::{Deref, Index, IndexMut, RangeBounds};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -441,6 +442,56 @@ impl InterruptDescriptorTable {
         };
 
         unsafe { lidt(&ptr) };
+    }
+
+    /// Returns slice of IDT entries with the specified range.
+    ///
+    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
+    /// exception
+    pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
+        let lower_idx = match bounds.start_bound() {
+            Included(start) => *start,
+            Excluded(start) => *start + 1,
+            Unbounded => 32,
+        };
+        let upper_idx = match bounds.end_bound() {
+            Included(end) => *end + 1,
+            Excluded(end) => *end,
+            Unbounded => 255,
+        };
+
+        if lower_idx > 255 || upper_idx > 255 {
+            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
+        }
+        if lower_idx < 32 {
+            panic!("Cannot return slice from traps, faults, and exception handlers");
+        }
+        &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
+    }
+
+    /// Returns a mutable slice of IDT entries with the specified range.
+    ///
+    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
+    /// exception
+    pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
+        let lower_idx = match bounds.start_bound() {
+            Included(start) => *start,
+            Excluded(start) => *start + 1,
+            Unbounded => 32,
+        };
+        let upper_idx = match bounds.end_bound() {
+            Included(end) => *end + 1,
+            Excluded(end) => *end,
+            Unbounded => 255,
+        };
+
+        if lower_idx > 255 || upper_idx > 255 {
+            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
+        }
+        if lower_idx < 32 {
+            panic!("Cannot return slice from traps, faults, and exception handlers");
+        }
+        &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 }
 
