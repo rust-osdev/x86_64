@@ -1,3 +1,5 @@
+- Add `slice` and `slice_mut` methods to IDT ([#95](https://github.com/rust-osdev/x86_64/pull/95))
+
 # 0.7.6
 
 - Use repr C to suppress not-ffi-safe when used with extern handler functions ([#94](https://github.com/rust-osdev/x86_64/pull/94))
