@@ -1,3 +1,5 @@
+# 0.7.7
+
 - Add `slice` and `slice_mut` methods to IDT ([#95](https://github.com/rust-osdev/x86_64/pull/95))
 
 # 0.7.6
