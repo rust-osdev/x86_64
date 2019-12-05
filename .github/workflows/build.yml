@@ -152,6 +152,8 @@ jobs:
     timeout-minutes: 2
     steps:
     - uses: actions/checkout@v1
+    - name: Set Rustup profile to minimal
+      run: rustup set profile minimal
     - name: "Add a rustup override for rustfmt nightly"
       uses: actions-rs/toolchain@v1
       with:
