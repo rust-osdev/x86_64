@@ -49,9 +49,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: binaries
-        key: ${{ runner.OS }}-binaries-${{ hashFiles('binaries/**') }}
-        restore-keys: |
-          ${{ runner.OS }}-binaries-
+        key: ${{ runner.OS }}-binaries
     - name: Create binaries directory for binaries
       run: mkdir binaries
       if: steps.cache-bin.outputs.cache-hit != 'true'
