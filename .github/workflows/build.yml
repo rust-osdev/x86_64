@@ -89,7 +89,7 @@ jobs:
           sudo apt install qemu-system-x86
           cp /usr/bin/qemu-system-x86_64 binaries/bin
         fi
-      if: runner.os == 'Linux' && steps.cache-bin.outputs.cache-hit != 'true'
+      if: runner.os == 'Linux'
     - name: Install QEMU (macOS)
       run: |
         if [[ ! -x qemu-system-x86_64 ]]; then
