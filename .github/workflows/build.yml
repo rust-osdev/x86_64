@@ -36,6 +36,9 @@ jobs:
         echo ::add-path::$HOME/.cargo/bin
       if: runner.os == 'macOS'
 
+    - name: Set Rustup profile to minimal
+      run: rustup set profile minimal
+
     - name: "Print Rust Version"
       run: |
         rustc -Vv
