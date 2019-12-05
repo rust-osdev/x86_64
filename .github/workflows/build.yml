@@ -87,6 +87,9 @@ jobs:
     - name: Install QEMU (Linux)
       run: sudo apt update && sudo apt install qemu-system-x86
       if: runner.os == 'Linux'
+    - name: Print QEMU location (Linux)
+      run: dpkg -L qemu-system-x86
+      if: runner.os == 'Linux'
     - name: Install QEMU (macOS)
       run: brew install qemu
       if: runner.os == 'macOS'
