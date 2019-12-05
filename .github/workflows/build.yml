@@ -50,31 +50,11 @@ jobs:
       with:
         path: ~/bin
         key: ${{ runner.OS }}-bin
-
-    - name: Create directory for binaries
+    - name: Create ~/bin directory for binaries
       run: mkdir $HOME/bin
       if: steps.cache-bin.outputs.cache-hit != 'true'
-    - name: Add $HOME/bin dir to PATH
+    - name: Add ~/bin to PATH
       run: echo ::add-path::$HOME/bin
-
-    - name: echo PATH
-      run: echo $PATH
-
-    - name: Cache target folder
-      uses: actions/cache@v1
-      with:
-        path: target
-        key: ${{ runner.OS }}-target-${{ hashFiles('**/Cargo.toml') }}
-        restore-keys: |
-          ${{ runner.OS }}-target-
-
-    - name: Cache testing/target folder
-      uses: actions/cache@v1
-      with:
-        path: testing/target
-        key: ${{ runner.OS }}-testing-target-${{ hashFiles('**/Cargo.toml') }}
-        restore-keys: |
-          ${{ runner.OS }}-testing-target-
 
     - name: "Run cargo build"
       run: cargo build
@@ -103,7 +83,10 @@ jobs:
 
      # install QEMU
     - name: Install QEMU (Linux)
-      run: sudo apt update && sudo apt install qemu-system-x86
+      run: |
+        sudo apt update
+        sudo apt install qemu-system-x86
+        cp /usr/bin/qemu-system-x86_64 ~/bin
       if: runner.os == 'Linux'
     - name: Print QEMU location (Linux)
       run: dpkg -L qemu-system-x86
@@ -139,6 +122,7 @@ jobs:
       if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
       shell: pwsh
 
+    - run: which qemu-system-x86_64
     - name: "Print QEMU Version"
       run: qemu-system-x86_64 --version
 
