@@ -95,7 +95,7 @@ jobs:
       working-directory: 'testing'
 
   check_formatting:
-    name: "Check Formatting"
+    name: "CF"
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

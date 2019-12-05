@@ -1,5 +1,2 @@
-status = [
-  # "Test",
-  "Test"
-]
-timeout_sec = 1200
+status = [ 'CF' ]
+timeout_sec = 180
