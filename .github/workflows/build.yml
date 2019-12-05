@@ -58,6 +58,14 @@ jobs:
         restore-keys: |
           ${{ runner.OS }}-target-
 
+    - name: Cache testing/target folder
+      uses: actions/cache@v1
+      with:
+        path: testing/target
+        key: ${{ runner.OS }}-testing-target-${{ hashFiles('**/Cargo.toml') }}
+        restore-keys: |
+          ${{ runner.OS }}-testing-target-
+
     - name: "Run cargo build"
       run: cargo build
 
