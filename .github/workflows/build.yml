@@ -48,7 +48,7 @@ jobs:
       id: cache-bin
       uses: actions/cache@v1
       with:
-        path: $HOME/bin
+        path: ~/bin
         key: ${{ runner.OS }}-bin
 
     - name: Create directory for binaries
