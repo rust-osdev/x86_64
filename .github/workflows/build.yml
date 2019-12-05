@@ -86,7 +86,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install qemu-system-x86
-        cp /usr/bin/qemu-system-x86_64 ~/bin
+        cp /usr/bin/qemu-system-x86_64 ~/binaries/bin
       if: runner.os == 'Linux'
     - name: Print QEMU location (Linux)
       run: dpkg -L qemu-system-x86
