@@ -44,6 +44,12 @@ jobs:
         rustc -Vv
         cargo -Vv
 
+    - name: Cache .cargo
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.OS }}-cargo
+
     - name: Cache target folder
       uses: actions/cache@v1
       with:
