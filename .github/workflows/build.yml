@@ -57,6 +57,9 @@ jobs:
     - name: Add bin dir to PATH
       run: echo ::add-path::bin
 
+    - name: echo PATH
+      run: echo $PATH
+
     - name: Cache target folder
       uses: actions/cache@v1
       with:
