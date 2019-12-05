@@ -82,7 +82,7 @@ jobs:
         HOMEBREW_NO_INSTALL_CLEANUP: 1
 
      # install QEMU (Windows)
-    - name: Cache scoop
+    - name: Cache QEMU and scoop
       id: cache-scoop
       uses: actions/cache@v1
       with:
@@ -90,15 +90,17 @@ jobs:
         key: ${{ runner.os }}-scoop
       if: runner.os == 'Windows'
     - name: Install Scoop (Windows)
-      run: |
-        Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-        echo ::add-path::$HOME\scoop\shims
+      run: Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
       if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
       shell: pwsh
+    - name: Add scoop shims to PATH
+      run: echo ::add-path::$HOME\scoop\shims
+      if: runner.os == 'Windows'
     - name: Install QEMU (Windows)
       run: scoop install qemu
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
       shell: pwsh
+
     - name: "Print QEMU Version"
       run: qemu-system-x86_64 --version
 
