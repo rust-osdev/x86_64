@@ -48,13 +48,13 @@ jobs:
       id: cache-bin
       uses: actions/cache@v1
       with:
-        path: bin
+        path: $HOME/bin
         key: ${{ runner.OS }}-bin
 
     - name: Create directory for binaries
-      run: mkdir bin
+      run: mkdir $HOME/bin
       if: steps.cache-bin.outputs.cache-hit != 'true'
-    - name: Add bin dir to PATH
+    - name: Add $HOME/bin dir to PATH
       run: echo ::add-path::$HOME/bin
 
     - name: echo PATH
@@ -97,9 +97,9 @@ jobs:
     - name: "Install Rustup Components"
       run: rustup component add rust-src llvm-tools-preview
     - name: "Install cargo-xbuild"
-      run: cargo install cargo-xbuild --debug --root .
+      run: cargo install cargo-xbuild --debug --root $HOME
     - name: "Install bootimage"
-      run: cargo install bootimage --debug --root .
+      run: cargo install bootimage --debug --root $HOME
 
      # install QEMU
     - name: Install QEMU (Linux)
