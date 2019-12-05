@@ -48,15 +48,15 @@ jobs:
       id: cache-bin
       uses: actions/cache@v1
       with:
-        path: ~/binaries
-        key: ${{ runner.OS }}-binaries-${{ hashFiles('~/binaries/**') }}
+        path: binaries
+        key: ${{ runner.OS }}-binaries-${{ hashFiles('binaries/**') }}
         restore-keys: |
           ${{ runner.OS }}-binaries-
-    - name: Create ~/binaries directory for binaries
-      run: mkdir $HOME/binaries
+    - name: Create binaries directory for binaries
+      run: mkdir binaries
       if: steps.cache-bin.outputs.cache-hit != 'true'
-    - name: Add ~/binaries/bin to PATH
-      run: echo ::add-path::$HOME/binaries/bin
+    - name: Add binaries/bin to PATH
+      run: echo ::add-path::$GITHUB_WORKSPACE/binaries/bin
 
     - name: "Run cargo build"
       run: cargo build
@@ -79,9 +79,9 @@ jobs:
     - name: "Install Rustup Components"
       run: rustup component add rust-src llvm-tools-preview
     - name: "Install cargo-xbuild"
-      run: cargo install cargo-xbuild --debug --root $HOME/binaries
+      run: cargo install cargo-xbuild --debug --root binaries
     - name: "Install bootimage"
-      run: cargo install bootimage --debug --root $HOME/binaries
+      run: cargo install bootimage --debug --root binaries
 
      # install QEMU
     - name: Install QEMU (Linux)
@@ -89,14 +89,14 @@ jobs:
         if [[ ! -x qemu-system-x86_64 ]]; then
           sudo apt update
           sudo apt install qemu-system-x86
-          cp /usr/bin/qemu-system-x86_64 ~/binaries/bin
+          cp /usr/bin/qemu-system-x86_64 binaries/bin
         fi
       if: runner.os == 'Linux' && steps.cache-bin.outputs.cache-hit != 'true'
     - name: Install QEMU (macOS)
       run: |
         if [[ ! -x qemu-system-x86_64 ]]; then
           brew install qemu
-          cp /usr/local/bin/qemu-system-x86_64 ~/binaries/bin
+          cp /usr/local/bin/qemu-system-x86_64 binaries/bin
         fi
       if: runner.os == 'macOS'
       env:
@@ -113,7 +113,7 @@ jobs:
     - name: Install QEMU (Windows)
       run: |
         scoop install qemu
-        cp $HOME/scoop/shims/qemu-system-x86_64 $HOME/binaries/bin
+        cp $HOME/scoop/shims/qemu-system-x86_64 binaries/bin
       if: runner.os == 'Windows' && steps.cache-bin.outputs.cache-hit != 'true'
       shell: pwsh
 
