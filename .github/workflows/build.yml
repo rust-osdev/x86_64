@@ -117,10 +117,6 @@ jobs:
     - name: Print $HOME\scoop
       run: tree $HOME\scoop
       if: runner.os == 'Windows'
-    - name: Print $HOME\scoop size
-      run: powershell -command "$fso = new-object -com Scripting.FileSystemObject; gci -Directory | select @{l='Size'; e={$fso.GetFolder($_.FullName).Size}},FullName | sort Size -Descending | ft @{l='Size [MB]'; e={'{0:N2}    ' -f ($_.Size / 1MB)}},FullName"
-      if: runner.os == 'Windows'
-      working-directory: '~/scoop'
     - name: Install Scoop (Windows)
       run: Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
       if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
