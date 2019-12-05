@@ -103,6 +103,9 @@ jobs:
         path: ~/scoop
         key: ${{ runner.os }}-scoop
       if: runner.os == 'Windows'
+    - name: Print $HOME\scoop
+      run: tree $HOME\scoop
+      if: runner.os == 'Windows'
     - name: Install Scoop (Windows)
       run: Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
       if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
