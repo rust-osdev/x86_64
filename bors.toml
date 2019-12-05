@@ -1,2 +1,2 @@
-status = [ 'CF' ]
-timeout_sec = 180
+status = [ "Debug" ]
+timeout_sec = 60

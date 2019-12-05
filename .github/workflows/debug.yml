@@ -1,0 +1,31 @@
+name: Debug
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!staging.tmp'
+    tags:
+      - '*'
+  schedule:
+    - cron: '40 4 * * *'   # every day at 4:40
+  pull_request:
+
+jobs:
+  test:
+    name: "X"
+
+    strategy:
+      matrix:
+        platform: [
+          ubuntu-latest,
+          macos-latest,
+          windows-latest
+        ]
+
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 15
+
+    steps:
+    - name: "Checkout Repository"
+      uses: actions/checkout@v1
