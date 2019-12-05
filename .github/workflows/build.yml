@@ -44,6 +44,14 @@ jobs:
         rustc -Vv
         cargo -Vv
 
+    - name: Cache target folder
+      uses: actions/cache@v1
+      with:
+        path: target
+        key: ${{ runner.OS }}-target-${{ hashFiles('**/Cargo.toml') }}
+        restore-keys: |
+          ${{ runner.OS }}-target-
+
     - name: "Run cargo build"
       run: cargo build
 
