@@ -50,9 +50,6 @@ jobs:
       with:
         path: binaries
         key: ${{ runner.OS }}-binaries-0
-    - name: Create binaries directory for binaries
-      run: mkdir binaries
-      if: steps.cache-bin.outputs.cache-hit != 'true'
     - name: Add binaries/bin to PATH
       run: echo ::add-path::$GITHUB_WORKSPACE/binaries/bin
 
