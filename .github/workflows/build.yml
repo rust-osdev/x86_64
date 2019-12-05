@@ -49,7 +49,9 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/binaries
-        key: ${{ runner.OS }}-binaries
+        key: ${{ runner.OS }}-binaries-${{ hashFiles('~/binaries/**') }}
+        restore-keys: |
+          ${{ runner.OS }}-binaries-
     - name: Create ~/binaries directory for binaries
       run: mkdir $HOME/binaries
       if: steps.cache-bin.outputs.cache-hit != 'true'
@@ -84,42 +86,35 @@ jobs:
      # install QEMU
     - name: Install QEMU (Linux)
       run: |
-        sudo apt update
-        sudo apt install qemu-system-x86
-        cp /usr/bin/qemu-system-x86_64 ~/binaries/bin
-      if: runner.os == 'Linux'
-    - name: Print QEMU location (Linux)
-      run: dpkg -L qemu-system-x86
-      if: runner.os == 'Linux'
+        if [[ ! -x qemu-system-x86_64 ]]; then
+          sudo apt update
+          sudo apt install qemu-system-x86
+          cp /usr/bin/qemu-system-x86_64 ~/binaries/bin
+        fi
+      if: runner.os == 'Linux' && steps.cache-bin.outputs.cache-hit != 'true'
     - name: Install QEMU (macOS)
-      run: brew install qemu
+      run: |
+        if [[ ! -x qemu-system-x86_64 ]]; then
+          brew install qemu
+          cp /usr/local/bin/qemu-system-x86_64 ~/binaries/bin
+        fi
       if: runner.os == 'macOS'
       env:
         HOMEBREW_NO_AUTO_UPDATE: 1
         HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK: 1
         HOMEBREW_NO_INSTALL_CLEANUP: 1
-
-     # install QEMU (Windows)
-    - name: Cache QEMU and scoop
-      id: cache-scoop
-      uses: actions/cache@v1
-      with:
-        path: ~/scoop
-        key: ${{ runner.os }}-scoop
-      if: runner.os == 'Windows'
-    - name: Print $HOME\scoop
-      run: tree $HOME\scoop
-      if: runner.os == 'Windows'
     - name: Install Scoop (Windows)
       run: Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-      if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
+      if: runner.os == 'Windows' && steps.cache-bin.outputs.cache-hit != 'true'
       shell: pwsh
     - name: Add scoop shims to PATH
       run: echo ::add-path::$HOME\scoop\shims
       if: runner.os == 'Windows'
     - name: Install QEMU (Windows)
-      run: scoop install qemu
-      if: runner.os == 'Windows' && steps.cache-scoop.outputs.cache-hit != 'true'
+      run: |
+        scoop install qemu
+        cp $HOME/scoop/shims/qemu-system-x86_64 $HOME/binaries/bin
+      if: runner.os == 'Windows' && steps.cache-bin.outputs.cache-hit != 'true'
       shell: pwsh
 
     - run: which qemu-system-x86_64
