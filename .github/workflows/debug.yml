@@ -18,13 +18,11 @@ jobs:
     strategy:
       matrix:
         platform: [
-          ubuntu-latest,
-          macos-latest,
-          windows-latest
+          ubuntu-latest
         ]
 
     runs-on: ${{ matrix.platform }}
-    timeout-minutes: 15
+    timeout-minutes: 1
 
     steps:
     - name: "Checkout Repository"
