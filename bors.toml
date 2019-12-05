@@ -1,5 +1,5 @@
 status = [
   # "Test",
-  "Build"
+  "Test"
 ]
 timeout_sec = 1200
