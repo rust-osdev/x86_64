@@ -1,2 +1,2 @@
-status = [ "Debug / X (ubuntu-latest) (push)" ]
+status = [ "X" ]
 timeout_sec = 60
