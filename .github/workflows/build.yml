@@ -44,11 +44,18 @@ jobs:
         rustc -Vv
         cargo -Vv
 
-    - name: Cache .cargo
+    - name: Cache binaries
+      id: cache-bin
       uses: actions/cache@v1
       with:
-        path: ~/.cargo
-        key: ${{ runner.OS }}-cargo
+        path: bin
+        key: ${{ runner.OS }}-bin
+
+    - name: Create directory for binaries
+      run: mkdir bin
+      if: steps.cache-bin.outputs.cache-hit != 'true'
+    - name: Add bin dir to PATH
+      run: echo ::add-path::bin
 
     - name: Cache target folder
       uses: actions/cache@v1
@@ -87,9 +94,9 @@ jobs:
     - name: "Install Rustup Components"
       run: rustup component add rust-src llvm-tools-preview
     - name: "Install cargo-xbuild"
-      run: cargo install cargo-xbuild --debug
+      run: cargo install cargo-xbuild --debug --root .
     - name: "Install bootimage"
-      run: cargo install bootimage --debug
+      run: cargo install bootimage --debug --root .
 
      # install QEMU
     - name: Install QEMU (Linux)
