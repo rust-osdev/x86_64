@@ -55,7 +55,7 @@ jobs:
       run: mkdir bin
       if: steps.cache-bin.outputs.cache-hit != 'true'
     - name: Add bin dir to PATH
-      run: echo ::add-path::bin
+      run: echo ::add-path::$HOME/bin
 
     - name: echo PATH
       run: echo $PATH
