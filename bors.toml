@@ -1,4 +1,5 @@
 status = [
-  "Test", "Check Formatting"
+  # "Test",
+  "Check Formatting"
 ]
 timeout_sec = 1200
