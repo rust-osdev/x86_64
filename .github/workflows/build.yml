@@ -86,7 +86,7 @@ jobs:
       id: cache-scoop
       uses: actions/cache@v1
       with:
-        path: $HOME\scoop
+        path: ~/scoop
         key: ${{ runner.os }}-scoop
       if: runner.os == 'Windows'
     - name: Install Scoop (Windows)
