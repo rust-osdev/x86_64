@@ -1,2 +1,2 @@
-status = [ 'CF' ]
+status = [ "Debug (ubuntu-latest)" ]
 timeout_sec = 180

@@ -12,6 +12,24 @@ on:
   pull_request:
 
 jobs:
+  debug:
+    name: "Debug"
+
+    strategy:
+      matrix:
+        platform: [
+          ubuntu-latest,
+          macos-latest,
+          windows-latest
+        ]
+
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 1
+
+    steps:
+    - name: "Checkout Repository"
+      uses: actions/checkout@v1
+
   test:
     name: "Test"
 
