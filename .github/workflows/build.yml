@@ -35,10 +35,23 @@ jobs:
         echo ::add-path::$HOME/.cargo/bin
       if: runner.os == 'macOS'
 
+    - name: Set Rustup profile to minimal
+      run: rustup set profile minimal
+
     - name: "Print Rust Version"
       run: |
         rustc -Vv
         cargo -Vv
+
+    - name: Cache binaries
+      id: cache-bin
+      uses: actions/cache@v1
+      with:
+        path: binaries
+        key: ${{ runner.OS }}-binaries
+    - name: Add binaries/bin to PATH
+      run: echo ::add-path::$GITHUB_WORKSPACE/binaries/bin
+      shell: bash
 
     - name: "Run cargo build"
       run: cargo build
@@ -61,13 +74,15 @@ jobs:
     - name: "Install Rustup Components"
       run: rustup component add rust-src llvm-tools-preview
     - name: "Install cargo-xbuild"
-      run: cargo install cargo-xbuild --debug
+      run: cargo install cargo-xbuild --debug --root binaries
     - name: "Install bootimage"
-      run: cargo install bootimage --debug
+      run: cargo install bootimage --debug --root binaries
 
      # install QEMU
     - name: Install QEMU (Linux)
-      run: sudo apt update && sudo apt install qemu-system-x86
+      run: |
+        sudo apt update
+        sudo apt install qemu-system-x86
       if: runner.os == 'Linux'
     - name: Install QEMU (macOS)
       run: brew install qemu
@@ -86,6 +101,7 @@ jobs:
       run: scoop install qemu
       if: runner.os == 'Windows'
       shell: pwsh
+
     - name: "Print QEMU Version"
       run: qemu-system-x86_64 --version
 
@@ -99,6 +115,8 @@ jobs:
     timeout-minutes: 2
     steps:
     - uses: actions/checkout@v1
+    - name: Set Rustup profile to minimal
+      run: rustup set profile minimal
     - name: "Add a rustup override for rustfmt nightly"
       uses: actions-rs/toolchain@v1
       with:
