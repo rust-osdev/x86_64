@@ -1,5 +1,7 @@
 - **Breaking:** Replace `ux` dependency with custom wrapper structs ([#91](https://github.com/rust-osdev/x86_64/pull/91))
 - **Breaking:** Add new UnsafePhysFrame type and use it in Mapper::map_to ([#89](https://github.com/rust-osdev/x86_64/pull/89))
+- _Possibly Breaking:_ Make Mapper trait object safe by adding `Self: Sized` bounds on generic functions ([#84](https://github.com/rust-osdev/x86_64/pull/84))
+
 
 # 0.7.7
 
