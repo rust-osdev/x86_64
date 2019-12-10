@@ -36,6 +36,10 @@ jobs:
         echo ::add-path::$HOME/.cargo/bin
       if: runner.os == 'macOS'
 
+    - name: Echo PATH
+      run: echo $PATH
+      shell: bash
+
     - name: Set Rustup profile to minimal
       run: rustup set profile minimal
 
