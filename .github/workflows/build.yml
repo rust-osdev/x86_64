@@ -49,7 +49,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: binaries
-        key: ${{ runner.OS }}-binaries-0
+        key: ${{ runner.OS }}-binaries
     - name: Add binaries/bin to PATH
       run: echo ::add-path::$GITHUB_WORKSPACE/binaries/bin
       shell: bash
