@@ -236,10 +236,14 @@ impl fmt::Debug for PageTable {
     }
 }
 
+/// A 9-bit index into a page table.
+///
+/// Can be used to select one of the 512 entries of a page table.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PageTableIndex(u16);
 
 impl PageTableIndex {
+    /// Creates a new index from the given `u16`. Panics if the given value is >=512.
     pub fn new(index: u16) -> Self {
         assert!(usize::from(index) < ENTRY_COUNT);
         Self(index)
@@ -264,10 +268,14 @@ impl From<PageTableIndex> for u64 {
     }
 }
 
+/// A 12-bit offset into a 4KiB Page.
+///
+/// This type is returned by the `VirtAddr::page_offset` method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PageOffset(u16);
 
 impl PageOffset {
+    /// Creates a new offset from the given `u16`. Panics if the passed value is >=4096.
     pub fn new(offset: u16) -> Self {
         assert!(offset < (1 << 12));
         Self(offset)
