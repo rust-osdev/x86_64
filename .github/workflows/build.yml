@@ -90,10 +90,8 @@ jobs:
         sudo apt install qemu-system-x86
       if: runner.os == 'Linux'
     - name: Install QEMU (macOS)
-      run: |
-          brew install qemu
-          cp /usr/local/bin/qemu-system-x86_64 binaries/bin
-      if: runner.os == 'macOS' && steps.cache-bin.outputs.cache-hit != 'true'
+      run: brew install qemu
+      if: runner.os == 'macOS'
       env:
         HOMEBREW_NO_AUTO_UPDATE: 1
         HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK: 1
