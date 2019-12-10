@@ -1,5 +1,6 @@
 - **Breaking:** Replace `ux` dependency with custom wrapper structs ([#91](https://github.com/rust-osdev/x86_64/pull/91))
 - **Breaking:** Add new UnsafePhysFrame type and use it in Mapper::map_to ([#89](https://github.com/rust-osdev/x86_64/pull/89))
+- **Breaking:** Rename divide_by_zero field of interrupt descriptor table to divide_error ([#108](https://github.com/rust-osdev/x86_64/pull/108))
 - _Possibly Breaking:_ Make Mapper trait object safe by adding `Self: Sized` bounds on generic functions ([#84](https://github.com/rust-osdev/x86_64/pull/84))
 
 
