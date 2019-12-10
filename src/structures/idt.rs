@@ -21,7 +21,7 @@ use core::ops::{Deref, Index, IndexMut, RangeBounds};
 ///
 /// The first 32 entries are used for CPU exceptions. These entries can be either accessed through
 /// fields on this struct or through an index operation, e.g. `idt[0]` returns the
-/// first entry, the entry for the `divide_by_zero` exception. Note that the index access is
+/// first entry, the entry for the `divide_error` exception. Note that the index access is
 /// not possible for entries for which an error code is pushed.
 ///
 /// The remaining entries are used for interrupts. They can be accesed through index
@@ -37,14 +37,14 @@ use core::ops::{Deref, Index, IndexMut, RangeBounds};
 #[repr(C)]
 #[repr(align(16))]
 pub struct InterruptDescriptorTable {
-    /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
+    /// A divide error (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
     /// represented in the destination.
     ///
     /// The saved instruction pointer points to the instruction that caused the `#DE`.
     ///
     /// The vector number of the `#DE` exception is 0.
-    pub divide_by_zero: Entry<HandlerFunc>,
+    pub divide_error: Entry<HandlerFunc>,
 
     /// When the debug-exception mechanism is enabled, a `#DB` exception can occur under any
     /// of the following circumstances:
@@ -373,7 +373,7 @@ impl InterruptDescriptorTable {
     /// Creates a new IDT filled with non-present entries.
     pub const fn new() -> InterruptDescriptorTable {
         InterruptDescriptorTable {
-            divide_by_zero: Entry::missing(),
+            divide_error: Entry::missing(),
             debug: Entry::missing(),
             non_maskable_interrupt: Entry::missing(),
             breakpoint: Entry::missing(),
@@ -403,7 +403,7 @@ impl InterruptDescriptorTable {
 
     /// Resets all entries of this IDT in place.
     pub fn reset(&mut self) {
-        self.divide_by_zero = Entry::missing();
+        self.divide_error = Entry::missing();
         self.debug = Entry::missing();
         self.non_maskable_interrupt = Entry::missing();
         self.breakpoint = Entry::missing();
@@ -497,7 +497,7 @@ impl Index<usize> for InterruptDescriptorTable {
     /// exception that pushes an error code (use the struct fields for accessing these entries).
     fn index(&self, index: usize) -> &Self::Output {
         match index {
-            0 => &self.divide_by_zero,
+            0 => &self.divide_error,
             1 => &self.debug,
             2 => &self.non_maskable_interrupt,
             3 => &self.breakpoint,
@@ -527,7 +527,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
     /// exception that pushes an error code (use the struct fields for accessing these entries).
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
-            0 => &mut self.divide_by_zero,
+            0 => &mut self.divide_error,
             1 => &mut self.debug,
             2 => &mut self.non_maskable_interrupt,
             3 => &mut self.breakpoint,
