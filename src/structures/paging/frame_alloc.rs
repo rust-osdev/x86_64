@@ -31,6 +31,7 @@ impl<S: PageSize> UnusedPhysFrame<S> {
         Self(frame)
     }
 
+    /// Returns the physical frame as `PhysFrame` type.
     pub fn frame(self) -> PhysFrame<S> {
         self.0
     }
