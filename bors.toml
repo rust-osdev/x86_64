@@ -1,2 +1,3 @@
 status = [ "Debug (ubuntu-latest)" ]
 timeout_sec = 180
+pr_status = [ "Debug (ubuntu-latest)" ]
