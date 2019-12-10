@@ -1,3 +1,3 @@
-status = [ "Debug (ubuntu-latest) (push)" ]
+status = [ "Debug (ubuntu-latest)" ]
 timeout_sec = 180
-pr_status = [ "Debug (ubuntu-latest) (pull_request)" ]
+pr_status = [ "Debug (ubuntu-latest)" ]
