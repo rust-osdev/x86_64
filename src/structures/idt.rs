@@ -577,7 +577,8 @@ pub type PageFaultHandlerFunc =
 /// A handler function that must not return, e.g. for a machine check exception.
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
-pub type DivergingHandlerFuncWithErrCode = extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
+pub type DivergingHandlerFuncWithErrCode =
+    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
