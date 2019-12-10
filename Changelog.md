@@ -1,3 +1,5 @@
+# 0.8.1
+
 - Fix: Add required reexport for new UnusedPhysFrame type ([#110](https://github.com/rust-osdev/x86_64/pull/110))
 
 # 0.8.0
