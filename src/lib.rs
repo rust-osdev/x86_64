@@ -10,11 +10,6 @@
 #![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]
 #![deny(missing_debug_implementations)]
 
-/// Provides the non-standard-width integer types `u2`–`u63`.
-///
-/// We use these integer types in various APIs, for example `u9` for page tables indices.
-pub use ux;
-
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
 pub mod instructions;

@@ -34,9 +34,5 @@ array-init = "0.0.4"
 version = "0.2.2"
 default-features = false
 
-[dependencies.ux]
-default-features = false
-version = "0.1.3"
-
 [features]
 deny-warnings = []

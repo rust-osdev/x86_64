@@ -1,10 +1,10 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-use ux::*;
 
 /// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
 pub trait PageSize: Copy + Eq + PartialOrd + Ord {
@@ -92,12 +92,12 @@ impl<S: PageSize> Page<S> {
     }
 
     /// Returns the level 4 page table index of this page.
-    pub fn p4_index(&self) -> u9 {
+    pub fn p4_index(&self) -> PageTableIndex {
         self.start_address().p4_index()
     }
 
     /// Returns the level 3 page table index of this page.
-    pub fn p3_index(&self) -> u9 {
+    pub fn p3_index(&self) -> PageTableIndex {
         self.start_address().p3_index()
     }
 
@@ -114,14 +114,17 @@ impl<S: PageSize> Page<S> {
 
 impl<S: NotGiantPageSize> Page<S> {
     /// Returns the level 2 page table index of this page.
-    pub fn p2_index(&self) -> u9 {
+    pub fn p2_index(&self) -> PageTableIndex {
         self.start_address().p2_index()
     }
 }
 
 impl Page<Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
-    pub fn from_page_table_indices_1gib(p4_index: u9, p3_index: u9) -> Self {
+    pub fn from_page_table_indices_1gib(
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+    ) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -133,7 +136,11 @@ impl Page<Size1GiB> {
 
 impl Page<Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
-    pub fn from_page_table_indices_2mib(p4_index: u9, p3_index: u9, p2_index: u9) -> Self {
+    pub fn from_page_table_indices_2mib(
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+    ) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -146,7 +153,12 @@ impl Page<Size2MiB> {
 
 impl Page<Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
-    pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9) -> Self {
+    pub fn from_page_table_indices(
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+        p1_index: PageTableIndex,
+    ) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -158,7 +170,7 @@ impl Page<Size4KiB> {
     }
 
     /// Returns the level 1 page table index of this page.
-    pub fn p1_index(&self) -> u9 {
+    pub fn p1_index(&self) -> PageTableIndex {
         self.start_address().p1_index()
     }
 }
