@@ -198,7 +198,7 @@ pub struct InterruptDescriptorTable {
     /// and the program cannot be restarted.
     ///
     /// The vector number of the `#DF` exception is 8.
-    pub double_fault: Entry<HandlerFuncWithErrCode>,
+    pub double_fault: Entry<DivergingHandlerFuncWithErrCode>,
 
     /// This interrupt vector is reserved. It is for a discontinued exception originally used
     /// by processors that supported external x87-instruction coprocessors. On those processors,
@@ -308,7 +308,7 @@ pub struct InterruptDescriptorTable {
     /// There is no reliable way to restart the program.
     ///
     /// The vector number of the `#MC` exception is 18.
-    pub machine_check: Entry<HandlerFunc>,
+    pub machine_check: Entry<DivergingHandlerFunc>,
 
     /// The SIMD Floating-Point Exception (`#XF`) is used to handle unmasked SSE
     /// floating-point exceptions. The SSE floating-point exceptions reported by
@@ -507,7 +507,6 @@ impl Index<usize> for InterruptDescriptorTable {
             7 => &self.device_not_available,
             9 => &self.coprocessor_segment_overrun,
             16 => &self.x87_floating_point,
-            18 => &self.machine_check,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
             i @ 32..=255 => &self.interrupts[i - 32],
@@ -515,6 +514,7 @@ impl Index<usize> for InterruptDescriptorTable {
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
+            i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
             i => panic!("no entry with index {}", i),
         }
     }
@@ -537,7 +537,6 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             7 => &mut self.device_not_available,
             9 => &mut self.coprocessor_segment_overrun,
             16 => &mut self.x87_floating_point,
-            18 => &mut self.machine_check,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
             i @ 32..=255 => &mut self.interrupts[i - 32],
@@ -545,6 +544,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
+            i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
             i => panic!("no entry with index {}", i),
         }
     }
@@ -574,6 +574,10 @@ pub type HandlerFuncWithErrCode =
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
+/// A handler function that must not return, e.g. for a machine check exception.
+pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
+/// A handler function with an error code that must not return, e.g. for a double fault exception.
+pub type DivergingHandlerFuncWithErrCode = extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -632,6 +636,8 @@ macro_rules! impl_set_handler_fn {
 impl_set_handler_fn!(HandlerFunc);
 impl_set_handler_fn!(HandlerFuncWithErrCode);
 impl_set_handler_fn!(PageFaultHandlerFunc);
+impl_set_handler_fn!(DivergingHandlerFunc);
+impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
