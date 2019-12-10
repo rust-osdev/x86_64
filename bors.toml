@@ -1,2 +1,2 @@
-status = ["X (ubuntu-latest)"]
-timeout_sec = 60
+status = [ 'CF' ]
+timeout_sec = 180
