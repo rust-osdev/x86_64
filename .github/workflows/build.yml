@@ -54,10 +54,6 @@ jobs:
       run: echo ::add-path::$GITHUB_WORKSPACE/binaries/bin
       shell: bash
 
-    - name: Echo PATH
-      run: echo $PATH
-      shell: bash
-
     - name: "Run cargo build"
       run: cargo build
 
@@ -97,18 +93,16 @@ jobs:
         HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK: 1
         HOMEBREW_NO_INSTALL_CLEANUP: 1
     - name: Install Scoop (Windows)
-      run: Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+      run: |
+        Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+        echo ::add-path::$HOME\scoop\shims
       if: runner.os == 'Windows'
       shell: pwsh
-    - name: Add scoop shims to PATH
-      run: echo ::add-path::$HOME\scoop\shims
-      if: runner.os == 'Windows'
     - name: Install QEMU (Windows)
       run: scoop install qemu
       if: runner.os == 'Windows'
       shell: pwsh
 
-    - run: which qemu-system-x86_64
     - name: "Print QEMU Version"
       run: qemu-system-x86_64 --version
 
