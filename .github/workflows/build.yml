@@ -108,7 +108,7 @@ jobs:
     - name: Install QEMU (Windows)
       run: |
         scoop install qemu
-        cp $HOME/scoop/shims/qemu-system-x86_64.exe binaries/bin
+        cp $HOME/scoop/shims/qemu-system-x86_64.* binaries/bin
       if: runner.os == 'Windows' && steps.cache-bin.outputs.cache-hit != 'true'
       shell: pwsh
 
