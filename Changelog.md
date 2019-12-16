@@ -1,3 +1,5 @@
+- Add support for cr4 control register ([#111](https://github.com/rust-osdev/x86_64/pull/111))
+
 # 0.8.1
 
 - Fix: Add required reexport for new UnusedPhysFrame type ([#110](https://github.com/rust-osdev/x86_64/pull/110))
