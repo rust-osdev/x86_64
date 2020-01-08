@@ -44,15 +44,18 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
         let p4 = &mut self.level_4_table;
-        let p3 = self
-            .page_table_walker
-            .create_next_table(&mut p4[page.p4_index()], allocator)?;
+        let p3 = self.page_table_walker.create_next_table(
+            &mut p4[page.p4_index()],
+            parent_table_flags,
+            allocator,
+        )?;
 
         if !p3[page.p3_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
@@ -69,18 +72,23 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
         let p4 = &mut self.level_4_table;
-        let p3 = self
-            .page_table_walker
-            .create_next_table(&mut p4[page.p4_index()], allocator)?;
-        let p2 = self
-            .page_table_walker
-            .create_next_table(&mut p3[page.p3_index()], allocator)?;
+        let p3 = self.page_table_walker.create_next_table(
+            &mut p4[page.p4_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+        let p2 = self.page_table_walker.create_next_table(
+            &mut p3[page.p3_index()],
+            parent_table_flags,
+            allocator,
+        )?;
 
         if !p2[page.p2_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
@@ -97,21 +105,28 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
         let p4 = &mut self.level_4_table;
-        let p3 = self
-            .page_table_walker
-            .create_next_table(&mut p4[page.p4_index()], allocator)?;
-        let p2 = self
-            .page_table_walker
-            .create_next_table(&mut p3[page.p3_index()], allocator)?;
-        let p1 = self
-            .page_table_walker
-            .create_next_table(&mut p2[page.p2_index()], allocator)?;
+        let p3 = self.page_table_walker.create_next_table(
+            &mut p4[page.p4_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+        let p2 = self.page_table_walker.create_next_table(
+            &mut p3[page.p3_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+        let p1 = self.page_table_walker.create_next_table(
+            &mut p2[page.p2_index()],
+            parent_table_flags,
+            allocator,
+        )?;
 
         if !p1[page.p1_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
@@ -124,17 +139,18 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
 
 impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.map_to_1gib(page, frame, flags, allocator)
+        self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -198,17 +214,18 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
 
 impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.map_to_2mib(page, frame, flags, allocator)
+        self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -280,17 +297,18 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
 
 impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.map_to_4kib(page, frame, flags, allocator)
+        self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -461,6 +479,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
     fn create_next_table<'b, A>(
         &self,
         entry: &'b mut PageTableEntry,
+        insert_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<&'b mut PageTable, PageTableCreateError>
     where
@@ -470,12 +489,15 @@ impl<P: PhysToVirt> PageTableWalker<P> {
 
         if entry.is_unused() {
             if let Some(frame) = allocator.allocate_frame() {
-                entry.set_frame(frame, PageTableFlags::PRESENT | PageTableFlags::WRITABLE);
+                entry.set_frame(frame, insert_flags);
                 created = true;
             } else {
                 return Err(PageTableCreateError::FrameAllocationFailed);
             }
         } else {
+            if !insert_flags.is_empty() && !entry.flags().contains(insert_flags) {
+                entry.set_flags(entry.flags() | insert_flags);
+            }
             created = false;
         }
 
