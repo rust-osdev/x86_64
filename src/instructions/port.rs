@@ -8,7 +8,7 @@ impl PortRead for u8 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u8 {
         let value: u8;
-        asm!("inb %dx, %al" : "={al}"(value) : "{dx}"(port) :: "volatile");
+        asm!("inb $1, $0" : "={al}"(value) : "N{dx}"(port) :: "volatile");
         value
     }
 }
@@ -17,7 +17,7 @@ impl PortRead for u16 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u16 {
         let value: u16;
-        asm!("inw %dx, %ax" : "={ax}"(value) : "{dx}"(port) :: "volatile");
+        asm!("inw $1, $0" : "={ax}"(value) : "N{dx}"(port) :: "volatile");
         value
     }
 }
@@ -26,7 +26,7 @@ impl PortRead for u32 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u32 {
         let value: u32;
-        asm!("inl %dx, %eax" : "={eax}"(value) : "{dx}"(port) :: "volatile");
+        asm!("inl $1, $0" : "={eax}"(value) : "N{dx}"(port) :: "volatile");
         value
     }
 }
@@ -34,21 +34,21 @@ impl PortRead for u32 {
 impl PortWrite for u8 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
-        asm!("outb %al, %dx" :: "{dx}"(port), "{al}"(value) :: "volatile");
+        asm!("outb $1, $0" :: "N{dx}"(port), "{al}"(value) :: "volatile");
     }
 }
 
 impl PortWrite for u16 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
-        asm!("outw %ax, %dx" :: "{dx}"(port), "{ax}"(value) :: "volatile");
+        asm!("outw $1, $0" :: "N{dx}"(port), "{ax}"(value) :: "volatile");
     }
 }
 
 impl PortWrite for u32 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
-        asm!("outl %eax, %dx" :: "{dx}"(port), "{eax}"(value) :: "volatile");
+        asm!("outl $1, $0" :: "N{dx}"(port), "{eax}"(value) :: "volatile");
     }
 }
 
