@@ -27,12 +27,12 @@ pub struct PageTableEntry {
 
 impl PageTableEntry {
     /// Creates an unused page table entry.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         PageTableEntry { entry: 0 }
     }
 
     /// Returns whether this entry is zero.
-    pub fn is_unused(&self) -> bool {
+    pub const fn is_unused(&self) -> bool {
         self.entry == 0
     }
 
@@ -42,7 +42,7 @@ impl PageTableEntry {
     }
 
     /// Returns the flags of this entry.
-    pub fn flags(&self) -> PageTableFlags {
+    pub const fn flags(&self) -> PageTableFlags {
         PageTableFlags::from_bits_truncate(self.entry)
     }
 
@@ -176,11 +176,9 @@ pub struct PageTable {
 
 impl PageTable {
     /// Creates an empty page table.
-    pub fn new() -> Self {
-        use array_init::array_init;
-
+    pub const fn new() -> Self {
         PageTable {
-            entries: array_init(|_| PageTableEntry::new()),
+            entries: [PageTableEntry::new(); ENTRY_COUNT],
         }
     }
 

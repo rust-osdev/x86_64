@@ -28,7 +28,6 @@ edition = "2018"
 [dependencies]
 bit_field = "0.9.0"
 bitflags = "1.0.4"
-array-init = "0.0.4"
 
 [dependencies.cast]
 version = "0.2.2"

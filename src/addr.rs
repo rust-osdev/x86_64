@@ -70,13 +70,8 @@ impl VirtAddr {
     /// This function performs sign extension of bit 47 to make the address canonical, so
     /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
     /// use `new` or `try_new`.
-    pub fn new_unchecked(mut addr: u64) -> VirtAddr {
-        if addr.get_bit(47) {
-            addr.set_bits(48..64, 0xffff);
-        } else {
-            addr.set_bits(48..64, 0);
-        }
-        VirtAddr(addr)
+    pub const fn new_unchecked(addr: u64) -> VirtAddr {
+        VirtAddr((addr.wrapping_mul(0x1_0000) as i64 / 0x1_0000) as u64)
     }
 
     /// Creates a virtual address that points to `0`.
@@ -85,7 +80,7 @@ impl VirtAddr {
     }
 
     /// Converts the address to an `u64`.
-    pub fn as_u64(self) -> u64 {
+    pub const fn as_u64(self) -> u64 {
         self.0
     }
 
@@ -416,6 +411,14 @@ pub fn align_up(addr: u64, align: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    pub fn virtaddr_new_unchecked() {
+        assert_eq!(VirtAddr::new_unchecked(0), VirtAddr(0));
+        assert_eq!(VirtAddr::new_unchecked(1 << 47), VirtAddr(0xfffff << 47));
+        assert_eq!(VirtAddr::new_unchecked(123), VirtAddr(123));
+        assert_eq!(VirtAddr::new_unchecked(123 << 47), VirtAddr(0xfffff << 47));
+    }
 
     #[test]
     pub fn test_align_up() {
