@@ -88,7 +88,7 @@ pub struct GlobalDescriptorTable {
 
 impl GlobalDescriptorTable {
     /// Creates an empty GDT.
-    pub fn new() -> GlobalDescriptorTable {
+    pub const fn new() -> GlobalDescriptorTable {
         GlobalDescriptorTable {
             table: [0; 8],
             next_free: 1,
