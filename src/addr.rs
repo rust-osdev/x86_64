@@ -71,6 +71,10 @@ impl VirtAddr {
     /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
     /// use `new` or `try_new`.
     pub const fn new_unchecked(addr: u64) -> VirtAddr {
+        // Rust doesn't accept shift operators in const functions at the moment,
+        // so we use a multiplication and division by 0x1_0000 instead of `<< 16` and `>> 16`.
+        // By doing the right shift as a signed operation (on a i64), it will
+        // sign extend the value, repeating the leftmost bit.
         VirtAddr((addr.wrapping_mul(0x1_0000) as i64 / 0x1_0000) as u64)
     }
 
