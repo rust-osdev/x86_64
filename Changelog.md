@@ -1,3 +1,5 @@
+- Allow immediate port version of in/out instructions ([#115](https://github.com/rust-osdev/x86_64/pull/115))
+
 # 0.8.2
 
 - Add support for cr4 control register ([#111](https://github.com/rust-osdev/x86_64/pull/111))
