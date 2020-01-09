@@ -1,3 +1,5 @@
+# 0.8.3
+
 - Allow immediate port version of in/out instructions ([#115](https://github.com/rust-osdev/x86_64/pull/115))
 - Make more functions const ([#116](https://github.com/rust-osdev/x86_64/pull/116))
 
