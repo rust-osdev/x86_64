@@ -88,7 +88,7 @@ pub trait Mapper<S: PageSize> {
         frame: UnusedPhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError>
+    ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
         A: FrameAllocator<Size4KiB>;
@@ -117,7 +117,7 @@ pub trait Mapper<S: PageSize> {
         frame: UnusedPhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError>
+    ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
         A: FrameAllocator<Size4KiB>,
@@ -156,7 +156,7 @@ impl<S: PageSize> MapperFlush<S> {
 
 /// This error is returned from `map_to` and similar methods.
 #[derive(Debug)]
-pub enum MapToError {
+pub enum MapToError<S: PageSize> {
     /// An additional frame was needed for the mapping process, but the frame allocator
     /// returned `None`.
     FrameAllocationFailed,
@@ -164,7 +164,7 @@ pub enum MapToError {
     /// given page is part of an already mapped huge page.
     ParentEntryHugePage,
     /// The given page is already mapped to a physical frame.
-    PageAlreadyMapped,
+    PageAlreadyMapped(UnusedPhysFrame<S>),
 }
 
 /// An error indicating that an `unmap` call failed.
