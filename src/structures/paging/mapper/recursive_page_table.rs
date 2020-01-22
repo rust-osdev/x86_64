@@ -85,22 +85,22 @@ impl<'a> RecursivePageTable<'a> {
     /// Returns `MapToError::FrameAllocationFailed` if the entry is unused and the allocator
     /// returned `None`. Returns `MapToError::ParentEntryHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
-    unsafe fn create_next_table<'b, A>(
+    unsafe fn create_next_table<'b, A, S: PageSize>(
         entry: &'b mut PageTableEntry,
         next_table_page: Page,
         allocator: &mut A,
-    ) -> Result<&'b mut PageTable, MapToError>
+    ) -> Result<&'b mut PageTable, MapToError<S>>
     where
         A: FrameAllocator<Size4KiB>,
     {
         /// This inner function is used to limit the scope of `unsafe`.
         ///
         /// This is a safe function, so we need to use `unsafe` blocks when we do something unsafe.
-        fn inner<'b, A>(
+        fn inner<'b, A, S: PageSize>(
             entry: &'b mut PageTableEntry,
             next_table_page: Page,
             allocator: &mut A,
-        ) -> Result<&'b mut PageTable, MapToError>
+        ) -> Result<&'b mut PageTable, MapToError<S>>
         where
             A: FrameAllocator<Size4KiB>,
         {
@@ -141,7 +141,7 @@ impl<'a> RecursivePageTable<'a> {
         frame: UnusedPhysFrame<Size1GiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GiB>, MapToError>
+    ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -152,7 +152,7 @@ impl<'a> RecursivePageTable<'a> {
         let p3 = unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, allocator)? };
 
         if !p3[page.p3_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped);
+            return Err(MapToError::PageAlreadyMapped(frame));
         }
         p3[page.p3_index()].set_addr(frame.start_address(), flags | Flags::HUGE_PAGE);
 
@@ -167,7 +167,7 @@ impl<'a> RecursivePageTable<'a> {
         frame: UnusedPhysFrame<Size2MiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MiB>, MapToError>
+    ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -181,7 +181,7 @@ impl<'a> RecursivePageTable<'a> {
         let p2 = unsafe { Self::create_next_table(&mut p3[page.p3_index()], p2_page, allocator)? };
 
         if !p2[page.p2_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped);
+            return Err(MapToError::PageAlreadyMapped(frame));
         }
         p2[page.p2_index()].set_addr(frame.start_address(), flags | Flags::HUGE_PAGE);
 
@@ -196,7 +196,7 @@ impl<'a> RecursivePageTable<'a> {
         frame: UnusedPhysFrame<Size4KiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KiB>, MapToError>
+    ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -212,7 +212,7 @@ impl<'a> RecursivePageTable<'a> {
         let p1 = unsafe { Self::create_next_table(&mut p2[page.p2_index()], p1_page, allocator)? };
 
         if !p1[page.p1_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped);
+            return Err(MapToError::PageAlreadyMapped(frame));
         }
         p1[page.p1_index()].set_frame(frame.frame(), flags);
 
@@ -227,7 +227,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         frame: UnusedPhysFrame<Size1GiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GiB>, MapToError>
+    ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -312,7 +312,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         frame: UnusedPhysFrame<Size2MiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MiB>, MapToError>
+    ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -417,7 +417,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         frame: UnusedPhysFrame<Size4KiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KiB>, MapToError>
+    ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {

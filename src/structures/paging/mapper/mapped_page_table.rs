@@ -42,7 +42,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         frame: UnusedPhysFrame<Size1GiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GiB>, MapToError>
+    ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -52,7 +52,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
             .create_next_table(&mut p4[page.p4_index()], allocator)?;
 
         if !p3[page.p3_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped);
+            return Err(MapToError::PageAlreadyMapped(frame));
         }
         p3[page.p3_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
 
@@ -67,7 +67,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         frame: UnusedPhysFrame<Size2MiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MiB>, MapToError>
+    ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -80,7 +80,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
             .create_next_table(&mut p3[page.p3_index()], allocator)?;
 
         if !p2[page.p2_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped);
+            return Err(MapToError::PageAlreadyMapped(frame));
         }
         p2[page.p2_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
 
@@ -95,7 +95,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         frame: UnusedPhysFrame<Size4KiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KiB>, MapToError>
+    ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -111,7 +111,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
             .create_next_table(&mut p2[page.p2_index()], allocator)?;
 
         if !p1[page.p1_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped);
+            return Err(MapToError::PageAlreadyMapped(frame));
         }
         p1[page.p1_index()].set_frame(frame.frame(), flags);
 
@@ -126,7 +126,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         frame: UnusedPhysFrame<Size1GiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GiB>, MapToError>
+    ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -199,7 +199,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         frame: UnusedPhysFrame<Size2MiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MiB>, MapToError>
+    ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -280,7 +280,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         frame: UnusedPhysFrame<Size4KiB>,
         flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KiB>, MapToError>
+    ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
@@ -499,7 +499,25 @@ enum PageTableCreateError {
     FrameAllocationFailed,
 }
 
-impl From<PageTableCreateError> for MapToError {
+impl From<PageTableCreateError> for MapToError<Size4KiB> {
+    fn from(err: PageTableCreateError) -> Self {
+        match err {
+            PageTableCreateError::MappedToHugePage => MapToError::ParentEntryHugePage,
+            PageTableCreateError::FrameAllocationFailed => MapToError::FrameAllocationFailed,
+        }
+    }
+}
+
+impl From<PageTableCreateError> for MapToError<Size2MiB> {
+    fn from(err: PageTableCreateError) -> Self {
+        match err {
+            PageTableCreateError::MappedToHugePage => MapToError::ParentEntryHugePage,
+            PageTableCreateError::FrameAllocationFailed => MapToError::FrameAllocationFailed,
+        }
+    }
+}
+
+impl From<PageTableCreateError> for MapToError<Size1GiB> {
     fn from(err: PageTableCreateError) -> Self {
         match err {
             PageTableCreateError::MappedToHugePage => MapToError::ParentEntryHugePage,
