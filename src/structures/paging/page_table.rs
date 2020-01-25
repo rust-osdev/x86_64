@@ -218,13 +218,15 @@ impl Index<PageTableIndex> for PageTable {
     type Output = PageTableEntry;
 
     fn index(&self, index: PageTableIndex) -> &Self::Output {
-        &self.entries[cast::usize(u16::from(index))]
+        // Safety: A PageTableIndex never contains a value >= 512.
+        unsafe { self.entries.get_unchecked(usize::from(index)) }
     }
 }
 
 impl IndexMut<PageTableIndex> for PageTable {
     fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {
-        &mut self.entries[cast::usize(u16::from(index))]
+        // Safety: A PageTableIndex never contains a value >= 512.
+        unsafe { self.entries.get_unchecked_mut(usize::from(index)) }
     }
 }
 
@@ -237,6 +239,8 @@ impl fmt::Debug for PageTable {
 /// A 9-bit index into a page table.
 ///
 /// Can be used to select one of the 512 entries of a page table.
+///
+/// Guaranteed to only ever contain 0..512.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PageTableIndex(u16);
 
@@ -245,6 +249,11 @@ impl PageTableIndex {
     pub fn new(index: u16) -> Self {
         assert!(usize::from(index) < ENTRY_COUNT);
         Self(index)
+    }
+
+    /// Creates a new index from the given `u16`. Throws away bits if the value is >=512.
+    pub const fn new_truncate(index: u16) -> Self {
+        Self(index % ENTRY_COUNT as u16)
     }
 }
 
@@ -266,9 +275,17 @@ impl From<PageTableIndex> for u64 {
     }
 }
 
+impl From<PageTableIndex> for usize {
+    fn from(index: PageTableIndex) -> Self {
+        usize::from(index.0)
+    }
+}
+
 /// A 12-bit offset into a 4KiB Page.
 ///
 /// This type is returned by the `VirtAddr::page_offset` method.
+///
+/// Guaranteed to only ever contain 0..4096.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PageOffset(u16);
 
@@ -277,6 +294,11 @@ impl PageOffset {
     pub fn new(offset: u16) -> Self {
         assert!(offset < (1 << 12));
         Self(offset)
+    }
+
+    /// Creates a new offset from the given `u16`. Throws away bits if the value is >=4096.
+    pub const fn new_truncate(offset: u16) -> Self {
+        Self(offset % (1 << 12))
     }
 }
 
@@ -295,5 +317,11 @@ impl From<PageOffset> for u32 {
 impl From<PageOffset> for u64 {
     fn from(offset: PageOffset) -> Self {
         u64::from(offset.0)
+    }
+}
+
+impl From<PageOffset> for usize {
+    fn from(offset: PageOffset) -> Self {
+        usize::from(offset.0)
     }
 }
