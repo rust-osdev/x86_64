@@ -89,13 +89,13 @@ impl VirtAddr {
 
     /// Creates a virtual address from the given pointer
     pub fn from_ptr<T>(ptr: *const T) -> Self {
-        Self::new(cast::u64(ptr as usize))
+        Self::new(ptr as u64)
     }
 
     /// Converts the address to a raw pointer.
     #[cfg(target_pointer_width = "64")]
     pub fn as_ptr<T>(self) -> *const T {
-        cast::usize(self.as_u64()) as *const T
+        self.as_u64() as *const T
     }
 
     /// Converts the address to a mutable raw pointer.
@@ -181,14 +181,14 @@ impl AddAssign<u64> for VirtAddr {
 impl Add<usize> for VirtAddr {
     type Output = Self;
     fn add(self, rhs: usize) -> Self::Output {
-        self + cast::u64(rhs)
+        self + rhs as u64
     }
 }
 
 #[cfg(target_pointer_width = "64")]
 impl AddAssign<usize> for VirtAddr {
     fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(cast::u64(rhs))
+        self.add_assign(rhs as u64)
     }
 }
 
@@ -209,14 +209,14 @@ impl SubAssign<u64> for VirtAddr {
 impl Sub<usize> for VirtAddr {
     type Output = Self;
     fn sub(self, rhs: usize) -> Self::Output {
-        self - cast::u64(rhs)
+        self - rhs as u64
     }
 }
 
 #[cfg(target_pointer_width = "64")]
 impl SubAssign<usize> for VirtAddr {
     fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(cast::u64(rhs))
+        self.sub_assign(rhs as u64)
     }
 }
 
@@ -347,14 +347,14 @@ impl AddAssign<u64> for PhysAddr {
 impl Add<usize> for PhysAddr {
     type Output = Self;
     fn add(self, rhs: usize) -> Self::Output {
-        self + cast::u64(rhs)
+        self + rhs as u64
     }
 }
 
 #[cfg(target_pointer_width = "64")]
 impl AddAssign<usize> for PhysAddr {
     fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(cast::u64(rhs))
+        self.add_assign(rhs as u64)
     }
 }
 
@@ -375,14 +375,14 @@ impl SubAssign<u64> for PhysAddr {
 impl Sub<usize> for PhysAddr {
     type Output = Self;
     fn sub(self, rhs: usize) -> Self::Output {
-        self - cast::u64(rhs)
+        self - rhs as u64
     }
 }
 
 #[cfg(target_pointer_width = "64")]
 impl SubAssign<usize> for PhysAddr {
     fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(cast::u64(rhs))
+        self.sub_assign(rhs as u64)
     }
 }
 
