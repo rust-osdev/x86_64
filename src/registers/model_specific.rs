@@ -216,11 +216,11 @@ mod x86_64 {
         /// - Field 2 (SYSCALL): This field is copied directly into CS.Sel. SS.Sel is set to
         ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
         /// 33:32 should be initialized to 00b.
-        pub fn read_raw() -> (u64, u64) {
+        pub fn read_raw() -> (u16, u16) {
             let msr_value = unsafe { Self::MSR.read() };
-            let sysret = msr_value.get_bits(48..63);
-            let syscall = msr_value.get_bits(32..47);
-            (sysret, syscall)
+            let sysret = msr_value.get_bits(48..64);
+            let syscall = msr_value.get_bits(32..48);
+            (sysret.try_into().unwrap(), syscall.try_into().unwrap())
         }
 
         /// Read the Ring 0 and Ring 3 segment bases.
@@ -255,10 +255,10 @@ mod x86_64 {
         /// - syscall: This field is copied directly into CS.Sel. SS.Sel is set to
         ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
         /// 33:32 should be initialized to 00b.
-        pub fn write_raw(sysret: u64, syscall: u64) {
+        pub fn write_raw(sysret: u16, syscall: u16) {
             let mut msr_value = 0u64;
-            msr_value.set_bits(48..63, sysret);
-            msr_value.set_bits(32..47, syscall);
+            msr_value.set_bits(48..64, sysret.into());
+            msr_value.set_bits(32..48, syscall.into());
             unsafe {
                 Self::MSR.write(msr_value);
             }
