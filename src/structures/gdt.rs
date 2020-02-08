@@ -34,6 +34,11 @@ impl SegmentSelector {
     pub fn rpl(&self) -> PrivilegeLevel {
         PrivilegeLevel::from_u16(self.0.get_bits(0..2))
     }
+
+    /// Set the privilege level for this Segment selector.
+    pub fn set_rpl(&mut self, rpl: PrivilegeLevel) {
+        self.0.set_bits(0..2, rpl as u16);
+    }
 }
 
 impl fmt::Debug for SegmentSelector {

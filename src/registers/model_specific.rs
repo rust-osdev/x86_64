@@ -2,6 +2,7 @@
 
 use crate::registers::rflags::RFlags;
 use crate::structures::gdt::SegmentSelector;
+use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::convert::TryInto;
@@ -237,8 +238,8 @@ mod x86_64 {
         ) {
             let raw = Self::read_raw();
             return (
-                SegmentSelector((raw.0 + 16 - 3).try_into().unwrap()),
-                SegmentSelector((raw.0 + 8 - 3).try_into().unwrap()),
+                SegmentSelector((raw.0 + 16).try_into().unwrap()),
+                SegmentSelector((raw.0 + 8).try_into().unwrap()),
                 SegmentSelector((raw.1).try_into().unwrap()),
                 SegmentSelector((raw.1 + 8).try_into().unwrap()),
             );
@@ -255,18 +256,23 @@ mod x86_64 {
         /// - syscall: This field is copied directly into CS.Sel. SS.Sel is set to
         ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
         /// 33:32 should be initialized to 00b.
-        pub fn write_raw(sysret: u16, syscall: u16) {
+        ///
+        /// # Unsafety
+        /// Unsafe because this can cause system instability if passed in the
+        /// wrong values for the fields.
+        pub unsafe fn write_raw(sysret: u16, syscall: u16) {
             let mut msr_value = 0u64;
             msr_value.set_bits(48..64, sysret.into());
             msr_value.set_bits(32..48, syscall.into());
-            unsafe {
-                Self::MSR.write(msr_value);
-            }
+            Self::MSR.write(msr_value);
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.
         /// The remaining fields are ignored because they are
         /// not valid for long mode.
+        /// This function will fail if the segment selectors are
+        /// not in the correct offset of each other or if the
+        /// segment selectors do not have correct privileges.
         pub fn write(
             cs_sysret: SegmentSelector,
             ss_sysret: SegmentSelector,
@@ -281,7 +287,15 @@ mod x86_64 {
                 return Err("Syscall CS and SS is not offset by 8.");
             }
 
-            Self::write_raw(((ss_sysret.0 - 8) | 0b11).into(), cs_syscall.0.into());
+            if ss_sysret.rpl() != PrivilegeLevel::Ring3 {
+                return Err("Sysret's segment must be a Ring3 segment.");
+            }
+
+            if ss_syscall.rpl() != PrivilegeLevel::Ring0 {
+                return Err("Syscall's segment must be a Ring0 segment.");
+            }
+
+            unsafe { Self::write_raw((ss_sysret.0 - 8).into(), cs_syscall.0.into()) };
 
             Ok(())
         }
