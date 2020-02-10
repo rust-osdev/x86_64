@@ -1,6 +1,11 @@
-//! Functions to read and write control registers.
+//! Functions to read and write model specific registers.
 
+use crate::registers::rflags::RFlags;
+use crate::structures::gdt::SegmentSelector;
+use crate::PrivilegeLevel;
+use bit_field::BitField;
 use bitflags::bitflags;
+use core::convert::TryInto;
 
 /// A model specific register.
 #[derive(Debug)]
@@ -29,6 +34,18 @@ pub struct GsBase;
 #[derive(Debug)]
 pub struct KernelGsBase;
 
+/// Syscall Register: STAR
+#[derive(Debug)]
+pub struct Star;
+
+/// Syscall Register: LSTAR
+#[derive(Debug)]
+pub struct LStar;
+
+/// Syscall Register: SFMASK
+#[derive(Debug)]
+pub struct SFMask;
+
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC0000080);
@@ -47,6 +64,21 @@ impl GsBase {
 impl KernelGsBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0102);
+}
+
+impl Star {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0xC000_0081);
+}
+
+impl LStar {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0xC000_0082);
+}
+
+impl SFMask {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0xC000_0084);
 }
 
 bitflags! {
@@ -170,6 +202,140 @@ mod x86_64 {
         /// Write a given virtual address to the KernelGsBase register.
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
+        }
+    }
+
+    impl Star {
+        /// Read the Ring 0 and Ring 3 segment bases.
+        /// The remaining fields are ignored because they are
+        /// not valid for long mode.
+        ///
+        /// # Returns
+        /// - Field 1 (SYSRET): The CS selector is set to this field + 16. SS.Sel is set to
+        /// this field + 8. Because SYSRET always returns to CPL 3, the
+        /// RPL bits 1:0 should be initialized to 11b.
+        /// - Field 2 (SYSCALL): This field is copied directly into CS.Sel. SS.Sel is set to
+        ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
+        /// 33:32 should be initialized to 00b.
+        pub fn read_raw() -> (u16, u16) {
+            let msr_value = unsafe { Self::MSR.read() };
+            let sysret = msr_value.get_bits(48..64);
+            let syscall = msr_value.get_bits(32..48);
+            (sysret.try_into().unwrap(), syscall.try_into().unwrap())
+        }
+
+        /// Read the Ring 0 and Ring 3 segment bases.
+        /// Returns
+        /// - CS Selector SYSRET
+        /// - SS Selector SYSRET
+        /// - CS Selector SYSCALL
+        /// - SS Selector SYSCALL
+        pub fn read() -> (
+            SegmentSelector,
+            SegmentSelector,
+            SegmentSelector,
+            SegmentSelector,
+        ) {
+            let raw = Self::read_raw();
+            return (
+                SegmentSelector((raw.0 + 16).try_into().unwrap()),
+                SegmentSelector((raw.0 + 8).try_into().unwrap()),
+                SegmentSelector((raw.1).try_into().unwrap()),
+                SegmentSelector((raw.1 + 8).try_into().unwrap()),
+            );
+        }
+
+        /// Write the Ring 0 and Ring 3 segment bases.
+        /// The remaining fields are ignored because they are
+        /// not valid for long mode.
+        ///
+        /// # Parameters
+        /// - sysret: The CS selector is set to this field + 16. SS.Sel is set to
+        /// this field + 8. Because SYSRET always returns to CPL 3, the
+        /// RPL bits 1:0 should be initialized to 11b.
+        /// - syscall: This field is copied directly into CS.Sel. SS.Sel is set to
+        ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
+        /// 33:32 should be initialized to 00b.
+        ///
+        /// # Unsafety
+        /// Unsafe because this can cause system instability if passed in the
+        /// wrong values for the fields.
+        pub unsafe fn write_raw(sysret: u16, syscall: u16) {
+            let mut msr_value = 0u64;
+            msr_value.set_bits(48..64, sysret.into());
+            msr_value.set_bits(32..48, syscall.into());
+            Self::MSR.write(msr_value);
+        }
+
+        /// Write the Ring 0 and Ring 3 segment bases.
+        /// The remaining fields are ignored because they are
+        /// not valid for long mode.
+        /// This function will fail if the segment selectors are
+        /// not in the correct offset of each other or if the
+        /// segment selectors do not have correct privileges.
+        pub fn write(
+            cs_sysret: SegmentSelector,
+            ss_sysret: SegmentSelector,
+            cs_syscall: SegmentSelector,
+            ss_syscall: SegmentSelector,
+        ) -> Result<(), &'static str> {
+            if cs_sysret.0 - 16 != ss_sysret.0 - 8 {
+                return Err("Sysret CS and SS is not offset by 8.");
+            }
+
+            if cs_syscall.0 != ss_syscall.0 - 8 {
+                return Err("Syscall CS and SS is not offset by 8.");
+            }
+
+            if ss_sysret.rpl() != PrivilegeLevel::Ring3 {
+                return Err("Sysret's segment must be a Ring3 segment.");
+            }
+
+            if ss_syscall.rpl() != PrivilegeLevel::Ring0 {
+                return Err("Syscall's segment must be a Ring0 segment.");
+            }
+
+            unsafe { Self::write_raw((ss_sysret.0 - 8).into(), cs_syscall.0.into()) };
+
+            Ok(())
+        }
+    }
+
+    impl LStar {
+        /// Read the current LStar register.
+        /// This holds the target RIP of a syscall.
+        pub fn read() -> VirtAddr {
+            VirtAddr::new(unsafe { Self::MSR.read() })
+        }
+
+        /// Write a given virtual address to the LStar register.
+        /// This holds the target RIP of a syscall.
+        pub fn write(address: VirtAddr) {
+            unsafe { Self::MSR.write(address.as_u64()) };
+        }
+    }
+
+    impl SFMask {
+        /// Read to the SFMask register.
+        /// The SFMASK register is used to specify which RFLAGS bits
+        /// are cleared during a SYSCALL. In long mode, SFMASK is used
+        /// to specify which RFLAGS bits are cleared when SYSCALL is
+        /// executed. If a bit in SFMASK is set to 1, the corresponding
+        /// bit in RFLAGS is cleared to 0. If a bit in SFMASK is cleared
+        /// to 0, the corresponding rFLAGS bit is not modified.
+        pub fn read() -> RFlags {
+            RFlags::from_bits(unsafe { Self::MSR.read() }).unwrap()
+        }
+
+        /// Write to the SFMask register.
+        /// The SFMASK register is used to specify which RFLAGS bits
+        /// are cleared during a SYSCALL. In long mode, SFMASK is used
+        /// to specify which RFLAGS bits are cleared when SYSCALL is
+        /// executed. If a bit in SFMASK is set to 1, the corresponding
+        /// bit in RFLAGS is cleared to 0. If a bit in SFMASK is cleared
+        /// to 0, the corresponding rFLAGS bit is not modified.
+        pub fn write(value: RFlags) {
+            unsafe { Self::MSR.write(value.bits()) };
         }
     }
 }
