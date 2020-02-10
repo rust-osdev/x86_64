@@ -1,3 +1,5 @@
+- Remove the `cast` dependency ([#124](https://github.com/rust-osdev/x86_64/pull/124))
+
 # 0.9.1
 
 - Improve PageTableIndex and PageOffset ([#122](https://github.com/rust-osdev/x86_64/pull/122))
