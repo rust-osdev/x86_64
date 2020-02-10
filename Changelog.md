@@ -1,3 +1,5 @@
+# 0.9.1
+
 - Improve PageTableIndex and PageOffset ([#122](https://github.com/rust-osdev/x86_64/pull/122))
 
 # 0.9.0
