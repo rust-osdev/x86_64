@@ -1,3 +1,5 @@
+# 0.9.2
+
 - Remove the `cast` dependency ([#124](https://github.com/rust-osdev/x86_64/pull/124))
 
 # 0.9.1
