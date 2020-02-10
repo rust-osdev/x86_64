@@ -217,16 +217,16 @@ impl IndexMut<usize> for PageTable {
 impl Index<PageTableIndex> for PageTable {
     type Output = PageTableEntry;
 
+    #[inline]
     fn index(&self, index: PageTableIndex) -> &Self::Output {
-        // Safety: A PageTableIndex never contains a value >= 512.
-        unsafe { self.entries.get_unchecked(usize::from(index)) }
+        &self.entries[usize::from(index)]
     }
 }
 
 impl IndexMut<PageTableIndex> for PageTable {
+    #[inline]
     fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {
-        // Safety: A PageTableIndex never contains a value >= 512.
-        unsafe { self.entries.get_unchecked_mut(usize::from(index)) }
+        &mut self.entries[usize::from(index)]
     }
 }
 
