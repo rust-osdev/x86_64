@@ -1,4 +1,5 @@
 - **Breaking:** Return the UnusedPhysFrame on MapToError::PageAlreadyMapped ([#118](https://github.com/rust-osdev/x86_64/pull/118))
+- Add User Mode registers ([#119](https://github.com/rust-osdev/x86_64/pull/119))
 
 # 0.8.3
 
