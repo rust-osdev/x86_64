@@ -1,4 +1,3 @@
-use core::convert::{Into, TryInto};
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -135,27 +134,27 @@ impl VirtAddr {
 
     /// Returns the 12-bit page offset of this virtual address.
     pub fn page_offset(&self) -> PageOffset {
-        PageOffset::new((self.0 & 0xfff).try_into().unwrap())
+        PageOffset::new_truncate(self.0 as u16)
     }
 
     /// Returns the 9-bit level 1 page table index.
     pub fn p1_index(&self) -> PageTableIndex {
-        PageTableIndex::new(((self.0 >> 12) & 0o777).try_into().unwrap())
+        PageTableIndex::new_truncate((self.0 >> 12) as u16)
     }
 
     /// Returns the 9-bit level 2 page table index.
     pub fn p2_index(&self) -> PageTableIndex {
-        PageTableIndex::new(((self.0 >> 12 >> 9) & 0o777).try_into().unwrap())
+        PageTableIndex::new_truncate((self.0 >> 12 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 3 page table index.
     pub fn p3_index(&self) -> PageTableIndex {
-        PageTableIndex::new(((self.0 >> 12 >> 9 >> 9) & 0o777).try_into().unwrap())
+        PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 4 page table index.
     pub fn p4_index(&self) -> PageTableIndex {
-        PageTableIndex::new(((self.0 >> 12 >> 9 >> 9 >> 9) & 0o777).try_into().unwrap())
+        PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9) as u16)
     }
 }
 
@@ -245,6 +244,11 @@ impl PhysAddr {
             "physical addresses must not have any bits in the range 52 to 64 set"
         );
         PhysAddr(addr)
+    }
+
+    /// Creates a new physical address, throwing bits 52..64 away.
+    pub const fn new_truncate(addr: u64) -> PhysAddr {
+        PhysAddr(addr % (1 << 52))
     }
 
     /// Tries to create a new physical address.
