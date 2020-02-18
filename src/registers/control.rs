@@ -140,9 +140,17 @@ mod x86_64 {
         /// Read the current raw CR0 value.
         pub fn read_raw() -> u64 {
             let value: u64;
+
+            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!("mov %cr0, $0" : "=r" (value));
             }
+
+            #[cfg(not(feature = "inline_asm"))]
+            unsafe {
+                value = crate::asm::x86_64_asm_read_cr0();
+            }
+
             value
         }
 
@@ -163,7 +171,11 @@ mod x86_64 {
         /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. disabling paging.
         pub unsafe fn write_raw(value: u64) {
-            asm!("mov $0, %cr0" :: "r" (value) : "memory")
+            #[cfg(feature = "inline_asm")]
+            asm!("mov $0, %cr0" :: "r" (value) : "memory");
+
+            #[cfg(not(feature = "inline_asm"))]
+            crate::asm::x86_64_asm_write_cr0(value);
         }
 
         /// Updates CR0 flags.
@@ -184,9 +196,17 @@ mod x86_64 {
         /// Read the current page fault linear address from the CR3 register.
         pub fn read() -> VirtAddr {
             let value: u64;
+
+            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!("mov %cr2, $0" : "=r" (value));
             }
+
+            #[cfg(not(feature = "inline_asm"))]
+            unsafe {
+                value = crate::asm::x86_64_asm_read_cr2();
+            }
+
             VirtAddr::new(value)
         }
     }
@@ -195,9 +215,17 @@ mod x86_64 {
         /// Read the current P4 table address from the CR3 register.
         pub fn read() -> (PhysFrame, Cr3Flags) {
             let value: u64;
+
+            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!("mov %cr3, $0" : "=r" (value));
             }
+
+            #[cfg(not(feature = "inline_asm"))]
+            unsafe {
+                value = crate::asm::x86_64_asm_read_cr3();
+            }
+
             let flags = Cr3Flags::from_bits_truncate(value);
             let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
             let frame = PhysFrame::containing_address(addr);
@@ -212,7 +240,12 @@ mod x86_64 {
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
             let addr = frame.start_address();
             let value = addr.as_u64() | flags.bits();
-            asm!("mov $0, %cr3" :: "r" (value) : "memory")
+
+            #[cfg(feature = "inline_asm")]
+            asm!("mov $0, %cr3" :: "r" (value) : "memory");
+
+            #[cfg(not(feature = "inline_asm"))]
+            crate::asm::x86_64_asm_write_cr3(value)
         }
     }
 
@@ -225,9 +258,17 @@ mod x86_64 {
         /// Read the current raw CR4 value.
         pub fn read_raw() -> u64 {
             let value: u64;
+
+            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!("mov %cr4, $0" : "=r" (value));
             }
+
+            #[cfg(not(feature = "inline_asm"))]
+            unsafe {
+                value = crate::asm::x86_64_asm_read_cr4();
+            }
+
             value
         }
 
@@ -248,7 +289,11 @@ mod x86_64 {
         /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. physical address extension.
         pub unsafe fn write_raw(value: u64) {
-            asm!("mov $0, %cr4" :: "r" (value) : "memory")
+            #[cfg(feature = "inline_asm")]
+            asm!("mov $0, %cr4" :: "r" (value) : "memory");
+
+            #[cfg(not(feature = "inline_asm"))]
+            crate::asm::x86_64_asm_write_cr4(value);
         }
 
         /// Updates CR4 flags.

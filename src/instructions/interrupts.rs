@@ -12,8 +12,13 @@ pub fn are_enabled() -> bool {
 /// This is a wrapper around the `sti` instruction.
 #[inline]
 pub fn enable() {
+    #[cfg(feature = "inline_asm")]
     unsafe {
         asm!("sti" :::: "volatile");
+    }
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_interrupt_enable();
     }
 }
 
@@ -22,8 +27,14 @@ pub fn enable() {
 /// This is a wrapper around the `cli` instruction.
 #[inline]
 pub fn disable() {
+    #[cfg(feature = "inline_asm")]
     unsafe {
         asm!("cli" :::: "volatile");
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_interrupt_disable();
     }
 }
 
@@ -74,8 +85,14 @@ where
 /// Cause a breakpoint exception by invoking the `int3` instruction.
 #[inline]
 pub fn int3() {
+    #[cfg(feature = "inline_asm")]
     unsafe {
         asm!("int3" :::: "volatile");
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_int3();
     }
 }
 
@@ -84,9 +101,19 @@ pub fn int3() {
 /// This currently needs to be a macro because the `int` argument needs to be an
 /// immediate. This macro will be replaced by a generic function when support for
 /// const generics is implemented in Rust.
+#[cfg(feature = "inline_asm")]
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
         asm!("int $0" :: "N" ($x) :: "volatile");
+    }};
+}
+
+/// Not implemented
+#[cfg(not(feature = "inline_asm"))]
+#[macro_export]
+macro_rules! software_interrupt {
+    ($x:expr) => {{
+        compile_error!("software_interrupt not implemented for non-nightly");
     }};
 }

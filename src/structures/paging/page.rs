@@ -87,7 +87,15 @@ impl<S: PageSize> Page<S> {
     }
 
     /// Returns the size the page (4KB, 2MB or 1GB).
+    #[cfg(feature = "const_fn")]
     pub const fn size(&self) -> u64 {
+        S::SIZE
+    }
+
+    /// Returns the size the page (4KB, 2MB or 1GB).
+    #[cfg(not(feature = "const_fn"))]
+    #[inline]
+    pub fn size(&self) -> u64 {
         S::SIZE
     }
 

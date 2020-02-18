@@ -5,50 +5,86 @@ use core::marker::PhantomData;
 pub use crate::structures::port::{PortRead, PortReadWrite, PortWrite};
 
 impl PortRead for u8 {
+    #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn read_from_port(port: u16) -> u8 {
         let value: u8;
         asm!("inb $1, $0" : "={al}"(value) : "N{dx}"(port) :: "volatile");
         value
     }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe fn read_from_port(port: u16) -> u8 {
+        crate::asm::x86_64_asm_read_from_port_u8(port)
+    }
 }
 
 impl PortRead for u16 {
+    #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn read_from_port(port: u16) -> u16 {
         let value: u16;
         asm!("inw $1, $0" : "={ax}"(value) : "N{dx}"(port) :: "volatile");
         value
     }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe fn read_from_port(port: u16) -> u16 {
+        crate::asm::x86_64_asm_read_from_port_u16(port)
+    }
 }
 
 impl PortRead for u32 {
+    #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn read_from_port(port: u16) -> u32 {
         let value: u32;
         asm!("inl $1, $0" : "={eax}"(value) : "N{dx}"(port) :: "volatile");
         value
     }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe fn read_from_port(port: u16) -> u32 {
+        crate::asm::x86_64_asm_read_from_port_u32(port)
+    }
 }
 
 impl PortWrite for u8 {
+    #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
         asm!("outb $1, $0" :: "N{dx}"(port), "{al}"(value) :: "volatile");
     }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe fn write_to_port(port: u16, value: u8) {
+        crate::asm::x86_64_asm_write_to_port_u8(port, value)
+    }
 }
 
 impl PortWrite for u16 {
+    #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
         asm!("outw $1, $0" :: "N{dx}"(port), "{ax}"(value) :: "volatile");
     }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe fn write_to_port(port: u16, value: u16) {
+        crate::asm::x86_64_asm_write_to_port_u16(port, value)
+    }
 }
 
 impl PortWrite for u32 {
+    #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
         asm!("outl $1, $0" :: "N{dx}"(port), "{eax}"(value) :: "volatile");
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe fn write_to_port(port: u16, value: u32) {
+        crate::asm::x86_64_asm_write_to_port_u32(port, value)
     }
 }
 
@@ -79,7 +115,17 @@ pub struct Port<T: PortReadWrite> {
 
 impl<T: PortRead> PortReadOnly<T> {
     /// Creates a read only I/O port with the given port number.
+    #[cfg(feature = "const_fn")]
     pub const fn new(port: u16) -> PortReadOnly<T> {
+        PortReadOnly {
+            port: port,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Creates a read only I/O port with the given port number.
+    #[cfg(not(feature = "const_fn"))]
+    pub fn new(port: u16) -> PortReadOnly<T> {
         PortReadOnly {
             port: port,
             phantom: PhantomData,
@@ -98,7 +144,17 @@ impl<T: PortRead> PortReadOnly<T> {
 
 impl<T: PortWrite> PortWriteOnly<T> {
     /// Creates a write only I/O port with the given port number.
+    #[cfg(feature = "const_fn")]
     pub const fn new(port: u16) -> PortWriteOnly<T> {
+        PortWriteOnly {
+            port: port,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Creates a write only I/O port with the given port number.
+    #[cfg(not(feature = "const_fn"))]
+    pub fn new(port: u16) -> PortWriteOnly<T> {
         PortWriteOnly {
             port: port,
             phantom: PhantomData,
@@ -117,7 +173,17 @@ impl<T: PortWrite> PortWriteOnly<T> {
 
 impl<T: PortReadWrite> Port<T> {
     /// Creates an I/O port with the given port number.
+    #[cfg(feature = "const_fn")]
     pub const fn new(port: u16) -> Port<T> {
+        Port {
+            port: port,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Creates an I/O port with the given port number.
+    #[cfg(not(feature = "const_fn"))]
+    pub fn new(port: u16) -> Port<T> {
         Port {
             port: port,
             phantom: PhantomData,

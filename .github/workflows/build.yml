@@ -56,8 +56,16 @@ jobs:
     - name: "Run cargo build"
       run: cargo build
 
+    - name: "Run cargo build for stable"
+      run: cargo build --no-default-features --features stable
+      if: runner.os != 'Windows'
+
     - name: "Run cargo test"
       run: cargo test
+
+    - name: "Run cargo test for stable"
+      run: cargo test --no-default-features --features stable
+      if: runner.os != 'Windows'
 
     - name: 'Deny Warnings'
       run: cargo build --features deny-warnings
