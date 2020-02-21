@@ -9,6 +9,7 @@ use crate::structures::gdt::SegmentSelector;
 /// and return value on the stack and use lretq
 /// to reload cs and continue at 1:.
 pub unsafe fn set_cs(sel: SegmentSelector) {
+    #[cfg(feature = "inline_asm")]
     #[inline(always)]
     unsafe fn inner(sel: SegmentSelector) {
         asm!("pushq $0; \
@@ -18,48 +19,87 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
               1:" :: "ri" (u64::from(sel.0)) : "rax" "memory");
     }
 
+    #[cfg(not(feature = "inline_asm"))]
+    #[inline(always)]
+    unsafe fn inner(sel: SegmentSelector) {
+        crate::asm::x86_64_asm_set_cs(u64::from(sel.0))
+    }
+
     inner(sel)
 }
 
 /// Reload stack segment register.
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
+    #[cfg(feature = "inline_asm")]
     asm!("movw $0, %ss " :: "r" (sel.0) : "memory");
+
+    #[cfg(not(feature = "inline_asm"))]
+    crate::asm::x86_64_asm_load_ss(sel.0);
 }
 
 /// Reload data segment register.
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
+    #[cfg(feature = "inline_asm")]
     asm!("movw $0, %ds " :: "r" (sel.0) : "memory");
+
+    #[cfg(not(feature = "inline_asm"))]
+    crate::asm::x86_64_asm_load_ds(sel.0);
 }
 
 /// Reload es segment register.
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
+    #[cfg(feature = "inline_asm")]
     asm!("movw $0, %es " :: "r" (sel.0) : "memory");
+
+    #[cfg(not(feature = "inline_asm"))]
+    crate::asm::x86_64_asm_load_es(sel.0);
 }
 
 /// Reload fs segment register.
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
+    #[cfg(feature = "inline_asm")]
     asm!("movw $0, %fs " :: "r" (sel.0) : "memory");
+
+    #[cfg(not(feature = "inline_asm"))]
+    crate::asm::x86_64_asm_load_fs(sel.0);
 }
 
 /// Reload gs segment register.
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
+    #[cfg(feature = "inline_asm")]
     asm!("movw $0, %gs " :: "r" (sel.0) : "memory");
+
+    #[cfg(not(feature = "inline_asm"))]
+    crate::asm::x86_64_asm_load_gs(sel.0);
 }
 
 /// Swap `KernelGsBase` MSR and `GsBase` MSR.
 #[inline]
 pub unsafe fn swap_gs() {
+    #[cfg(feature = "inline_asm")]
     asm!("swapgs" ::: "memory" : "volatile");
+
+    #[cfg(not(feature = "inline_asm"))]
+    crate::asm::x86_64_asm_swapgs();
 }
 
 /// Returns the current value of the code segment register.
 pub fn cs() -> SegmentSelector {
-    let segment: u16;
-    unsafe { asm!("mov %cs, $0" : "=r" (segment) ) };
-    SegmentSelector(segment)
+    #[cfg(feature = "inline_asm")]
+    {
+        let segment: u16;
+        unsafe { asm!("mov %cs, $0" : "=r" (segment) ) };
+        SegmentSelector(segment)
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    {
+        let segment: u16 = unsafe { crate::asm::x86_64_asm_get_cs() };
+        SegmentSelector(segment)
+    }
 }

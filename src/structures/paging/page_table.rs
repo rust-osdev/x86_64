@@ -27,7 +27,15 @@ pub struct PageTableEntry {
 
 impl PageTableEntry {
     /// Creates an unused page table entry.
+    #[cfg(feature = "const_fn")]
     pub const fn new() -> Self {
+        PageTableEntry { entry: 0 }
+    }
+
+    /// Creates an unused page table entry.
+    #[cfg(not(feature = "const_fn"))]
+    #[inline]
+    pub fn new() -> Self {
         PageTableEntry { entry: 0 }
     }
 
@@ -176,9 +184,18 @@ pub struct PageTable {
 
 impl PageTable {
     /// Creates an empty page table.
+    #[cfg(feature = "const_fn")]
     pub const fn new() -> Self {
         PageTable {
             entries: [PageTableEntry::new(); ENTRY_COUNT],
+        }
+    }
+
+    /// Creates an empty page table.
+    #[cfg(not(feature = "const_fn"))]
+    pub fn new() -> Self {
+        PageTable {
+            entries: array_init::array_init(|_| PageTableEntry::new()),
         }
     }
 

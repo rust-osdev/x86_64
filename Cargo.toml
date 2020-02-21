@@ -28,6 +28,16 @@ edition = "2018"
 [dependencies]
 bit_field = "0.9.0"
 bitflags = "1.0.4"
+array-init = { version = "0.1.1", optional = true }
+
+[build-dependencies]
+cc = { version = "1.0.37", optional = true }
 
 [features]
+default = [ "nightly" ]
 deny-warnings = []
+stable = [ "cc", "array-init" ]
+nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
+inline_asm = []
+abi_x86_interrupt = []
+const_fn = []

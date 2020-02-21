@@ -76,7 +76,16 @@ mod x86_64 {
     /// Returns the raw current value of the RFLAGS register.
     pub fn read_raw() -> u64 {
         let r: u64;
-        unsafe { asm!("pushfq; popq $0" : "=r"(r) :: "memory") };
+        #[cfg(feature = "inline_asm")]
+        unsafe {
+            asm!("pushfq; popq $0" : "=r"(r) :: "memory")
+        };
+
+        #[cfg(not(feature = "inline_asm"))]
+        unsafe {
+            r = crate::asm::x86_64_asm_read_rflags();
+        };
+
         r
     }
 
@@ -93,6 +102,25 @@ mod x86_64 {
     ///
     /// Does not preserve any bits, including reserved bits.
     pub fn write_raw(val: u64) {
-        unsafe { asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags") };
+        #[cfg(feature = "inline_asm")]
+        unsafe {
+            asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags")
+        };
+
+        #[cfg(not(feature = "inline_asm"))]
+        unsafe {
+            crate::asm::x86_64_asm_write_rflags(val)
+        }
+    }
+
+    #[cfg(test)]
+    mod test {
+        use crate::registers::rflags::read;
+
+        #[test]
+        fn rflags_read() {
+            let rflags = read();
+            println!("{:#?}", rflags);
+        }
     }
 }
