@@ -2,7 +2,7 @@
 fn main() {}
 
 #[cfg(all(not(feature = "inline_asm"), not(feature = "stable")))]
-fn check_inline_asm() {
+fn main() {
     compile_error!("Neither feature \"stable\" nor \"inline_asm\" was set!");
 }
 
