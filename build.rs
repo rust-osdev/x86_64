@@ -3,7 +3,7 @@ fn main() {}
 
 #[cfg(all(not(feature = "inline_asm"), not(feature = "stable")))]
 fn main() {
-    compile_error!("Neither feature \"stable\" nor \"inline_asm\" was set!");
+    compile_error!("Neither feature \"stable\" nor \"nightly\" was set!");
 }
 
 #[cfg(all(not(feature = "inline_asm"), feature = "stable"))]
