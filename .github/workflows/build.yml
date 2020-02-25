@@ -38,6 +38,12 @@ jobs:
     - name: Set Rustup profile to minimal
       run: rustup set profile minimal
 
+    - name: Install musl target on Linux
+      run: |
+        rustup target add x86_64-unknown-linux-musl
+        sudo apt-get install musl-tools musl-dev
+      if: runner.os == 'Linux'
+
     - name: "Print Rust Version"
       run: |
         rustc -Vv
@@ -60,12 +66,20 @@ jobs:
       run: cargo build --no-default-features --features stable
       if: runner.os != 'Windows'
 
+    - name: "Run cargo build for stable on musl"
+      run: cargo build --target x86_64-unknown-linux-musl --no-default-features --features stable
+      if: runner.os == 'Linux'
+
     - name: "Run cargo test"
       run: cargo test
 
     - name: "Run cargo test for stable"
       run: cargo test --no-default-features --features stable
       if: runner.os != 'Windows'
+
+    - name: "Run cargo test for stable on musl"
+      run: cargo test --target x86_64-unknown-linux-musl --no-default-features --features stable
+      if: runner.os == 'Linux'
 
     - name: 'Deny Warnings'
       run: cargo build --features deny-warnings
