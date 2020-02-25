@@ -89,6 +89,7 @@ pub unsafe fn swap_gs() {
 }
 
 /// Returns the current value of the code segment register.
+#[inline]
 pub fn cs() -> SegmentSelector {
     #[cfg(feature = "inline_asm")]
     {

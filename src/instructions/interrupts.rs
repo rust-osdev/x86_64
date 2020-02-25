@@ -1,6 +1,7 @@
 //! Enabling and disabling interrupts
 
 /// Returns whether interrupts are enabled.
+#[inline]
 pub fn are_enabled() -> bool {
     use crate::registers::rflags::{self, RFlags};
 
@@ -58,6 +59,7 @@ pub fn disable() {
 /// });
 /// // interrupts are enabled again
 /// ```
+#[inline]
 pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,

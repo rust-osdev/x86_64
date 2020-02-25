@@ -69,6 +69,7 @@ impl VirtAddr {
     /// This function performs sign extension of bit 47 to make the address canonical, so
     /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
     /// use `new` or `try_new`.
+    #[inline]
     pub const fn new_unchecked(addr: u64) -> VirtAddr {
         // Rust doesn't accept shift operators in const functions at the moment,
         // so we use a multiplication and division by 0x1_0000 instead of `<< 16` and `>> 16`.
@@ -78,11 +79,13 @@ impl VirtAddr {
     }
 
     /// Creates a virtual address that points to `0`.
+    #[inline]
     pub const fn zero() -> VirtAddr {
         VirtAddr(0)
     }
 
     /// Converts the address to an `u64`.
+    #[inline]
     pub const fn as_u64(self) -> u64 {
         self.0
     }
@@ -93,18 +96,21 @@ impl VirtAddr {
     // on this function. At least for 32- and 64-bit we know the `as u64` cast
     // doesn't truncate.
     #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+    #[inline]
     pub fn from_ptr<T>(ptr: *const T) -> Self {
         Self::new(ptr as u64)
     }
 
     /// Converts the address to a raw pointer.
     #[cfg(target_pointer_width = "64")]
+    #[inline]
     pub fn as_ptr<T>(self) -> *const T {
         self.as_u64() as *const T
     }
 
     /// Converts the address to a mutable raw pointer.
     #[cfg(target_pointer_width = "64")]
+    #[inline]
     pub fn as_mut_ptr<T>(self) -> *mut T {
         self.as_ptr::<T>() as *mut T
     }
@@ -112,6 +118,7 @@ impl VirtAddr {
     /// Aligns the virtual address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
+    #[inline]
     pub fn align_up<U>(self, align: U) -> Self
     where
         U: Into<u64>,
@@ -122,6 +129,7 @@ impl VirtAddr {
     /// Aligns the virtual address downwards to the given alignment.
     ///
     /// See the `align_down` function for more information.
+    #[inline]
     pub fn align_down<U>(self, align: U) -> Self
     where
         U: Into<u64>,
@@ -130,6 +138,7 @@ impl VirtAddr {
     }
 
     /// Checks whether the virtual address has the demanded alignment.
+    #[inline]
     pub fn is_aligned<U>(self, align: U) -> bool
     where
         U: Into<u64>,
@@ -138,26 +147,31 @@ impl VirtAddr {
     }
 
     /// Returns the 12-bit page offset of this virtual address.
+    #[inline]
     pub fn page_offset(&self) -> PageOffset {
         PageOffset::new_truncate(self.0 as u16)
     }
 
     /// Returns the 9-bit level 1 page table index.
+    #[inline]
     pub fn p1_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12) as u16)
     }
 
     /// Returns the 9-bit level 2 page table index.
+    #[inline]
     pub fn p2_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 3 page table index.
+    #[inline]
     pub fn p3_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 4 page table index.
+    #[inline]
     pub fn p4_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9) as u16)
     }
@@ -252,6 +266,7 @@ impl PhysAddr {
     }
 
     /// Creates a new physical address, throwing bits 52..64 away.
+    #[inline]
     pub const fn new_truncate(addr: u64) -> PhysAddr {
         PhysAddr(addr % (1 << 52))
     }
@@ -267,11 +282,13 @@ impl PhysAddr {
     }
 
     /// Converts the address to an `u64`.
+    #[inline]
     pub fn as_u64(self) -> u64 {
         self.0
     }
 
     /// Convenience method for checking if a physical address is null.
+    #[inline]
     pub fn is_null(&self) -> bool {
         self.0 == 0
     }
@@ -279,6 +296,7 @@ impl PhysAddr {
     /// Aligns the physical address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
+    #[inline]
     pub fn align_up<U>(self, align: U) -> Self
     where
         U: Into<u64>,
@@ -289,6 +307,7 @@ impl PhysAddr {
     /// Aligns the physical address downwards to the given alignment.
     ///
     /// See the `align_down` function for more information.
+    #[inline]
     pub fn align_down<U>(self, align: U) -> Self
     where
         U: Into<u64>,
@@ -297,6 +316,7 @@ impl PhysAddr {
     }
 
     /// Checks whether the physical address has the demanded alignment.
+    #[inline]
     pub fn is_aligned<U>(self, align: U) -> bool
     where
         U: Into<u64>,
@@ -402,6 +422,7 @@ impl Sub<PhysAddr> for PhysAddr {
 ///
 /// Returns the greatest x with alignment `align` so that x <= addr. The alignment must be
 ///  a power of 2.
+#[inline]
 pub fn align_down(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
     addr & !(align - 1)

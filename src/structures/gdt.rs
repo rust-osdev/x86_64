@@ -26,16 +26,19 @@ impl SegmentSelector {
     }
 
     /// Returns the GDT index.
+    #[inline]
     pub fn index(&self) -> u16 {
         self.0 >> 3
     }
 
     /// Returns the requested privilege level.
+    #[inline]
     pub fn rpl(&self) -> PrivilegeLevel {
         PrivilegeLevel::from_u16(self.0.get_bits(0..2))
     }
 
     /// Set the privilege level for this Segment selector.
+    #[inline]
     pub fn set_rpl(&mut self, rpl: PrivilegeLevel) {
         self.0.set_bits(0..2, rpl as u16);
     }
@@ -184,6 +187,7 @@ bitflags! {
 
 impl Descriptor {
     /// Creates a segment descriptor for a long mode kernel code segment.
+    #[inline]
     pub fn kernel_code_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 
@@ -192,6 +196,7 @@ impl Descriptor {
     }
 
     /// Creates a segment descriptor for a long mode ring 3 data segment.
+    #[inline]
     pub fn user_data_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 
@@ -200,6 +205,7 @@ impl Descriptor {
     }
 
     /// Creates a segment descriptor for a long mode ring 3 code segment.
+    #[inline]
     pub fn user_code_segment() -> Descriptor {
         use self::DescriptorFlags as Flags;
 

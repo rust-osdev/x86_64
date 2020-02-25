@@ -56,6 +56,7 @@ impl PrivilegeLevel {
     /// Creates a `PrivilegeLevel` from a numeric value. The value must be in the range 0..4.
     ///
     /// This function panics if the passed value is >3.
+    #[inline]
     pub fn from_u16(value: u16) -> PrivilegeLevel {
         match value {
             0 => PrivilegeLevel::Ring0,

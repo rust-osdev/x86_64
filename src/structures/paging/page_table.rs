@@ -40,21 +40,25 @@ impl PageTableEntry {
     }
 
     /// Returns whether this entry is zero.
+    #[inline]
     pub const fn is_unused(&self) -> bool {
         self.entry == 0
     }
 
     /// Sets this entry to zero.
+    #[inline]
     pub fn set_unused(&mut self) {
         self.entry = 0;
     }
 
     /// Returns the flags of this entry.
+    #[inline]
     pub const fn flags(&self) -> PageTableFlags {
         PageTableFlags::from_bits_truncate(self.entry)
     }
 
     /// Returns the physical address mapped by this entry, might be zero.
+    #[inline]
     pub fn addr(&self) -> PhysAddr {
         PhysAddr::new(self.entry & 0x000fffff_fffff000)
     }
@@ -77,18 +81,21 @@ impl PageTableEntry {
     }
 
     /// Map the entry to the specified physical address with the specified flags.
+    #[inline]
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
         assert!(addr.is_aligned(Size4KiB::SIZE));
         self.entry = (addr.as_u64()) | flags.bits();
     }
 
     /// Map the entry to the specified physical frame with the specified flags.
+    #[inline]
     pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
         assert!(!flags.contains(PageTableFlags::HUGE_PAGE));
         self.set_addr(frame.start_address(), flags)
     }
 
     /// Sets the flags of this entry.
+    #[inline]
     pub fn set_flags(&mut self, flags: PageTableFlags) {
         self.entry = self.addr().as_u64() | flags.bits();
     }
@@ -200,6 +207,7 @@ impl PageTable {
     }
 
     /// Clears all entries.
+    #[inline]
     pub fn zero(&mut self) {
         for entry in self.entries.iter_mut() {
             entry.set_unused();
@@ -269,30 +277,35 @@ impl PageTableIndex {
     }
 
     /// Creates a new index from the given `u16`. Throws away bits if the value is >=512.
+    #[inline]
     pub const fn new_truncate(index: u16) -> Self {
         Self(index % ENTRY_COUNT as u16)
     }
 }
 
 impl From<PageTableIndex> for u16 {
+    #[inline]
     fn from(index: PageTableIndex) -> Self {
         index.0
     }
 }
 
 impl From<PageTableIndex> for u32 {
+    #[inline]
     fn from(index: PageTableIndex) -> Self {
         u32::from(index.0)
     }
 }
 
 impl From<PageTableIndex> for u64 {
+    #[inline]
     fn from(index: PageTableIndex) -> Self {
         u64::from(index.0)
     }
 }
 
 impl From<PageTableIndex> for usize {
+    #[inline]
     fn from(index: PageTableIndex) -> Self {
         usize::from(index.0)
     }
@@ -314,30 +327,35 @@ impl PageOffset {
     }
 
     /// Creates a new offset from the given `u16`. Throws away bits if the value is >=4096.
+    #[inline]
     pub const fn new_truncate(offset: u16) -> Self {
         Self(offset % (1 << 12))
     }
 }
 
 impl From<PageOffset> for u16 {
+    #[inline]
     fn from(offset: PageOffset) -> Self {
         offset.0
     }
 }
 
 impl From<PageOffset> for u32 {
+    #[inline]
     fn from(offset: PageOffset) -> Self {
         u32::from(offset.0)
     }
 }
 
 impl From<PageOffset> for u64 {
+    #[inline]
     fn from(offset: PageOffset) -> Self {
         u64::from(offset.0)
     }
 }
 
 impl From<PageOffset> for usize {
+    #[inline]
     fn from(offset: PageOffset) -> Self {
         usize::from(offset.0)
     }

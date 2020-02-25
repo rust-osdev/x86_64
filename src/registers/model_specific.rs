@@ -110,6 +110,7 @@ mod x86_64 {
 
     impl Msr {
         /// Read 64 bits msr register.
+        #[inline]
         pub unsafe fn read(&self) -> u64 {
             #[cfg(feature = "inline_asm")]
             {
@@ -123,6 +124,7 @@ mod x86_64 {
         }
 
         /// Write 64 bits to msr register.
+        #[inline]
         pub unsafe fn write(&mut self, value: u64) {
             #[cfg(feature = "inline_asm")]
             {
@@ -138,11 +140,13 @@ mod x86_64 {
 
     impl Efer {
         /// Read the current EFER flags.
+        #[inline]
         pub fn read() -> EferFlags {
             EferFlags::from_bits_truncate(Self::read_raw())
         }
 
         /// Read the current raw EFER flags.
+        #[inline]
         pub fn read_raw() -> u64 {
             unsafe { Self::MSR.read() }
         }
@@ -151,6 +155,7 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
         /// safety, e.g. by disabling long mode.
+        #[inline]
         pub unsafe fn write(flags: EferFlags) {
             let old_value = Self::read_raw();
             let reserved = old_value & !(EferFlags::all().bits());
@@ -163,6 +168,7 @@ mod x86_64 {
         ///
         /// Does not preserve any bits, including reserved fields. Unsafe because it's possible to
         /// break memory safety, e.g. by disabling long mode.
+        #[inline]
         pub unsafe fn write_raw(flags: u64) {
             Self::MSR.write(flags);
         }
@@ -171,6 +177,7 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
         /// safety, e.g. by disabling long mode.
+        #[inline]
         pub unsafe fn update<F>(f: F)
         where
             F: FnOnce(&mut EferFlags),
@@ -183,11 +190,13 @@ mod x86_64 {
 
     impl FsBase {
         /// Read the current FsBase register.
+        #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the FS.Base register.
+        #[inline]
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
@@ -195,11 +204,13 @@ mod x86_64 {
 
     impl GsBase {
         /// Read the current GsBase register.
+        #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the GS.Base register.
+        #[inline]
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
@@ -207,11 +218,13 @@ mod x86_64 {
 
     impl KernelGsBase {
         /// Read the current KernelGsBase register.
+        #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the KernelGsBase register.
+        #[inline]
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
@@ -229,6 +242,7 @@ mod x86_64 {
         /// - Field 2 (SYSCALL): This field is copied directly into CS.Sel. SS.Sel is set to
         ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
         /// 33:32 should be initialized to 00b.
+        #[inline]
         pub fn read_raw() -> (u16, u16) {
             let msr_value = unsafe { Self::MSR.read() };
             let sysret = msr_value.get_bits(48..64);
@@ -242,6 +256,7 @@ mod x86_64 {
         /// - SS Selector SYSRET
         /// - CS Selector SYSCALL
         /// - SS Selector SYSCALL
+        #[inline]
         pub fn read() -> (
             SegmentSelector,
             SegmentSelector,
@@ -272,6 +287,7 @@ mod x86_64 {
         /// # Unsafety
         /// Unsafe because this can cause system instability if passed in the
         /// wrong values for the fields.
+        #[inline]
         pub unsafe fn write_raw(sysret: u16, syscall: u16) {
             let mut msr_value = 0u64;
             msr_value.set_bits(48..64, sysret.into());
@@ -316,12 +332,14 @@ mod x86_64 {
     impl LStar {
         /// Read the current LStar register.
         /// This holds the target RIP of a syscall.
+        #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the LStar register.
         /// This holds the target RIP of a syscall.
+        #[inline]
         pub fn write(address: VirtAddr) {
             unsafe { Self::MSR.write(address.as_u64()) };
         }
@@ -335,6 +353,7 @@ mod x86_64 {
         /// executed. If a bit in SFMASK is set to 1, the corresponding
         /// bit in RFLAGS is cleared to 0. If a bit in SFMASK is cleared
         /// to 0, the corresponding rFLAGS bit is not modified.
+        #[inline]
         pub fn read() -> RFlags {
             RFlags::from_bits(unsafe { Self::MSR.read() }).unwrap()
         }
@@ -346,6 +365,7 @@ mod x86_64 {
         /// executed. If a bit in SFMASK is set to 1, the corresponding
         /// bit in RFLAGS is cleared to 0. If a bit in SFMASK is cleared
         /// to 0, the corresponding rFLAGS bit is not modified.
+        #[inline]
         pub fn write(value: RFlags) {
             unsafe { Self::MSR.write(value.bits()) };
         }
