@@ -1,3 +1,5 @@
+- asm: add target_env = "musl" to pickup the underscore asm names ([#128](https://github.com/rust-osdev/x86_64/pull/128))
+
 # 0.9.3
 
 - Enable usage with non-nightly rust ([#127](https://github.com/rust-osdev/x86_64/pull/127))
