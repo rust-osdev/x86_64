@@ -69,11 +69,13 @@ mod x86_64 {
     /// Returns the current value of the RFLAGS register.
     ///
     /// Drops any unknown bits.
+    #[inline]
     pub fn read() -> RFlags {
         RFlags::from_bits_truncate(read_raw())
     }
 
     /// Returns the raw current value of the RFLAGS register.
+    #[inline]
     pub fn read_raw() -> u64 {
         let r: u64;
         #[cfg(feature = "inline_asm")]
@@ -90,6 +92,7 @@ mod x86_64 {
     }
 
     /// Writes the RFLAGS register, preserves reserved bits.
+    #[inline]
     pub fn write(flags: RFlags) {
         let old_value = read_raw();
         let reserved = old_value & !(RFlags::all().bits());
@@ -101,6 +104,7 @@ mod x86_64 {
     /// Writes the RFLAGS register.
     ///
     /// Does not preserve any bits, including reserved bits.
+    #[inline]
     pub fn write_raw(val: u64) {
         #[cfg(feature = "inline_asm")]
         unsafe {

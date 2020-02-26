@@ -23,6 +23,7 @@ impl<'a> OffsetPageTable<'a> {
     /// is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
+    #[inline]
     pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: VirtAddr) -> Self {
         let phys_offset = PhysOffset {
             offset: phys_offset,
@@ -39,6 +40,7 @@ struct PhysOffset {
 }
 
 impl PhysToVirt for PhysOffset {
+    #[inline]
     fn phys_to_virt(&self, frame: PhysFrame) -> *mut PageTable {
         let phys = frame.start_address().as_u64();
         let virt = self.offset + phys;
@@ -62,6 +64,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         self.inner.map_to(page, frame, flags, allocator)
     }
 
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
@@ -69,6 +72,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
+    #[inline]
     fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
@@ -77,12 +81,14 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         self.inner.update_flags(page, flags)
     }
 
+    #[inline]
     fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
+    #[inline]
     fn map_to<A>(
         &mut self,
         page: Page<Size2MiB>,
@@ -96,6 +102,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         self.inner.map_to(page, frame, flags, allocator)
     }
 
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
@@ -103,6 +110,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
+    #[inline]
     fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
@@ -111,12 +119,14 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         self.inner.update_flags(page, flags)
     }
 
+    #[inline]
     fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
+    #[inline]
     fn map_to<A>(
         &mut self,
         page: Page<Size4KiB>,
@@ -130,6 +140,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         self.inner.map_to(page, frame, flags, allocator)
     }
 
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
@@ -137,6 +148,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
+    #[inline]
     fn update_flags(
         &mut self,
         page: Page<Size4KiB>,
@@ -145,12 +157,14 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         self.inner.update_flags(page, flags)
     }
 
+    #[inline]
     fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl<'a> MapperAllSizes for OffsetPageTable<'a> {
+    #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
     }

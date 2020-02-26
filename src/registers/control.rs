@@ -133,11 +133,13 @@ mod x86_64 {
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
+        #[inline]
         pub fn read() -> Cr0Flags {
             Cr0Flags::from_bits_truncate(Self::read_raw())
         }
 
         /// Read the current raw CR0 value.
+        #[inline]
         pub fn read_raw() -> u64 {
             let value: u64;
 
@@ -158,6 +160,7 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. disabling paging.
+        #[inline]
         pub unsafe fn write(flags: Cr0Flags) {
             let old_value = Self::read_raw();
             let reserved = old_value & !(Cr0Flags::all().bits());
@@ -170,6 +173,7 @@ mod x86_64 {
         ///
         /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. disabling paging.
+        #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
             asm!("mov $0, %cr0" :: "r" (value) : "memory");
@@ -182,6 +186,7 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. disabling paging.
+        #[inline]
         pub unsafe fn update<F>(f: F)
         where
             F: FnOnce(&mut Cr0Flags),
@@ -194,6 +199,7 @@ mod x86_64 {
 
     impl Cr2 {
         /// Read the current page fault linear address from the CR3 register.
+        #[inline]
         pub fn read() -> VirtAddr {
             let value: u64;
 
@@ -237,6 +243,7 @@ mod x86_64 {
         /// ## Safety
         /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
         /// changing the page mapping.
+        #[inline]
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
             let addr = frame.start_address();
             let value = addr.as_u64() | flags.bits();
@@ -251,11 +258,13 @@ mod x86_64 {
 
     impl Cr4 {
         /// Read the current set of CR4 flags.
+        #[inline]
         pub fn read() -> Cr4Flags {
             Cr4Flags::from_bits_truncate(Self::read_raw())
         }
 
         /// Read the current raw CR4 value.
+        #[inline]
         pub fn read_raw() -> u64 {
             let value: u64;
 
@@ -276,6 +285,7 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. physical address extension.
+        #[inline]
         pub unsafe fn write(flags: Cr4Flags) {
             let old_value = Self::read_raw();
             let reserved = old_value & !(Cr4Flags::all().bits());
@@ -288,6 +298,7 @@ mod x86_64 {
         ///
         /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. physical address extension.
+        #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
             asm!("mov $0, %cr4" :: "r" (value) : "memory");
@@ -300,6 +311,7 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
         /// safety by e.g. physical address extension.
+        #[inline]
         pub unsafe fn update<F>(f: F)
         where
             F: FnOnce(&mut Cr4Flags),

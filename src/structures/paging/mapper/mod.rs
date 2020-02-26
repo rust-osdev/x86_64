@@ -33,6 +33,7 @@ pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB>
     ///
     /// This is a convenience method. For more information about a mapping see the
     /// [`translate`](MapperAllSizes::translate) method.
+    #[inline]
     fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
         match self.translate(addr) {
             TranslateResult::PageNotMapped | TranslateResult::InvalidFrameAddress(_) => None,
@@ -112,6 +113,7 @@ pub trait Mapper<S: PageSize> {
     fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
+    #[inline]
     unsafe fn identity_map<A>(
         &mut self,
         frame: UnusedPhysFrame<S>,
@@ -146,11 +148,13 @@ impl<S: PageSize> MapperFlush<S> {
 
     /// Flush the page from the TLB to ensure that the newest mapping is used.
     #[cfg(target_arch = "x86_64")]
+    #[inline]
     pub fn flush(self) {
         crate::instructions::tlb::flush(self.0.start_address());
     }
 
     /// Don't flush the TLB and silence the “must be used” warning.
+    #[inline]
     pub fn ignore(self) {}
 }
 

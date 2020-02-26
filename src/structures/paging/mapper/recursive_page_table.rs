@@ -67,6 +67,7 @@ impl<'a> RecursivePageTable<'a> {
     /// Creates a new RecursivePageTable without performing any checks.
     ///
     /// The `recursive_index` parameter must be the index of the recursively mapped entry.
+    #[inline]
     pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: PageTableIndex) -> Self {
         RecursivePageTable {
             p4: table,
@@ -306,6 +307,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
 }
 
 impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
+    #[inline]
     fn map_to<A>(
         &mut self,
         page: Page<Size2MiB>,
@@ -581,10 +583,12 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
     }
 }
 
+#[inline]
 fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {
     p3_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
+#[inline]
 fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
     Page::from_page_table_indices(
         recursive_index,
@@ -594,10 +598,12 @@ fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page 
     )
 }
 
+#[inline]
 fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {
     p2_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
+#[inline]
 fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
     Page::from_page_table_indices(
         recursive_index,
@@ -607,10 +613,12 @@ fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) 
     )
 }
 
+#[inline]
 fn p1_ptr(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> *mut PageTable {
     p1_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
+#[inline]
 fn p1_page(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> Page {
     Page::from_page_table_indices(
         recursive_index,

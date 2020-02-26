@@ -465,6 +465,7 @@ impl InterruptDescriptorTable {
 
     /// Loads the IDT in the CPU using the `lidt` command.
     #[cfg(target_arch = "x86_64")]
+    #[inline]
     pub fn load(&'static self) {
         use crate::instructions::tables::{lidt, DescriptorTablePointer};
         use core::mem::size_of;
@@ -506,6 +507,7 @@ impl InterruptDescriptorTable {
     ///
     /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
     /// exception
+    #[inline]
     pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
@@ -515,6 +517,7 @@ impl InterruptDescriptorTable {
     ///
     /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
     /// exception
+    #[inline]
     pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
@@ -680,11 +683,13 @@ pub struct EntryOptions(u16);
 
 impl EntryOptions {
     /// Creates a minimal options field with all the must-be-one bits set.
+    #[inline]
     const fn minimal() -> Self {
         EntryOptions(0b1110_0000_0000)
     }
 
     /// Set or reset the preset bit.
+    #[inline]
     pub fn set_present(&mut self, present: bool) -> &mut Self {
         self.0.set_bit(15, present);
         self
@@ -692,6 +697,7 @@ impl EntryOptions {
 
     /// Let the CPU disable hardware interrupts when the handler is invoked. By default,
     /// interrupts are disabled on handler invocation.
+    #[inline]
     pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {
         self.0.set_bit(8, !disable);
         self
@@ -701,6 +707,7 @@ impl EntryOptions {
     /// or 3, the default is 0. If CPL < DPL, a general protection fault occurs.
     ///
     /// This function panics for a DPL > 3.
+    #[inline]
     pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {
         self.0.set_bits(13..15, dpl as u16);
         self
@@ -718,6 +725,7 @@ impl EntryOptions {
     /// ## Safety
     /// This function is unsafe because the caller must ensure that the passed stack index is
     /// valid and not used by other interrupts. Otherwise, memory safety violations are possible.
+    #[inline]
     pub unsafe fn set_stack_index(&mut self, index: u16) -> &mut Self {
         // The hardware IST index starts at 1, but our software IST index
         // starts at 0. Therefore we need to add 1 here.
@@ -751,6 +759,7 @@ impl InterruptStackFrame {
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
+    #[inline]
     pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
         &mut self.value
     }

@@ -414,6 +414,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
     /// Returns `PageTableWalkError::NotMapped` if the entry is unused. Returns
     /// `PageTableWalkError::MappedToHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
+    #[inline]
     fn next_table<'b>(
         &self,
         entry: &'b PageTableEntry,
@@ -429,6 +430,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
     /// Returns `PageTableWalkError::NotMapped` if the entry is unused. Returns
     /// `PageTableWalkError::MappedToHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
+    #[inline]
     fn next_table_mut<'b>(
         &self,
         entry: &'b mut PageTableEntry,
@@ -575,6 +577,7 @@ impl<T> PhysToVirt for T
 where
     T: Fn(PhysFrame) -> *mut PageTable,
 {
+    #[inline]
     fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable {
         self(phys_frame)
     }

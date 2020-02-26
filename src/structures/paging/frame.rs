@@ -18,6 +18,7 @@ impl<S: PageSize> PhysFrame<S> {
     /// Returns the frame that starts at the given virtual address.
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
+    #[inline]
     pub fn from_start_address(address: PhysAddr) -> Result<Self, ()> {
         if !address.is_aligned(S::SIZE) {
             return Err(());
@@ -26,6 +27,7 @@ impl<S: PageSize> PhysFrame<S> {
     }
 
     /// Returns the frame that contains the given physical address.
+    #[inline]
     pub fn containing_address(address: PhysAddr) -> Self {
         PhysFrame {
             start_address: address.align_down(S::SIZE),
@@ -34,27 +36,32 @@ impl<S: PageSize> PhysFrame<S> {
     }
 
     /// Returns the start address of the frame.
+    #[inline]
     pub fn start_address(&self) -> PhysAddr {
         self.start_address
     }
 
     /// Returns the size the frame (4KB, 2MB or 1GB).
+    #[inline]
     pub fn size(&self) -> u64 {
         S::SIZE
     }
 
     /// Returns a range of frames, exclusive `end`.
+    #[inline]
     pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
         PhysFrameRange { start, end }
     }
 
     /// Returns a range of frames, inclusive `end`.
+    #[inline]
     pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
         PhysFrameRangeInclusive { start, end }
     }
 }
 
 impl<S: PageSize> fmt::Debug for PhysFrame<S> {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "PhysFrame[{}]({:#x})",
@@ -109,6 +116,7 @@ pub struct PhysFrameRange<S: PageSize = Size4KiB> {
 
 impl<S: PageSize> PhysFrameRange<S> {
     /// Returns whether the range contains no frames.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         !(self.start < self.end)
     }
@@ -149,6 +157,7 @@ pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
 
 impl<S: PageSize> PhysFrameRangeInclusive<S> {
     /// Returns whether the range contains no frames.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         !(self.start <= self.end)
     }

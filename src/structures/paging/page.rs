@@ -66,6 +66,7 @@ impl<S: PageSize> Page<S> {
     /// Returns the page that starts at the given virtual address.
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
+    #[inline]
     pub fn from_start_address(address: VirtAddr) -> Result<Self, ()> {
         if !address.is_aligned(S::SIZE) {
             return Err(());
@@ -74,6 +75,7 @@ impl<S: PageSize> Page<S> {
     }
 
     /// Returns the page that contains the given virtual address.
+    #[inline]
     pub fn containing_address(address: VirtAddr) -> Self {
         Page {
             start_address: address.align_down(S::SIZE),
@@ -82,12 +84,14 @@ impl<S: PageSize> Page<S> {
     }
 
     /// Returns the start address of the page.
+    #[inline]
     pub fn start_address(&self) -> VirtAddr {
         self.start_address
     }
 
     /// Returns the size the page (4KB, 2MB or 1GB).
     #[cfg(feature = "const_fn")]
+    #[inline]
     pub const fn size(&self) -> u64 {
         S::SIZE
     }
@@ -100,21 +104,25 @@ impl<S: PageSize> Page<S> {
     }
 
     /// Returns the level 4 page table index of this page.
+    #[inline]
     pub fn p4_index(&self) -> PageTableIndex {
         self.start_address().p4_index()
     }
 
     /// Returns the level 3 page table index of this page.
+    #[inline]
     pub fn p3_index(&self) -> PageTableIndex {
         self.start_address().p3_index()
     }
 
     /// Returns a range of pages, exclusive `end`.
+    #[inline]
     pub fn range(start: Self, end: Self) -> PageRange<S> {
         PageRange { start, end }
     }
 
     /// Returns a range of pages, inclusive `end`.
+    #[inline]
     pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
         PageRangeInclusive { start, end }
     }
@@ -122,6 +130,7 @@ impl<S: PageSize> Page<S> {
 
 impl<S: NotGiantPageSize> Page<S> {
     /// Returns the level 2 page table index of this page.
+    #[inline]
     pub fn p2_index(&self) -> PageTableIndex {
         self.start_address().p2_index()
     }
@@ -178,6 +187,7 @@ impl Page<Size4KiB> {
     }
 
     /// Returns the level 1 page table index of this page.
+    #[inline]
     pub fn p1_index(&self) -> PageTableIndex {
         self.start_address().p1_index()
     }
@@ -259,6 +269,7 @@ impl<S: PageSize> Iterator for PageRange<S> {
 
 impl PageRange<Size2MiB> {
     /// Converts the range of 2MiB pages to a range of 4KiB pages.
+    #[inline]
     pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
         PageRange {
             start: Page::containing_address(self.start.start_address()),
