@@ -249,7 +249,7 @@ pub struct PageRange<S: PageSize = Size4KiB> {
 impl<S: PageSize> PageRange<S> {
     /// Returns wether this range contains no pages.
     pub fn is_empty(&self) -> bool {
-        !(self.start < self.end)
+        self.start >= self.end
     }
 }
 
@@ -300,7 +300,7 @@ pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
 impl<S: PageSize> PageRangeInclusive<S> {
     /// Returns wether this range contains no pages.
     pub fn is_empty(&self) -> bool {
-        !(self.start <= self.end)
+        self.start >= self.end
     }
 }
 

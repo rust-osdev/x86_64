@@ -118,7 +118,7 @@ impl<S: PageSize> PhysFrameRange<S> {
     /// Returns whether the range contains no frames.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        !(self.start < self.end)
+        self.start >= self.end
     }
 }
 
@@ -159,7 +159,7 @@ impl<S: PageSize> PhysFrameRangeInclusive<S> {
     /// Returns whether the range contains no frames.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        !(self.start <= self.end)
+        self.start >= self.end
     }
 }
 
