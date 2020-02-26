@@ -550,7 +550,7 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         }
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
-            let offset = addr.as_u64() & 0o7_777_777_777;
+            let offset = addr.as_u64() & 0o_777_777_7777;
             return TranslateResult::Frame1GiB { frame, offset };
         }
 
@@ -561,7 +561,7 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         }
         if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
-            let offset = addr.as_u64() & 0o7_777_777;
+            let offset = addr.as_u64() & 0o_777_7777;
             return TranslateResult::Frame2MiB { frame, offset };
         }
 
