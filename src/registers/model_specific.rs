@@ -48,7 +48,7 @@ pub struct SFMask;
 
 impl Efer {
     /// The underlying model specific register.
-    pub const MSR: Msr = Msr(0xC0000080);
+    pub const MSR: Msr = Msr(0xC000_0080);
 }
 
 impl FsBase {
