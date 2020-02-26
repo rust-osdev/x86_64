@@ -85,14 +85,14 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the start address of the page.
     #[inline]
-    pub fn start_address(self) -> VirtAddr {
+    pub fn start_address(&self) -> VirtAddr {
         self.start_address
     }
 
     /// Returns the size the page (4KB, 2MB or 1GB).
     #[cfg(feature = "const_fn")]
     #[inline]
-    pub const fn size(self) -> u64 {
+    pub const fn size(&self) -> u64 {
         S::SIZE
     }
 
@@ -105,13 +105,13 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the level 4 page table index of this page.
     #[inline]
-    pub fn p4_index(self) -> PageTableIndex {
+    pub fn p4_index(&self) -> PageTableIndex {
         self.start_address().p4_index()
     }
 
     /// Returns the level 3 page table index of this page.
     #[inline]
-    pub fn p3_index(self) -> PageTableIndex {
+    pub fn p3_index(&self) -> PageTableIndex {
         self.start_address().p3_index()
     }
 
@@ -131,7 +131,7 @@ impl<S: PageSize> Page<S> {
 impl<S: NotGiantPageSize> Page<S> {
     /// Returns the level 2 page table index of this page.
     #[inline]
-    pub fn p2_index(self) -> PageTableIndex {
+    pub fn p2_index(&self) -> PageTableIndex {
         self.start_address().p2_index()
     }
 }
@@ -188,7 +188,7 @@ impl Page<Size4KiB> {
 
     /// Returns the level 1 page table index of this page.
     #[inline]
-    pub fn p1_index(self) -> PageTableIndex {
+    pub fn p1_index(&self) -> PageTableIndex {
         self.start_address().p1_index()
     }
 }

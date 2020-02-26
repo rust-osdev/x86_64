@@ -21,7 +21,7 @@ impl RdRand {
     /// Uniformly sampled u64.
     /// May fail in rare circumstances or heavy load.
     #[inline]
-    pub fn get_u64(self) -> Option<u64> {
+    pub fn get_u64(&self) -> Option<u64> {
         let mut res: u64 = 0;
         unsafe {
             match core::arch::x86_64::_rdrand64_step(&mut res) {
@@ -36,7 +36,7 @@ impl RdRand {
     /// Uniformly sampled u32.
     /// May fail in rare circumstances or heavy load.
     #[inline]
-    pub fn get_u32(self) -> Option<u32> {
+    pub fn get_u32(&self) -> Option<u32> {
         let mut res: u32 = 0;
         unsafe {
             match core::arch::x86_64::_rdrand32_step(&mut res) {
@@ -51,7 +51,7 @@ impl RdRand {
     /// Uniformly sampled u16.
     /// May fail in rare circumstances or heavy load.
     #[inline]
-    pub fn get_u16(self) -> Option<u16> {
+    pub fn get_u16(&self) -> Option<u16> {
         let mut res: u16 = 0;
         unsafe {
             match core::arch::x86_64::_rdrand16_step(&mut res) {

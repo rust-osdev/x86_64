@@ -37,13 +37,13 @@ impl<S: PageSize> PhysFrame<S> {
 
     /// Returns the start address of the frame.
     #[inline]
-    pub fn start_address(self) -> PhysAddr {
+    pub fn start_address(&self) -> PhysAddr {
         self.start_address
     }
 
     /// Returns the size the frame (4KB, 2MB or 1GB).
     #[inline]
-    pub fn size(self) -> u64 {
+    pub fn size(&self) -> u64 {
         S::SIZE
     }
 
