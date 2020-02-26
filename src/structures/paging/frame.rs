@@ -80,7 +80,7 @@ impl<S: PageSize> Add<u64> for PhysFrame<S> {
 
 impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
     fn add_assign(&mut self, rhs: u64) {
-        *self = self.clone() + rhs;
+        *self = *self + rhs;
     }
 }
 
@@ -93,7 +93,7 @@ impl<S: PageSize> Sub<u64> for PhysFrame<S> {
 
 impl<S: PageSize> SubAssign<u64> for PhysFrame<S> {
     fn sub_assign(&mut self, rhs: u64) {
-        *self = self.clone() - rhs;
+        *self = *self - rhs;
     }
 }
 
@@ -127,7 +127,7 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
-            let frame = self.start.clone();
+            let frame = self.start;
             self.start += 1;
             Some(frame)
         } else {
@@ -168,7 +168,7 @@ impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
-            let frame = self.start.clone();
+            let frame = self.start;
             self.start += 1;
             Some(frame)
         } else {

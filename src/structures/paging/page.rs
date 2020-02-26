@@ -212,7 +212,7 @@ impl<S: PageSize> Add<u64> for Page<S> {
 
 impl<S: PageSize> AddAssign<u64> for Page<S> {
     fn add_assign(&mut self, rhs: u64) {
-        *self = self.clone() + rhs;
+        *self = *self + rhs;
     }
 }
 
@@ -225,7 +225,7 @@ impl<S: PageSize> Sub<u64> for Page<S> {
 
 impl<S: PageSize> SubAssign<u64> for Page<S> {
     fn sub_assign(&mut self, rhs: u64) {
-        *self = self.clone() - rhs;
+        *self = *self - rhs;
     }
 }
 
@@ -258,7 +258,7 @@ impl<S: PageSize> Iterator for PageRange<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
-            let page = self.start.clone();
+            let page = self.start;
             self.start += 1;
             Some(page)
         } else {
@@ -309,7 +309,7 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
-            let page = self.start.clone();
+            let page = self.start;
             self.start += 1;
             Some(page)
         } else {
