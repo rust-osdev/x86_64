@@ -1,3 +1,5 @@
+- Add `#[inline]` attribute to small functions ([#129](https://github.com/rust-osdev/x86_64/pull/129))
+
 # 0.9.4
 
 - asm: add target_env = "musl" to pickup the underscore asm names ([#128](https://github.com/rust-osdev/x86_64/pull/128))
