@@ -114,7 +114,7 @@ bitflags! {
     /// Possible flags for a page table entry.
     pub struct PageTableFlags: u64 {
         /// Specifies whether the mapped frame or page table is loaded in memory.
-        const PRESENT =         1 << 0;
+        const PRESENT =         1;
         /// Controls whether writes to the mapped frames are allowed.
         ///
         /// If this bit is unset in a level 1 page table entry, the mapped frame is read-only.

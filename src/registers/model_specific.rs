@@ -85,7 +85,7 @@ bitflags! {
     /// Flags of the Extended Feature Enable Register.
     pub struct EferFlags: u64 {
         /// Enables the `syscall` and `sysret` instructions.
-        const SYSTEM_CALL_EXTENSIONS = 1 << 0;
+        const SYSTEM_CALL_EXTENSIONS = 1;
         /// Activates long mode, requires activating paging.
         const LONG_MODE_ENABLE = 1 << 8;
         /// Indicates that long mode is active.
