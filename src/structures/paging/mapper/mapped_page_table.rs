@@ -370,7 +370,7 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
-                let offset = addr.as_u64() & 0o_777_777_7777;
+                let offset = addr.as_u64() & 0o7_777_777_777;
                 return TranslateResult::Frame1GiB { frame, offset };
             }
         };
@@ -379,7 +379,7 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
-                let offset = addr.as_u64() & 0o_777_7777;
+                let offset = addr.as_u64() & 0o7_777_777;
                 return TranslateResult::Frame2MiB { frame, offset };
             }
         };
