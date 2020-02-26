@@ -323,7 +323,7 @@ mod x86_64 {
                 return Err("Syscall's segment must be a Ring0 segment.");
             }
 
-            unsafe { Self::write_raw((ss_sysret.0 - 8).into(), cs_syscall.0.into()) };
+            unsafe { Self::write_raw(ss_sysret.0 - 8, cs_syscall.0) };
 
             Ok(())
         }

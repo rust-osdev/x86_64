@@ -74,7 +74,7 @@ impl<S: PageSize> fmt::Debug for PhysFrame<S> {
 impl<S: PageSize> Add<u64> for PhysFrame<S> {
     type Output = Self;
     fn add(self, rhs: u64) -> Self::Output {
-        PhysFrame::containing_address(self.start_address() + rhs * u64::from(S::SIZE))
+        PhysFrame::containing_address(self.start_address() + rhs * S::SIZE)
     }
 }
 
@@ -87,7 +87,7 @@ impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
 impl<S: PageSize> Sub<u64> for PhysFrame<S> {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        PhysFrame::containing_address(self.start_address() - rhs * u64::from(S::SIZE))
+        PhysFrame::containing_address(self.start_address() - rhs * S::SIZE)
     }
 }
 
