@@ -264,12 +264,12 @@ mod x86_64 {
             SegmentSelector,
         ) {
             let raw = Self::read_raw();
-            return (
+            (
                 SegmentSelector((raw.0 + 16).try_into().unwrap()),
                 SegmentSelector((raw.0 + 8).try_into().unwrap()),
                 SegmentSelector((raw.1).try_into().unwrap()),
                 SegmentSelector((raw.1 + 8).try_into().unwrap()),
-            );
+            )
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.
