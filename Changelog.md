@@ -1,3 +1,5 @@
+# 0.9.5
+
 - Add `#[inline]` attribute to small functions ([#129](https://github.com/rust-osdev/x86_64/pull/129))
 
 # 0.9.4
