@@ -139,3 +139,12 @@ jobs:
     - uses: actions/checkout@v1
     - run: rustup install nightly
     - run: cargo +nightly fmt -- --check
+
+  clippy:
+    name: "Clippy"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v1
+    - run: rustup install nightly
+    - run: cargo +nightly clippy -- -D warnings
