@@ -356,6 +356,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
 }
 
 impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
+    #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let p4 = &self.level_4_table;
         let p3 = match self.page_table_walker.next_table(&p4[addr.p4_index()]) {

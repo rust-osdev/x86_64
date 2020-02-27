@@ -36,12 +36,14 @@ impl<S: PageSize> PhysFrame<S> {
     }
 
     /// Returns the start address of the frame.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn start_address(&self) -> PhysAddr {
         self.start_address
     }
 
     /// Returns the size the frame (4KB, 2MB or 1GB).
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn size(&self) -> u64 {
         S::SIZE

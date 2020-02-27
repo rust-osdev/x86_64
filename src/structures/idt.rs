@@ -759,6 +759,7 @@ impl InterruptStackFrame {
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
+    #[allow(clippy::should_implement_trait)]
     #[inline]
     pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
         &mut self.value

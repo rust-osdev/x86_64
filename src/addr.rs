@@ -38,6 +38,7 @@ pub struct PhysAddr(u64);
 #[derive(Debug)]
 pub struct VirtAddrNotValid(u64);
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
@@ -288,6 +289,7 @@ impl PhysAddr {
     }
 
     /// Convenience method for checking if a physical address is null.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn is_null(&self) -> bool {
         self.0 == 0
