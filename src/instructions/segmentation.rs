@@ -8,6 +8,11 @@ use crate::structures::gdt::SegmentSelector;
 /// to %cs. Instead we push the new segment selector
 /// and return value on the stack and use lretq
 /// to reload cs and continue at 1:.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that `sel`
+/// is a valid code segment descriptor.
 pub unsafe fn set_cs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
     #[inline(always)]
@@ -29,6 +34,11 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
 }
 
 /// Reload stack segment register.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that `sel`
+/// is a valid stack segment descriptor.
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
@@ -39,6 +49,11 @@ pub unsafe fn load_ss(sel: SegmentSelector) {
 }
 
 /// Reload data segment register.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that `sel`
+/// is a valid data segment descriptor.
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
@@ -49,6 +64,11 @@ pub unsafe fn load_ds(sel: SegmentSelector) {
 }
 
 /// Reload es segment register.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that `sel`
+/// is a valid extra segment descriptor.
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
@@ -59,6 +79,11 @@ pub unsafe fn load_es(sel: SegmentSelector) {
 }
 
 /// Reload fs segment register.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that `sel`
+/// is a valid fs segment descriptor.
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
@@ -69,6 +94,11 @@ pub unsafe fn load_fs(sel: SegmentSelector) {
 }
 
 /// Reload gs segment register.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that `sel`
+/// is a valid gs segment descriptor.
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
@@ -79,6 +109,11 @@ pub unsafe fn load_gs(sel: SegmentSelector) {
 }
 
 /// Swap `KernelGsBase` MSR and `GsBase` MSR.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that the
+/// swap operation cannot lead to undefined behavior.
 #[inline]
 pub unsafe fn swap_gs() {
     #[cfg(feature = "inline_asm")]

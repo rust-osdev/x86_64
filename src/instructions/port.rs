@@ -134,6 +134,8 @@ impl<T: PortRead> PortReadOnly<T> {
 
     /// Reads from the port.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
     #[inline]
@@ -162,6 +164,8 @@ impl<T: PortWrite> PortWriteOnly<T> {
     }
 
     /// Writes to the port.
+    ///
+    /// ## Safety
     ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
@@ -192,6 +196,8 @@ impl<T: PortReadWrite> Port<T> {
 
     /// Reads from the port.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
     #[inline]
@@ -200,6 +206,8 @@ impl<T: PortReadWrite> Port<T> {
     }
 
     /// Writes to the port.
+    ///
+    /// ## Safety
     ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.

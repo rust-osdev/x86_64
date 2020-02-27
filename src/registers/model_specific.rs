@@ -110,6 +110,11 @@ mod x86_64 {
 
     impl Msr {
         /// Read 64 bits msr register.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that this read operation has no unsafe side
+        /// effects.
         #[inline]
         pub unsafe fn read(&self) -> u64 {
             #[cfg(feature = "inline_asm")]
@@ -124,6 +129,11 @@ mod x86_64 {
         }
 
         /// Write 64 bits to msr register.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that this write operation has no unsafe side
+        /// effects.
         #[inline]
         pub unsafe fn write(&mut self, value: u64) {
             #[cfg(feature = "inline_asm")]
@@ -153,8 +163,12 @@ mod x86_64 {
 
         /// Write the EFER flags, preserving reserved values.
         ///
-        /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
-        /// safety, e.g. by disabling long mode.
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to break memory
+        /// safety with wrong flags, e.g. by disabling long mode.
         #[inline]
         pub unsafe fn write(flags: EferFlags) {
             let old_value = Self::read_raw();
@@ -166,8 +180,12 @@ mod x86_64 {
 
         /// Write the EFER flags.
         ///
-        /// Does not preserve any bits, including reserved fields. Unsafe because it's possible to
-        /// break memory safety, e.g. by disabling long mode.
+        /// Does not preserve any bits, including reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to
+        /// break memory safety with wrong flags, e.g. by disabling long mode.
         #[inline]
         pub unsafe fn write_raw(flags: u64) {
             Self::MSR.write(flags);
@@ -175,8 +193,12 @@ mod x86_64 {
 
         /// Update EFER flags.
         ///
-        /// Preserves the value of reserved fields. Unsafe because it's possible to break memory
-        /// safety, e.g. by disabling long mode.
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to break memory
+        /// safety with wrong flags, e.g. by disabling long mode.
         #[inline]
         pub unsafe fn update<F>(f: F)
         where
@@ -284,7 +306,8 @@ mod x86_64 {
         ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
         /// 33:32 should be initialized to 00b.
         ///
-        /// # Unsafety
+        /// # Safety
+        ///
         /// Unsafe because this can cause system instability if passed in the
         /// wrong values for the fields.
         #[inline]

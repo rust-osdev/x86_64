@@ -113,6 +113,10 @@ pub trait Mapper<S: PageSize> {
     fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
+    ///
+    /// ## Safety
+    ///
+    /// TODO: Should this function be safe?
     #[inline]
     unsafe fn identity_map<A>(
         &mut self,
