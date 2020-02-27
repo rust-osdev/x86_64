@@ -25,6 +25,8 @@ pub struct UnusedPhysFrame<S: PageSize = Size4KiB>(PhysFrame<S>);
 impl<S: PageSize> UnusedPhysFrame<S> {
     /// Creates a new UnusedPhysFrame from the given frame.
     ///
+    /// ## Safety
+    ///
     /// This method is unsafe because the caller must guarantee
     /// that the given frame is unused.
     pub unsafe fn new(frame: PhysFrame<S>) -> Self {

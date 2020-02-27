@@ -38,6 +38,7 @@ pub struct PhysAddr(u64);
 #[derive(Debug)]
 pub struct VirtAddrNotValid(u64);
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
@@ -288,6 +289,7 @@ impl PhysAddr {
     }
 
     /// Convenience method for checking if a physical address is null.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn is_null(&self) -> bool {
         self.0 == 0
@@ -459,15 +461,15 @@ mod tests {
         // align 1
         assert_eq!(align_up(0, 1), 0);
         assert_eq!(align_up(1234, 1), 1234);
-        assert_eq!(align_up(0xffffffffffffffff, 1), 0xffffffffffffffff);
+        assert_eq!(align_up(0xffff_ffff_ffff_ffff, 1), 0xffff_ffff_ffff_ffff);
         // align 2
         assert_eq!(align_up(0, 2), 0);
         assert_eq!(align_up(1233, 2), 1234);
-        assert_eq!(align_up(0xfffffffffffffffe, 2), 0xfffffffffffffffe);
+        assert_eq!(align_up(0xffff_ffff_ffff_fffe, 2), 0xffff_ffff_ffff_fffe);
         // address 0
         assert_eq!(align_up(0, 128), 0);
         assert_eq!(align_up(0, 1), 0);
         assert_eq!(align_up(0, 2), 0);
-        assert_eq!(align_up(0, 0x8000000000000000), 0);
+        assert_eq!(align_up(0, 0x8000_0000_0000_0000), 0);
     }
 }

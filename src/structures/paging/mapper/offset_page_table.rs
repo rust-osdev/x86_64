@@ -19,6 +19,8 @@ impl<'a> OffsetPageTable<'a> {
     /// the mapper needs to access page tables, which are not mapped into the virtual address
     /// space by default.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe because the caller must guarantee that the passed `phys_offset`
     /// is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.

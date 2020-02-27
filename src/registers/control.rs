@@ -158,8 +158,12 @@ mod x86_64 {
 
         /// Write CR0 flags.
         ///
-        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
-        /// safety by e.g. disabling paging.
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to violate memory
+        /// safety through it, e.g. by disabling paging.
         #[inline]
         pub unsafe fn write(flags: Cr0Flags) {
             let old_value = Self::read_raw();
@@ -171,8 +175,12 @@ mod x86_64 {
 
         /// Write raw CR0 flags.
         ///
-        /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
-        /// safety by e.g. disabling paging.
+        /// Does _not_ preserve any values, including reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to violate memory
+        /// safety through it, e.g. by disabling paging.
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
@@ -184,8 +192,12 @@ mod x86_64 {
 
         /// Updates CR0 flags.
         ///
-        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
-        /// safety by e.g. disabling paging.
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to violate memory
+        /// safety through it, e.g. by disabling paging.
         #[inline]
         pub unsafe fn update<F>(f: F)
         where
@@ -283,8 +295,13 @@ mod x86_64 {
 
         /// Write CR4 flags.
         ///
-        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
-        /// safety by e.g. physical address extension.
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to violate memory
+        /// safety through it, e.g. by overwriting the physical address extension
+        /// flag.
         #[inline]
         pub unsafe fn write(flags: Cr4Flags) {
             let old_value = Self::read_raw();
@@ -296,8 +313,13 @@ mod x86_64 {
 
         /// Write raw CR4 flags.
         ///
-        /// Does _not_ preserve any values, including reserved fields. Unsafe because it's possible to violate memory
-        /// safety by e.g. physical address extension.
+        /// Does _not_ preserve any values, including reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to violate memory
+        /// safety through it, e.g. by overwriting the physical address extension
+        /// flag.
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
@@ -309,8 +331,12 @@ mod x86_64 {
 
         /// Updates CR4 flags.
         ///
-        /// Preserves the value of reserved fields. Unsafe because it's possible to violate memory
-        /// safety by e.g. physical address extension.
+        /// Preserves the value of reserved fields.
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to violate memory
+        /// safety through it, e.g. by overwriting the physical address extension
+        /// flag.
         #[inline]
         pub unsafe fn update<F>(f: F)
         where

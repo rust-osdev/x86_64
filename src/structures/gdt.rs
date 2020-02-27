@@ -26,12 +26,14 @@ impl SegmentSelector {
     }
 
     /// Returns the GDT index.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn index(&self) -> u16 {
         self.0 >> 3
     }
 
     /// Returns the requested privilege level.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn rpl(&self) -> PrivilegeLevel {
         PrivilegeLevel::from_u16(self.0.get_bits(0..2))

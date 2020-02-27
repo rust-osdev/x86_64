@@ -59,6 +59,7 @@ pub struct Page<S: PageSize = Size4KiB> {
     size: PhantomData<S>,
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 impl<S: PageSize> Page<S> {
     /// The page size in bytes.
     pub const SIZE: u64 = S::SIZE;
@@ -130,6 +131,7 @@ impl<S: PageSize> Page<S> {
 
 impl<S: NotGiantPageSize> Page<S> {
     /// Returns the level 2 page table index of this page.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn p2_index(&self) -> PageTableIndex {
         self.start_address().p2_index()
@@ -187,6 +189,7 @@ impl Page<Size4KiB> {
     }
 
     /// Returns the level 1 page table index of this page.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn p1_index(&self) -> PageTableIndex {
         self.start_address().p1_index()
@@ -336,11 +339,11 @@ mod tests {
         let page_size = Size4KiB::SIZE;
         let number = 1000;
 
-        let start_addr = VirtAddr::new(0xdeadbeaf);
+        let start_addr = VirtAddr::new(0xdead_beaf);
         let start: Page = Page::containing_address(start_addr);
-        let end = start.clone() + number;
+        let end = start + number;
 
-        let mut range = Page::range(start.clone(), end.clone());
+        let mut range = Page::range(start, end);
         for i in 0..number {
             assert_eq!(
                 range.next(),

@@ -23,6 +23,8 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
     /// Creates a new `MappedPageTable` that uses the passed closure for converting virtual
     /// to physical addresses.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe because the caller must guarantee that the passed `phys_to_virt`
     /// closure is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
@@ -356,6 +358,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
 }
 
 impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
+    #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let p4 = &self.level_4_table;
         let p3 = match self.page_table_walker.next_table(&p4[addr.p4_index()]) {
@@ -476,7 +479,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
 
         let page_table = match self.next_table_mut(entry) {
             Err(PageTableWalkError::MappedToHugePage) => {
-                Err(PageTableCreateError::MappedToHugePage)?
+                return Err(PageTableCreateError::MappedToHugePage);
             }
             Err(PageTableWalkError::NotMapped) => panic!("entry should be mapped at this point"),
             Ok(page_table) => page_table,

@@ -5,6 +5,7 @@
 pub struct RdRand(());
 
 #[cfg(target_arch = "x86_64")]
+#[allow(clippy::trivially_copy_pass_by_ref)]
 impl RdRand {
     /// Creates Some(RdRand) if RDRAND is supported, None otherwise
     pub fn new() -> Option<Self> {
