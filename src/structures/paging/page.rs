@@ -339,11 +339,11 @@ mod tests {
         let page_size = Size4KiB::SIZE;
         let number = 1000;
 
-        let start_addr = VirtAddr::new(0xdeadbeaf);
+        let start_addr = VirtAddr::new(0xdead_beaf);
         let start: Page = Page::containing_address(start_addr);
-        let end = start.clone() + number;
+        let end = start + number;
 
-        let mut range = Page::range(start.clone(), end.clone());
+        let mut range = Page::range(start, end);
         for i in 0..number {
             assert_eq!(
                 range.next(),

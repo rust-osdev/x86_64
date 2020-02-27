@@ -479,7 +479,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
 
         let page_table = match self.next_table_mut(entry) {
             Err(PageTableWalkError::MappedToHugePage) => {
-                Err(PageTableCreateError::MappedToHugePage)?
+                return Err(PageTableCreateError::MappedToHugePage);
             }
             Err(PageTableWalkError::NotMapped) => panic!("entry should be mapped at this point"),
             Ok(page_table) => page_table,
