@@ -66,6 +66,8 @@ impl<'a> RecursivePageTable<'a> {
 
     /// Creates a new RecursivePageTable without performing any checks.
     ///
+    /// ## Safety
+    ///
     /// The `recursive_index` parameter must be the index of the recursively mapped entry.
     #[inline]
     pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: PageTableIndex) -> Self {
