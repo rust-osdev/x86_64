@@ -1,4 +1,5 @@
 - Fix some clippy warnings ([#130](https://github.com/rust-osdev/x86_64/pull/130))
+- Resolve remaining clippy warnings and add clippy job to CI ([#132](https://github.com/rust-osdev/x86_64/pull/132))
 
 # 0.9.5
 
