@@ -12,7 +12,7 @@ bitflags! {
     /// Configuration flags of the Cr0 register.
     pub struct Cr0Flags: u64 {
         /// Enables protected mode.
-        const PROTECTED_MODE_ENABLE = 1 << 0;
+        const PROTECTED_MODE_ENABLE = 1;
         /// Enables monitoring of the coprocessor, typical for x87 instructions.
         ///
         /// Controls together with the `TASK_SWITCHED` flag whether a `wait` or `fwait`
@@ -73,7 +73,7 @@ bitflags! {
     pub struct Cr4Flags: u64 {
         /// Enables hardware-supported performance enhancements for software running in
         /// virtual-8086 mode.
-        const VIRTUAL_8086_MODE_EXTENSIONS = 1 << 0;
+        const VIRTUAL_8086_MODE_EXTENSIONS = 1;
         /// Enables support for protected-mode virtual interrupts.
         const PROTECTED_MODE_VIRTUAL_INTERRUPTS = 1 << 1;
         /// When set, only privilege-level 0 can execute the RDTSC or RDTSCP instructions.

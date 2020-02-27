@@ -74,26 +74,26 @@ impl<S: PageSize> fmt::Debug for PhysFrame<S> {
 impl<S: PageSize> Add<u64> for PhysFrame<S> {
     type Output = Self;
     fn add(self, rhs: u64) -> Self::Output {
-        PhysFrame::containing_address(self.start_address() + rhs * u64::from(S::SIZE))
+        PhysFrame::containing_address(self.start_address() + rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
     fn add_assign(&mut self, rhs: u64) {
-        *self = self.clone() + rhs;
+        *self = *self + rhs;
     }
 }
 
 impl<S: PageSize> Sub<u64> for PhysFrame<S> {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        PhysFrame::containing_address(self.start_address() - rhs * u64::from(S::SIZE))
+        PhysFrame::containing_address(self.start_address() - rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> SubAssign<u64> for PhysFrame<S> {
     fn sub_assign(&mut self, rhs: u64) {
-        *self = self.clone() - rhs;
+        *self = *self - rhs;
     }
 }
 
@@ -118,7 +118,7 @@ impl<S: PageSize> PhysFrameRange<S> {
     /// Returns whether the range contains no frames.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        !(self.start < self.end)
+        self.start >= self.end
     }
 }
 
@@ -127,7 +127,7 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
-            let frame = self.start.clone();
+            let frame = self.start;
             self.start += 1;
             Some(frame)
         } else {
@@ -159,7 +159,7 @@ impl<S: PageSize> PhysFrameRangeInclusive<S> {
     /// Returns whether the range contains no frames.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        !(self.start <= self.end)
+        self.start >= self.end
     }
 }
 
@@ -168,7 +168,7 @@ impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
-            let frame = self.start.clone();
+            let frame = self.start;
             self.start += 1;
             Some(frame)
         } else {

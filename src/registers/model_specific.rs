@@ -48,7 +48,7 @@ pub struct SFMask;
 
 impl Efer {
     /// The underlying model specific register.
-    pub const MSR: Msr = Msr(0xC0000080);
+    pub const MSR: Msr = Msr(0xC000_0080);
 }
 
 impl FsBase {
@@ -85,7 +85,7 @@ bitflags! {
     /// Flags of the Extended Feature Enable Register.
     pub struct EferFlags: u64 {
         /// Enables the `syscall` and `sysret` instructions.
-        const SYSTEM_CALL_EXTENSIONS = 1 << 0;
+        const SYSTEM_CALL_EXTENSIONS = 1;
         /// Activates long mode, requires activating paging.
         const LONG_MODE_ENABLE = 1 << 8;
         /// Indicates that long mode is active.
@@ -264,12 +264,12 @@ mod x86_64 {
             SegmentSelector,
         ) {
             let raw = Self::read_raw();
-            return (
+            (
                 SegmentSelector((raw.0 + 16).try_into().unwrap()),
                 SegmentSelector((raw.0 + 8).try_into().unwrap()),
                 SegmentSelector((raw.1).try_into().unwrap()),
                 SegmentSelector((raw.1 + 8).try_into().unwrap()),
-            );
+            )
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.
@@ -323,7 +323,7 @@ mod x86_64 {
                 return Err("Syscall's segment must be a Ring0 segment.");
             }
 
-            unsafe { Self::write_raw((ss_sysret.0 - 8).into(), cs_syscall.0.into()) };
+            unsafe { Self::write_raw(ss_sysret.0 - 8, cs_syscall.0) };
 
             Ok(())
         }

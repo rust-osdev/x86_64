@@ -206,26 +206,26 @@ impl<S: PageSize> fmt::Debug for Page<S> {
 impl<S: PageSize> Add<u64> for Page<S> {
     type Output = Self;
     fn add(self, rhs: u64) -> Self::Output {
-        Page::containing_address(self.start_address() + rhs * u64::from(S::SIZE))
+        Page::containing_address(self.start_address() + rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> AddAssign<u64> for Page<S> {
     fn add_assign(&mut self, rhs: u64) {
-        *self = self.clone() + rhs;
+        *self = *self + rhs;
     }
 }
 
 impl<S: PageSize> Sub<u64> for Page<S> {
     type Output = Self;
     fn sub(self, rhs: u64) -> Self::Output {
-        Page::containing_address(self.start_address() - rhs * u64::from(S::SIZE))
+        Page::containing_address(self.start_address() - rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> SubAssign<u64> for Page<S> {
     fn sub_assign(&mut self, rhs: u64) {
-        *self = self.clone() - rhs;
+        *self = *self - rhs;
     }
 }
 
@@ -249,7 +249,7 @@ pub struct PageRange<S: PageSize = Size4KiB> {
 impl<S: PageSize> PageRange<S> {
     /// Returns wether this range contains no pages.
     pub fn is_empty(&self) -> bool {
-        !(self.start < self.end)
+        self.start >= self.end
     }
 }
 
@@ -258,7 +258,7 @@ impl<S: PageSize> Iterator for PageRange<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
-            let page = self.start.clone();
+            let page = self.start;
             self.start += 1;
             Some(page)
         } else {
@@ -300,7 +300,7 @@ pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
 impl<S: PageSize> PageRangeInclusive<S> {
     /// Returns wether this range contains no pages.
     pub fn is_empty(&self) -> bool {
-        !(self.start <= self.end)
+        self.start >= self.end
     }
 }
 
@@ -309,7 +309,7 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
-            let page = self.start.clone();
+            let page = self.start;
             self.start += 1;
             Some(page)
         } else {

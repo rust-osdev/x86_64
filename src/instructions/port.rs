@@ -118,7 +118,7 @@ impl<T: PortRead> PortReadOnly<T> {
     #[cfg(feature = "const_fn")]
     pub const fn new(port: u16) -> PortReadOnly<T> {
         PortReadOnly {
-            port: port,
+            port,
             phantom: PhantomData,
         }
     }
@@ -127,7 +127,7 @@ impl<T: PortRead> PortReadOnly<T> {
     #[cfg(not(feature = "const_fn"))]
     pub fn new(port: u16) -> PortReadOnly<T> {
         PortReadOnly {
-            port: port,
+            port,
             phantom: PhantomData,
         }
     }
@@ -147,7 +147,7 @@ impl<T: PortWrite> PortWriteOnly<T> {
     #[cfg(feature = "const_fn")]
     pub const fn new(port: u16) -> PortWriteOnly<T> {
         PortWriteOnly {
-            port: port,
+            port,
             phantom: PhantomData,
         }
     }
@@ -156,7 +156,7 @@ impl<T: PortWrite> PortWriteOnly<T> {
     #[cfg(not(feature = "const_fn"))]
     pub fn new(port: u16) -> PortWriteOnly<T> {
         PortWriteOnly {
-            port: port,
+            port,
             phantom: PhantomData,
         }
     }
@@ -176,7 +176,7 @@ impl<T: PortReadWrite> Port<T> {
     #[cfg(feature = "const_fn")]
     pub const fn new(port: u16) -> Port<T> {
         Port {
-            port: port,
+            port,
             phantom: PhantomData,
         }
     }
@@ -185,7 +185,7 @@ impl<T: PortReadWrite> Port<T> {
     #[cfg(not(feature = "const_fn"))]
     pub fn new(port: u16) -> Port<T> {
         Port {
-            port: port,
+            port,
             phantom: PhantomData,
         }
     }

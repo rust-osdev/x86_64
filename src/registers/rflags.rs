@@ -58,7 +58,7 @@ bitflags! {
         const PARITY_FLAG = 1 << 2;
         /// Set by hardware if last arithmetic operation generated a carry out of the
         /// most-significant bit of the result.
-        const CARRY_FLAG = 1 << 0;
+        const CARRY_FLAG = 1;
     }
 }
 
