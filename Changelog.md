@@ -1,3 +1,5 @@
+- Fix some clippy warnings ([#130](https://github.com/rust-osdev/x86_64/pull/130))
+
 # 0.9.5
 
 - Add `#[inline]` attribute to small functions ([#129](https://github.com/rust-osdev/x86_64/pull/129))
