@@ -175,7 +175,7 @@ pub enum MapToError<S: PageSize> {
     /// given page is part of an already mapped huge page.
     ParentEntryHugePage,
     /// The given page is already mapped to a physical frame.
-    PageAlreadyMapped(UnusedPhysFrame<S>),
+    PageAlreadyMapped(PhysFrame<S>),
 }
 
 /// An error indicating that an `unmap` call failed.
