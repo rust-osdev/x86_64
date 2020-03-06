@@ -53,10 +53,10 @@ impl PhysToVirt for PhysOffset {
 // delegate all trait implementations to inner
 
 impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
-    fn map_to<A>(
+    unsafe fn map_to<A>(
         &mut self,
         page: Page<Size1GiB>,
-        frame: UnusedPhysFrame<Size1GiB>,
+        frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
@@ -91,10 +91,10 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
 
 impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     #[inline]
-    fn map_to<A>(
+    unsafe fn map_to<A>(
         &mut self,
         page: Page<Size2MiB>,
-        frame: UnusedPhysFrame<Size2MiB>,
+        frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
@@ -129,10 +129,10 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
 
 impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     #[inline]
-    fn map_to<A>(
+    unsafe fn map_to<A>(
         &mut self,
         page: Page<Size4KiB>,
-        frame: UnusedPhysFrame<Size4KiB>,
+        frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
