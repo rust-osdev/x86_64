@@ -83,8 +83,34 @@ pub trait Mapper<S: PageSize> {
     /// This function might need additional physical frames to create new page tables. These
     /// frames are allocated from the `allocator` argument. At most three frames are required.
     ///
-    /// This function is unsafe because the caller must guarantee that passed `frame` is
-    /// unused, i.e. not used for any other mappings.
+    /// ## Safety
+    ///
+    /// Creating page table mappings is a fundamentally unsafe operation because
+    /// there are various ways to break memory safety through it. For example,
+    /// re-mapping an in-use page to a different frame changes and invalidates
+    /// all values stored in that page, resulting in undefined behavior on the
+    /// next use.
+    ///
+    /// The caller must ensure that no undefined behavior or memory safety
+    /// violations can occur through the new mapping. Among other things, the
+    /// caller must prevent the following:
+    ///
+    /// - Aliasing of `&mut` references, i.e. two `&mut` references that point to
+    ///   the same physical address. This is undefined behavior in Rust.
+    ///     - This can be ensured by mapping each page to an individual physical
+    ///       frame that is not mapped anywhere else.
+    /// - Creating uninitalized or invalid values: Rust requires that all values
+    ///   have a correct memory layout. For example, a `bool` must be either a 0
+    ///   or a 1 in memory, but not a 3 or 4. An exception is the `MaybeUninit`
+    ///   wrapper type, which abstracts over possibly uninitialized memory.
+    ///     - This is only a problem when re-mapping pages to different physical
+    ///       frames. Mapping a page that is not in use yet is fine.
+    ///
+    /// Special care must be taken when sharing pages with other address spaces,
+    /// e.g. by setting the `GLOBAL` flag. For example, a global mapping must be
+    /// the same in all address spaces, otherwise undefined behavior can occur
+    /// because of TLB races. It's worth noting that all the above requirements
+    /// also apply to shared mappings, including the aliasing requirements.
     unsafe fn map_to<A>(
         &mut self,
         page: Page<S>,
@@ -118,8 +144,8 @@ pub trait Mapper<S: PageSize> {
     ///
     /// ## Safety
     ///
-    /// This function is unsafe because the caller must guarantee that the passed `frame` is
-    /// unused, i.e. not used for any other mappings.
+    /// This is a convencience function that invokes [`map_to`] internally, so
+    /// all safety requirements of it also apply for this function.
     #[inline]
     unsafe fn identity_map<A>(
         &mut self,
