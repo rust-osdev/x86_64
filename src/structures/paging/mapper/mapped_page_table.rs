@@ -161,7 +161,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    fn update_flags(
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
         flags: PageTableFlags,
@@ -237,7 +237,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    fn update_flags(
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
         flags: PageTableFlags,
@@ -315,7 +315,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    fn update_flags(
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size4KiB>,
         flags: PageTableFlags,

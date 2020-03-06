@@ -267,7 +267,9 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    fn update_flags(
+    // allow unused_unsafe until https://github.com/rust-lang/rfcs/pull/2585 lands
+    #[allow(unused_unsafe)]
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
         flags: PageTableFlags,
@@ -359,7 +361,9 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    fn update_flags(
+    // allow unused_unsafe until https://github.com/rust-lang/rfcs/pull/2585 lands
+    #[allow(unused_unsafe)]
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
         flags: PageTableFlags,
@@ -465,7 +469,9 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    fn update_flags(
+    // allow unused_unsafe until https://github.com/rust-lang/rfcs/pull/2585 lands
+    #[allow(unused_unsafe)]
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size4KiB>,
         flags: PageTableFlags,

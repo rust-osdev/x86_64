@@ -128,7 +128,15 @@ pub trait Mapper<S: PageSize> {
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
     /// Updates the flags of an existing mapping.
-    fn update_flags(
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `MUTABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn update_flags(
         &mut self,
         page: Page<S>,
         flags: PageTableFlags,

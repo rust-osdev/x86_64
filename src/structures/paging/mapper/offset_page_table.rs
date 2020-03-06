@@ -75,7 +75,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    fn update_flags(
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
         flags: PageTableFlags,
@@ -113,7 +113,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    fn update_flags(
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
         flags: PageTableFlags,
@@ -151,7 +151,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    fn update_flags(
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size4KiB>,
         flags: PageTableFlags,
