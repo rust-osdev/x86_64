@@ -3,6 +3,8 @@
 //! Page tables translate virtual memory “pages” to physical memory “frames”.
 
 pub use self::frame::PhysFrame;
+#[allow(deprecated)]
+pub use self::frame_alloc::UnusedPhysFrame;
 pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
 #[doc(no_inline)]
 pub use self::mapper::MappedPageTable;
