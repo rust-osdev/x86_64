@@ -351,6 +351,10 @@ pub trait Mapper<S: PageSize> {
 
     /// Maps the given frame to the virtual page with the same address.
     ///
+    /// This function might need additional physical frames to create new page
+    /// tables. These frames are allocated from the `frame_allocator` argument.
+    /// At most three frames are required.
+    ///
     /// ## Safety
     ///
     /// This is a convencience function that invokes [`map_to`] internally, so
