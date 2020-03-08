@@ -467,6 +467,24 @@ impl InterruptDescriptorTable {
     #[cfg(target_arch = "x86_64")]
     #[inline]
     pub fn load(&'static self) {
+        unsafe {
+            self.load_unsafe()
+        }
+    }
+
+    /// Loads the IDT in the CPU using the `lidt` command.
+    ///
+    /// # Safety
+    ///
+    /// You must ensure that:
+    ///
+    /// - `self` is never de-allocated.
+    /// - `self` always stays at the same memory location. It is recommended to wrap it in
+    /// a `Box`.
+    ///
+    #[cfg(target_arch = "x86_64")]
+    #[inline]
+    pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::{lidt, DescriptorTablePointer};
         use core::mem::size_of;
 
@@ -475,7 +493,7 @@ impl InterruptDescriptorTable {
             limit: (size_of::<Self>() - 1) as u16,
         };
 
-        unsafe { lidt(&ptr) };
+        lidt(&ptr);
     }
 
     /// Returns a normalized and ranged check slice range from a RangeBounds trait object
