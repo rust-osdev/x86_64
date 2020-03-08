@@ -13,6 +13,13 @@ _x86_64_asm_interrupt_disable:
     cli
     retq
 
+.global _x86_64_asm_interrupt_enable_and_hlt
+.p2align 4
+_x86_64_asm_interrupt_enable_and_hlt:
+    sti
+    hlt
+    retq
+
 .global _x86_64_asm_int3
 .p2align 4
 _x86_64_asm_int3:
