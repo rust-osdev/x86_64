@@ -467,9 +467,7 @@ impl InterruptDescriptorTable {
     #[cfg(target_arch = "x86_64")]
     #[inline]
     pub fn load(&'static self) {
-        unsafe {
-            self.load_unsafe()
-        }
+        unsafe { self.load_unsafe() }
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
