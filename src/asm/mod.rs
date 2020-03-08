@@ -14,6 +14,12 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_interrupt_enable_and_hlt"
+    )]
+    pub(crate) fn x86_64_asm_interrupt_enable_and_hlt();
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_int3"
     )]
     pub(crate) fn x86_64_asm_int3();
