@@ -476,9 +476,9 @@ impl InterruptDescriptorTable {
     ///
     /// # Safety
     ///
-    /// You must ensure that:
+    /// As long as it is the active IDT, you must ensure that:
     ///
-    /// - `self` is never de-allocated.
+    /// - `self` is never destroyed.
     /// - `self` always stays at the same memory location. It is recommended to wrap it in
     /// a `Box`.
     ///
