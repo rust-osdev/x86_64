@@ -137,7 +137,7 @@ jobs:
     timeout-minutes: 2
     steps:
     - uses: actions/checkout@v1
-    - run: rustup install nightly
+    - run: rustup toolchain install nightly --profile minimal --component rustfmt
     - run: cargo +nightly fmt -- --check
 
   clippy:
@@ -146,5 +146,5 @@ jobs:
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v1
-    - run: rustup install nightly
+    - run: rustup toolchain install nightly --profile minimal --component clippy
     - run: cargo +nightly clippy -- -D warnings
