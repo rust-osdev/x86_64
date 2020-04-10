@@ -1,3 +1,6 @@
+- Various improvements to VirtAddr and PhysAddr ([#141](https://github.com/rust-osdev/x86_64/pull/141))
+  - Among other things, this renamed the `VirtAddr::new_unchecked` function to `new_unsafe`.
+
 # 0.9.6
 
 - Add an enable_interrupts_and_hlt function that executes `sti; hlt` ([#138](https://github.com/rust-osdev/x86_64/pull/138))
