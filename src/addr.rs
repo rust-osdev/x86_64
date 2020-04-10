@@ -81,9 +81,19 @@ impl VirtAddr {
 
     /// Alias for [`new_truncate`][VirtAddr::new_truncate] for backwards compatibility.
     #[inline]
-    #[deprecated(note = "Use new_truncate instead")]
+    #[deprecated(note = "Use new_truncate or new_unsafe instead")]
     pub const fn new_unchecked(addr: u64) -> VirtAddr {
         Self::new_truncate(addr)
+    }
+
+    /// Creates a new virtual address, without any checks.
+    ///
+    /// ## Safety
+    ///
+    /// You must make sure bits 48..64 are equal to bit 47. This is not checked.
+    #[inline]
+    pub const unsafe fn new_unsafe(addr: u64) -> VirtAddr {
+        VirtAddr(addr)
     }
 
     /// Creates a virtual address that points to `0`.
@@ -277,6 +287,16 @@ impl PhysAddr {
     #[inline]
     pub const fn new_truncate(addr: u64) -> PhysAddr {
         PhysAddr(addr % (1 << 52))
+    }
+
+    /// Creates a new physical address, without any checks.
+    ///
+    /// ## Safety
+    ///
+    /// You must make sure bits 52..64 are zero. This is not checked.
+    #[inline]
+    pub const unsafe fn new_unsafe(addr: u64) -> PhysAddr {
+        PhysAddr(addr)
     }
 
     /// Tries to create a new physical address.
