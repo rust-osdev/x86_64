@@ -59,24 +59,31 @@ impl VirtAddr {
     /// is returned.
     pub fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
         match addr.get_bits(47..64) {
-            0 | 0x1ffff => Ok(VirtAddr(addr)),      // address is canonical
-            1 => Ok(VirtAddr::new_unchecked(addr)), // address needs sign extension
+            0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
+            1 => Ok(VirtAddr::new_truncate(addr)), // address needs sign extension
             other => Err(VirtAddrNotValid(other)),
         }
     }
 
-    /// Creates a new canonical virtual address without checks.
+    /// Creates a new canonical virtual address, throwing out bits 48..64.
     ///
     /// This function performs sign extension of bit 47 to make the address canonical, so
     /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
     /// use `new` or `try_new`.
     #[inline]
-    pub const fn new_unchecked(addr: u64) -> VirtAddr {
+    pub const fn new_truncate(addr: u64) -> VirtAddr {
         // Rust doesn't accept shift operators in const functions at the moment,
         // so we use a multiplication and division by 0x1_0000 instead of `<< 16` and `>> 16`.
         // By doing the right shift as a signed operation (on a i64), it will
         // sign extend the value, repeating the leftmost bit.
         VirtAddr((addr.wrapping_mul(0x1_0000) as i64 / 0x1_0000) as u64)
+    }
+
+    /// Alias for [`new_truncate`][VirtAddr::new_truncate] for backwards compatibility.
+    #[inline]
+    #[deprecated(note = "Use new_truncate instead")]
+    pub const fn new_unchecked(addr: u64) -> VirtAddr {
+        Self::new_truncate(addr)
     }
 
     /// Creates a virtual address that points to `0`.
@@ -449,11 +456,11 @@ mod tests {
     use super::*;
 
     #[test]
-    pub fn virtaddr_new_unchecked() {
-        assert_eq!(VirtAddr::new_unchecked(0), VirtAddr(0));
-        assert_eq!(VirtAddr::new_unchecked(1 << 47), VirtAddr(0xfffff << 47));
-        assert_eq!(VirtAddr::new_unchecked(123), VirtAddr(123));
-        assert_eq!(VirtAddr::new_unchecked(123 << 47), VirtAddr(0xfffff << 47));
+    pub fn virtaddr_new_truncate() {
+        assert_eq!(VirtAddr::new_truncate(0), VirtAddr(0));
+        assert_eq!(VirtAddr::new_truncate(1 << 47), VirtAddr(0xfffff << 47));
+        assert_eq!(VirtAddr::new_truncate(123), VirtAddr(123));
+        assert_eq!(VirtAddr::new_truncate(123 << 47), VirtAddr(0xfffff << 47));
     }
 
     #[test]
