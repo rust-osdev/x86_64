@@ -75,6 +75,21 @@ impl<S: PageSize> Page<S> {
         Ok(Page::containing_address(address))
     }
 
+    const_fn! {
+        /// Returns the page that starts at the given virtual address.
+        ///
+        /// ## Safety
+        ///
+        /// The address must be correctly aligned.
+        #[inline]
+        pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+            Page {
+                start_address,
+                size: PhantomData,
+            }
+        }
+    }
+
     /// Returns the page that contains the given virtual address.
     #[inline]
     pub fn containing_address(address: VirtAddr) -> Self {

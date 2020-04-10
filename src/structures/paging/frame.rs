@@ -26,6 +26,21 @@ impl<S: PageSize> PhysFrame<S> {
         Ok(PhysFrame::containing_address(address))
     }
 
+    const_fn! {
+        /// Returns the frame that starts at the given virtual address.
+        ///
+        /// ## Safety
+        ///
+        /// The address must be correctly aligned.
+        #[inline]
+        pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
+            PhysFrame {
+                start_address,
+                size: PhantomData,
+            }
+        }
+    }
+
     /// Returns the frame that contains the given physical address.
     #[inline]
     pub fn containing_address(address: PhysAddr) -> Self {
