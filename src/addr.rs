@@ -317,14 +317,14 @@ impl PhysAddr {
 
     /// Converts the address to an `u64`.
     #[inline]
-    pub fn as_u64(self) -> u64 {
+    pub const fn as_u64(self) -> u64 {
         self.0
     }
 
     /// Convenience method for checking if a physical address is null.
     #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
-    pub fn is_null(&self) -> bool {
+    pub const fn is_null(&self) -> bool {
         self.0 == 0
     }
 
