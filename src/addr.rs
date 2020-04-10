@@ -59,24 +59,41 @@ impl VirtAddr {
     /// is returned.
     pub fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
         match addr.get_bits(47..64) {
-            0 | 0x1ffff => Ok(VirtAddr(addr)),      // address is canonical
-            1 => Ok(VirtAddr::new_unchecked(addr)), // address needs sign extension
+            0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
+            1 => Ok(VirtAddr::new_truncate(addr)), // address needs sign extension
             other => Err(VirtAddrNotValid(other)),
         }
     }
 
-    /// Creates a new canonical virtual address without checks.
+    /// Creates a new canonical virtual address, throwing out bits 48..64.
     ///
     /// This function performs sign extension of bit 47 to make the address canonical, so
     /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
     /// use `new` or `try_new`.
     #[inline]
-    pub const fn new_unchecked(addr: u64) -> VirtAddr {
+    pub const fn new_truncate(addr: u64) -> VirtAddr {
         // Rust doesn't accept shift operators in const functions at the moment,
         // so we use a multiplication and division by 0x1_0000 instead of `<< 16` and `>> 16`.
         // By doing the right shift as a signed operation (on a i64), it will
         // sign extend the value, repeating the leftmost bit.
         VirtAddr((addr.wrapping_mul(0x1_0000) as i64 / 0x1_0000) as u64)
+    }
+
+    /// Alias for [`new_truncate`][VirtAddr::new_truncate] for backwards compatibility.
+    #[inline]
+    #[deprecated(note = "Use new_truncate or new_unsafe instead")]
+    pub const fn new_unchecked(addr: u64) -> VirtAddr {
+        Self::new_truncate(addr)
+    }
+
+    /// Creates a new virtual address, without any checks.
+    ///
+    /// ## Safety
+    ///
+    /// You must make sure bits 48..64 are equal to bit 47. This is not checked.
+    #[inline]
+    pub const unsafe fn new_unsafe(addr: u64) -> VirtAddr {
+        VirtAddr(addr)
     }
 
     /// Creates a virtual address that points to `0`.
@@ -249,7 +266,7 @@ impl Sub<VirtAddr> for VirtAddr {
 
 /// A passed `u64` was not a valid physical address.
 ///
-/// This means that bits 52 to 64 are not were not all null.
+/// This means that bits 52 to 64 were not all null.
 #[derive(Debug)]
 pub struct PhysAddrNotValid(u64);
 
@@ -272,6 +289,16 @@ impl PhysAddr {
         PhysAddr(addr % (1 << 52))
     }
 
+    /// Creates a new physical address, without any checks.
+    ///
+    /// ## Safety
+    ///
+    /// You must make sure bits 52..64 are zero. This is not checked.
+    #[inline]
+    pub const unsafe fn new_unsafe(addr: u64) -> PhysAddr {
+        PhysAddr(addr)
+    }
+
     /// Tries to create a new physical address.
     ///
     /// Fails if any bits in the range 52 to 64 are set.
@@ -282,16 +309,22 @@ impl PhysAddr {
         }
     }
 
+    /// Creates a physical address that points to `0`.
+    #[inline]
+    pub const fn zero() -> PhysAddr {
+        PhysAddr(0)
+    }
+
     /// Converts the address to an `u64`.
     #[inline]
-    pub fn as_u64(self) -> u64 {
+    pub const fn as_u64(self) -> u64 {
         self.0
     }
 
     /// Convenience method for checking if a physical address is null.
     #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
-    pub fn is_null(&self) -> bool {
+    pub const fn is_null(&self) -> bool {
         self.0 == 0
     }
 
@@ -449,11 +482,11 @@ mod tests {
     use super::*;
 
     #[test]
-    pub fn virtaddr_new_unchecked() {
-        assert_eq!(VirtAddr::new_unchecked(0), VirtAddr(0));
-        assert_eq!(VirtAddr::new_unchecked(1 << 47), VirtAddr(0xfffff << 47));
-        assert_eq!(VirtAddr::new_unchecked(123), VirtAddr(123));
-        assert_eq!(VirtAddr::new_unchecked(123 << 47), VirtAddr(0xfffff << 47));
+    pub fn virtaddr_new_truncate() {
+        assert_eq!(VirtAddr::new_truncate(0), VirtAddr(0));
+        assert_eq!(VirtAddr::new_truncate(1 << 47), VirtAddr(0xfffff << 47));
+        assert_eq!(VirtAddr::new_truncate(123), VirtAddr(123));
+        assert_eq!(VirtAddr::new_truncate(123 << 47), VirtAddr(0xfffff << 47));
     }
 
     #[test]
