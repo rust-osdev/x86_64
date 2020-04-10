@@ -266,7 +266,7 @@ impl Sub<VirtAddr> for VirtAddr {
 
 /// A passed `u64` was not a valid physical address.
 ///
-/// This means that bits 52 to 64 are not were not all null.
+/// This means that bits 52 to 64 were not all null.
 #[derive(Debug)]
 pub struct PhysAddrNotValid(u64);
 
