@@ -309,6 +309,12 @@ impl PhysAddr {
         }
     }
 
+    /// Creates a physical address that points to `0`.
+    #[inline]
+    pub const fn zero() -> PhysAddr {
+        PhysAddr(0)
+    }
+
     /// Converts the address to an `u64`.
     #[inline]
     pub fn as_u64(self) -> u64 {
