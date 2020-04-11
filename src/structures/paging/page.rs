@@ -59,7 +59,6 @@ pub struct Page<S: PageSize = Size4KiB> {
     size: PhantomData<S>,
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
 impl<S: PageSize> Page<S> {
     /// The page size in bytes.
     pub const SIZE: u64 = S::SIZE;
@@ -102,7 +101,7 @@ impl<S: PageSize> Page<S> {
     const_fn! {
         /// Returns the start address of the page.
         #[inline]
-        pub fn start_address(&self) -> VirtAddr {
+        pub fn start_address(self) -> VirtAddr {
             self.start_address
         }
     }
@@ -110,7 +109,7 @@ impl<S: PageSize> Page<S> {
     const_fn! {
         /// Returns the size the page (4KB, 2MB or 1GB).
         #[inline]
-        pub fn size(&self) -> u64 {
+        pub fn size(self) -> u64 {
             S::SIZE
         }
     }
@@ -118,7 +117,7 @@ impl<S: PageSize> Page<S> {
     const_fn! {
         /// Returns the level 4 page table index of this page.
         #[inline]
-        pub fn p4_index(&self) -> PageTableIndex {
+        pub fn p4_index(self) -> PageTableIndex {
             self.start_address().p4_index()
         }
     }
@@ -126,7 +125,7 @@ impl<S: PageSize> Page<S> {
     const_fn! {
         /// Returns the level 3 page table index of this page.
         #[inline]
-        pub fn p3_index(&self) -> PageTableIndex {
+        pub fn p3_index(self) -> PageTableIndex {
             self.start_address().p3_index()
         }
     }
@@ -151,9 +150,8 @@ impl<S: PageSize> Page<S> {
 impl<S: NotGiantPageSize> Page<S> {
     const_fn! {
         /// Returns the level 2 page table index of this page.
-        #[allow(clippy::trivially_copy_pass_by_ref)]
         #[inline]
-        pub fn p2_index(&self) -> PageTableIndex {
+        pub fn p2_index(self) -> PageTableIndex {
             self.start_address().p2_index()
         }
     }
@@ -214,9 +212,8 @@ impl Page<Size4KiB> {
 
     const_fn! {
         /// Returns the level 1 page table index of this page.
-        #[allow(clippy::trivially_copy_pass_by_ref)]
         #[inline]
-        pub fn p1_index(&self) -> PageTableIndex {
+        pub fn p1_index(self) -> PageTableIndex {
             self.start_address().p1_index()
         }
     }
