@@ -5,12 +5,12 @@
 - **Breaking**: Don't pass small trivially copyable types by reference ([#147](https://github.com/rust-osdev/x86_64/pull/147))
 - Various improvements to VirtAddr and PhysAddr ([#141](https://github.com/rust-osdev/x86_64/pull/141))
   - Among other things, this renamed the `VirtAddr::new_unchecked` function to `new_truncate`.
-- Add const_fn!{} macro to make functions const without duplication ([#144](https://github.com/rust-osdev/x86_64/pull/144))
+- Add `const_fn!{}` macro to make functions const without duplication ([#144](https://github.com/rust-osdev/x86_64/pull/144))
   - Also makes some more functions `const`.
-- Add {PhysFrame,Page}::from_start_address_unchecked ([#142](https://github.com/rust-osdev/x86_64/pull/142))
-- Use #[inline] everywhere ([#145](https://github.com/rust-osdev/x86_64/pull/145))
-- In VirtAddr::new_truncate, use shift instead of mul and div ([#143](https://github.com/rust-osdev/x86_64/pull/143))
-- Use Self::new() in InterruptDescriptorTable::reset() ([#148](https://github.com/rust-osdev/x86_64/pull/148))
+- Add `{PhysFrame,Page}::from_start_address_unchecked` ([#142](https://github.com/rust-osdev/x86_64/pull/142))
+- Use `#[inline]` everywhere ([#145](https://github.com/rust-osdev/x86_64/pull/145))
+- In `VirtAddr::new_truncate`, use shift instead of mul and div ([#143](https://github.com/rust-osdev/x86_64/pull/143))
+- Use `Self::new()` in `InterruptDescriptorTable::reset()` ([#148](https://github.com/rust-osdev/x86_64/pull/148))
 
 # 0.9.6
 
