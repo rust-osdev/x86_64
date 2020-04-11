@@ -31,11 +31,13 @@ impl<S: PageSize> UnusedPhysFrame<S> {
     ///
     /// This method is unsafe because the caller must guarantee
     /// that the given frame is unused.
+    #[inline]
     pub unsafe fn new(frame: PhysFrame<S>) -> Self {
         Self(frame)
     }
 
     /// Returns the physical frame as `PhysFrame` type.
+    #[inline]
     pub fn frame(self) -> PhysFrame<S> {
         self.0
     }
@@ -45,6 +47,7 @@ impl<S: PageSize> UnusedPhysFrame<S> {
 impl<S: PageSize> Deref for UnusedPhysFrame<S> {
     type Target = PhysFrame<S>;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -52,6 +55,7 @@ impl<S: PageSize> Deref for UnusedPhysFrame<S> {
 
 #[allow(deprecated)]
 impl<S: PageSize> DerefMut for UnusedPhysFrame<S> {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

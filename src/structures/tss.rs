@@ -24,6 +24,7 @@ pub struct TaskStateSegment {
 impl TaskStateSegment {
     /// Creates a new TSS with zeroed privilege and interrupt stack table and a zero
     /// `iomap_base`.
+    #[inline]
     pub const fn new() -> TaskStateSegment {
         TaskStateSegment {
             privilege_stack_table: [VirtAddr::zero(); 3],

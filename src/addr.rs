@@ -44,6 +44,7 @@ impl VirtAddr {
     ///
     /// This function performs sign extension of bit 47 to make the address canonical. Panics
     /// if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
+    #[inline]
     pub fn new(addr: u64) -> VirtAddr {
         Self::try_new(addr).expect(
             "address passed to VirtAddr::new must not contain any data \
@@ -57,6 +58,7 @@ impl VirtAddr {
     /// extension of bit 47 to make the address canonical. It succeeds if bits 48 to 64 are
     /// either a correct sign extension (i.e. copies of bit 47) or all null. Else, an error
     /// is returned.
+    #[inline]
     pub fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
         match addr.get_bits(47..64) {
             0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
@@ -201,12 +203,14 @@ impl fmt::Debug for VirtAddr {
 
 impl Add<u64> for VirtAddr {
     type Output = Self;
+    #[inline]
     fn add(self, rhs: u64) -> Self::Output {
         VirtAddr::new(self.0 + rhs)
     }
 }
 
 impl AddAssign<u64> for VirtAddr {
+    #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -215,6 +219,7 @@ impl AddAssign<u64> for VirtAddr {
 #[cfg(target_pointer_width = "64")]
 impl Add<usize> for VirtAddr {
     type Output = Self;
+    #[inline]
     fn add(self, rhs: usize) -> Self::Output {
         self + rhs as u64
     }
@@ -222,6 +227,7 @@ impl Add<usize> for VirtAddr {
 
 #[cfg(target_pointer_width = "64")]
 impl AddAssign<usize> for VirtAddr {
+    #[inline]
     fn add_assign(&mut self, rhs: usize) {
         self.add_assign(rhs as u64)
     }
@@ -229,12 +235,14 @@ impl AddAssign<usize> for VirtAddr {
 
 impl Sub<u64> for VirtAddr {
     type Output = Self;
+    #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
         VirtAddr::new(self.0.checked_sub(rhs).unwrap())
     }
 }
 
 impl SubAssign<u64> for VirtAddr {
+    #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -243,6 +251,7 @@ impl SubAssign<u64> for VirtAddr {
 #[cfg(target_pointer_width = "64")]
 impl Sub<usize> for VirtAddr {
     type Output = Self;
+    #[inline]
     fn sub(self, rhs: usize) -> Self::Output {
         self - rhs as u64
     }
@@ -250,6 +259,7 @@ impl Sub<usize> for VirtAddr {
 
 #[cfg(target_pointer_width = "64")]
 impl SubAssign<usize> for VirtAddr {
+    #[inline]
     fn sub_assign(&mut self, rhs: usize) {
         self.sub_assign(rhs as u64)
     }
@@ -257,6 +267,7 @@ impl SubAssign<usize> for VirtAddr {
 
 impl Sub<VirtAddr> for VirtAddr {
     type Output = u64;
+    #[inline]
     fn sub(self, rhs: VirtAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
     }
@@ -272,6 +283,7 @@ impl PhysAddr {
     /// Creates a new physical address.
     ///
     /// Panics if a bit in the range 52 to 64 is set.
+    #[inline]
     pub fn new(addr: u64) -> PhysAddr {
         assert_eq!(
             addr.get_bits(52..64),
@@ -300,6 +312,7 @@ impl PhysAddr {
     /// Tries to create a new physical address.
     ///
     /// Fails if any bits in the range 52 to 64 are set.
+    #[inline]
     pub fn try_new(addr: u64) -> Result<PhysAddr, PhysAddrNotValid> {
         match addr.get_bits(52..64) {
             0 => Ok(PhysAddr(addr)), // address is valid
@@ -365,24 +378,28 @@ impl fmt::Debug for PhysAddr {
 }
 
 impl fmt::Binary for PhysAddr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
 impl fmt::LowerHex for PhysAddr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
 impl fmt::Octal for PhysAddr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
 impl fmt::UpperHex for PhysAddr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
@@ -390,12 +407,14 @@ impl fmt::UpperHex for PhysAddr {
 
 impl Add<u64> for PhysAddr {
     type Output = Self;
+    #[inline]
     fn add(self, rhs: u64) -> Self::Output {
         PhysAddr::new(self.0 + rhs)
     }
 }
 
 impl AddAssign<u64> for PhysAddr {
+    #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -404,6 +423,7 @@ impl AddAssign<u64> for PhysAddr {
 #[cfg(target_pointer_width = "64")]
 impl Add<usize> for PhysAddr {
     type Output = Self;
+    #[inline]
     fn add(self, rhs: usize) -> Self::Output {
         self + rhs as u64
     }
@@ -411,6 +431,7 @@ impl Add<usize> for PhysAddr {
 
 #[cfg(target_pointer_width = "64")]
 impl AddAssign<usize> for PhysAddr {
+    #[inline]
     fn add_assign(&mut self, rhs: usize) {
         self.add_assign(rhs as u64)
     }
@@ -418,12 +439,14 @@ impl AddAssign<usize> for PhysAddr {
 
 impl Sub<u64> for PhysAddr {
     type Output = Self;
+    #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
         PhysAddr::new(self.0.checked_sub(rhs).unwrap())
     }
 }
 
 impl SubAssign<u64> for PhysAddr {
+    #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -432,6 +455,7 @@ impl SubAssign<u64> for PhysAddr {
 #[cfg(target_pointer_width = "64")]
 impl Sub<usize> for PhysAddr {
     type Output = Self;
+    #[inline]
     fn sub(self, rhs: usize) -> Self::Output {
         self - rhs as u64
     }
@@ -439,6 +463,7 @@ impl Sub<usize> for PhysAddr {
 
 #[cfg(target_pointer_width = "64")]
 impl SubAssign<usize> for PhysAddr {
+    #[inline]
     fn sub_assign(&mut self, rhs: usize) {
         self.sub_assign(rhs as u64)
     }
@@ -446,6 +471,7 @@ impl SubAssign<usize> for PhysAddr {
 
 impl Sub<PhysAddr> for PhysAddr {
     type Output = u64;
+    #[inline]
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
     }
@@ -465,6 +491,7 @@ pub fn align_down(addr: u64, align: u64) -> u64 {
 ///
 /// Returns the smallest x with alignment `align` so that x >= addr. The alignment must be
 /// a power of 2.
+#[inline]
 pub fn align_up(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
     let align_mask = align - 1;

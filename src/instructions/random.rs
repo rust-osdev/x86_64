@@ -8,6 +8,7 @@ pub struct RdRand(());
 #[allow(clippy::trivially_copy_pass_by_ref)]
 impl RdRand {
     /// Creates Some(RdRand) if RDRAND is supported, None otherwise
+    #[inline]
     pub fn new() -> Option<Self> {
         // RDRAND support indicated by CPUID page 01h, ecx bit 30
         // https://en.wikipedia.org/wiki/RdRand#Overview

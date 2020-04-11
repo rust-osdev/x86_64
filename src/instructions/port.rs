@@ -14,6 +14,7 @@ impl PortRead for u8 {
     }
 
     #[cfg(not(feature = "inline_asm"))]
+    #[inline]
     unsafe fn read_from_port(port: u16) -> u8 {
         crate::asm::x86_64_asm_read_from_port_u8(port)
     }
@@ -29,6 +30,7 @@ impl PortRead for u16 {
     }
 
     #[cfg(not(feature = "inline_asm"))]
+    #[inline]
     unsafe fn read_from_port(port: u16) -> u16 {
         crate::asm::x86_64_asm_read_from_port_u16(port)
     }
@@ -44,6 +46,7 @@ impl PortRead for u32 {
     }
 
     #[cfg(not(feature = "inline_asm"))]
+    #[inline]
     unsafe fn read_from_port(port: u16) -> u32 {
         crate::asm::x86_64_asm_read_from_port_u32(port)
     }
@@ -57,6 +60,7 @@ impl PortWrite for u8 {
     }
 
     #[cfg(not(feature = "inline_asm"))]
+    #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
         crate::asm::x86_64_asm_write_to_port_u8(port, value)
     }
@@ -70,6 +74,7 @@ impl PortWrite for u16 {
     }
 
     #[cfg(not(feature = "inline_asm"))]
+    #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
         crate::asm::x86_64_asm_write_to_port_u16(port, value)
     }
@@ -83,6 +88,7 @@ impl PortWrite for u32 {
     }
 
     #[cfg(not(feature = "inline_asm"))]
+    #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
         crate::asm::x86_64_asm_write_to_port_u32(port, value)
     }
@@ -116,6 +122,7 @@ pub struct Port<T: PortReadWrite> {
 impl<T: PortRead> PortReadOnly<T> {
     const_fn! {
         /// Creates a read only I/O port with the given port number.
+        #[inline]
         pub fn new(port: u16) -> PortReadOnly<T> {
             PortReadOnly {
                 port,
@@ -139,6 +146,7 @@ impl<T: PortRead> PortReadOnly<T> {
 impl<T: PortWrite> PortWriteOnly<T> {
     const_fn! {
         /// Creates a write only I/O port with the given port number.
+        #[inline]
         pub fn new(port: u16) -> PortWriteOnly<T> {
             PortWriteOnly {
                 port,
@@ -162,6 +170,7 @@ impl<T: PortWrite> PortWriteOnly<T> {
 impl<T: PortReadWrite> Port<T> {
     const_fn! {
         /// Creates an I/O port with the given port number.
+        #[inline]
         pub fn new(port: u16) -> Port<T> {
             Port {
                 port,

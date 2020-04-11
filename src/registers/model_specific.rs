@@ -13,6 +13,7 @@ pub struct Msr(u32);
 
 impl Msr {
     /// Create an instance from a register.
+    #[inline]
     pub const fn new(reg: u32) -> Msr {
         Msr(reg)
     }
@@ -324,6 +325,7 @@ mod x86_64 {
         /// This function will fail if the segment selectors are
         /// not in the correct offset of each other or if the
         /// segment selectors do not have correct privileges.
+        #[inline]
         pub fn write(
             cs_sysret: SegmentSelector,
             ss_sysret: SegmentSelector,

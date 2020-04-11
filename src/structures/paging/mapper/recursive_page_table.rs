@@ -44,6 +44,7 @@ impl<'a> RecursivePageTable<'a> {
     /// - The page table must be active, i.e. the CR3 register must contain its physical address.
     ///
     /// Otherwise `Err(())` is returned.
+    #[inline]
     pub fn new(table: &'a mut PageTable) -> Result<Self, ()> {
         let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
         let recursive_index = page.p4_index();
@@ -224,6 +225,7 @@ impl<'a> RecursivePageTable<'a> {
 }
 
 impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size1GiB>,
@@ -419,6 +421,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
 }
 
 impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size4KiB>,
