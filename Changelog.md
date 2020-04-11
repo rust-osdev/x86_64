@@ -8,6 +8,7 @@
 - Add {PhysFrame,Page}::from_start_address_unchecked ([#142](https://github.com/rust-osdev/x86_64/pull/142))
 - Use #[inline] everywhere ([#145](https://github.com/rust-osdev/x86_64/pull/145))
 - In VirtAddr::new_truncate, use shift instead of mul and div ([#143](https://github.com/rust-osdev/x86_64/pull/143))
+- Use Self::new() in InterruptDescriptorTable::reset() ([#148](https://github.com/rust-osdev/x86_64/pull/148))
 
 # 0.9.6
 
