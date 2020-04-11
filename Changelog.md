@@ -1,5 +1,6 @@
 - **Breaking**: Make `map_to` and `update_flags` unsafe ([#135](https://github.com/rust-osdev/x86_64/pull/135))
 - **Breaking**: Make `FrameDeallocator::deallocate_frame` unsafe ([#146](https://github.com/rust-osdev/x86_64/pull/146))
+- **Breaking**: Don't pass small trivially copyable types by reference ([#147](https://github.com/rust-osdev/x86_64/pull/147))
 - Various improvements to VirtAddr and PhysAddr ([#141](https://github.com/rust-osdev/x86_64/pull/141))
   - Among other things, this renamed the `VirtAddr::new_unchecked` function to `new_truncate`.
 - Add const_fn!{} macro to make functions const without duplication ([#144](https://github.com/rust-osdev/x86_64/pull/144))
