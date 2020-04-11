@@ -14,8 +14,12 @@ pub unsafe trait FrameAllocator<S: PageSize> {
 
 /// A trait for types that can deallocate a frame of memory.
 pub trait FrameDeallocator<S: PageSize> {
-    /// Deallocate the given frame of memory.
-    fn deallocate_frame(&mut self, frame: PhysFrame<S>);
+    /// Deallocate the given unused frame.
+    ///
+    /// ## Safety
+    ///
+    /// The caller must ensure that the passed frame is unused.
+    unsafe fn deallocate_frame(&mut self, frame: PhysFrame<S>);
 }
 
 /// Represents a physical frame that is not used for any mapping.
