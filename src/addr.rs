@@ -166,31 +166,31 @@ impl VirtAddr {
 
     /// Returns the 12-bit page offset of this virtual address.
     #[inline]
-    pub fn page_offset(&self) -> PageOffset {
+    pub const fn page_offset(&self) -> PageOffset {
         PageOffset::new_truncate(self.0 as u16)
     }
 
     /// Returns the 9-bit level 1 page table index.
     #[inline]
-    pub fn p1_index(&self) -> PageTableIndex {
+    pub const fn p1_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12) as u16)
     }
 
     /// Returns the 9-bit level 2 page table index.
     #[inline]
-    pub fn p2_index(&self) -> PageTableIndex {
+    pub const fn p2_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 3 page table index.
     #[inline]
-    pub fn p3_index(&self) -> PageTableIndex {
+    pub const fn p3_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 4 page table index.
     #[inline]
-    pub fn p4_index(&self) -> PageTableIndex {
+    pub const fn p4_index(&self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9) as u16)
     }
 }

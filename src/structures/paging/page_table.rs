@@ -27,15 +27,7 @@ pub struct PageTableEntry {
 
 impl PageTableEntry {
     /// Creates an unused page table entry.
-    #[cfg(feature = "const_fn")]
     pub const fn new() -> Self {
-        PageTableEntry { entry: 0 }
-    }
-
-    /// Creates an unused page table entry.
-    #[cfg(not(feature = "const_fn"))]
-    #[inline]
-    pub fn new() -> Self {
         PageTableEntry { entry: 0 }
     }
 
