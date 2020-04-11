@@ -72,11 +72,9 @@ impl VirtAddr {
     /// use `new` or `try_new`.
     #[inline]
     pub const fn new_truncate(addr: u64) -> VirtAddr {
-        // Rust doesn't accept shift operators in const functions at the moment,
-        // so we use a multiplication and division by 0x1_0000 instead of `<< 16` and `>> 16`.
         // By doing the right shift as a signed operation (on a i64), it will
         // sign extend the value, repeating the leftmost bit.
-        VirtAddr((addr.wrapping_mul(0x1_0000) as i64 / 0x1_0000) as u64)
+        VirtAddr(((addr << 16) as i64 >> 16) as u64)
     }
 
     /// Alias for [`new_truncate`][VirtAddr::new_truncate] for backwards compatibility.
