@@ -405,32 +405,9 @@ impl InterruptDescriptorTable {
     }
 
     /// Resets all entries of this IDT in place.
+    #[inline]
     pub fn reset(&mut self) {
-        self.divide_error = Entry::missing();
-        self.debug = Entry::missing();
-        self.non_maskable_interrupt = Entry::missing();
-        self.breakpoint = Entry::missing();
-        self.overflow = Entry::missing();
-        self.bound_range_exceeded = Entry::missing();
-        self.invalid_opcode = Entry::missing();
-        self.device_not_available = Entry::missing();
-        self.double_fault = Entry::missing();
-        self.coprocessor_segment_overrun = Entry::missing();
-        self.invalid_tss = Entry::missing();
-        self.segment_not_present = Entry::missing();
-        self.stack_segment_fault = Entry::missing();
-        self.general_protection_fault = Entry::missing();
-        self.page_fault = Entry::missing();
-        self.reserved_1 = Entry::missing();
-        self.x87_floating_point = Entry::missing();
-        self.alignment_check = Entry::missing();
-        self.machine_check = Entry::missing();
-        self.simd_floating_point = Entry::missing();
-        self.virtualization = Entry::missing();
-        self.reserved_2 = [Entry::missing(); 9];
-        self.security_exception = Entry::missing();
-        self.reserved_3 = Entry::missing();
-        self.interrupts = [Entry::missing(); 256 - 32];
+        *self = Self::new();
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
