@@ -13,6 +13,25 @@
 
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
+/// Makes a function const only when `feature = "const_fn"` is enabled.
+///
+/// This is needed for const functions with bounds on their generic parameters,
+/// such as those in `Page` and `PhysFrame` and many more.
+macro_rules! const_fn {
+    (
+        $(#[$attr:meta])*
+        pub $($fn:tt)*
+    ) => {
+        $(#[$attr])*
+        #[cfg(feature = "const_fn")]
+        pub const $($fn)*
+
+        $(#[$attr])*
+        #[cfg(not(feature = "const_fn"))]
+        pub $($fn)*
+    }
+}
+
 #[cfg(not(feature = "inline_asm"))]
 pub(crate) mod asm;
 

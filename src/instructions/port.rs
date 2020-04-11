@@ -114,21 +114,13 @@ pub struct Port<T: PortReadWrite> {
 }
 
 impl<T: PortRead> PortReadOnly<T> {
-    /// Creates a read only I/O port with the given port number.
-    #[cfg(feature = "const_fn")]
-    pub const fn new(port: u16) -> PortReadOnly<T> {
-        PortReadOnly {
-            port,
-            phantom: PhantomData,
-        }
-    }
-
-    /// Creates a read only I/O port with the given port number.
-    #[cfg(not(feature = "const_fn"))]
-    pub fn new(port: u16) -> PortReadOnly<T> {
-        PortReadOnly {
-            port,
-            phantom: PhantomData,
+    const_fn! {
+        /// Creates a read only I/O port with the given port number.
+        pub fn new(port: u16) -> PortReadOnly<T> {
+            PortReadOnly {
+                port,
+                phantom: PhantomData,
+            }
         }
     }
 
@@ -145,21 +137,13 @@ impl<T: PortRead> PortReadOnly<T> {
 }
 
 impl<T: PortWrite> PortWriteOnly<T> {
-    /// Creates a write only I/O port with the given port number.
-    #[cfg(feature = "const_fn")]
-    pub const fn new(port: u16) -> PortWriteOnly<T> {
-        PortWriteOnly {
-            port,
-            phantom: PhantomData,
-        }
-    }
-
-    /// Creates a write only I/O port with the given port number.
-    #[cfg(not(feature = "const_fn"))]
-    pub fn new(port: u16) -> PortWriteOnly<T> {
-        PortWriteOnly {
-            port,
-            phantom: PhantomData,
+    const_fn! {
+        /// Creates a write only I/O port with the given port number.
+        pub fn new(port: u16) -> PortWriteOnly<T> {
+            PortWriteOnly {
+                port,
+                phantom: PhantomData,
+            }
         }
     }
 
@@ -176,21 +160,13 @@ impl<T: PortWrite> PortWriteOnly<T> {
 }
 
 impl<T: PortReadWrite> Port<T> {
-    /// Creates an I/O port with the given port number.
-    #[cfg(feature = "const_fn")]
-    pub const fn new(port: u16) -> Port<T> {
-        Port {
-            port,
-            phantom: PhantomData,
-        }
-    }
-
-    /// Creates an I/O port with the given port number.
-    #[cfg(not(feature = "const_fn"))]
-    pub fn new(port: u16) -> Port<T> {
-        Port {
-            port,
-            phantom: PhantomData,
+    const_fn! {
+        /// Creates an I/O port with the given port number.
+        pub fn new(port: u16) -> Port<T> {
+            Port {
+                port,
+                phantom: PhantomData,
+            }
         }
     }
 
