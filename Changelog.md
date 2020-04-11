@@ -1,5 +1,6 @@
 - Various improvements to VirtAddr and PhysAddr ([#141](https://github.com/rust-osdev/x86_64/pull/141))
   - Among other things, this renamed the `VirtAddr::new_unchecked` function to `new_unsafe`.
+- In VirtAddr::new_truncate, use shift instead of mul and div ([#143](https://github.com/rust-osdev/x86_64/pull/143))
 
 # 0.9.6
 
