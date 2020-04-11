@@ -5,9 +5,8 @@ pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
 pub use self::{offset_page_table::OffsetPageTable, recursive_page_table::RecursivePageTable};
 
 use crate::structures::paging::{
-    frame_alloc::{FrameAllocator, UnusedPhysFrame},
-    page_table::PageTableFlags,
-    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size1GiB,
+    Size2MiB, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 
@@ -83,10 +82,39 @@ pub trait Mapper<S: PageSize> {
     ///
     /// This function might need additional physical frames to create new page tables. These
     /// frames are allocated from the `allocator` argument. At most three frames are required.
-    fn map_to<A>(
+    ///
+    /// ## Safety
+    ///
+    /// Creating page table mappings is a fundamentally unsafe operation because
+    /// there are various ways to break memory safety through it. For example,
+    /// re-mapping an in-use page to a different frame changes and invalidates
+    /// all values stored in that page, resulting in undefined behavior on the
+    /// next use.
+    ///
+    /// The caller must ensure that no undefined behavior or memory safety
+    /// violations can occur through the new mapping. Among other things, the
+    /// caller must prevent the following:
+    ///
+    /// - Aliasing of `&mut` references, i.e. two `&mut` references that point to
+    ///   the same physical address. This is undefined behavior in Rust.
+    ///     - This can be ensured by mapping each page to an individual physical
+    ///       frame that is not mapped anywhere else.
+    /// - Creating uninitalized or invalid values: Rust requires that all values
+    ///   have a correct memory layout. For example, a `bool` must be either a 0
+    ///   or a 1 in memory, but not a 3 or 4. An exception is the `MaybeUninit`
+    ///   wrapper type, which abstracts over possibly uninitialized memory.
+    ///     - This is only a problem when re-mapping pages to different physical
+    ///       frames. Mapping a page that is not in use yet is fine.
+    ///
+    /// Special care must be taken when sharing pages with other address spaces,
+    /// e.g. by setting the `GLOBAL` flag. For example, a global mapping must be
+    /// the same in all address spaces, otherwise undefined behavior can occur
+    /// because of TLB races. It's worth noting that all the above requirements
+    /// also apply to shared mappings, including the aliasing requirements.
+    unsafe fn map_to<A>(
         &mut self,
         page: Page<S>,
-        frame: UnusedPhysFrame<S>,
+        frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError<S>>
@@ -100,7 +128,15 @@ pub trait Mapper<S: PageSize> {
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
     /// Updates the flags of an existing mapping.
-    fn update_flags(
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `MUTABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn update_flags(
         &mut self,
         page: Page<S>,
         flags: PageTableFlags,
@@ -116,11 +152,12 @@ pub trait Mapper<S: PageSize> {
     ///
     /// ## Safety
     ///
-    /// TODO: Should this function be safe?
+    /// This is a convencience function that invokes [`map_to`] internally, so
+    /// all safety requirements of it also apply for this function.
     #[inline]
     unsafe fn identity_map<A>(
         &mut self,
-        frame: UnusedPhysFrame<S>,
+        frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError<S>>
@@ -172,7 +209,7 @@ pub enum MapToError<S: PageSize> {
     /// given page is part of an already mapped huge page.
     ParentEntryHugePage,
     /// The given page is already mapped to a physical frame.
-    PageAlreadyMapped(UnusedPhysFrame<S>),
+    PageAlreadyMapped(PhysFrame<S>),
 }
 
 /// An error indicating that an `unmap` call failed.
