@@ -38,7 +38,6 @@ pub struct PhysAddr(u64);
 #[derive(Debug)]
 pub struct VirtAddrNotValid(u64);
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
@@ -166,31 +165,31 @@ impl VirtAddr {
 
     /// Returns the 12-bit page offset of this virtual address.
     #[inline]
-    pub const fn page_offset(&self) -> PageOffset {
+    pub const fn page_offset(self) -> PageOffset {
         PageOffset::new_truncate(self.0 as u16)
     }
 
     /// Returns the 9-bit level 1 page table index.
     #[inline]
-    pub const fn p1_index(&self) -> PageTableIndex {
+    pub const fn p1_index(self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12) as u16)
     }
 
     /// Returns the 9-bit level 2 page table index.
     #[inline]
-    pub const fn p2_index(&self) -> PageTableIndex {
+    pub const fn p2_index(self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 3 page table index.
     #[inline]
-    pub const fn p3_index(&self) -> PageTableIndex {
+    pub const fn p3_index(self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9) as u16)
     }
 
     /// Returns the 9-bit level 4 page table index.
     #[inline]
-    pub const fn p4_index(&self) -> PageTableIndex {
+    pub const fn p4_index(self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9) as u16)
     }
 }
@@ -333,9 +332,8 @@ impl PhysAddr {
     }
 
     /// Convenience method for checking if a physical address is null.
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
-    pub const fn is_null(&self) -> bool {
+    pub const fn is_null(self) -> bool {
         self.0 == 0
     }
 
