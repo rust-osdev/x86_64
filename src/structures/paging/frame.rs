@@ -35,30 +35,38 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
-    /// Returns the start address of the frame.
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    #[inline]
-    pub fn start_address(&self) -> PhysAddr {
-        self.start_address
+    const_fn! {
+        /// Returns the start address of the frame.
+        #[allow(clippy::trivially_copy_pass_by_ref)]
+        #[inline]
+        pub fn start_address(&self) -> PhysAddr {
+            self.start_address
+        }
     }
 
-    /// Returns the size the frame (4KB, 2MB or 1GB).
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    #[inline]
-    pub fn size(&self) -> u64 {
-        S::SIZE
+    const_fn! {
+        /// Returns the size the frame (4KB, 2MB or 1GB).
+        #[allow(clippy::trivially_copy_pass_by_ref)]
+        #[inline]
+        pub fn size(&self) -> u64 {
+            S::SIZE
+        }
     }
 
-    /// Returns a range of frames, exclusive `end`.
-    #[inline]
-    pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
-        PhysFrameRange { start, end }
+    const_fn! {
+        /// Returns a range of frames, exclusive `end`.
+        #[inline]
+        pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
+            PhysFrameRange { start, end }
+        }
     }
 
-    /// Returns a range of frames, inclusive `end`.
-    #[inline]
-    pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
-        PhysFrameRangeInclusive { start, end }
+    const_fn! {
+        /// Returns a range of frames, inclusive `end`.
+        #[inline]
+        pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
+            PhysFrameRangeInclusive { start, end }
+        }
     }
 }
 

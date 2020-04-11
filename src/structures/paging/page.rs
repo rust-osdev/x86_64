@@ -84,57 +84,63 @@ impl<S: PageSize> Page<S> {
         }
     }
 
-    /// Returns the start address of the page.
-    #[inline]
-    pub fn start_address(&self) -> VirtAddr {
-        self.start_address
+    const_fn! {
+        /// Returns the start address of the page.
+        #[inline]
+        pub fn start_address(&self) -> VirtAddr {
+            self.start_address
+        }
     }
 
-    /// Returns the size the page (4KB, 2MB or 1GB).
-    #[cfg(feature = "const_fn")]
-    #[inline]
-    pub const fn size(&self) -> u64 {
-        S::SIZE
+    const_fn! {
+        /// Returns the size the page (4KB, 2MB or 1GB).
+        #[inline]
+        pub fn size(&self) -> u64 {
+            S::SIZE
+        }
     }
 
-    /// Returns the size the page (4KB, 2MB or 1GB).
-    #[cfg(not(feature = "const_fn"))]
-    #[inline]
-    pub fn size(&self) -> u64 {
-        S::SIZE
+    const_fn! {
+        /// Returns the level 4 page table index of this page.
+        #[inline]
+        pub fn p4_index(&self) -> PageTableIndex {
+            self.start_address().p4_index()
+        }
     }
 
-    /// Returns the level 4 page table index of this page.
-    #[inline]
-    pub fn p4_index(&self) -> PageTableIndex {
-        self.start_address().p4_index()
+    const_fn! {
+        /// Returns the level 3 page table index of this page.
+        #[inline]
+        pub fn p3_index(&self) -> PageTableIndex {
+            self.start_address().p3_index()
+        }
     }
 
-    /// Returns the level 3 page table index of this page.
-    #[inline]
-    pub fn p3_index(&self) -> PageTableIndex {
-        self.start_address().p3_index()
+    const_fn! {
+        /// Returns a range of pages, exclusive `end`.
+        #[inline]
+        pub fn range(start: Self, end: Self) -> PageRange<S> {
+            PageRange { start, end }
+        }
     }
 
-    /// Returns a range of pages, exclusive `end`.
-    #[inline]
-    pub fn range(start: Self, end: Self) -> PageRange<S> {
-        PageRange { start, end }
-    }
-
-    /// Returns a range of pages, inclusive `end`.
-    #[inline]
-    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
-        PageRangeInclusive { start, end }
+    const_fn! {
+        /// Returns a range of pages, inclusive `end`.
+        #[inline]
+        pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+            PageRangeInclusive { start, end }
+        }
     }
 }
 
 impl<S: NotGiantPageSize> Page<S> {
-    /// Returns the level 2 page table index of this page.
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    #[inline]
-    pub fn p2_index(&self) -> PageTableIndex {
-        self.start_address().p2_index()
+    const_fn! {
+        /// Returns the level 2 page table index of this page.
+        #[allow(clippy::trivially_copy_pass_by_ref)]
+        #[inline]
+        pub fn p2_index(&self) -> PageTableIndex {
+            self.start_address().p2_index()
+        }
     }
 }
 
@@ -188,11 +194,13 @@ impl Page<Size4KiB> {
         Page::containing_address(VirtAddr::new(addr))
     }
 
-    /// Returns the level 1 page table index of this page.
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    #[inline]
-    pub fn p1_index(&self) -> PageTableIndex {
-        self.start_address().p1_index()
+    const_fn! {
+        /// Returns the level 1 page table index of this page.
+        #[allow(clippy::trivially_copy_pass_by_ref)]
+        #[inline]
+        pub fn p1_index(&self) -> PageTableIndex {
+            self.start_address().p1_index()
+        }
     }
 }
 
