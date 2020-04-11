@@ -231,6 +231,7 @@ mod x86_64 {
 
     impl Cr3 {
         /// Read the current P4 table address from the CR3 register.
+        #[inline]
         pub fn read() -> (PhysFrame, Cr3Flags) {
             let value: u64;
 

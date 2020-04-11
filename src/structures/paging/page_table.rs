@@ -27,6 +27,7 @@ pub struct PageTableEntry {
 
 impl PageTableEntry {
     /// Creates an unused page table entry.
+    #[inline]
     pub const fn new() -> Self {
         PageTableEntry { entry: 0 }
     }
@@ -62,6 +63,7 @@ impl PageTableEntry {
     /// - `FrameError::FrameNotPresent` if the entry doesn't have the `PRESENT` flag set.
     /// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the
     ///    `addr` function must be used)
+    #[inline]
     pub fn frame(&self) -> Result<PhysFrame, FrameError> {
         if !self.flags().contains(PageTableFlags::PRESENT) {
             Err(FrameError::FrameNotPresent)
@@ -184,6 +186,7 @@ pub struct PageTable {
 impl PageTable {
     /// Creates an empty page table.
     #[cfg(feature = "const_fn")]
+    #[inline]
     pub const fn new() -> Self {
         PageTable {
             entries: [PageTableEntry::new(); ENTRY_COUNT],
@@ -192,6 +195,7 @@ impl PageTable {
 
     /// Creates an empty page table.
     #[cfg(not(feature = "const_fn"))]
+    #[inline]
     pub fn new() -> Self {
         PageTable {
             entries: array_init::array_init(|_| PageTableEntry::new()),
@@ -207,11 +211,13 @@ impl PageTable {
     }
 
     /// Returns an iterator over the entries of the page table.
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
         self.entries.iter()
     }
 
     /// Returns an iterator that allows modifying the entries of the page table.
+    #[inline]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
         self.entries.iter_mut()
     }
@@ -220,12 +226,14 @@ impl PageTable {
 impl Index<usize> for PageTable {
     type Output = PageTableEntry;
 
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         &self.entries[index]
     }
 }
 
 impl IndexMut<usize> for PageTable {
+    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.entries[index]
     }
@@ -248,6 +256,7 @@ impl IndexMut<PageTableIndex> for PageTable {
 }
 
 impl fmt::Debug for PageTable {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.entries[..].fmt(f)
     }
@@ -263,6 +272,7 @@ pub struct PageTableIndex(u16);
 
 impl PageTableIndex {
     /// Creates a new index from the given `u16`. Panics if the given value is >=512.
+    #[inline]
     pub fn new(index: u16) -> Self {
         assert!(usize::from(index) < ENTRY_COUNT);
         Self(index)
@@ -313,6 +323,7 @@ pub struct PageOffset(u16);
 
 impl PageOffset {
     /// Creates a new offset from the given `u16`. Panics if the passed value is >=4096.
+    #[inline]
     pub fn new(offset: u16) -> Self {
         assert!(offset < (1 << 12));
         Self(offset)

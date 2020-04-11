@@ -29,6 +29,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
     /// closure is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
+    #[inline]
     pub unsafe fn new(level_4_table: &'a mut PageTable, phys_to_virt: P) -> Self {
         Self {
             level_4_table,
@@ -122,6 +123,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
 }
 
 impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size1GiB>,
@@ -195,6 +197,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
 }
 
 impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size2MiB>,
@@ -276,6 +279,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
 }
 
 impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size4KiB>,
@@ -408,6 +412,7 @@ struct PageTableWalker<P: PhysToVirt> {
 }
 
 impl<P: PhysToVirt> PageTableWalker<P> {
+    #[inline]
     pub unsafe fn new(phys_to_virt: P) -> Self {
         Self { phys_to_virt }
     }
@@ -502,6 +507,7 @@ enum PageTableCreateError {
 }
 
 impl From<PageTableCreateError> for MapToError<Size4KiB> {
+    #[inline]
     fn from(err: PageTableCreateError) -> Self {
         match err {
             PageTableCreateError::MappedToHugePage => MapToError::ParentEntryHugePage,
@@ -511,6 +517,7 @@ impl From<PageTableCreateError> for MapToError<Size4KiB> {
 }
 
 impl From<PageTableCreateError> for MapToError<Size2MiB> {
+    #[inline]
     fn from(err: PageTableCreateError) -> Self {
         match err {
             PageTableCreateError::MappedToHugePage => MapToError::ParentEntryHugePage,
@@ -520,6 +527,7 @@ impl From<PageTableCreateError> for MapToError<Size2MiB> {
 }
 
 impl From<PageTableCreateError> for MapToError<Size1GiB> {
+    #[inline]
     fn from(err: PageTableCreateError) -> Self {
         match err {
             PageTableCreateError::MappedToHugePage => MapToError::ParentEntryHugePage,
@@ -529,6 +537,7 @@ impl From<PageTableCreateError> for MapToError<Size1GiB> {
 }
 
 impl From<FrameError> for PageTableWalkError {
+    #[inline]
     fn from(err: FrameError) -> Self {
         match err {
             FrameError::HugeFrame => PageTableWalkError::MappedToHugePage,
@@ -538,6 +547,7 @@ impl From<FrameError> for PageTableWalkError {
 }
 
 impl From<PageTableWalkError> for UnmapError {
+    #[inline]
     fn from(err: PageTableWalkError) -> Self {
         match err {
             PageTableWalkError::MappedToHugePage => UnmapError::ParentEntryHugePage,
@@ -547,6 +557,7 @@ impl From<PageTableWalkError> for UnmapError {
 }
 
 impl From<PageTableWalkError> for FlagUpdateError {
+    #[inline]
     fn from(err: PageTableWalkError) -> Self {
         match err {
             PageTableWalkError::MappedToHugePage => FlagUpdateError::ParentEntryHugePage,
@@ -556,6 +567,7 @@ impl From<PageTableWalkError> for FlagUpdateError {
 }
 
 impl From<PageTableWalkError> for TranslateError {
+    #[inline]
     fn from(err: PageTableWalkError) -> Self {
         match err {
             PageTableWalkError::MappedToHugePage => TranslateError::ParentEntryHugePage,

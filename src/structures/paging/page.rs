@@ -161,6 +161,7 @@ impl<S: NotGiantPageSize> Page<S> {
 
 impl Page<Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
+    #[inline]
     pub fn from_page_table_indices_1gib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -176,6 +177,7 @@ impl Page<Size1GiB> {
 
 impl Page<Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
+    #[inline]
     pub fn from_page_table_indices_2mib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -193,6 +195,7 @@ impl Page<Size2MiB> {
 
 impl Page<Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
+    #[inline]
     pub fn from_page_table_indices(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -231,12 +234,14 @@ impl<S: PageSize> fmt::Debug for Page<S> {
 
 impl<S: PageSize> Add<u64> for Page<S> {
     type Output = Self;
+    #[inline]
     fn add(self, rhs: u64) -> Self::Output {
         Page::containing_address(self.start_address() + rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> AddAssign<u64> for Page<S> {
+    #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -244,12 +249,14 @@ impl<S: PageSize> AddAssign<u64> for Page<S> {
 
 impl<S: PageSize> Sub<u64> for Page<S> {
     type Output = Self;
+    #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
         Page::containing_address(self.start_address() - rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> SubAssign<u64> for Page<S> {
+    #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -257,6 +264,7 @@ impl<S: PageSize> SubAssign<u64> for Page<S> {
 
 impl<S: PageSize> Sub<Self> for Page<S> {
     type Output = u64;
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
     }
@@ -274,6 +282,7 @@ pub struct PageRange<S: PageSize = Size4KiB> {
 
 impl<S: PageSize> PageRange<S> {
     /// Returns wether this range contains no pages.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.start >= self.end
     }
@@ -282,6 +291,7 @@ impl<S: PageSize> PageRange<S> {
 impl<S: PageSize> Iterator for PageRange<S> {
     type Item = Page<S>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
             let page = self.start;
@@ -325,6 +335,7 @@ pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
 
 impl<S: PageSize> PageRangeInclusive<S> {
     /// Returns wether this range contains no pages.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.start >= self.end
     }
@@ -333,6 +344,7 @@ impl<S: PageSize> PageRangeInclusive<S> {
 impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     type Item = Page<S>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
             let page = self.start;

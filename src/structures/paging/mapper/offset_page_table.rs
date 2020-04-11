@@ -53,6 +53,7 @@ impl PhysToVirt for PhysOffset {
 // delegate all trait implementations to inner
 
 impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<Size1GiB>,

@@ -183,6 +183,7 @@ pub struct MapperFlush<S: PageSize>(Page<S>);
 
 impl<S: PageSize> MapperFlush<S> {
     /// Create a new flush promise
+    #[inline]
     fn new(page: Page<S>) -> Self {
         MapperFlush(page)
     }

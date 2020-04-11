@@ -372,6 +372,7 @@ pub struct InterruptDescriptorTable {
 impl InterruptDescriptorTable {
     const_fn! {
         /// Creates a new IDT filled with non-present entries.
+        #[inline]
         pub fn new() -> InterruptDescriptorTable {
             InterruptDescriptorTable {
                 divide_error: Entry::missing(),
@@ -500,6 +501,7 @@ impl Index<usize> for InterruptDescriptorTable {
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
     /// exception that pushes an error code (use the struct fields for accessing these entries).
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         match index {
             0 => &self.divide_error,
@@ -530,6 +532,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
     /// exception that pushes an error code (use the struct fields for accessing these entries).
+    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
             0 => &mut self.divide_error,
@@ -587,6 +590,7 @@ pub type DivergingHandlerFuncWithErrCode =
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
+    #[inline]
     pub const fn missing() -> Self {
         Entry {
             gdt_selector: 0,
@@ -607,6 +611,7 @@ impl<F> Entry<F> {
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
     #[cfg(target_arch = "x86_64")]
+    #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
         use crate::instructions::segmentation;
 
@@ -632,6 +637,7 @@ macro_rules! impl_set_handler_fn {
             ///
             /// The function returns a mutable reference to the entry's options that allows
             /// further customization.
+            #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
                 self.set_handler_addr(handler as u64)
             }
@@ -740,12 +746,14 @@ impl InterruptStackFrame {
 impl Deref for InterruptStackFrame {
     type Target = InterruptStackFrameValue;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.value
     }
 }
 
 impl fmt::Debug for InterruptStackFrame {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.value.fmt(f)
     }

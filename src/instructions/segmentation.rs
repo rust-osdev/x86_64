@@ -13,6 +13,7 @@ use crate::structures::gdt::SegmentSelector;
 ///
 /// This function is unsafe because the caller must ensure that `sel`
 /// is a valid code segment descriptor.
+#[inline]
 pub unsafe fn set_cs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
     #[inline(always)]

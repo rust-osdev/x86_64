@@ -21,6 +21,7 @@ impl SegmentSelector {
     /// # Arguments
     ///  * `index`: index in GDT or LDT array (not the offset)
     ///  * `rpl`: the requested privilege level
+    #[inline]
     pub const fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
         SegmentSelector(index << 3 | (rpl as u16))
     }
@@ -98,6 +99,7 @@ pub struct GlobalDescriptorTable {
 
 impl GlobalDescriptorTable {
     /// Creates an empty GDT.
+    #[inline]
     pub const fn new() -> GlobalDescriptorTable {
         GlobalDescriptorTable {
             table: [0; 8],
@@ -108,6 +110,7 @@ impl GlobalDescriptorTable {
     /// Adds the given segment descriptor to the GDT, returning the segment selector.
     ///
     /// Panics if the GDT has no free entries left.
+    #[inline]
     pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
             Descriptor::UserSegment(value) => self.push(value),
@@ -126,6 +129,7 @@ impl GlobalDescriptorTable {
     /// [load_ss](crate::instructions::segmentation::load_ss),
     /// [set_cs](crate::instructions::segmentation::set_cs).
     #[cfg(target_arch = "x86_64")]
+    #[inline]
     pub fn load(&'static self) {
         use crate::instructions::tables::{lgdt, DescriptorTablePointer};
         use core::mem::size_of;
@@ -138,6 +142,7 @@ impl GlobalDescriptorTable {
         unsafe { lgdt(&ptr) };
     }
 
+    #[inline]
     fn push(&mut self, value: u64) -> usize {
         if self.next_free < self.table.len() {
             let index = self.next_free;
@@ -220,6 +225,7 @@ impl Descriptor {
     }
 
     /// Creates a TSS system descriptor for the given TSS.
+    #[inline]
     pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {
         use self::DescriptorFlags as Flags;
         use core::mem::size_of;
