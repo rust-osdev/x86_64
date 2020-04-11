@@ -1,5 +1,5 @@
 - Various improvements to VirtAddr and PhysAddr ([#141](https://github.com/rust-osdev/x86_64/pull/141))
-  - Among other things, this renamed the `VirtAddr::new_unchecked` function to `new_unsafe`.
+  - Among other things, this renamed the `VirtAddr::new_unchecked` function to `new_truncate`.
 - Add const_fn!{} macro to make functions const without duplication ([#144](https://github.com/rust-osdev/x86_64/pull/144))
   - Also makes some more functions `const`.
 - Add {PhysFrame,Page}::from_start_address_unchecked ([#142](https://github.com/rust-osdev/x86_64/pull/142))
