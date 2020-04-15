@@ -377,8 +377,13 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
+                let flags = p3[addr.p3_index()].flags();
                 let offset = addr.as_u64() & 0o_777_777_7777;
-                return TranslateResult::Frame1GiB { frame, offset };
+                return TranslateResult::Frame1GiB {
+                    frame,
+                    offset,
+                    flags,
+                };
             }
         };
         let p1 = match self.page_table_walker.next_table(&p2[addr.p2_index()]) {
@@ -386,8 +391,13 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
+                let flags = p2[addr.p2_index()].flags();
                 let offset = addr.as_u64() & 0o_777_7777;
-                return TranslateResult::Frame2MiB { frame, offset };
+                return TranslateResult::Frame2MiB {
+                    frame,
+                    offset,
+                    flags,
+                };
             }
         };
 
@@ -402,7 +412,12 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
         };
         let offset = u64::from(addr.page_offset());
-        TranslateResult::Frame4KiB { frame, offset }
+        let flags = p1_entry.flags();
+        TranslateResult::Frame4KiB {
+            frame,
+            offset,
+            flags,
+        }
     }
 }
 

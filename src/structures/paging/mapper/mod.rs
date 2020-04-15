@@ -36,9 +36,15 @@ pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB>
     fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
         match self.translate(addr) {
             TranslateResult::PageNotMapped | TranslateResult::InvalidFrameAddress(_) => None,
-            TranslateResult::Frame4KiB { frame, offset } => Some(frame.start_address() + offset),
-            TranslateResult::Frame2MiB { frame, offset } => Some(frame.start_address() + offset),
-            TranslateResult::Frame1GiB { frame, offset } => Some(frame.start_address() + offset),
+            TranslateResult::Frame4KiB { frame, offset, .. } => {
+                Some(frame.start_address() + offset)
+            }
+            TranslateResult::Frame2MiB { frame, offset, .. } => {
+                Some(frame.start_address() + offset)
+            }
+            TranslateResult::Frame1GiB { frame, offset, .. } => {
+                Some(frame.start_address() + offset)
+            }
         }
     }
 }
@@ -53,6 +59,8 @@ pub enum TranslateResult {
     Frame4KiB {
         /// The mapped frame.
         frame: PhysFrame<Size4KiB>,
+        /// Flags in the pagetable for this entry
+        flags: PageTableFlags,
         /// The offset whithin the mapped frame.
         offset: u64,
     },
@@ -60,6 +68,8 @@ pub enum TranslateResult {
     Frame2MiB {
         /// The mapped frame.
         frame: PhysFrame<Size2MiB>,
+        /// Flags in the pagetable for this entry
+        flags: PageTableFlags,
         /// The offset whithin the mapped frame.
         offset: u64,
     },
@@ -67,6 +77,8 @@ pub enum TranslateResult {
     Frame1GiB {
         /// The mapped frame.
         frame: PhysFrame<Size1GiB>,
+        /// Flags in the pagetable for this entry
+        flags: PageTableFlags,
         /// The offset whithin the mapped frame.
         offset: u64,
     },
