@@ -59,28 +59,28 @@ pub enum TranslateResult {
     Frame4KiB {
         /// The mapped frame.
         frame: PhysFrame<Size4KiB>,
-        /// Flags in the pagetable for this entry
-        flags: PageTableFlags,
         /// The offset whithin the mapped frame.
         offset: u64,
+        /// Flags in the pagetable for this entry
+        flags: PageTableFlags,
     },
     /// The page is mapped to a physical frame of size 2MiB.
     Frame2MiB {
         /// The mapped frame.
         frame: PhysFrame<Size2MiB>,
-        /// Flags in the pagetable for this entry
-        flags: PageTableFlags,
         /// The offset whithin the mapped frame.
         offset: u64,
+        /// Flags in the pagetable for this entry
+        flags: PageTableFlags,
     },
     /// The page is mapped to a physical frame of size 2MiB.
     Frame1GiB {
         /// The mapped frame.
         frame: PhysFrame<Size1GiB>,
-        /// Flags in the pagetable for this entry
-        flags: PageTableFlags,
         /// The offset whithin the mapped frame.
         offset: u64,
+        /// Flags in the pagetable for this entry
+        flags: PageTableFlags,
     },
     /// The given page is not mapped to a physical frame.
     PageNotMapped,
