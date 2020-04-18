@@ -1,4 +1,4 @@
-0.10.1
+# 0.10.1
 
 - Add InterruptDescriptorTable::load_unsafe ([#137](https://github.com/rust-osdev/x86_64/pull/137))
 
