@@ -376,13 +376,10 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Ok(page_table) => page_table,
             Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
-                let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
-                let flags = p3[addr.p3_index()].flags();
-                let offset = addr.as_u64() & 0o_777_777_7777;
                 return TranslateResult::Frame1GiB {
-                    frame,
-                    offset,
-                    flags,
+                    frame: PhysFrame::containing_address(p3[addr.p3_index()].addr()),
+                    offset: addr.as_u64() & 0o_777_777_7777,
+                    flags: p3[addr.p3_index()].flags(),
                 };
             }
         };
@@ -390,13 +387,10 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Ok(page_table) => page_table,
             Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
-                let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
-                let flags = p2[addr.p2_index()].flags();
-                let offset = addr.as_u64() & 0o_777_7777;
                 return TranslateResult::Frame2MiB {
-                    frame,
-                    offset,
-                    flags,
+                    frame: PhysFrame::containing_address(p2[addr.p2_index()].addr()),
+                    offset: addr.as_u64() & 0o_777_7777,
+                    flags: p2[addr.p2_index()].flags(),
                 };
             }
         };
@@ -411,12 +405,10 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
             Ok(frame) => frame,
             Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
         };
-        let offset = u64::from(addr.page_offset());
-        let flags = p1_entry.flags();
         TranslateResult::Frame4KiB {
             frame,
-            offset,
-            flags,
+            offset: u64::from(addr.page_offset()),
+            flags: p1_entry.flags(),
         }
     }
 }
