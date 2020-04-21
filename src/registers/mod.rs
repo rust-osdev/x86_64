@@ -11,7 +11,7 @@ pub mod rflags;
 pub fn read_rip() -> u64 {
     let rip: u64;
     unsafe {
-        asm!(
+        llvm_asm!(
             "lea (%rip), $0"
             : "=r"(rip) ::: "volatile"
         );

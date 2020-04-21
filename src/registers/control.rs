@@ -145,7 +145,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov %cr0, $0" : "=r" (value));
+                llvm_asm!("mov %cr0, $0" : "=r" (value));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -184,7 +184,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            asm!("mov $0, %cr0" :: "r" (value) : "memory");
+            llvm_asm!("mov $0, %cr0" :: "r" (value) : "memory");
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr0(value);
@@ -217,7 +217,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov %cr2, $0" : "=r" (value));
+                llvm_asm!("mov %cr2, $0" : "=r" (value));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -237,7 +237,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov %cr3, $0" : "=r" (value));
+                llvm_asm!("mov %cr3, $0" : "=r" (value));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -262,7 +262,7 @@ mod x86_64 {
             let value = addr.as_u64() | flags.bits();
 
             #[cfg(feature = "inline_asm")]
-            asm!("mov $0, %cr3" :: "r" (value) : "memory");
+            llvm_asm!("mov $0, %cr3" :: "r" (value) : "memory");
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr3(value)
@@ -283,7 +283,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov %cr4, $0" : "=r" (value));
+                llvm_asm!("mov %cr4, $0" : "=r" (value));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -324,7 +324,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            asm!("mov $0, %cr4" :: "r" (value) : "memory");
+            llvm_asm!("mov $0, %cr4" :: "r" (value) : "memory");
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr4(value);

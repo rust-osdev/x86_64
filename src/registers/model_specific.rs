@@ -121,7 +121,7 @@ mod x86_64 {
             #[cfg(feature = "inline_asm")]
             {
                 let (high, low): (u32, u32);
-                asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (self.0) : "memory" : "volatile");
+                llvm_asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (self.0) : "memory" : "volatile");
                 ((high as u64) << 32) | (low as u64)
             }
 
@@ -141,7 +141,7 @@ mod x86_64 {
             {
                 let low = value as u32;
                 let high = (value >> 32) as u32;
-                asm!("wrmsr" :: "{ecx}" (self.0), "{eax}" (low), "{edx}" (high) : "memory" : "volatile" );
+                llvm_asm!("wrmsr" :: "{ecx}" (self.0), "{eax}" (low), "{edx}" (high) : "memory" : "volatile" );
             }
 
             #[cfg(not(feature = "inline_asm"))]
