@@ -89,6 +89,33 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p4_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p3_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p2_entry(page, flags)
+    }
+
+    #[inline]
     fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         self.inner.translate_page(page)
     }
@@ -129,6 +156,33 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p4_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p3_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p2_entry(page, flags)
+    }
+
+    #[inline]
     fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         self.inner.translate_page(page)
     }
@@ -166,6 +220,33 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
         self.inner.update_flags(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p4_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p3_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p2_entry(page, flags)
     }
 
     #[inline]

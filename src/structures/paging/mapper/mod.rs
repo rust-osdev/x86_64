@@ -263,6 +263,51 @@ pub trait Mapper<S: PageSize> {
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
+    /// Set the flags of an existing page level 4 table entry
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError>;
+
+    /// Set the flags of an existing page table level 3 entry
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError>;
+
+    /// Set the flags of an existing page table level 2 entry
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError>;
+
     /// Return the frame that the specified page is mapped to.
     ///
     /// This function assumes that the page is mapped to a frame of size `S` and returns an
@@ -314,6 +359,34 @@ impl<S: PageSize> MapperFlush<S> {
     #[inline]
     pub fn flush(self) {
         crate::instructions::tlb::flush(self.0.start_address());
+    }
+
+    /// Don't flush the TLB and silence the “must be used” warning.
+    #[inline]
+    pub fn ignore(self) {}
+}
+
+/// This type represents a change of a page table requiring a complete TLB flush
+///
+/// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
+/// to be flushed from the TLB before it's accessed. This type is returned from a function that
+/// made the change to ensure that the TLB flush is not forgotten.
+#[derive(Debug)]
+#[must_use = "Page Table changes must be flushed or ignored."]
+pub struct MapperFlushAll(());
+
+impl MapperFlushAll {
+    /// Create a new flush promise
+    #[inline]
+    fn new() -> Self {
+        MapperFlushAll(())
+    }
+
+    /// Flush all pages from the TLB to ensure that the newest mapping is used.
+    #[cfg(target_arch = "x86_64")]
+    #[inline]
+    pub fn flush_all(self) {
+        crate::instructions::tlb::flush_all()
     }
 
     /// Don't flush the TLB and silence the “must be used” warning.

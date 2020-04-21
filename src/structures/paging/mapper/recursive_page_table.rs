@@ -351,6 +351,39 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &mut p4[page.p4_index()];
+
+        if p4_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p4_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        _page: Page<Size1GiB>,
+        _flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        Err(FlagUpdateError::ParentEntryHugePage)
+    }
+
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        _page: Page<Size1GiB>,
+        _flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        Err(FlagUpdateError::ParentEntryHugePage)
+    }
+
     fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         let p4 = &self.p4;
 
@@ -451,6 +484,54 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         p2[page.p2_index()].set_flags(flags | Flags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
+    }
+
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &mut p4[page.p4_index()];
+
+        if p4_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p4_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3_entry = &mut p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p3_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        _page: Page<Size2MiB>,
+        _flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        Err(FlagUpdateError::ParentEntryHugePage)
     }
 
     fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
@@ -566,6 +647,75 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         p1[page.p1_index()].set_flags(flags);
 
         Ok(MapperFlush::new(page))
+    }
+
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &mut p4[page.p4_index()];
+
+        if p4_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p4_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3_entry = &mut p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p3_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+
+        if p3[page.p3_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p2 = &mut *(p2_ptr(page, self.recursive_index));
+        let p2_entry = &mut p2[page.p2_index()];
+
+        if p2_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p2_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
     }
 
     fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
