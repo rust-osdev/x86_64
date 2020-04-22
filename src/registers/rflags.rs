@@ -80,7 +80,7 @@ mod x86_64 {
         let r: u64;
         #[cfg(feature = "inline_asm")]
         unsafe {
-            asm!("pushfq; popq $0" : "=r"(r) :: "memory")
+            llvm_asm!("pushfq; popq $0" : "=r"(r) :: "memory")
         };
 
         #[cfg(not(feature = "inline_asm"))]
@@ -108,7 +108,7 @@ mod x86_64 {
     pub fn write_raw(val: u64) {
         #[cfg(feature = "inline_asm")]
         unsafe {
-            asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags")
+            llvm_asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags")
         };
 
         #[cfg(not(feature = "inline_asm"))]

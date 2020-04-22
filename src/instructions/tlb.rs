@@ -7,7 +7,7 @@ use crate::VirtAddr;
 pub fn flush(addr: VirtAddr) {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("invlpg ($0)" :: "r" (addr.as_u64()) : "memory")
+        llvm_asm!("invlpg ($0)" :: "r" (addr.as_u64()) : "memory")
     };
 
     #[cfg(not(feature = "inline_asm"))]
