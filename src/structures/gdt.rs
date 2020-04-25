@@ -121,11 +121,11 @@ impl GlobalDescriptorTable {
 
         let rpl = match entry {
             Descriptor::UserSegment(value) => {
-                match DescriptorFlags::from_bits_truncate(value)
-                    .contains(DescriptorFlags::DPL_RING_3)
+                if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
                 {
-                    true => PrivilegeLevel::Ring3,
-                    false => PrivilegeLevel::Ring0,
+                    PrivilegeLevel::Ring3
+                } else {
+                    PrivilegeLevel::Ring0
                 }
             }
             Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
