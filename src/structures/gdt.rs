@@ -118,7 +118,20 @@ impl GlobalDescriptorTable {
                 index
             }
         };
-        SegmentSelector::new(index as u16, PrivilegeLevel::Ring0)
+
+        let rpl = match entry {
+            Descriptor::UserSegment(value) => {
+                if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
+                {
+                    PrivilegeLevel::Ring3
+                } else {
+                    PrivilegeLevel::Ring0
+                }
+            }
+            Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
+        };
+
+        SegmentSelector::new(index as u16, rpl)
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
