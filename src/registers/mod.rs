@@ -77,6 +77,22 @@ impl RegData {
                 :"=0"(reg_rdx)
             );
         }
+        
+        let reg_rdi: usize;
+        unsafe {
+            llvm_asm!("
+                mov %rdi, $0"
+                :"=0"(reg_rdi)
+            );
+        }
+        
+        let reg_rsi: usize;
+        unsafe {
+            llvm_asm!("
+                mov %rsi, $0"
+                :"=0"(reg_rsi)
+            );
+        }
 
         let reg_rbp: usize;
         unsafe {
