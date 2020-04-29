@@ -111,7 +111,7 @@ impl RegData {
             llvm_asm!("
                 mov (%rsp), $0"
                 :"=i"(reg_rsp) ::: "volatile"
-            );usize
+            );
         }
 
         let reg_r8: usize;
