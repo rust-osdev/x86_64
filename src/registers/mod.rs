@@ -151,22 +151,27 @@ impl RegData {
                 mov (%r15), $0"
                 :"=i"(reg_r15) ::: "volatile"
             );
+            
             llvm_asm!("
                 mov (%rip), $0"
                 :"=i"(reg_rip) ::: "volatile"
             );
+            
             llvm_asm!("
                 mov (%rflags), $0"
                 :"=i"(reg_rflags) ::: "volatile"
             );
+            
             llvm_asm!("
                 mov (%cs), $0"
                 :"=i"(reg_cs) ::: "volatile"
             );
+            
             llvm_asm!("
                 mov (%fs), $0"
                 :"=i"(reg_fs) ::: "volatile"
             );
+            
             llvm_asm!("
                 mov (%gs), $0"
                 :"=i"(reg_gs) ::: "volatile"
