@@ -46,7 +46,25 @@ pub struct RegData {
 }
 
 impl RegData {
-    /// Copy data from all registers, including stack and instruction pointers, into RegData instance
+    /// Backs up data from all registers, including stack and instruction pointers,
+    /// then returns a RegData instance containing the data that was backed up
+    /// 
+    /// # Example:
+    /// ```
+    /// pub struct Thread {
+    ///    // ...
+    /// }
+    /// 
+    /// impl Thread {
+    ///     // ...
+    ///     pub fn preempt(other: RegData) -> RegData {
+    ///         let backup = RegData::backup();
+    ///         RegData::restore(other);
+    ///         backup
+    ///     }
+    ///     // ...
+    /// }
+    
     #[cfg(feature = "llvm_asm")]
     pub fn backup() -> RegData {
 
@@ -243,7 +261,23 @@ impl RegData {
         }
     }
 
-    /// Copy data from RegData instance provided as method argument into all registers, including stack and instruction pointers
+    /// Copies data from RegData instance provided as method argument into all registers,
+    /// including stack and instruction pointers
+    ///
+    /// # Example:
+    /// ```
+    /// pub struct Thread {
+    ///    // ...
+    /// }
+    /// 
+    /// impl Thread {
+    ///     // ...
+    ///     pub fn resume(data: RegData) {
+    ///         RegData::restore(data);
+    ///     }
+    ///     // ...
+    /// }
+    /// ```
     #[cfg(feature = "llvm_asm")]
     pub fn restore(data: RegData) {
 
