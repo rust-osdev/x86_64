@@ -43,7 +43,7 @@ pub struct RegData {
     cs: usize,
     fs: usize,
     gs: usize,
-}
+};
 
 impl RegData {
 
