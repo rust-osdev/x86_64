@@ -91,7 +91,7 @@ impl RegData {
             llvm_asm!("
                 mov %rsp, $0"
                 :"=0"(reg_rsp)
-            );usize
+            );
         }
         let reg_r8: usize;
         unsafe {
