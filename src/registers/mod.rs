@@ -19,6 +19,8 @@ pub fn read_rip() -> u64 {
     rip
 }
 
+/// Struct to store data from all registers in, in event of context switch
+#[derive(Debug)]
 pub struct RegData {
     rax: usize,
     rbx: usize,
@@ -44,6 +46,8 @@ pub struct RegData {
 }
 
 impl RegData {
+    
+    /// Copy data from all registers, including stack and instruction pointers, into RegData instance
     pub fn backup() -> RegData {
 
         let reg_rax: usize;
@@ -226,8 +230,9 @@ impl RegData {
         }
     }
 
+    /// Copy data from RegData instance provided as method argument into all registers, including stack and instruction pointers
     pub fn restore(data: RegData) {
-
+        
         unsafe {
             llvm_asm!("
                 mov $0, %rax"
