@@ -19,6 +19,30 @@ pub fn read_rip() -> u64 {
     rip
 }
 
+pub struct RegData {
+    rax: usize,
+    rbx: usize,
+    rcx: usize,
+    rdx: usize,
+    rdi: usize,
+    rsi: usize,
+    rbp: usize,
+    rsp: usize,
+    r8: usize,
+    r9: usize,
+    r10: usize,
+    r11: usize,
+    r12: usize,
+    r13: usize,
+    r14: usize,
+    r15: usize,
+    rip: usize,
+    rflags: usize,
+    cs: usize,
+    fs: usize,
+    gs: usize,
+}
+
 impl RegData {
     pub fn backup() -> RegData {
 
