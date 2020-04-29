@@ -6,7 +6,7 @@ pub mod rflags;
 
 /// Gets the current instruction pointer. Note that this is only approximate as it requires a few
 /// instructions to execute.
-#[cfg(feature = "inline_asm")]
+#[cfg(feature = "llvm_asm")]
 #[inline(always)]
 pub fn read_rip() -> u64 {
     let rip: u64;
@@ -46,8 +46,8 @@ pub struct RegData {
 }
 
 impl RegData {
-
     /// Copy data from all registers, including stack and instruction pointers, into RegData instance
+    #[cfg(feature = "llvm_asm")]
     pub fn backup() -> RegData {
 
         let reg_rax: usize;
@@ -244,6 +244,7 @@ impl RegData {
     }
 
     /// Copy data from RegData instance provided as method argument into all registers, including stack and instruction pointers
+    #[cfg(feature = "llvm_asm")]
     pub fn restore(data: RegData) {
 
         unsafe {
