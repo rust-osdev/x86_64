@@ -19,194 +19,170 @@ pub fn read_rip() -> u64 {
     rip
 }
 
-pub struct RegData {
-    rax: usize,
-    rbx: usize,
-    rcx: usize,
-    rdx: usize,
-    rdi: usize,
-    rsi: usize,
-    rbp: usize,
-    rsp: usize,
-    r8: usize,
-    r9: usize,
-    r10: usize,
-    r11: usize,
-    r12: usize,
-    r13: usize,
-    r14: usize,
-    r15: usize,
-    rip: usize,
-    rflags: usize,
-    cs: usize,
-    fs: usize,
-    gs: usize,
-}
-
 impl RegData {
     pub fn backup() -> RegData {
 
-        let rax: usize;
+        let reg_rax: usize;
         unsafe {
             llvm_asm!("
                 mov %rax, $0"
-                :"=0"(rax)
+                :"=0"(reg_rax)
             );
         }
 
-        let rbx: usize;
+        let reg_rbx: usize;
         unsafe {
             llvm_asm!("
                 mov %rbx, $0"
-                :"=0"(rbx)
+                :"=0"(reg_rbx)
             );
         }
 
-        let rcx: usize;
+        let reg_rcx: usize;
         unsafe {
             llvm_asm!("
                 mov %rcx, $0"
-                :"=0"(rcx)
+                :"=0"(reg_rcx)
             );
         }
 
-        let rdx: usize;
+        let reg_rdx: usize;
         unsafe {
             llvm_asm!("
                 mov %rdx, $0"
-                :"=0"(rdx)
+                :"=0"(reg_rdx)
             );
         }
 
-        let rbp: usize;
+        let reg_rbp: usize;
         unsafe {
             llvm_asm!("
                 mov %rbp, $0"
-                :"=0"(rbp)
+                :"=0"(reg_rbp)
             );
         }
 
-        let rsp: usize;
+        let reg_rsp: usize;
         unsafe {
             llvm_asm!("
                 mov %rsp, $0"
-                :"=0"(rsp)
+                :"=0"(reg_rsp)
             );usize
         }
-        let r8: usize;
+        let reg_r8: usize;
         unsafe {
             llvm_asm!("
                 mov %r8, $0"
-                :"=0"(r8)
+                :"=0"(reg_r8)
             );
         }
-        let r9: usize;
+        let reg_r9: usize;
         unsafe {
             llvm_asm!("
                 mov %r9, $0"
-                :"=0"(r9)
+                :"=0"(reg_r9)
             );
         }
-        let r10: usize;
+        let reg_r10: usize;
         unsafe {
             llvm_asm!("
                 mov %r10, $0"
-                :"=0"(r10)
+                :"=0"(reg_r10)
             );
         }
-        let r11: usize;
+        let reg_r11: usize;
         unsafe {
             llvm_asm!("
                 mov %r11, $0"
-                :"=0"(r11)
+                :"=0"(reg_r11)
             );
         }
-        let r12: usize;
+        let reg_r12: usize;
         unsafe {
             llvm_asm!("
                 mov %r12, $0"
-                :"=0"(r12)
+                :"=0"(reg_r12)
             );
         }
-        let r13: usize;
+        let reg_r13: usize;
         unsafe {
             llvm_asm!("
                 mov %r13, $0"
-                :"=0"(r13)
+                :"=0"(reg_r13)
             );
         }
-        let r14: usize;
+        let reg_r14: usize;
         unsafe {
             llvm_asm!("
                 mov %r14, $0"
-                :"=0"(r14)
+                :"=0"(reg_r14)
             );
         }
-        let r15: usize;
+        let reg_r15: usize;
         unsafe {
             llvm_asm!("
                 mov %r15, $0"
-                :"=0"(r15)
+                :"=0"(reg_r15)
             );
         }
-        let rip: usize;
+        let reg_rip: usize;
         unsafe {
             llvm_asm!("
                 mov %rip, $0"
-                :"=0"(rip)
+                :"=0"(reg_rip)
             );
         }
-        let rflags: usize;
+        let reg_rflags: usize;
         unsafe {
             llvm_asm!("
                 mov %rflags, $0"
-                :"=0"(rflags)
+                :"=0"(reg_rflags)
             );
         }
-        let cs: usize;
+        let reg_cs: usize;
         unsafe {
             llvm_asm!("
                 mov %cs, $0"
-                :"=0"(cs)
+                :"=0"(reg_cs)
             );
         }
-        let fs: usize;
+        let reg_fs: usize;
         unsafe {
             llvm_asm!("
                 mov %fs, $0"
-                :"=0"(fs)
+                :"=0"(reg_fs)
             );
         }
-        let gs: usize;
+        let reg_gs: usize;
         unsafe {
             llvm_asm!("
                 mov %gs, $0"
-                :"=0"(gs)
+                :"=0"(reg_gs)
             );
         }
 
         RegData {
-            rax: rax,
-            rbx: rbx,
-            rcx: rcx,
-            rdx: rdx,
-            rdi: rdi,
-            rsi: rsi,
-            rbp: rbp,
-            rsp: rsp,
-            r8: r8,
-            r9: r9,
-            r10: r10,
-            r11: r11,
-            r12: r12,
-            r13: r13,
-            r14: r14,
-            r15: r15,
-            rip: rip,
-            rflags: rflags,
-            cs: cs,
-            fs: fs,
-            gs: gs,
+            rax: reg_rax,
+            rbx: reg_rbx,
+            rcx: reg_rcx,
+            rdx: reg_rdx,
+            rdi: reg_rdi,
+            rsi: reg_rsi,
+            rbp: reg_rbp,
+            rsp: reg_rsp,
+            r8: reg_r8,
+            r9: reg_r9,
+            r10: reg_r10,
+            r11: reg_r11,
+            r12: reg_r12,
+            r13: reg_r13,
+            r14: reg_r14,
+            r15: reg_r15,
+            rip: reg_rip,
+            rflags: reg_rflags,
+            cs: reg_cs,
+            fs: reg_fs,
+            gs: reg_gs,
         }
     }
 
