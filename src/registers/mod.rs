@@ -19,7 +19,7 @@ pub fn read_rip() -> u64 {
     rip
 }
 
-/// Struct to store data from all registers in, in event of context switch
+/// Stores all data from all registers, in event of e.g. a context switch
 #[derive(Debug)]
 pub struct RegData {
     rax: usize,
@@ -46,28 +46,28 @@ pub struct RegData {
 }
 
 impl RegData {
-    /// Backs up data from all registers, including stack and instruction pointers,
-    /// then returns a RegData instance containing the data that was backed up
-    /// 
-    /// # Example:
-    /// ```
-    /// pub struct Thread {
-    ///    // ...
-    /// }
-    /// 
-    /// impl Thread {
-    ///     // ...
-    ///     pub fn preempt(other: RegData) -> RegData {
-    ///         let backup = RegData::backup();
-    ///         RegData::restore(other);
-    ///         backup
-    ///     }
-    ///     // ...
-    /// }
     
     #[cfg(feature = "llvm_asm")]
     pub fn backup() -> RegData {
-
+        /// Backs up data from all registers, including stack and instruction pointers,
+        /// then returns a RegData instance containing the data that was backed up
+        /// 
+        /// # Example:
+        /// ```
+        /// pub struct Thread {
+        ///    // ...
+        /// }
+        /// 
+        /// impl Thread {
+        ///     // ...
+        ///     pub fn preempt(other: RegData) -> RegData {
+        ///         let backup = RegData::backup();
+        ///         RegData::restore(other);
+        ///         backup
+        ///     }
+        ///     // ...
+        /// }
+        
         let reg_rax: usize;
         unsafe {
             llvm_asm!("
@@ -261,25 +261,25 @@ impl RegData {
         }
     }
 
-    /// Copies data from RegData instance provided as method argument into all registers,
-    /// including stack and instruction pointers
-    ///
-    /// # Example:
-    /// ```
-    /// pub struct Thread {
-    ///    // ...
-    /// }
-    /// 
-    /// impl Thread {
-    ///     // ...
-    ///     pub fn resume(data: RegData) {
-    ///         RegData::restore(data);
-    ///     }
-    ///     // ...
-    /// }
-    /// ```
     #[cfg(feature = "llvm_asm")]
     pub fn restore(data: RegData) {
+        /// Copies data from RegData instance provided as method argument into all registers,
+        /// including stack and instruction pointers
+        ///
+        /// # Example:
+        /// ```
+        /// pub struct Thread {
+        ///    // ...
+        /// }
+        /// 
+        /// impl Thread {
+        ///     // ...
+        ///     pub fn resume(data: RegData) {
+        ///         RegData::restore(data);
+        ///     }
+        ///     // ...
+        /// }
+        /// ```
 
         unsafe {
             llvm_asm!("
