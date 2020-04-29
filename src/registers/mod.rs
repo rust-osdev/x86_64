@@ -204,127 +204,127 @@ impl RegData {
             llvm_asm!("
                 mov $0, (%rax)"
                 :
-                : "{rax}"(data.rax) ::: "volatile"
+                : "{rax}"(data.rax) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rbx)"
                 :
-                : "{rbx}"(data.rbx) ::: "volatile"
+                : "{rbx}"(data.rbx) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rcx)"
                 :
-                : "{rcx}"(data.rcx) ::: "volatile"
+                : "{rcx}"(data.rcx) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rdx)"
                 :
-                : "{rdx}"(data.rdx) ::: "volatile"
+                : "{rdx}"(data.rdx) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rdi)"
                 :
-                : "{rdi}"(data.rdi) ::: "volatile"
+                : "{rdi}"(data.rdi) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rsi)"
                 :
-                : "{rsi}"(data.rsi) ::: "volatile"
+                : "{rsi}"(data.rsi) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rbp)"
                 :
-                : "{rbp}"(data.rbp) ::: "volatile"
+                : "{rbp}"(data.rbp) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rsp)"
                 :
-                : "{rsp}"(data.rsp) ::: "volatile"
+                : "{rsp}"(data.rsp) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r8)"
                 :
-                : "{r8}"(data.r8) ::: "volatile"
+                : "{r8}"(data.r8) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r9)"
                 :
-                : "{r9}"(data.r9) ::: "volatile"
+                : "{r9}"(data.r9) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r10)"
                 :
-                : "{r10}"(data.r10) ::: "volatile"
+                : "{r10}"(data.r10) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r11)"
                 :
-                : "{r11}"(data.r11) ::: "volatile"
+                : "{r11}"(data.r11) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r12)"
                 :
-                : "{r12}"(data.r12) ::: "volatile"
+                : "{r12}"(data.r12) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r13)"
                 :
-                : "{r13}"(data.r13) ::: "volatile"
+                : "{r13}"(data.r13) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r14)"
                 :
-                : "{r14}"(data.r14) ::: "volatile"
+                : "{r14}"(data.r14) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%r15)"
                 :
-                : "{r15}"(data.r15) ::: "volatile"
+                : "{r15}"(data.r15) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rip)"
                 :
-                : "{rip}"(data.rip) ::: "volatile"
+                : "{rip}"(data.rip) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%rflags)"
                 :
-                : "{rflags}"(data.rflags) ::: "volatile"
+                : "{rflags}"(data.rflags) :: "volatile"
             );
 
             llvm_asm!("
                 mov $0, (%cs)"
                 :
-                : "{cs}"(data.cs) ::: "volatile"
+                : "{cs}"(data.cs) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%fs)"
                 :
-                : "{fs}"(data.fs) ::: "volatile"
+                : "{fs}"(data.fs) :: "volatile"
             );
             
             llvm_asm!("
                 mov $0, (%gs)"
                 :
-                : "{gs}"(data.gs) ::: "volatile"
+                : "{gs}"(data.gs) :: "volatile"
             );
         }
     }
