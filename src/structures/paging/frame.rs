@@ -179,7 +179,7 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
 pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
-    /// The start of the range, exclusive.
+    /// The start of the range, inclusive.
     pub end: PhysFrame<S>,
 }
 
@@ -187,7 +187,7 @@ impl<S: PageSize> PhysFrameRangeInclusive<S> {
     /// Returns whether the range contains no frames.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        self.start >= self.end
+        self.start > self.end
     }
 }
 
