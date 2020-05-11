@@ -1,3 +1,5 @@
+# 0.10.3
+
 - Fix: Inclusive ranges is_empty() comparison ([#156](https://github.com/rust-osdev/x86_64/pull/156))
 
 # 0.10.2
