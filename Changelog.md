@@ -1,3 +1,5 @@
+- Fix: Inclusive ranges is_empty() comparison ([#156](https://github.com/rust-osdev/x86_64/pull/156))
+
 # 0.10.2
 
 - **Nightly Breakage**: Use `llvm_asm!` instead of deprecated `asm!` macro ([#151](https://github.com/rust-osdev/x86_64/pull/151))
