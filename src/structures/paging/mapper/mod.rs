@@ -83,6 +83,13 @@ pub trait Mapper<S: PageSize> {
     /// This function might need additional physical frames to create new page tables. These
     /// frames are allocated from the `allocator` argument. At most three frames are required.
     ///
+    /// Parent page table entries are automatically updated with `PRESENT | WRITABLE | USER_ACCESSIBLE`
+    /// if present in the `PageTableFlags`. Depending on the used mapper implementation
+    /// the `PRESENT` and `WRITABLE` flags might be set for parent tables,
+    /// even if they are not set in `PageTableFlags`.
+    ///
+    /// The `map_to_with_table_flags` method gives explicit control over the parent page table flags.
+    ///
     /// ## Safety
     ///
     /// Creating page table mappings is a fundamentally unsafe operation because
@@ -111,11 +118,125 @@ pub trait Mapper<S: PageSize> {
     /// the same in all address spaces, otherwise undefined behavior can occur
     /// because of TLB races. It's worth noting that all the above requirements
     /// also apply to shared mappings, including the aliasing requirements.
+    ///
+    /// # Examples
+    ///
+    /// Create a USER_ACCESSIBLE mapping:
+    ///
+    /// ```
+    /// # use x86_64::structures::paging::{
+    /// #    Mapper, Page, PhysFrame, FrameAllocator,
+    /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
+    /// # };
+    /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+    /// #         page: Page<Size4KiB>, frame: PhysFrame) {
+    ///         mapper
+    ///           .map_to(
+    ///               page,
+    ///               frame,
+    ///              PageTableFlags::PRESENT
+    ///                   | PageTableFlags::WRITABLE
+    ///                   | PageTableFlags::USER_ACCESSIBLE,
+    ///               frame_allocator,
+    ///           )
+    ///           .unwrap()
+    ///           .flush();
+    /// # }
+    /// ```
+    #[inline]
     unsafe fn map_to<A>(
         &mut self,
         page: Page<S>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
+        frame_allocator: &mut A,
+    ) -> Result<MapperFlush<S>, MapToError<S>>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB>,
+    {
+        let parent_table_flags = flags
+            & (PageTableFlags::PRESENT
+                | PageTableFlags::WRITABLE
+                | PageTableFlags::USER_ACCESSIBLE);
+
+        self.map_to_with_table_flags(page, frame, flags, parent_table_flags, frame_allocator)
+    }
+
+    /// Creates a new mapping in the page table.
+    ///
+    /// This function might need additional physical frames to create new page tables. These
+    /// frames are allocated from the `allocator` argument. At most three frames are required.
+    ///
+    /// The flags of the parent table(s) can be explicitly specified. Those flags are used for
+    /// newly created table entries, and for existing entries the flags are added.
+    ///
+    /// Depending on the used mapper implementation, the `PRESENT` and `WRITABLE` flags might
+    /// be set for parent tables, even if they are not specified in `parent_table_flags`.
+    ///
+    /// ## Safety
+    ///
+    /// Creating page table mappings is a fundamentally unsafe operation because
+    /// there are various ways to break memory safety through it. For example,
+    /// re-mapping an in-use page to a different frame changes and invalidates
+    /// all values stored in that page, resulting in undefined behavior on the
+    /// next use.
+    ///
+    /// The caller must ensure that no undefined behavior or memory safety
+    /// violations can occur through the new mapping. Among other things, the
+    /// caller must prevent the following:
+    ///
+    /// - Aliasing of `&mut` references, i.e. two `&mut` references that point to
+    ///   the same physical address. This is undefined behavior in Rust.
+    ///     - This can be ensured by mapping each page to an individual physical
+    ///       frame that is not mapped anywhere else.
+    /// - Creating uninitalized or invalid values: Rust requires that all values
+    ///   have a correct memory layout. For example, a `bool` must be either a 0
+    ///   or a 1 in memory, but not a 3 or 4. An exception is the `MaybeUninit`
+    ///   wrapper type, which abstracts over possibly uninitialized memory.
+    ///     - This is only a problem when re-mapping pages to different physical
+    ///       frames. Mapping a page that is not in use yet is fine.
+    ///
+    /// Special care must be taken when sharing pages with other address spaces,
+    /// e.g. by setting the `GLOBAL` flag. For example, a global mapping must be
+    /// the same in all address spaces, otherwise undefined behavior can occur
+    /// because of TLB races. It's worth noting that all the above requirements
+    /// also apply to shared mappings, including the aliasing requirements.
+    ///
+    /// # Examples
+    ///
+    /// Create USER_ACCESSIBLE | NO_EXECUTE | NO_CACHE mapping and update
+    /// the top hierarchy only with USER_ACCESSIBLE:
+    ///
+    /// ```
+    /// # use x86_64::structures::paging::{
+    /// #    Mapper, PhysFrame, Page, FrameAllocator,
+    /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
+    /// # };
+    /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+    /// #         page: Page<Size4KiB>, frame: PhysFrame) {
+    ///         mapper
+    ///           .map_to_with_table_flags(
+    ///               page,
+    ///               frame,
+    ///              PageTableFlags::PRESENT
+    ///                   | PageTableFlags::WRITABLE
+    ///                   | PageTableFlags::USER_ACCESSIBLE
+    ///                   | PageTableFlags::NO_EXECUTE
+    ///                   | PageTableFlags::NO_CACHE,
+    ///              PageTableFlags::USER_ACCESSIBLE,
+    ///               frame_allocator,
+    ///           )
+    ///           .unwrap()
+    ///           .flush();
+    /// # }
+    /// ```
+    unsafe fn map_to_with_table_flags<A>(
+        &mut self,
+        page: Page<S>,
+        frame: PhysFrame<S>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         frame_allocator: &mut A,
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
@@ -141,6 +262,51 @@ pub trait Mapper<S: PageSize> {
         page: Page<S>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
+
+    /// Set the flags of an existing page level 4 table entry
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError>;
+
+    /// Set the flags of an existing page table level 3 entry
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError>;
+
+    /// Set the flags of an existing page table level 2 entry
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError>;
 
     /// Return the frame that the specified page is mapped to.
     ///
@@ -193,6 +359,34 @@ impl<S: PageSize> MapperFlush<S> {
     #[inline]
     pub fn flush(self) {
         crate::instructions::tlb::flush(self.0.start_address());
+    }
+
+    /// Don't flush the TLB and silence the “must be used” warning.
+    #[inline]
+    pub fn ignore(self) {}
+}
+
+/// This type represents a change of a page table requiring a complete TLB flush
+///
+/// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
+/// to be flushed from the TLB before it's accessed. This type is returned from a function that
+/// made the change to ensure that the TLB flush is not forgotten.
+#[derive(Debug)]
+#[must_use = "Page Table changes must be flushed or ignored."]
+pub struct MapperFlushAll(());
+
+impl MapperFlushAll {
+    /// Create a new flush promise
+    #[inline]
+    fn new() -> Self {
+        MapperFlushAll(())
+    }
+
+    /// Flush all pages from the TLB to ensure that the newest mapping is used.
+    #[cfg(target_arch = "x86_64")]
+    #[inline]
+    pub fn flush_all(self) {
+        crate::instructions::tlb::flush_all()
     }
 
     /// Don't flush the TLB and silence the “must be used” warning.

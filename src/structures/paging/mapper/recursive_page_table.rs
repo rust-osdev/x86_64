@@ -26,6 +26,9 @@ use crate::VirtAddr;
 ///   level 3 index, then the level 2 index.
 ///
 /// This struct implements the `Mapper` trait.
+///
+/// The page table flags `PRESENT` and `WRITABLE` are always set for higher level page table
+/// entries, even if not specified, because the design of the recursive page table requires it.
 #[derive(Debug)]
 pub struct RecursivePageTable<'a> {
     p4: &'a mut PageTable,
@@ -84,6 +87,10 @@ impl<'a> RecursivePageTable<'a> {
     /// and the entry is updated to that address. If the passed entry is already mapped, the next
     /// table is returned directly.
     ///
+    /// The page table flags `PRESENT` and `WRITABLE` are always set for higher level page table
+    /// entries, even if not specified in the `insert_flags`, because the design of the
+    /// recursive page table requires it.
+    ///
     /// The `next_page_table` page must be the page of the next page table in the hierarchy.
     ///
     /// Returns `MapToError::FrameAllocationFailed` if the entry is unused and the allocator
@@ -92,6 +99,7 @@ impl<'a> RecursivePageTable<'a> {
     unsafe fn create_next_table<'b, A, S: PageSize>(
         entry: &'b mut PageTableEntry,
         next_table_page: Page,
+        insert_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<&'b mut PageTable, MapToError<S>>
     where
@@ -103,6 +111,7 @@ impl<'a> RecursivePageTable<'a> {
         fn inner<'b, A, S: PageSize>(
             entry: &'b mut PageTableEntry,
             next_table_page: Page,
+            insert_flags: PageTableFlags,
             allocator: &mut A,
         ) -> Result<&'b mut PageTable, MapToError<S>>
         where
@@ -114,12 +123,15 @@ impl<'a> RecursivePageTable<'a> {
 
             if entry.is_unused() {
                 if let Some(frame) = allocator.allocate_frame() {
-                    entry.set_frame(frame, Flags::PRESENT | Flags::WRITABLE);
+                    entry.set_frame(frame, Flags::PRESENT | Flags::WRITABLE | insert_flags);
                     created = true;
                 } else {
                     return Err(MapToError::FrameAllocationFailed);
                 }
             } else {
+                if !insert_flags.is_empty() && !entry.flags().contains(insert_flags) {
+                    entry.set_flags(entry.flags() | insert_flags);
+                }
                 created = false;
             }
             if entry.flags().contains(Flags::HUGE_PAGE) {
@@ -134,7 +146,7 @@ impl<'a> RecursivePageTable<'a> {
             Ok(page_table)
         }
 
-        inner(entry, next_table_page, allocator)
+        inner(entry, next_table_page, insert_flags, allocator)
     }
 
     /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
@@ -144,6 +156,7 @@ impl<'a> RecursivePageTable<'a> {
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
@@ -153,7 +166,14 @@ impl<'a> RecursivePageTable<'a> {
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
-        let p3 = unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, allocator)? };
+        let p3 = unsafe {
+            Self::create_next_table(
+                &mut p4[page.p4_index()],
+                p3_page,
+                parent_table_flags,
+                allocator,
+            )?
+        };
 
         if !p3[page.p3_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
@@ -170,6 +190,7 @@ impl<'a> RecursivePageTable<'a> {
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
@@ -179,10 +200,24 @@ impl<'a> RecursivePageTable<'a> {
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
-        let p3 = unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, allocator)? };
+        let p3 = unsafe {
+            Self::create_next_table(
+                &mut p4[page.p4_index()],
+                p3_page,
+                parent_table_flags,
+                allocator,
+            )?
+        };
 
         let p2_page = p2_page(page, self.recursive_index);
-        let p2 = unsafe { Self::create_next_table(&mut p3[page.p3_index()], p2_page, allocator)? };
+        let p2 = unsafe {
+            Self::create_next_table(
+                &mut p3[page.p3_index()],
+                p2_page,
+                parent_table_flags,
+                allocator,
+            )?
+        };
 
         if !p2[page.p2_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
@@ -199,6 +234,7 @@ impl<'a> RecursivePageTable<'a> {
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
@@ -207,13 +243,34 @@ impl<'a> RecursivePageTable<'a> {
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
-        let p3 = unsafe { Self::create_next_table(&mut p4[page.p4_index()], p3_page, allocator)? };
+        let p3 = unsafe {
+            Self::create_next_table(
+                &mut p4[page.p4_index()],
+                p3_page,
+                parent_table_flags,
+                allocator,
+            )?
+        };
 
         let p2_page = p2_page(page, self.recursive_index);
-        let p2 = unsafe { Self::create_next_table(&mut p3[page.p3_index()], p2_page, allocator)? };
+        let p2 = unsafe {
+            Self::create_next_table(
+                &mut p3[page.p3_index()],
+                p2_page,
+                parent_table_flags,
+                allocator,
+            )?
+        };
 
         let p1_page = p1_page(page, self.recursive_index);
-        let p1 = unsafe { Self::create_next_table(&mut p2[page.p2_index()], p1_page, allocator)? };
+        let p1 = unsafe {
+            Self::create_next_table(
+                &mut p2[page.p2_index()],
+                p1_page,
+                parent_table_flags,
+                allocator,
+            )?
+        };
 
         if !p1[page.p1_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
@@ -226,17 +283,18 @@ impl<'a> RecursivePageTable<'a> {
 
 impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.map_to_1gib(page, frame, flags, allocator)
+        self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -293,6 +351,39 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &mut p4[page.p4_index()];
+
+        if p4_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p4_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        _page: Page<Size1GiB>,
+        _flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        Err(FlagUpdateError::ParentEntryHugePage)
+    }
+
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        _page: Page<Size1GiB>,
+        _flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        Err(FlagUpdateError::ParentEntryHugePage)
+    }
+
     fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         let p4 = &self.p4;
 
@@ -314,17 +405,18 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
 
 impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.map_to_2mib(page, frame, flags, allocator)
+        self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -394,6 +486,54 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &mut p4[page.p4_index()];
+
+        if p4_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p4_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3_entry = &mut p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p3_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        _page: Page<Size2MiB>,
+        _flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        Err(FlagUpdateError::ParentEntryHugePage)
+    }
+
     fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         let p4 = &self.p4;
 
@@ -422,17 +562,18 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
 
 impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.map_to_4kib(page, frame, flags, allocator)
+        self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -506,6 +647,75 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         p1[page.p1_index()].set_flags(flags);
 
         Ok(MapperFlush::new(page))
+    }
+
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &mut p4[page.p4_index()];
+
+        if p4_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p4_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3_entry = &mut p3[page.p3_index()];
+
+        if p3_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p3_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
+    }
+
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let p4 = &mut self.p4;
+
+        if p4[page.p4_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+
+        if p3[page.p3_index()].is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        let p2 = &mut *(p2_ptr(page, self.recursive_index));
+        let p2_entry = &mut p2[page.p2_index()];
+
+        if p2_entry.is_unused() {
+            return Err(FlagUpdateError::PageNotMapped);
+        }
+
+        p2_entry.set_flags(flags);
+
+        Ok(MapperFlushAll::new())
     }
 
     fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
