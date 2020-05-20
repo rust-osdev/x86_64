@@ -17,7 +17,7 @@ name = "double_fault_stack_overflow"
 harness = false
 
 [dependencies]
-bootloader = "0.9.2"
+bootloader = "0.9.3"
 uart_16550 = "0.2.0"
 spin = "0.5.0"
 
