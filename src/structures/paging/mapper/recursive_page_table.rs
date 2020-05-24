@@ -72,7 +72,9 @@ impl<'a> RecursivePageTable<'a> {
     ///
     /// ## Safety
     ///
-    /// The `recursive_index` parameter must be the index of the recursively mapped entry.
+    /// The given page table must be a level 4 page table that is active in the
+    /// CPU (i.e. loaded in the CR3 register). The `recursive_index` parameter
+    /// must be the index of the recursively mapped entry of that page table.
     #[inline]
     pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: PageTableIndex) -> Self {
         RecursivePageTable {
