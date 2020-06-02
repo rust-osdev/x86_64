@@ -25,7 +25,7 @@ use core::ops::{Deref, Index, IndexMut, RangeBounds};
 /// not possible for entries for which an error code is pushed.
 ///
 /// The remaining entries are used for interrupts. They can be accesed through index
-/// operations on the idt, e.g. `idt[32]` returns the first interrupt entry, which is the 32th IDT
+/// operations on the idt, e.g. `idt[32]` returns the first interrupt entry, which is the 32nd IDT
 /// entry).
 ///
 ///
