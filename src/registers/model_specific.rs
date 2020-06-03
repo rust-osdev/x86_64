@@ -288,10 +288,10 @@ mod x86_64 {
         ) {
             let raw = Self::read_raw();
             (
-                SegmentSelector((raw.0 + 16).try_into().unwrap()),
-                SegmentSelector((raw.0 + 8).try_into().unwrap()),
-                SegmentSelector((raw.1).try_into().unwrap()),
-                SegmentSelector((raw.1 + 8).try_into().unwrap()),
+                SegmentSelector(raw.0 + 16),
+                SegmentSelector(raw.0 + 8),
+                SegmentSelector(raw.1),
+                SegmentSelector(raw.1 + 8),
             )
         }
 
