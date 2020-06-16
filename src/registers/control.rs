@@ -210,7 +210,7 @@ mod x86_64 {
     }
 
     impl Cr2 {
-        /// Read the current page fault linear address from the CR3 register.
+        /// Read the current page fault linear address from the CR2 register.
         #[inline]
         pub fn read() -> VirtAddr {
             let value: u64;
