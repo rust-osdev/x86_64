@@ -35,11 +35,10 @@ macro_rules! const_fn {
 #[cfg(not(feature = "inline_asm"))]
 pub(crate) mod asm;
 
+pub mod addr;
 pub mod instructions;
 pub mod registers;
 pub mod structures;
-
-mod addr;
 
 /// Represents a protection ring level.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

@@ -1,3 +1,5 @@
+//! Physical and virtal addresses manipulation
+
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
