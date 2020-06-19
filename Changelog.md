@@ -1,3 +1,5 @@
+# 0.11.1
+
 - Export `PhysAddrNotValid` and `VirtAddrNotValid` error types ([#163](https://github.com/rust-osdev/x86_64/pull/163))
 
 # 0.11.0
