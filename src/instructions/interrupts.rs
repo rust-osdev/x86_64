@@ -15,7 +15,7 @@ pub fn are_enabled() -> bool {
 pub fn enable() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("sti" :::: "volatile");
+        asm!("sti", options(nomem, nostack));
     }
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
@@ -30,7 +30,7 @@ pub fn enable() {
 pub fn disable() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("cli" :::: "volatile");
+        asm!("cli", options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -131,7 +131,7 @@ where
 pub fn enable_interrupts_and_hlt() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("sti; hlt" :::: "volatile");
+        asm!("sti; hlt", options(nomem, nostack));
     }
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
@@ -144,7 +144,7 @@ pub fn enable_interrupts_and_hlt() {
 pub fn int3() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("int3" :::: "volatile");
+        asm!("int3", options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -162,7 +162,7 @@ pub fn int3() {
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
-        llvm_asm!("int $0" :: "N" ($x) :: "volatile");
+        asm!("int {}", in(reg) $x, options(nomem, nostack));
     }};
 }
 

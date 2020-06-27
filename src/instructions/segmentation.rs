@@ -18,11 +18,8 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
     #[inline(always)]
     unsafe fn inner(sel: SegmentSelector) {
-        llvm_asm!("pushq $0; \
-              leaq  1f(%rip), %rax; \
-              pushq %rax; \
-              lretq; \
-              1:" :: "ri" (u64::from(sel.0)) : "rax" "memory");
+        // FIXME - Use intel syntax
+        asm!("pushq {}; leaq 1f(%rip), %rax; pushq %rax; lretq; 1:", in(reg) u64::from(sel.0), out("rax") _, options(att_syntax));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -43,7 +40,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("movw $0, %ss " :: "r" (sel.0) : "memory");
+    asm!("mov ss, {0:x}", in(reg) sel.0, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_ss(sel.0);
@@ -58,7 +55,7 @@ pub unsafe fn load_ss(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("movw $0, %ds " :: "r" (sel.0) : "memory");
+    asm!("mov ds, {0:x}", in(reg) sel.0, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_ds(sel.0);
@@ -73,7 +70,7 @@ pub unsafe fn load_ds(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("movw $0, %es " :: "r" (sel.0) : "memory");
+     asm!("mov es, {0:x}", in(reg) sel.0, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_es(sel.0);
@@ -88,7 +85,7 @@ pub unsafe fn load_es(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("movw $0, %fs " :: "r" (sel.0) : "memory");
+    asm!("mov fs, {0:x}", in(reg) sel.0, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_fs(sel.0);
@@ -103,7 +100,7 @@ pub unsafe fn load_fs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("movw $0, %gs " :: "r" (sel.0) : "memory");
+    asm!("mov gs, {0:x}", in(reg) sel.0, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_gs(sel.0);
@@ -118,7 +115,7 @@ pub unsafe fn load_gs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn swap_gs() {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("swapgs" ::: "memory" : "volatile");
+    asm!("swapgs", options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_swapgs();
@@ -130,7 +127,9 @@ pub fn cs() -> SegmentSelector {
     #[cfg(feature = "inline_asm")]
     {
         let segment: u16;
-        unsafe { llvm_asm!("mov %cs, $0" : "=r" (segment) ) };
+        unsafe {
+            asm!("mov {0:x}, cs", out(reg) segment, options(nostack, nomem)) 
+        };
         SegmentSelector(segment)
     }
 
