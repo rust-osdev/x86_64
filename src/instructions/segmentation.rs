@@ -70,7 +70,7 @@ pub unsafe fn load_ds(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-     asm!("mov es, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov es, {0:x}", in(reg) sel.0, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_es(sel.0);
@@ -127,9 +127,7 @@ pub fn cs() -> SegmentSelector {
     #[cfg(feature = "inline_asm")]
     {
         let segment: u16;
-        unsafe {
-            asm!("mov {0:x}, cs", out(reg) segment, options(nostack, nomem)) 
-        };
+        unsafe { asm!("mov {0:x}, cs", out(reg) segment, options(nostack, nomem)) };
         SegmentSelector(segment)
     }
 
