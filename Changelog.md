@@ -1,5 +1,7 @@
 # Unreleased
 
+- Use `asm!` instead of perma-unstable `llvm_asm!` macro
+
 # 0.12.2 – 2020-09-29
 
 - Add additional `DescriptorFlags` and aliases compatible with `syscall`/`sysenter` ([#181](https://github.com/rust-osdev/x86_64/pull/181))
