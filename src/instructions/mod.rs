@@ -60,7 +60,7 @@ pub fn read_rip() -> u64 {
     let rip: u64;
     unsafe {
         asm!(
-            "lea {}, rip", out(reg) rip, options(nostack, nomem)
+            "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
         );
     }
     rip
