@@ -141,7 +141,7 @@ mod x86_64 {
             {
                 let low = value as u32;
                 let high = (value >> 32) as u32;
-                asm!("rdmsr", in("ecx") self.0, in("eax") low, in("edx") high, options(nostack))
+                asm!("wrmsr", in("ecx") self.0, in("eax") low, in("edx") high, options(nostack))
             }
 
             #[cfg(not(feature = "inline_asm"))]
