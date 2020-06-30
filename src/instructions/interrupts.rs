@@ -162,7 +162,7 @@ pub fn int3() {
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
-        asm!("int {}", in(reg) $x, options(nomem, nostack));
+        asm!("int {id}", id = const $x, options(nomem, nostack));
     }};
 }
 
