@@ -16,6 +16,8 @@ use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
+#[cfg(feature = "proc_macros")]
+pub use x86_64_idt_default_handler::set_default_handler;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -828,5 +830,14 @@ mod test {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+    }
+
+    #[cfg(feature = "proc_macros")]
+    #[test]
+    fn default_handlers() {
+        fn default_handler(_stack_frame: &mut InterruptStackFrame, _index: u8) {}
+
+        let mut idt = InterruptDescriptorTable::new();
+        set_default_handler!(&mut idt, default_handler, 32..64);
     }
 }
