@@ -17,7 +17,7 @@ use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
 #[cfg(feature = "proc_macros")]
-pub use x86_64_idt_default_handler::set_default_handler;
+pub use x86_64_idt_general_handler::set_general_handler;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -824,6 +824,26 @@ bitflags! {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate as x86_64;
+
+    fn entry_present(idt: &InterruptDescriptorTable, index: usize) -> bool {
+        let options = match index {
+            8 => &idt.double_fault.options,
+            10 => &idt.invalid_tss.options,
+            11 => &idt.segment_not_present.options,
+            12 => &idt.stack_segment_fault.options,
+            13 => &idt.general_protection_fault.options,
+            14 => &idt.page_fault.options,
+            15 => &idt.reserved_1.options,
+            17 => &idt.alignment_check.options,
+            18 => &idt.machine_check.options,
+            i @ 21..=29 => &idt.reserved_2[i - 21].options,
+            30 => &idt.security_exception.options,
+            31 => &idt.reserved_3.options,
+            other => &idt[other].options,
+        };
+        options.0.get_bit(15)
+    }
 
     #[test]
     fn size_test() {
@@ -834,10 +854,47 @@ mod test {
 
     #[cfg(feature = "proc_macros")]
     #[test]
-    fn default_handlers() {
-        fn default_handler(_stack_frame: &mut InterruptStackFrame, _index: u8) {}
+    fn general_handlers() {
+        fn general_handler(
+            _stack_frame: &mut InterruptStackFrame,
+            _index: u8,
+            _error_code: Option<u64>,
+        ) {
+        }
 
         let mut idt = InterruptDescriptorTable::new();
-        set_default_handler!(&mut idt, default_handler, 32..64);
+        set_general_handler!(&mut idt, general_handler, 0);
+        for i in 0..256 {
+            if i == 0 {
+                assert!(entry_present(&idt, i));
+            } else {
+                assert!(!entry_present(&idt, i));
+            }
+        }
+        set_general_handler!(&mut idt, general_handler, 14);
+        for i in 0..256 {
+            if i == 0 || i == 14 {
+                assert!(entry_present(&idt, i));
+            } else {
+                assert!(!entry_present(&idt, i));
+            }
+        }
+        set_general_handler!(&mut idt, general_handler, 32..64);
+        for i in 1..256 {
+            if i == 0 || i == 14 || (i >= 32 && i < 64) {
+                assert!(entry_present(&idt, i));
+            } else {
+                assert!(!entry_present(&idt, i));
+            }
+        }
+        set_general_handler!(&mut idt, general_handler);
+        for i in 0..256 {
+            if i == 15 || i == 31 || (i >= 21 && i <= 29) {
+                // reserved entries should not be set
+                assert!(!entry_present(&idt, i));
+            } else {
+                assert!(entry_present(&idt, i));
+            }
+        }
     }
 }

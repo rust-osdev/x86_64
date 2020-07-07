@@ -1,5 +1,5 @@
 [package]
-name = "x86_64-idt-default-handler"
+name = "x86_64-idt-general-handler"
 version = "0.1.0"
 authors = ["Philipp Oppermann <dev@phil-opp.com>"]
 edition = "2018"
@@ -12,3 +12,4 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0.33", features = ["full"] }
 quote = "1.0.7"
+proc-macro2 = "1.0.18"

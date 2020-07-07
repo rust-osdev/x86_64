@@ -30,7 +30,7 @@ edition = "2018"
 [dependencies]
 bit_field = "0.9.0"
 bitflags = "1.0.4"
-x86_64-idt-default-handler = { path = "x86_64-idt-default-handler", optional = true}
+x86_64-idt-general-handler = { path = "idt-general-handler", optional = true}
 
 [build-dependencies]
 cc = { version = "1.0.37", optional = true }
@@ -44,7 +44,7 @@ nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
 inline_asm = []
 abi_x86_interrupt = []
 const_fn = []
-proc_macros = [ "x86_64-idt-default-handler" ]
+proc_macros = [ "x86_64-idt-general-handler" ]
 
 [package.metadata.release]
 no-dev-version = true
