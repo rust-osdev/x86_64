@@ -129,7 +129,7 @@ bitflags! {
 mod x86_64 {
     use super::*;
     use crate::structures::paging::PhysFrame;
-    use crate::{PhysAddr, VirtAddr};
+    use crate::{PhysAddr, VirtAddr, instructions::tlb::Pcid};
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
@@ -251,6 +251,28 @@ mod x86_64 {
             (frame, flags)
         }
 
+        /// Read the current P4 table address from the CR3 register along with PCID.
+        /// The correct functioning of this requires CR4.PCIDE = 1.
+        #[inline]
+        pub fn read_as_pcid() -> (PhysFrame, u16) {
+            let value: u64;
+
+            #[cfg(feature = "inline_asm")]
+            unsafe {
+                llvm_asm!("mov %cr3, $0" : "=r" (value));
+            }
+
+            #[cfg(not(feature = "inline_asm"))]
+            unsafe {
+                value = crate::asm::x86_64_asm_read_cr3();
+            }
+
+            let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
+            let frame = PhysFrame::containing_address(addr);
+            let pcid = value & 0xFFF;
+            (frame, pcid as u16)
+        }
+
         /// Write a new P4 table address into the CR3 register.
         ///
         /// ## Safety
@@ -260,6 +282,24 @@ mod x86_64 {
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
             let addr = frame.start_address();
             let value = addr.as_u64() | flags.bits();
+
+            #[cfg(feature = "inline_asm")]
+            llvm_asm!("mov $0, %cr3" :: "r" (value) : "memory");
+
+            #[cfg(not(feature = "inline_asm"))]
+            crate::asm::x86_64_asm_write_cr3(value)
+        }
+
+        /// Write a new P4 table address into the CR3 register.
+        ///
+        /// ## Safety
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        /// Also, using this requires CR4.PCIDE flag to be set.
+        #[inline]
+        pub unsafe fn write_pcid(frame: PhysFrame, pcid: Pcid) {
+            let addr = frame.start_address();
+            let value = addr.as_u64() | pcid.value() as u64;
 
             #[cfg(feature = "inline_asm")]
             llvm_asm!("mov $0, %cr3" :: "r" (value) : "memory");
