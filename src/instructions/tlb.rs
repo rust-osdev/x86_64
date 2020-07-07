@@ -55,7 +55,7 @@ struct InvpcidDescriptor {
 pub struct Pcid(u64);
 
 impl Pcid {
-    /// Create a new PCID. Will result in a failure if the value of 
+    /// Create a new PCID. Will result in a failure if the value of
     /// PCID is out of expected bounds.
     pub fn new(pcid: u16) -> Result<Pcid, &'static str> {
         if pcid >= 4096 {
@@ -74,16 +74,22 @@ impl Pcid {
 /// Invalidate the given address in the TLB using the `invpcid` instruction.
 #[inline]
 pub fn flush_pcid(command: InvPicdCommand) {
-
     let mut desc = InvpcidDescriptor {
         address: 0,
         pcid: 0,
     };
-    
+
     let kind;
     match command {
-        InvPicdCommand::IndividualAddressInvalidation(addr, pcid) => { kind = 0; desc.pcid = pcid.value() as u64; desc.address = addr.as_u64() }
-        InvPicdCommand::SingleContextInvalidation(pcid) => { kind = 1;  desc.pcid = pcid.0},
+        InvPicdCommand::IndividualAddressInvalidation(addr, pcid) => {
+            kind = 0;
+            desc.pcid = pcid.value() as u64;
+            desc.address = addr.as_u64()
+        }
+        InvPicdCommand::SingleContextInvalidation(pcid) => {
+            kind = 1;
+            desc.pcid = pcid.0
+        }
         InvPicdCommand::AllContextInvalidationIncludeGlobal => kind = 2,
         InvPicdCommand::AllContextInvalidationExcludeGlobal => kind = 3,
     }

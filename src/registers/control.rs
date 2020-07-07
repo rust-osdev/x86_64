@@ -129,7 +129,7 @@ bitflags! {
 mod x86_64 {
     use super::*;
     use crate::structures::paging::PhysFrame;
-    use crate::{PhysAddr, VirtAddr, instructions::tlb::Pcid};
+    use crate::{instructions::tlb::Pcid, PhysAddr, VirtAddr};
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
