@@ -1,3 +1,5 @@
+- Add rdfsbase, rdgsbase, wrfsbase, wrgsbase ([#172](https://github.com/rust-osdev/x86_64/pull/172))
+
 # 0.11.1
 
 - Export `PhysAddrNotValid` and `VirtAddrNotValid` error types ([#163](https://github.com/rust-osdev/x86_64/pull/163))
