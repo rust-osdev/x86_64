@@ -234,6 +234,12 @@ _x86_64_asm_hlt:
     hlt
     retq
 
+.global _x86_64_asm_nop
+.p2align 4
+_x86_64_asm_nop:
+    nop
+    retq
+
 .global _x86_64_asm_rdfsbase
 .p2align 4
 _x86_64_asm_rdfsbase:
