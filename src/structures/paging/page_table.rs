@@ -189,7 +189,7 @@ impl PageTable {
     #[inline]
     pub const fn new() -> Self {
         PageTable {
-            entries: [PageTableEntry::new(); ENTRY_COUNT],
+            entries: [PageTableEntry { entry: 0 }; ENTRY_COUNT],
         }
     }
 
