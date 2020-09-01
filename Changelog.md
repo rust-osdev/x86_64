@@ -1,8 +1,10 @@
 # Unreleased
 
-# 0.11.3 – 2020-09-01
-
 - Add a function for the `nop` instruction ([#174](https://github.com/rust-osdev/x86_64/pull/174))
+
+# ~~0.11.3 – 2020-09-01~~
+
+- (accidental release, yanked)
 
 # 0.11.2 – 2020-08-13
 
