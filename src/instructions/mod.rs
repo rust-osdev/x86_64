@@ -26,7 +26,7 @@ pub fn hlt() {
 /// Executes the `nop` instructions, which performs no operation (i.e. does nothing).
 ///
 /// This operation is useful to work around the LLVM bug that endless loops are illegally
-/// optimized away (see https://github.com/rust-lang/rust/issues/28728). By invoking this
+/// optimized away (see [the issue](https://github.com/rust-lang/rust/issues/28728)). By invoking this
 /// instruction (which is marked as volatile), the compiler should no longer optimize the
 /// endless loop away.
 #[inline]
