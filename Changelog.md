@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.11.5 – 2020-09-03
+
 - Don't rely on promotion of `PageTableEntry::new` inside a `const fn` ([#175](https://github.com/rust-osdev/x86_64/pull/175))
 
 # 0.11.4 – 2020-09-01
