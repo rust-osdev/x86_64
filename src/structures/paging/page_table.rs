@@ -188,8 +188,9 @@ impl PageTable {
     #[cfg(feature = "const_fn")]
     #[inline]
     pub const fn new() -> Self {
+        const EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
-            entries: [PageTableEntry { entry: 0 }; ENTRY_COUNT],
+            entries: [EMPTY; ENTRY_COUNT],
         }
     }
 
