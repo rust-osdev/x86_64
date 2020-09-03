@@ -1,5 +1,7 @@
 # Unreleased
 
+- Don't rely on promotion of `PageTableEntry::new` inside a `const fn` ([#175](https://github.com/rust-osdev/x86_64/pull/175))
+
 # 0.11.4 – 2020-09-01
 
 - Add a function for the `nop` instruction ([#174](https://github.com/rust-osdev/x86_64/pull/174))
