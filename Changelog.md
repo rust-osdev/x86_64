@@ -2,6 +2,10 @@
 
 - Fix const_item_mutation warnings added in latest Rust nightly ([#178](https://github.com/rust-osdev/x86_64/pull/178))
 
+# 0.11.6 – 2020-09-11 (yanked)
+
+- (accidental empty release)
+
 # 0.11.5 – 2020-09-03
 
 - Don't rely on promotion of `PageTableEntry::new` inside a `const fn` ([#175](https://github.com/rust-osdev/x86_64/pull/175))
