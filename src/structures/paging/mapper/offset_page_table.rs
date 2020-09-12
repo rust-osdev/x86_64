@@ -1,5 +1,3 @@
-#![cfg(target_arch = "x86_64")]
-
 use crate::structures::paging::{
     frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
 };

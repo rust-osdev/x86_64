@@ -125,7 +125,7 @@ bitflags! {
     }
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
     use crate::structures::paging::PhysFrame;

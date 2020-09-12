@@ -32,7 +32,7 @@ macro_rules! const_fn {
     }
 }
 
-#[cfg(not(feature = "inline_asm"))]
+#[cfg(all(feature = "instructions", not(feature = "inline_asm")))]
 pub(crate) mod asm;
 
 pub mod addr;

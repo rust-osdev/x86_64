@@ -34,9 +34,10 @@ array-init = { version = "0.1.1", optional = true }
 cc = { version = "1.0.37", optional = true }
 
 [features]
-default = [ "nightly" ]
+default = [ "nightly", "instructions" ]
+instructions = []
 deny-warnings = []
-stable = [ "cc", "array-init" ]
+external_asm = [ "cc", "array-init" ]
 nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
 inline_asm = []
 abi_x86_interrupt = []
