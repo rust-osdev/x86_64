@@ -246,6 +246,12 @@ impl IndexMut<PageTableIndex> for PageTable {
     }
 }
 
+impl Default for PageTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Debug for PageTable {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
