@@ -2,10 +2,12 @@ fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
     #[cfg(all(feature = "external_asm", windows))]
-    compile_error!("\"external_asm\" feature is not available on windows!");
+    compile_error!("\"external_asm\" feature is not available on windows toolchain!");
 
-    #[cfg(all(feature = "instructions", not(target_arch = "x86_64")))]
-    compile_error!("\"instructions\" feature is only available for x86_64 targets!");
+    #[cfg(feature = "instructions")]
+    if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap() != "x86_64" {
+        panic!("\"instructions\" feature is only available for x86_64 targets!");
+    }
 
     #[cfg(all(
         feature = "instructions",
