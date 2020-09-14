@@ -185,21 +185,11 @@ pub struct PageTable {
 
 impl PageTable {
     /// Creates an empty page table.
-    #[cfg(feature = "const_fn")]
     #[inline]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         const EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
             entries: [EMPTY; ENTRY_COUNT],
-        }
-    }
-
-    /// Creates an empty page table.
-    #[cfg(not(feature = "const_fn"))]
-    #[inline]
-    pub fn new() -> Self {
-        PageTable {
-            entries: array_init::array_init(|_| PageTableEntry::new()),
         }
     }
 

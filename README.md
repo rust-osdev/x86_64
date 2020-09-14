@@ -7,7 +7,7 @@ Support for x86_64 specific instructions (e.g. TLB flush), registers (e.g. contr
 
 ## Crate Feature Flags
 
-* `nightly`: This is the default.
+* `nightly`: Enables features only available on nightly Rust; enabled by default.
 * `instructions`: Enabled by default, turns on x86\_64 specific instructions, and dependent features. Only available for x86\_64 targets.
 * `external_asm`: Use this to build with non-nightly rust. Needs `default-features = false, features = ["instructions"]`. Is unsupported on Windows.
 
