@@ -8,7 +8,7 @@ pub use self::frame_alloc::UnusedPhysFrame;
 pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
 #[doc(no_inline)]
 pub use self::mapper::MappedPageTable;
-#[cfg(pointer_width = "64")]
+#[cfg(target_pointer_width = "64")]
 #[doc(no_inline)]
 pub use self::mapper::OffsetPageTable;
 #[cfg(feature = "instructions")]

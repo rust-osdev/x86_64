@@ -1,7 +1,7 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
 pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
-#[cfg(pointer_width = "64")]
+#[cfg(target_pointer_width = "64")]
 pub use self::offset_page_table::OffsetPageTable;
 #[cfg(feature = "instructions")]
 pub use self::recursive_page_table::RecursivePageTable;
@@ -127,12 +127,12 @@ pub trait Mapper<S: PageSize> {
     /// Create a USER_ACCESSIBLE mapping:
     ///
     /// ```
-    /// # #[cfg(pointer_width = "64")]
+    /// # #[cfg(feature = "instructions")]
     /// # use x86_64::structures::paging::{
     /// #    Mapper, Page, PhysFrame, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
-    /// # #[cfg(pointer_width = "64")]
+    /// # #[cfg(feature = "instructions")]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
     /// #         page: Page<Size4KiB>, frame: PhysFrame) {
     ///         mapper
@@ -214,12 +214,12 @@ pub trait Mapper<S: PageSize> {
     /// the top hierarchy only with USER_ACCESSIBLE:
     ///
     /// ```
-    /// # #[cfg(pointer_width = "64")]
+    /// # #[cfg(feature = "instructions")]
     /// # use x86_64::structures::paging::{
     /// #    Mapper, PhysFrame, Page, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
-    /// # #[cfg(pointer_width = "64")]
+    /// # #[cfg(feature = "instructions")]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
     /// #         page: Page<Size4KiB>, frame: PhysFrame) {
     ///         mapper

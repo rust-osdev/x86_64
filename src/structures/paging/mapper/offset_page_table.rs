@@ -1,4 +1,4 @@
-#![cfg(pointer_width = "64")]
+#![cfg(target_pointer_width = "64")]
 
 use crate::structures::paging::{
     frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
