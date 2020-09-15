@@ -1,6 +1,7 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
 pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
+#[cfg(pointer_width = "64")]
 pub use self::offset_page_table::OffsetPageTable;
 #[cfg(feature = "instructions")]
 pub use self::recursive_page_table::RecursivePageTable;
