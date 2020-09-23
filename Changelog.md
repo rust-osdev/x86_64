@@ -1,5 +1,10 @@
 # Unreleased
 
+- **Breaking**: Decouple instructions into a separate feature flag ([#179](https://github.com/rust-osdev/x86_64/pull/179))
+  - Gates the `instructions` module by a new `instructions` feature (enabled by default).
+  - Rename the `stable` feature to `external_asm`
+  - `PageTable::new` is no longer a `const fn` on stable (i.e. without the `nightly` feature)
+
 # 0.11.8 – 2020-09-23
 
 - Add `VirtAddr::is_null` ([#180](https://github.com/rust-osdev/x86_64/pull/180))
