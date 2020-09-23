@@ -134,6 +134,12 @@ impl VirtAddr {
         self.as_ptr::<T>() as *mut T
     }
 
+    /// Convenience method for checking if a virtual address is null.
+    #[inline]
+    pub const fn is_null(self) -> bool {
+        self.0 == 0
+    }
+
     /// Aligns the virtual address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
