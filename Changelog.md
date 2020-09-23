@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.11.8 – 2020-09-23
+
 - Add `VirtAddr::is_null` ([#180](https://github.com/rust-osdev/x86_64/pull/180))
 
 # 0.11.7 – 2020-09-11
