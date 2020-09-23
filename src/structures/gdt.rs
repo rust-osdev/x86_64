@@ -184,55 +184,80 @@ pub enum Descriptor {
 bitflags! {
     /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
     pub struct DescriptorFlags: u64 {
-        /// For data segments, this flag sets the segment as writable. Ignored for code segments.
+        /// Set by the processor if this segment has been accessed. Only cleared by software.
+        const ACCESSED          = 1 << 40;
+        /// For 32-bit data segments, sets the segment as writable. For 32-bit code segments,
+        /// sets the segment as _readable_. In 64-bit mode, ignored for all segments.
         const WRITABLE          = 1 << 41;
-        /// Marks a code segment as “conforming”. This influences the privilege checks that
-        /// occur on control transfers.
+        /// For code segments, sets the segment as “conforming”, influencing the
+        /// privilege checks that occur on control transfers. For 32-bit data segments,
+        /// sets the segment as "expand down". In 64-bit mode, ignored for data segments.
         const CONFORMING        = 1 << 42;
-        /// This flag must be set for code segments.
+        /// This flag must be set for code segments and unset for data segments.
         const EXECUTABLE        = 1 << 43;
         /// This flag must be set for user segments (in contrast to system segments).
         const USER_SEGMENT      = 1 << 44;
+        /// The DPL for this descriptor is Ring 3. In 64-bit mode, ignored for data segments.
+        const DPL_RING_3        = 3 << 45;
         /// Must be set for any segment, causes a segment not present exception if not set.
         const PRESENT           = 1 << 47;
-        /// Must be set for long mode code segments.
+        /// Available for use by the Operating System
+        const AVAILABLE         = 1 << 52;
+        /// Must be set for 64-bit code segments, unset otherwise.
         const LONG_MODE         = 1 << 53;
+        /// Use 32-bit (as opposed to 16-bit) operands. If [`LONG_MODE`] is set,
+        /// this must be unset. In 64-bit mode, ignored for data segments.
+        const DEFAULT_SIZE      = 1 << 54;
+        /// Limit field is scaled by 4096 bytes. In 64-bit mode, ignored for all segments.
+        const GRANULARITY       = 1 << 55;
 
-        /// The DPL for this descriptor is Ring 3
-        const DPL_RING_3        = 3 << 45;
+        /// Bits 0..=15 of the limit field (ignored in 64-bit mode)
+        const LIMIT_0_15        = 0xFFFF;
+        /// Bits 16..=19 of the limit field (ignored in 64-bit mode)
+        const LIMIT_16_19       = 0xF << 48;
+        /// Bits 0..=23 of the base field (ignored in 64-bit mode)
+        const BASE_0_23         = 0xFF_FFFF << 16;
+        /// Bits 24..=31 of the base field (ignored in 64-bit mode)
+        const BASE_24_31        = 0xFF << 56;
+
+        /// Flags that should be set for all flat user segments
+        const FLAT_COMMON = Self::LIMIT_0_15.bits | Self::LIMIT_16_19.bits
+            | Self::GRANULARITY.bits | Self::ACCESSED.bits | Self::WRITABLE.bits
+            | Self::USER_SEGMENT.bits | Self::PRESENT.bits;
+
+        /// Flags for a flat 32-bit kernel code segment
+        const KERNEL_CODE32 = Self::FLAT_COMMON.bits | Self::EXECUTABLE.bits | Self::DEFAULT_SIZE.bits;
+        /// Flags for a 64-bit kernel code segment
+        const KERNEL_CODE64 = Self::FLAT_COMMON.bits | Self::EXECUTABLE.bits | Self::LONG_MODE.bits;
+        /// Flags for a kernel data segment (64-bit or flat 32-bit)
+        const KERNEL_DATA = Self::FLAT_COMMON.bits | Self::DEFAULT_SIZE.bits;
+
+        /// Flags for a flat 32-bit user code segment
+        const USER_CODE32 = Self::KERNEL_CODE32.bits | Self::DPL_RING_3.bits;
+        /// Flags for a 64-bit user code segment
+        const USER_CODE64 = Self::KERNEL_CODE64.bits | Self::DPL_RING_3.bits;
+        /// Flags for a user data segment (64-bit or flat 32-bit)
+        const USER_DATA = Self::KERNEL_DATA.bits | Self::DPL_RING_3.bits;
     }
 }
 
 impl Descriptor {
-    /// Creates a segment descriptor for a long mode kernel code segment.
+    /// Creates a segment descriptor for a 64-bit kernel code segment.
     #[inline]
-    pub fn kernel_code_segment() -> Descriptor {
-        use self::DescriptorFlags as Flags;
-
-        let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::EXECUTABLE | Flags::LONG_MODE;
-        Descriptor::UserSegment(flags.bits())
+    pub const fn kernel_code_segment() -> Descriptor {
+        Descriptor::UserSegment(DescriptorFlags::KERNEL_CODE64.bits())
     }
 
-    /// Creates a segment descriptor for a long mode ring 3 data segment.
+    /// Creates a segment descriptor for a ring 3 data segment (64-bit or 32-bit).
     #[inline]
-    pub fn user_data_segment() -> Descriptor {
-        use self::DescriptorFlags as Flags;
-
-        let flags = Flags::USER_SEGMENT | Flags::PRESENT | Flags::WRITABLE | Flags::DPL_RING_3;
-        Descriptor::UserSegment(flags.bits())
+    pub const fn user_data_segment() -> Descriptor {
+        Descriptor::UserSegment(DescriptorFlags::USER_DATA.bits())
     }
 
-    /// Creates a segment descriptor for a long mode ring 3 code segment.
+    /// Creates a segment descriptor for a 64-bit ring 3 code segment.
     #[inline]
-    pub fn user_code_segment() -> Descriptor {
-        use self::DescriptorFlags as Flags;
-
-        let flags = Flags::USER_SEGMENT
-            | Flags::PRESENT
-            | Flags::EXECUTABLE
-            | Flags::LONG_MODE
-            | Flags::DPL_RING_3;
-        Descriptor::UserSegment(flags.bits())
+    pub const fn user_code_segment() -> Descriptor {
+        Descriptor::UserSegment(DescriptorFlags::USER_CODE64.bits())
     }
 
     /// Creates a TSS system descriptor for the given TSS.
@@ -256,5 +281,23 @@ impl Descriptor {
         high.set_bits(0..32, ptr.get_bits(32..64));
 
         Descriptor::SystemSegment(low, high)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DescriptorFlags as Flags;
+
+    #[test]
+    #[rustfmt::skip]
+    pub fn linux_kernel_defaults() {
+        // Make sure our defaults match the ones used by the Linux kernel.
+        // Constants pulled from an old version of arch/x86/kernel/cpu/common.c
+        assert_eq!(Flags::KERNEL_CODE32.bits(), 0x00cf9b000000ffff);
+        assert_eq!(Flags::KERNEL_CODE64.bits(), 0x00af9b000000ffff);
+        assert_eq!(Flags::KERNEL_DATA.bits(),   0x00cf93000000ffff);
+        assert_eq!(Flags::USER_CODE32.bits(),   0x00cffb000000ffff);
+        assert_eq!(Flags::USER_DATA.bits(),     0x00cff3000000ffff);
+        assert_eq!(Flags::USER_CODE64.bits(),   0x00affb000000ffff);
     }
 }
