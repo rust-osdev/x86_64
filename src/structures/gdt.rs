@@ -185,6 +185,7 @@ bitflags! {
     /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
     pub struct DescriptorFlags: u64 {
         /// Set by the processor if this segment has been accessed. Only cleared by software.
+        /// _Setting_ this bit in software prevents GDT writes on first use.
         const ACCESSED          = 1 << 40;
         /// For 32-bit data segments, sets the segment as writable. For 32-bit code segments,
         /// sets the segment as _readable_. In 64-bit mode, ignored for all segments.
@@ -205,40 +206,66 @@ bitflags! {
         const AVAILABLE         = 1 << 52;
         /// Must be set for 64-bit code segments, unset otherwise.
         const LONG_MODE         = 1 << 53;
-        /// Use 32-bit (as opposed to 16-bit) operands. If [`LONG_MODE`] is set,
+        /// Use 32-bit (as opposed to 16-bit) operands. If [`LONG_MODE`][Self::LONG_MODE] is set,
         /// this must be unset. In 64-bit mode, ignored for data segments.
         const DEFAULT_SIZE      = 1 << 54;
         /// Limit field is scaled by 4096 bytes. In 64-bit mode, ignored for all segments.
         const GRANULARITY       = 1 << 55;
 
-        /// Bits 0..=15 of the limit field (ignored in 64-bit mode)
+        /// Bits `0..=15` of the limit field (ignored in 64-bit mode)
         const LIMIT_0_15        = 0xFFFF;
-        /// Bits 16..=19 of the limit field (ignored in 64-bit mode)
+        /// Bits `16..=19` of the limit field (ignored in 64-bit mode)
         const LIMIT_16_19       = 0xF << 48;
-        /// Bits 0..=23 of the base field (ignored in 64-bit mode)
+        /// Bits `0..=23` of the base field (ignored in 64-bit mode)
         const BASE_0_23         = 0xFF_FFFF << 16;
-        /// Bits 24..=31 of the base field (ignored in 64-bit mode)
+        /// Bits `24..=31` of the base field (ignored in 64-bit mode)
         const BASE_24_31        = 0xFF << 56;
-
-        /// Flags that should be set for all flat user segments
-        const FLAT_COMMON = Self::LIMIT_0_15.bits | Self::LIMIT_16_19.bits
-            | Self::GRANULARITY.bits | Self::ACCESSED.bits | Self::WRITABLE.bits
-            | Self::USER_SEGMENT.bits | Self::PRESENT.bits;
-
-        /// Flags for a flat 32-bit kernel code segment
-        const KERNEL_CODE32 = Self::FLAT_COMMON.bits | Self::EXECUTABLE.bits | Self::DEFAULT_SIZE.bits;
-        /// Flags for a 64-bit kernel code segment
-        const KERNEL_CODE64 = Self::FLAT_COMMON.bits | Self::EXECUTABLE.bits | Self::LONG_MODE.bits;
-        /// Flags for a kernel data segment (64-bit or flat 32-bit)
-        const KERNEL_DATA = Self::FLAT_COMMON.bits | Self::DEFAULT_SIZE.bits;
-
-        /// Flags for a flat 32-bit user code segment
-        const USER_CODE32 = Self::KERNEL_CODE32.bits | Self::DPL_RING_3.bits;
-        /// Flags for a 64-bit user code segment
-        const USER_CODE64 = Self::KERNEL_CODE64.bits | Self::DPL_RING_3.bits;
-        /// Flags for a user data segment (64-bit or flat 32-bit)
-        const USER_DATA = Self::KERNEL_DATA.bits | Self::DPL_RING_3.bits;
     }
+}
+
+/// The following constants define default values for common GDT use-cases. They
+/// are all "flat" segments meaning that they can access the entire address
+/// space. These values all set [`WRITABLE`][DescriptorFlags::WRITABLE] and
+/// [`ACCESSED`][DescriptorFlags::ACCESSED].
+///
+/// In short, these values disable segmentation, permission checks, and access
+/// tracking at the GDT level. Kernels using these values should use paging to
+/// implement this functionality.
+impl DescriptorFlags {
+    // Flags that we set for all user segments
+    const COMMON: Self = Self::from_bits_truncate(
+        Self::USER_SEGMENT.bits()
+            | Self::PRESENT.bits()
+            | Self::WRITABLE.bits()
+            | Self::ACCESSED.bits(),
+    );
+    // Flags that need to be set for all flat 32-bit segments
+    const COMMON_FLAT: Self = Self::from_bits_truncate(
+        Self::COMMON.bits()
+            | Self::LIMIT_0_15.bits()
+            | Self::LIMIT_16_19.bits()
+            | Self::GRANULARITY.bits(),
+    );
+    /// A kernel data segment (64-bit or flat 32-bit)
+    pub const KERNEL_DATA: Self =
+        Self::from_bits_truncate(Self::COMMON_FLAT.bits() | Self::DEFAULT_SIZE.bits());
+    /// A flat 32-bit kernel code segment
+    pub const KERNEL_CODE32: Self = Self::from_bits_truncate(
+        Self::COMMON_FLAT.bits() | Self::EXECUTABLE.bits() | Self::DEFAULT_SIZE.bits(),
+    );
+    /// A 64-bit kernel code segment
+    pub const KERNEL_CODE64: Self = Self::from_bits_truncate(
+        Self::COMMON.bits() | Self::EXECUTABLE.bits() | Self::LONG_MODE.bits(),
+    );
+    /// A user data segment (64-bit or flat 32-bit)
+    pub const USER_DATA: Self =
+        Self::from_bits_truncate(Self::KERNEL_DATA.bits() | Self::DPL_RING_3.bits());
+    /// A flat 32-bit user code segment
+    pub const USER_CODE32: Self =
+        Self::from_bits_truncate(Self::KERNEL_CODE32.bits() | Self::DPL_RING_3.bits());
+    /// A 64-bit user code segment
+    pub const USER_CODE64: Self =
+        Self::from_bits_truncate(Self::KERNEL_CODE64.bits() | Self::DPL_RING_3.bits());
 }
 
 impl Descriptor {
@@ -291,13 +318,15 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     pub fn linux_kernel_defaults() {
-        // Make sure our defaults match the ones used by the Linux kernel.
+        // Make sure our 32-bit defaults match the ones used by the Linux kernel.
         // Constants pulled from an old version of arch/x86/kernel/cpu/common.c
         assert_eq!(Flags::KERNEL_CODE32.bits(), 0x00cf9b000000ffff);
-        assert_eq!(Flags::KERNEL_CODE64.bits(), 0x00af9b000000ffff);
         assert_eq!(Flags::KERNEL_DATA.bits(),   0x00cf93000000ffff);
         assert_eq!(Flags::USER_CODE32.bits(),   0x00cffb000000ffff);
         assert_eq!(Flags::USER_DATA.bits(),     0x00cff3000000ffff);
-        assert_eq!(Flags::USER_CODE64.bits(),   0x00affb000000ffff);
+
+        // Our 64-bit code segments only use a subset of the kernel's flags
+        assert!(Flags::from_bits(0x00af9b000000ffff).unwrap().contains(Flags::KERNEL_CODE64));
+        assert!(Flags::from_bits(0x00affb000000ffff).unwrap().contains(Flags::KERNEL_CODE64));
     }
 }
