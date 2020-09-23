@@ -9,7 +9,7 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{PrivilegeLevel, VirtAddr};
+use crate::{structures::DescriptorTablePointer, PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
@@ -430,15 +430,19 @@ impl InterruptDescriptorTable {
     #[cfg(feature = "instructions")]
     #[inline]
     pub unsafe fn load_unsafe(&self) {
-        use crate::instructions::tables::{lidt, DescriptorTablePointer};
-        use core::mem::size_of;
+        use crate::instructions::tables::lidt;
+        lidt(&self.pointer());
+    }
 
-        let ptr = DescriptorTablePointer {
+    /// Creates the descriptor pointer for this table. This pointer can only be
+    /// safely used if the table is never modified or destroyed while in use.
+    #[cfg(feature = "instructions")]
+    fn pointer(&self) -> DescriptorTablePointer {
+        use core::mem::size_of;
+        DescriptorTablePointer {
             base: self as *const _ as u64,
             limit: (size_of::<Self>() - 1) as u16,
-        };
-
-        lidt(&ptr);
+        }
     }
 
     /// Returns a normalized and ranged check slice range from a RangeBounds trait object

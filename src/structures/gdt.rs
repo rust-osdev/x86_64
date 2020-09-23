@@ -1,6 +1,6 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
-use crate::structures::tss::TaskStateSegment;
+use crate::structures::{tss::TaskStateSegment, DescriptorTablePointer};
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
@@ -105,33 +105,35 @@ impl GlobalDescriptorTable {
         }
     }
 
-    /// Adds the given segment descriptor to the GDT, returning the segment selector.
-    ///
-    /// Panics if the GDT has no free entries left.
-    #[inline]
-    pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
-        let index = match entry {
-            Descriptor::UserSegment(value) => self.push(value),
-            Descriptor::SystemSegment(value_low, value_high) => {
-                let index = self.push(value_low);
-                self.push(value_high);
-                index
-            }
-        };
-
-        let rpl = match entry {
-            Descriptor::UserSegment(value) => {
-                if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
-                {
-                    PrivilegeLevel::Ring3
-                } else {
-                    PrivilegeLevel::Ring0
+    const_fn! {
+        /// Adds the given segment descriptor to the GDT, returning the segment selector.
+        ///
+        /// Panics if the GDT has no free entries left.
+        #[inline]
+        pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
+            let index = match entry {
+                Descriptor::UserSegment(value) => self.push(value),
+                Descriptor::SystemSegment(value_low, value_high) => {
+                    let index = self.push(value_low);
+                    self.push(value_high);
+                    index
                 }
-            }
-            Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
-        };
+            };
 
-        SegmentSelector::new(index as u16, rpl)
+            let rpl = match entry {
+                Descriptor::UserSegment(value) => {
+                    if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
+                    {
+                        PrivilegeLevel::Ring3
+                    } else {
+                        PrivilegeLevel::Ring0
+                    }
+                }
+                Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
+            };
+
+            SegmentSelector::new(index as u16, rpl)
+        }
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
@@ -142,26 +144,33 @@ impl GlobalDescriptorTable {
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
-        use crate::instructions::tables::{lgdt, DescriptorTablePointer};
-        use core::mem::size_of;
-
-        let ptr = DescriptorTablePointer {
-            base: self.table.as_ptr() as u64,
-            limit: (self.table.len() * size_of::<u64>() - 1) as u16,
-        };
-
-        unsafe { lgdt(&ptr) };
+        use crate::instructions::tables::lgdt;
+        // SAFETY: static lifetime ensures no modification after loading.
+        unsafe { lgdt(&self.pointer()) };
     }
 
-    #[inline]
-    fn push(&mut self, value: u64) -> usize {
-        if self.next_free < self.table.len() {
-            let index = self.next_free;
-            self.table[index] = value;
-            self.next_free += 1;
-            index
-        } else {
-            panic!("GDT full");
+    const_fn! {
+        #[inline]
+        fn push(&mut self, value: u64) -> usize {
+            if self.next_free < self.table.len() {
+                let index = self.next_free;
+                self.table[index] = value;
+                self.next_free += 1;
+                index
+            } else {
+                panic!("GDT full");
+            }
+        }
+    }
+
+    /// Creates the descriptor pointer for this table. This pointer can only be
+    /// safely used if the table is never modified or destroyed while in use.
+    #[cfg(feature = "instructions")]
+    fn pointer(&self) -> DescriptorTablePointer {
+        use core::mem::size_of;
+        DescriptorTablePointer {
+            base: self.table.as_ptr() as u64,
+            limit: (self.next_free * size_of::<u64>() - 1) as u16,
         }
     }
 }
