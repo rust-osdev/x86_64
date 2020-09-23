@@ -1,4 +1,4 @@
-#![cfg(target_arch = "x86_64")]
+#![cfg(feature = "instructions")]
 
 //! Special x86_64 instructions.
 
@@ -50,4 +50,19 @@ pub fn bochs_breakpoint() {
     unsafe {
         llvm_asm!("xchgw %bx, %bx" :::: "volatile");
     }
+}
+
+/// Gets the current instruction pointer. Note that this is only approximate as it requires a few
+/// instructions to execute.
+#[cfg(feature = "inline_asm")]
+#[inline(always)]
+pub fn read_rip() -> u64 {
+    let rip: u64;
+    unsafe {
+        llvm_asm!(
+            "lea (%rip), $0"
+            : "=r"(rip) ::: "volatile"
+        );
+    }
+    rip
 }

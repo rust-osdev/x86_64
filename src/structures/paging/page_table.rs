@@ -194,12 +194,12 @@ impl PageTable {
         }
     }
 
-    /// Creates an empty page table.
     #[cfg(not(feature = "const_fn"))]
     #[inline]
     pub fn new() -> Self {
+        const EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
-            entries: array_init::array_init(|_| PageTableEntry::new()),
+            entries: [EMPTY; ENTRY_COUNT],
         }
     }
 
@@ -253,6 +253,12 @@ impl IndexMut<PageTableIndex> for PageTable {
     #[inline]
     fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {
         &mut self.entries[usize::from(index)]
+    }
+}
+
+impl Default for PageTable {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

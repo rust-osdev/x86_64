@@ -1,11 +1,6 @@
 //! Functions to read and write model specific registers.
 
-use crate::registers::rflags::RFlags;
-use crate::structures::gdt::SegmentSelector;
-use crate::PrivilegeLevel;
-use bit_field::BitField;
 use bitflags::bitflags;
-use core::convert::TryInto;
 
 /// A model specific register.
 #[derive(Debug)]
@@ -104,10 +99,15 @@ bitflags! {
     }
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
     use crate::addr::VirtAddr;
+    use crate::registers::rflags::RFlags;
+    use crate::structures::gdt::SegmentSelector;
+    use crate::PrivilegeLevel;
+    use bit_field::BitField;
+    use core::convert::TryInto;
 
     impl Msr {
         /// Read 64 bits msr register.

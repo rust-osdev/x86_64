@@ -139,7 +139,7 @@ impl GlobalDescriptorTable {
     /// functions](crate::instructions::segmentation):
     /// [load_ss](crate::instructions::segmentation::load_ss),
     /// [set_cs](crate::instructions::segmentation::set_cs).
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
         use crate::instructions::tables::{lgdt, DescriptorTablePointer};

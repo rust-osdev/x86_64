@@ -62,23 +62,26 @@ jobs:
     - name: "Run cargo build"
       run: cargo build
 
+    - name: "Run cargo build for stable without instructions"
+      run: cargo build --no-default-features
+
     - name: "Run cargo build for stable"
-      run: cargo build --no-default-features --features stable
+      run: cargo build --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo build for stable on musl"
-      run: cargo build --target x86_64-unknown-linux-musl --no-default-features --features stable
+      run: cargo build --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
 
     - name: "Run cargo test"
       run: cargo test
 
     - name: "Run cargo test for stable"
-      run: cargo test --no-default-features --features stable
+      run: cargo test --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo test for stable on musl"
-      run: cargo test --target x86_64-unknown-linux-musl --no-default-features --features stable
+      run: cargo test --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
 
     - name: 'Deny Warnings'
@@ -90,8 +93,8 @@ jobs:
         rustup target add thumbv7em-none-eabihf
     - name: 'Build on non x86_64 platforms'
       run: |
-        cargo build --target i686-unknown-linux-gnu
-        cargo build --target thumbv7em-none-eabihf
+        cargo build --target i686-unknown-linux-gnu --no-default-features --features nightly
+        cargo build --target thumbv7em-none-eabihf --no-default-features --features nightly
 
     - name: "Install Rustup Components"
       run: rustup component add rust-src llvm-tools-preview

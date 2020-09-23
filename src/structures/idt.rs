@@ -411,7 +411,7 @@ impl InterruptDescriptorTable {
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
         unsafe { self.load_unsafe() }
@@ -427,7 +427,7 @@ impl InterruptDescriptorTable {
     /// - `self` always stays at the same memory location. It is recommended to wrap it in
     /// a `Box`.
     ///
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::{lidt, DescriptorTablePointer};
@@ -603,7 +603,7 @@ impl<F> Entry<F> {
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
         use crate::instructions::segmentation;
@@ -621,7 +621,7 @@ impl<F> Entry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
-        #[cfg(target_arch = "x86_64")]
+        #[cfg(feature = "instructions")]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///

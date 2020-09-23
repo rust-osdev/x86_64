@@ -1,6 +1,6 @@
 //! Processor state stored in the RFLAGS register.
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 pub use self::x86_64::*;
 
 use bitflags::bitflags;
@@ -62,7 +62,7 @@ bitflags! {
     }
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
 

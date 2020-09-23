@@ -1,5 +1,3 @@
-#![cfg(target_arch = "x86_64")]
-
 //! Access the page tables through a recursively mapped level 4 table.
 
 use super::*;
