@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.12.0 – 2020-09-23
+
 - **Breaking**: Decouple instructions into a separate feature flag ([#179](https://github.com/rust-osdev/x86_64/pull/179))
   - Gates the `instructions` module by a new `instructions` feature (enabled by default).
   - Rename the `stable` feature to `external_asm`
