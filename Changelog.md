@@ -1,5 +1,7 @@
 # Unreleased
 
+- Add `VirtAddr::is_null` ([#180](https://github.com/rust-osdev/x86_64/pull/180))
+
 # 0.11.7 – 2020-09-11
 
 - Fix const_item_mutation warnings added in latest Rust nightly ([#178](https://github.com/rust-osdev/x86_64/pull/178))
