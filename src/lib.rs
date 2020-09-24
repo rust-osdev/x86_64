@@ -3,6 +3,7 @@
 
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(feature = "const_fn", feature(const_fn))]
+#![cfg_attr(feature = "const_fn", feature(const_mut_refs))]
 #![cfg_attr(feature = "const_fn", feature(const_in_array_repeat_expressions))]
 #![cfg_attr(feature = "inline_asm", feature(llvm_asm))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
