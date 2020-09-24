@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.12.1 – 2020-09-24
+
 - Fix build error on latest nightly ([#182](https://github.com/rust-osdev/x86_64/pull/182))
 
 # 0.12.0 – 2020-09-23
