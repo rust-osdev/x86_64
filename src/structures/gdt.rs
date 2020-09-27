@@ -216,42 +216,39 @@ bitflags! {
         const LIMIT_0_15        = 0xFFFF;
         /// Bits `16..=19` of the limit field (ignored in 64-bit mode)
         const LIMIT_16_19       = 0xF << 48;
-        /// Bits `0..=23` of the base field (ignored in 64-bit mode)
+        /// Bits `0..=23` of the base field (ignored in 64-bit mode, except for fs and gs)
         const BASE_0_23         = 0xFF_FFFF << 16;
-        /// Bits `24..=31` of the base field (ignored in 64-bit mode)
+        /// Bits `24..=31` of the base field (ignored in 64-bit mode, except for fs and gs)
         const BASE_24_31        = 0xFF << 56;
     }
 }
 
-/// The following constants define default values for common GDT use-cases. They
-/// are all "flat" segments meaning that they can access the entire address
-/// space. These values all set [`WRITABLE`][DescriptorFlags::WRITABLE] and
-/// [`ACCESSED`][DescriptorFlags::ACCESSED].
+/// The following constants define default values for common GDT entries. They
+/// are all "flat" segments, meaning they can access the entire address space.
+/// These values all set [`WRITABLE`][DescriptorFlags::WRITABLE] and
+/// [`ACCESSED`][DescriptorFlags::ACCESSED]. They also match the values loaded
+/// by the `syscall`/`sysret` and `sysenter`/`sysexit` instructions.
 ///
 /// In short, these values disable segmentation, permission checks, and access
 /// tracking at the GDT level. Kernels using these values should use paging to
 /// implement this functionality.
 impl DescriptorFlags {
-    // Flags that we set for all user segments
+    // Flags that we set for all our default segments
     const COMMON: Self = Self::from_bits_truncate(
         Self::USER_SEGMENT.bits()
             | Self::PRESENT.bits()
             | Self::WRITABLE.bits()
-            | Self::ACCESSED.bits(),
-    );
-    // Flags that need to be set for all flat 32-bit segments
-    const COMMON_FLAT: Self = Self::from_bits_truncate(
-        Self::COMMON.bits()
+            | Self::ACCESSED.bits()
             | Self::LIMIT_0_15.bits()
             | Self::LIMIT_16_19.bits()
             | Self::GRANULARITY.bits(),
     );
     /// A kernel data segment (64-bit or flat 32-bit)
     pub const KERNEL_DATA: Self =
-        Self::from_bits_truncate(Self::COMMON_FLAT.bits() | Self::DEFAULT_SIZE.bits());
+        Self::from_bits_truncate(Self::COMMON.bits() | Self::DEFAULT_SIZE.bits());
     /// A flat 32-bit kernel code segment
     pub const KERNEL_CODE32: Self = Self::from_bits_truncate(
-        Self::COMMON_FLAT.bits() | Self::EXECUTABLE.bits() | Self::DEFAULT_SIZE.bits(),
+        Self::COMMON.bits() | Self::EXECUTABLE.bits() | Self::DEFAULT_SIZE.bits(),
     );
     /// A 64-bit kernel code segment
     pub const KERNEL_CODE64: Self = Self::from_bits_truncate(
@@ -269,19 +266,29 @@ impl DescriptorFlags {
 }
 
 impl Descriptor {
-    /// Creates a segment descriptor for a 64-bit kernel code segment.
+    /// Creates a segment descriptor for a 64-bit kernel code segment. Suitable
+    /// for use with `syscall` or 64-bit `sysenter`.
     #[inline]
     pub const fn kernel_code_segment() -> Descriptor {
         Descriptor::UserSegment(DescriptorFlags::KERNEL_CODE64.bits())
     }
 
-    /// Creates a segment descriptor for a ring 3 data segment (64-bit or 32-bit).
+    /// Creates a segment descriptor for a kernel data segment (32-bit or
+    /// 64-bit). Suitable for use with `syscall` or `sysenter`.
+    #[inline]
+    pub const fn kernel_data_segment() -> Descriptor {
+        Descriptor::UserSegment(DescriptorFlags::KERNEL_DATA.bits())
+    }
+
+    /// Creates a segment descriptor for a ring 3 data segment (32-bit or
+    /// 64-bit). Suitable for use with `sysret` or `sysexit`.
     #[inline]
     pub const fn user_data_segment() -> Descriptor {
         Descriptor::UserSegment(DescriptorFlags::USER_DATA.bits())
     }
 
-    /// Creates a segment descriptor for a 64-bit ring 3 code segment.
+    /// Creates a segment descriptor for a 64-bit ring 3 code segment. Suitable
+    /// for use with `sysret` or `sysexit`.
     #[inline]
     pub const fn user_code_segment() -> Descriptor {
         Descriptor::UserSegment(DescriptorFlags::USER_CODE64.bits())
@@ -318,15 +325,13 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     pub fn linux_kernel_defaults() {
-        // Make sure our 32-bit defaults match the ones used by the Linux kernel.
+        // Make sure our defaults match the ones used by the Linux kernel.
         // Constants pulled from an old version of arch/x86/kernel/cpu/common.c
+        assert_eq!(Flags::KERNEL_CODE64.bits(), 0x00af9b000000ffff);
         assert_eq!(Flags::KERNEL_CODE32.bits(), 0x00cf9b000000ffff);
         assert_eq!(Flags::KERNEL_DATA.bits(),   0x00cf93000000ffff);
+        assert_eq!(Flags::USER_CODE64.bits(),   0x00affb000000ffff);
         assert_eq!(Flags::USER_CODE32.bits(),   0x00cffb000000ffff);
         assert_eq!(Flags::USER_DATA.bits(),     0x00cff3000000ffff);
-
-        // Our 64-bit code segments only use a subset of the kernel's flags
-        assert!(Flags::from_bits(0x00af9b000000ffff).unwrap().contains(Flags::KERNEL_CODE64));
-        assert!(Flags::from_bits(0x00affb000000ffff).unwrap().contains(Flags::KERNEL_CODE64));
     }
 }
