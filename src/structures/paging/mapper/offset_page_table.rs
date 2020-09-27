@@ -36,6 +36,11 @@ impl<'a> OffsetPageTable<'a> {
             inner: MappedPageTable::new(level_4_table, phys_offset),
         }
     }
+
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        self.inner.level_4_table()
+    }
 }
 
 #[derive(Debug)]
