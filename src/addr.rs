@@ -43,8 +43,11 @@ pub struct VirtAddrNotValid(u64);
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
-    /// This function performs sign extension of bit 47 to make the address canonical. Panics
-    /// if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
+    /// This function performs sign extension of bit 47 to make the address canonical.
+    ///
+    /// ## Panics
+    ///
+    /// This function panics if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
     #[inline]
     pub fn new(addr: u64) -> VirtAddr {
         Self::try_new(addr).expect(
