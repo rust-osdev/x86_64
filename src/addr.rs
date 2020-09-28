@@ -292,7 +292,9 @@ pub struct PhysAddrNotValid(u64);
 impl PhysAddr {
     /// Creates a new physical address.
     ///
-    /// Panics if a bit in the range 52 to 64 is set.
+    /// ## Panics
+    ///
+    /// This function panics if a bit in the range 52 to 64 is set.
     #[inline]
     pub fn new(addr: u64) -> PhysAddr {
         assert_eq!(
