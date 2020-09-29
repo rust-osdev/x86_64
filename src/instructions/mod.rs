@@ -33,7 +33,7 @@ pub fn hlt() {
 pub fn nop() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("nop" :::: "volatile");
+        asm!("nop", options(nomem, nostack, preserves_flags));
     }
 
     #[cfg(not(feature = "inline_asm"))]

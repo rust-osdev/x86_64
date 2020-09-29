@@ -159,7 +159,7 @@ pub unsafe fn wrfsbase(val: u64) {
     #[cfg(feature = "inline_asm")]
     #[inline(always)]
     unsafe fn inner(val: u64) {
-        llvm_asm!("wrfsbase $0" :: "r"(val) :: "volatile")
+        asm!("wrfsbase {}", in(reg) val, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -182,7 +182,7 @@ pub unsafe fn rdfsbase() -> u64 {
     #[inline(always)]
     unsafe fn inner() -> u64 {
         let val: u64;
-        llvm_asm!("rdfsbase $0" : "=r" (val) ::: "volatile");
+        asm!("rdfsbase {}", out(reg) val, options(nomem, nostack));
         val
     }
 
@@ -208,7 +208,7 @@ pub unsafe fn wrgsbase(val: u64) {
     #[cfg(feature = "inline_asm")]
     #[inline(always)]
     unsafe fn inner(val: u64) {
-        llvm_asm!("wrgsbase $0" :: "r"(val) :: "volatile")
+        asm!("wrgsbase {}", in(reg) val, options(nomem, nostack))
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -231,7 +231,7 @@ pub unsafe fn rdgsbase() -> u64 {
     #[inline(always)]
     unsafe fn inner() -> u64 {
         let val: u64;
-        llvm_asm!("rdgsbase $0" : "=r" (val) ::: "volatile");
+        asm!("rdgsbase {}", out(reg) val, options(nomem, nostack));
         val
     }
 
