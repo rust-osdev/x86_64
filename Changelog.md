@@ -1,5 +1,8 @@
 # Unreleased
 
+- Add additional `DescriptorFlags` and aliases compatible with `syscall`/`sysenter` ([#181](https://github.com/rust-osdev/x86_64/pull/181))
+- Fix (another) build error on latest nightly ([#186](https://github.com/rust-osdev/x86_64/pull/186))
+
 # 0.12.1 – 2020-09-24
 
 - Fix build error on latest nightly ([#182](https://github.com/rust-osdev/x86_64/pull/182))
