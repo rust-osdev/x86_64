@@ -5,8 +5,8 @@ use crate::structures::gdt::SegmentSelector;
 /// Reload code segment register.
 ///
 /// Note this is special since we can not directly move
-/// to %cs. Instead we push the new segment selector
-/// and return value on the stack and use lretq
+/// to cs. Instead we push the new segment selector
+/// and return value on the stack and use retf
 /// to reload cs and continue at 1:.
 ///
 /// ## Safety
@@ -18,8 +18,15 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
     #[inline(always)]
     unsafe fn inner(sel: SegmentSelector) {
-        // FIXME - Use intel syntax
-        asm!("pushq {}; leaq 1f(%rip), %rax; pushq %rax; lretq; 1:", in(reg) u64::from(sel.0), out("rax") _, options(att_syntax));
+        asm!(
+            "push {sel}",
+            "lea {tmp}, [1f + rip]",
+            "push {tmp}",
+            "retfq",
+            "1:",
+            sel = in(reg) u64::from(sel.0),
+            tmp = lateout(reg) _,
+        );
     }
 
     #[cfg(not(feature = "inline_asm"))]
