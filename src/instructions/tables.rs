@@ -18,7 +18,7 @@ pub use crate::structures::DescriptorTablePointer;
 #[inline]
 pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("lgdt ($0)" :: "r" (gdt) : "memory");
+    asm!("lgdt [{}]", in(reg) gdt, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_lgdt(gdt as *const _);
@@ -38,7 +38,7 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
 #[inline]
 pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("lidt ($0)" :: "r" (idt) : "memory");
+    asm!("lidt [{}]", in(reg) idt, options(nostack));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_lidt(idt as *const _);
@@ -54,7 +54,7 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
 #[inline]
 pub unsafe fn load_tss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    llvm_asm!("ltr $0" :: "r" (sel.0));
+    asm!("ltr {0:x}", in(reg) sel.0, options(nostack, nomem));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_ltr(sel.0)

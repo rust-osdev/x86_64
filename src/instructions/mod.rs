@@ -14,7 +14,7 @@ pub mod tlb;
 pub fn hlt() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("hlt" :::: "volatile");
+        asm!("hlt", options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -33,7 +33,7 @@ pub fn hlt() {
 pub fn nop() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("nop" :::: "volatile");
+        asm!("nop", options(nomem, nostack, preserves_flags));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -48,7 +48,7 @@ pub fn nop() {
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        llvm_asm!("xchgw %bx, %bx" :::: "volatile");
+        asm!("xchgw bx, bx", options(nomem, nostack));
     }
 }
 
@@ -59,9 +59,8 @@ pub fn bochs_breakpoint() {
 pub fn read_rip() -> u64 {
     let rip: u64;
     unsafe {
-        llvm_asm!(
-            "lea (%rip), $0"
-            : "=r"(rip) ::: "volatile"
+        asm!(
+            "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
         );
     }
     rip

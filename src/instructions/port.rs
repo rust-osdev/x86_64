@@ -9,7 +9,7 @@ impl PortRead for u8 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u8 {
         let value: u8;
-        llvm_asm!("inb $1, $0" : "={al}"(value) : "N{dx}"(port) :: "volatile");
+        asm!("in al, dx", out("al") value, in("dx") port, options(nomem, nostack));
         value
     }
 
@@ -25,7 +25,7 @@ impl PortRead for u16 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u16 {
         let value: u16;
-        llvm_asm!("inw $1, $0" : "={ax}"(value) : "N{dx}"(port) :: "volatile");
+        asm!("in ax, dx", out("ax") value, in("dx") port, options(nomem, nostack));
         value
     }
 
@@ -41,7 +41,7 @@ impl PortRead for u32 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u32 {
         let value: u32;
-        llvm_asm!("inl $1, $0" : "={eax}"(value) : "N{dx}"(port) :: "volatile");
+        asm!("in eax, dx", out("eax") value, in("dx") port, options(nomem, nostack));
         value
     }
 
@@ -56,7 +56,7 @@ impl PortWrite for u8 {
     #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
-        llvm_asm!("outb $1, $0" :: "N{dx}"(port), "{al}"(value) :: "volatile");
+        asm!("out dx, al", in("dx") port, in("al") value, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -70,7 +70,7 @@ impl PortWrite for u16 {
     #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
-        llvm_asm!("outw $1, $0" :: "N{dx}"(port), "{ax}"(value) :: "volatile");
+        asm!("out dx, ax", in("dx") port, in("ax") value, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -84,7 +84,7 @@ impl PortWrite for u32 {
     #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
-        llvm_asm!("outl $1, $0" :: "N{dx}"(port), "{eax}"(value) :: "volatile");
+        asm!("out dx, eax", in("dx") port, in("eax") value, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]

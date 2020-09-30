@@ -80,7 +80,7 @@ mod x86_64 {
         let r: u64;
         #[cfg(feature = "inline_asm")]
         unsafe {
-            llvm_asm!("pushfq; popq $0" : "=r"(r) :: "memory")
+            asm!("pushf; pop {}", out(reg) r)
         };
 
         #[cfg(not(feature = "inline_asm"))]
@@ -108,7 +108,8 @@ mod x86_64 {
     pub fn write_raw(val: u64) {
         #[cfg(feature = "inline_asm")]
         unsafe {
-            llvm_asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags")
+            // FIXME - There's probably a better way than saying we preserve the flags even though we actually don't
+            asm!("push {}; popf", in(reg) val, options(preserves_flags))
         };
 
         #[cfg(not(feature = "inline_asm"))]
