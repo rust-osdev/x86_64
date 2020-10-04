@@ -1,27 +1,46 @@
 //! This crate provides x86_64 specific functions and data structures,
 //! and access to various system registers.
 
-#![feature(const_fn)]
-#![feature(asm)]
-#![feature(abi_x86_interrupt)]
 #![cfg_attr(not(test), no_std)]
+#![cfg_attr(feature = "const_fn", feature(const_fn))] // Needed for generic access to associated consts
+#![cfg_attr(feature = "const_fn", feature(const_mut_refs))]
+#![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))]
+#![cfg_attr(feature = "const_fn", feature(const_in_array_repeat_expressions))]
+#![cfg_attr(feature = "inline_asm", feature(asm))]
+#![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
 #![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]
 #![deny(missing_debug_implementations)]
 
-/// Provides the non-standard-width integer types `u2`–`u63`.
-///
-/// We use these integer types in various APIs, for example `u9` for page tables indices.
-pub use ux;
-
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
+/// Makes a function const only when `feature = "const_fn"` is enabled.
+///
+/// This is needed for const functions with bounds on their generic parameters,
+/// such as those in `Page` and `PhysFrame` and many more.
+macro_rules! const_fn {
+    (
+        $(#[$attr:meta])*
+        pub $($fn:tt)*
+    ) => {
+        $(#[$attr])*
+        #[cfg(feature = "const_fn")]
+        pub const $($fn)*
+
+        $(#[$attr])*
+        #[cfg(not(feature = "const_fn"))]
+        pub $($fn)*
+    }
+}
+
+#[cfg(all(feature = "instructions", feature = "external_asm"))]
+pub(crate) mod asm;
+
+pub mod addr;
 pub mod instructions;
 pub mod registers;
 pub mod structures;
-
-mod addr;
 
 /// Represents a protection ring level.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -57,6 +76,7 @@ impl PrivilegeLevel {
     /// Creates a `PrivilegeLevel` from a numeric value. The value must be in the range 0..4.
     ///
     /// This function panics if the passed value is >3.
+    #[inline]
     pub fn from_u16(value: u16) -> PrivilegeLevel {
         match value {
             0 => PrivilegeLevel::Ring0,

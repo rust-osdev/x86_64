@@ -1,6 +1,8 @@
-#![cfg(target_arch = "x86_64")]
+#![cfg(target_pointer_width = "64")]
 
-use crate::structures::paging::{frame::PhysFrame, mapper::*, page_table::PageTable};
+use crate::structures::paging::{
+    frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
+};
 
 /// A Mapper implementation that requires that the complete physically memory is mapped at some
 /// offset in the virtual address space.
@@ -19,10 +21,13 @@ impl<'a> OffsetPageTable<'a> {
     /// the mapper needs to access page tables, which are not mapped into the virtual address
     /// space by default.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe because the caller must guarantee that the passed `phys_offset`
     /// is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
+    #[inline]
     pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: VirtAddr) -> Self {
         let phys_offset = PhysOffset {
             offset: phys_offset,
@@ -39,6 +44,7 @@ struct PhysOffset {
 }
 
 impl PhysToVirt for PhysOffset {
+    #[inline]
     fn phys_to_virt(&self, frame: PhysFrame) -> *mut PageTable {
         let phys = frame.start_address().as_u64();
         let virt = self.offset + phys;
@@ -49,19 +55,23 @@ impl PhysToVirt for PhysOffset {
 // delegate all trait implementations to inner
 
 impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
-    unsafe fn map_to<A>(
+    #[inline]
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GiB>, MapToError>
+    ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.inner.map_to(page, frame, flags, allocator)
+        self.inner
+            .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
@@ -69,7 +79,8 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
-    fn update_flags(
+    #[inline]
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
         flags: PageTableFlags,
@@ -77,25 +88,57 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         self.inner.update_flags(page, flags)
     }
 
+    #[inline]
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p4_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p3_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size1GiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p2_entry(page, flags)
+    }
+
+    #[inline]
     fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
-    unsafe fn map_to<A>(
+    #[inline]
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MiB>, MapToError>
+    ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.inner.map_to(page, frame, flags, allocator)
+        self.inner
+            .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
@@ -103,7 +146,8 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
-    fn update_flags(
+    #[inline]
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
         flags: PageTableFlags,
@@ -111,25 +155,57 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         self.inner.update_flags(page, flags)
     }
 
+    #[inline]
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p4_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p3_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size2MiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p2_entry(page, flags)
+    }
+
+    #[inline]
     fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
-    unsafe fn map_to<A>(
+    #[inline]
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
         allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KiB>, MapToError>
+    ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
         A: FrameAllocator<Size4KiB>,
     {
-        self.inner.map_to(page, frame, flags, allocator)
+        self.inner
+            .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
@@ -137,7 +213,8 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
-    fn update_flags(
+    #[inline]
+    unsafe fn update_flags(
         &mut self,
         page: Page<Size4KiB>,
         flags: PageTableFlags,
@@ -145,12 +222,41 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         self.inner.update_flags(page, flags)
     }
 
+    #[inline]
+    unsafe fn set_flags_p4_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p4_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p3_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p3_entry(page, flags)
+    }
+
+    #[inline]
+    unsafe fn set_flags_p2_entry(
+        &mut self,
+        page: Page<Size4KiB>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        self.inner.set_flags_p2_entry(page, flags)
+    }
+
+    #[inline]
     fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl<'a> MapperAllSizes for OffsetPageTable<'a> {
+    #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
     }

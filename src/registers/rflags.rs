@@ -1,6 +1,6 @@
 //! Processor state stored in the RFLAGS register.
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 pub use self::x86_64::*;
 
 use bitflags::bitflags;
@@ -58,29 +58,41 @@ bitflags! {
         const PARITY_FLAG = 1 << 2;
         /// Set by hardware if last arithmetic operation generated a carry out of the
         /// most-significant bit of the result.
-        const CARRY_FLAG = 1 << 0;
+        const CARRY_FLAG = 1;
     }
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
 
     /// Returns the current value of the RFLAGS register.
     ///
     /// Drops any unknown bits.
+    #[inline]
     pub fn read() -> RFlags {
         RFlags::from_bits_truncate(read_raw())
     }
 
     /// Returns the raw current value of the RFLAGS register.
+    #[inline]
     pub fn read_raw() -> u64 {
         let r: u64;
-        unsafe { asm!("pushfq; popq $0" : "=r"(r) :: "memory") };
+        #[cfg(feature = "inline_asm")]
+        unsafe {
+            asm!("pushf; pop {}", out(reg) r)
+        };
+
+        #[cfg(not(feature = "inline_asm"))]
+        unsafe {
+            r = crate::asm::x86_64_asm_read_rflags();
+        };
+
         r
     }
 
     /// Writes the RFLAGS register, preserves reserved bits.
+    #[inline]
     pub fn write(flags: RFlags) {
         let old_value = read_raw();
         let reserved = old_value & !(RFlags::all().bits());
@@ -92,7 +104,28 @@ mod x86_64 {
     /// Writes the RFLAGS register.
     ///
     /// Does not preserve any bits, including reserved bits.
+    #[inline]
     pub fn write_raw(val: u64) {
-        unsafe { asm!("pushq $0; popfq" :: "r"(val) : "memory" "flags") };
+        #[cfg(feature = "inline_asm")]
+        unsafe {
+            // FIXME - There's probably a better way than saying we preserve the flags even though we actually don't
+            asm!("push {}; popf", in(reg) val, options(preserves_flags))
+        };
+
+        #[cfg(not(feature = "inline_asm"))]
+        unsafe {
+            crate::asm::x86_64_asm_write_rflags(val)
+        }
+    }
+
+    #[cfg(test)]
+    mod test {
+        use crate::registers::rflags::read;
+
+        #[test]
+        fn rflags_read() {
+            let rflags = read();
+            println!("{:#?}", rflags);
+        }
     }
 }

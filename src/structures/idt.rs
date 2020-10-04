@@ -14,17 +14,18 @@ use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Deref, Index, IndexMut};
+use core::ops::Bound::{Excluded, Included, Unbounded};
+use core::ops::{Deref, Index, IndexMut, RangeBounds};
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
 /// The first 32 entries are used for CPU exceptions. These entries can be either accessed through
 /// fields on this struct or through an index operation, e.g. `idt[0]` returns the
-/// first entry, the entry for the `divide_by_zero` exception. Note that the index access is
+/// first entry, the entry for the `divide_error` exception. Note that the index access is
 /// not possible for entries for which an error code is pushed.
 ///
 /// The remaining entries are used for interrupts. They can be accesed through index
-/// operations on the idt, e.g. `idt[32]` returns the first interrupt entry, which is the 32th IDT
+/// operations on the idt, e.g. `idt[32]` returns the first interrupt entry, which is the 32nd IDT
 /// entry).
 ///
 ///
@@ -36,14 +37,14 @@ use core::ops::{Deref, Index, IndexMut};
 #[repr(C)]
 #[repr(align(16))]
 pub struct InterruptDescriptorTable {
-    /// A divide by zero exception (`#DE`) occurs when the denominator of a DIV instruction or
+    /// A divide error (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
     /// represented in the destination.
     ///
     /// The saved instruction pointer points to the instruction that caused the `#DE`.
     ///
     /// The vector number of the `#DE` exception is 0.
-    pub divide_by_zero: Entry<HandlerFunc>,
+    pub divide_error: Entry<HandlerFunc>,
 
     /// When the debug-exception mechanism is enabled, a `#DB` exception can occur under any
     /// of the following circumstances:
@@ -197,7 +198,7 @@ pub struct InterruptDescriptorTable {
     /// and the program cannot be restarted.
     ///
     /// The vector number of the `#DF` exception is 8.
-    pub double_fault: Entry<HandlerFuncWithErrCode>,
+    pub double_fault: Entry<DivergingHandlerFuncWithErrCode>,
 
     /// This interrupt vector is reserved. It is for a discontinued exception originally used
     /// by processors that supported external x87-instruction coprocessors. On those processors,
@@ -307,7 +308,7 @@ pub struct InterruptDescriptorTable {
     /// There is no reliable way to restart the program.
     ///
     /// The vector number of the `#MC` exception is 18.
-    pub machine_check: Entry<HandlerFunc>,
+    pub machine_check: Entry<DivergingHandlerFunc>,
 
     /// The SIMD Floating-Point Exception (`#XF`) is used to handle unmasked SSE
     /// floating-point exceptions. The SSE floating-point exceptions reported by
@@ -369,69 +370,66 @@ pub struct InterruptDescriptorTable {
 }
 
 impl InterruptDescriptorTable {
-    /// Creates a new IDT filled with non-present entries.
-    pub const fn new() -> InterruptDescriptorTable {
-        InterruptDescriptorTable {
-            divide_by_zero: Entry::missing(),
-            debug: Entry::missing(),
-            non_maskable_interrupt: Entry::missing(),
-            breakpoint: Entry::missing(),
-            overflow: Entry::missing(),
-            bound_range_exceeded: Entry::missing(),
-            invalid_opcode: Entry::missing(),
-            device_not_available: Entry::missing(),
-            double_fault: Entry::missing(),
-            coprocessor_segment_overrun: Entry::missing(),
-            invalid_tss: Entry::missing(),
-            segment_not_present: Entry::missing(),
-            stack_segment_fault: Entry::missing(),
-            general_protection_fault: Entry::missing(),
-            page_fault: Entry::missing(),
-            reserved_1: Entry::missing(),
-            x87_floating_point: Entry::missing(),
-            alignment_check: Entry::missing(),
-            machine_check: Entry::missing(),
-            simd_floating_point: Entry::missing(),
-            virtualization: Entry::missing(),
-            reserved_2: [Entry::missing(); 9],
-            security_exception: Entry::missing(),
-            reserved_3: Entry::missing(),
-            interrupts: [Entry::missing(); 256 - 32],
+    const_fn! {
+        /// Creates a new IDT filled with non-present entries.
+        #[inline]
+        pub fn new() -> InterruptDescriptorTable {
+            InterruptDescriptorTable {
+                divide_error: Entry::missing(),
+                debug: Entry::missing(),
+                non_maskable_interrupt: Entry::missing(),
+                breakpoint: Entry::missing(),
+                overflow: Entry::missing(),
+                bound_range_exceeded: Entry::missing(),
+                invalid_opcode: Entry::missing(),
+                device_not_available: Entry::missing(),
+                double_fault: Entry::missing(),
+                coprocessor_segment_overrun: Entry::missing(),
+                invalid_tss: Entry::missing(),
+                segment_not_present: Entry::missing(),
+                stack_segment_fault: Entry::missing(),
+                general_protection_fault: Entry::missing(),
+                page_fault: Entry::missing(),
+                reserved_1: Entry::missing(),
+                x87_floating_point: Entry::missing(),
+                alignment_check: Entry::missing(),
+                machine_check: Entry::missing(),
+                simd_floating_point: Entry::missing(),
+                virtualization: Entry::missing(),
+                reserved_2: [Entry::missing(); 9],
+                security_exception: Entry::missing(),
+                reserved_3: Entry::missing(),
+                interrupts: [Entry::missing(); 256 - 32],
+            }
         }
     }
 
     /// Resets all entries of this IDT in place.
+    #[inline]
     pub fn reset(&mut self) {
-        self.divide_by_zero = Entry::missing();
-        self.debug = Entry::missing();
-        self.non_maskable_interrupt = Entry::missing();
-        self.breakpoint = Entry::missing();
-        self.overflow = Entry::missing();
-        self.bound_range_exceeded = Entry::missing();
-        self.invalid_opcode = Entry::missing();
-        self.device_not_available = Entry::missing();
-        self.double_fault = Entry::missing();
-        self.coprocessor_segment_overrun = Entry::missing();
-        self.invalid_tss = Entry::missing();
-        self.segment_not_present = Entry::missing();
-        self.stack_segment_fault = Entry::missing();
-        self.general_protection_fault = Entry::missing();
-        self.page_fault = Entry::missing();
-        self.reserved_1 = Entry::missing();
-        self.x87_floating_point = Entry::missing();
-        self.alignment_check = Entry::missing();
-        self.machine_check = Entry::missing();
-        self.simd_floating_point = Entry::missing();
-        self.virtualization = Entry::missing();
-        self.reserved_2 = [Entry::missing(); 9];
-        self.security_exception = Entry::missing();
-        self.reserved_3 = Entry::missing();
-        self.interrupts = [Entry::missing(); 256 - 32];
+        *self = Self::new();
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
+    #[inline]
     pub fn load(&'static self) {
+        unsafe { self.load_unsafe() }
+    }
+
+    /// Loads the IDT in the CPU using the `lidt` command.
+    ///
+    /// # Safety
+    ///
+    /// As long as it is the active IDT, you must ensure that:
+    ///
+    /// - `self` is never destroyed.
+    /// - `self` always stays at the same memory location. It is recommended to wrap it in
+    /// a `Box`.
+    ///
+    #[cfg(feature = "instructions")]
+    #[inline]
+    pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::{lidt, DescriptorTablePointer};
         use core::mem::size_of;
 
@@ -440,7 +438,52 @@ impl InterruptDescriptorTable {
             limit: (size_of::<Self>() - 1) as u16,
         };
 
-        unsafe { lidt(&ptr) };
+        lidt(&ptr);
+    }
+
+    /// Returns a normalized and ranged check slice range from a RangeBounds trait object
+    ///
+    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
+    /// exception
+    fn condition_slice_bounds(&self, bounds: impl RangeBounds<usize>) -> (usize, usize) {
+        let lower_idx = match bounds.start_bound() {
+            Included(start) => *start,
+            Excluded(start) => *start + 1,
+            Unbounded => 0,
+        };
+        let upper_idx = match bounds.end_bound() {
+            Included(end) => *end + 1,
+            Excluded(end) => *end,
+            Unbounded => 256,
+        };
+
+        if lower_idx > 256 || upper_idx > 256 {
+            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
+        }
+        if lower_idx < 32 {
+            panic!("Cannot return slice from traps, faults, and exception handlers");
+        }
+        (lower_idx, upper_idx)
+    }
+
+    /// Returns slice of IDT entries with the specified range.
+    ///
+    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
+    /// exception
+    #[inline]
+    pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
+        let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
+        &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
+    }
+
+    /// Returns a mutable slice of IDT entries with the specified range.
+    ///
+    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
+    /// exception
+    #[inline]
+    pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
+        let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
+        &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 }
 
@@ -451,9 +494,10 @@ impl Index<usize> for InterruptDescriptorTable {
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
     /// exception that pushes an error code (use the struct fields for accessing these entries).
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         match index {
-            0 => &self.divide_by_zero,
+            0 => &self.divide_error,
             1 => &self.debug,
             2 => &self.non_maskable_interrupt,
             3 => &self.breakpoint,
@@ -463,7 +507,6 @@ impl Index<usize> for InterruptDescriptorTable {
             7 => &self.device_not_available,
             9 => &self.coprocessor_segment_overrun,
             16 => &self.x87_floating_point,
-            18 => &self.machine_check,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
             i @ 32..=255 => &self.interrupts[i - 32],
@@ -471,6 +514,7 @@ impl Index<usize> for InterruptDescriptorTable {
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
+            i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
             i => panic!("no entry with index {}", i),
         }
     }
@@ -481,9 +525,10 @@ impl IndexMut<usize> for InterruptDescriptorTable {
     ///
     /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
     /// exception that pushes an error code (use the struct fields for accessing these entries).
+    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
-            0 => &mut self.divide_by_zero,
+            0 => &mut self.divide_error,
             1 => &mut self.debug,
             2 => &mut self.non_maskable_interrupt,
             3 => &mut self.breakpoint,
@@ -493,7 +538,6 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             7 => &mut self.device_not_available,
             9 => &mut self.coprocessor_segment_overrun,
             16 => &mut self.x87_floating_point,
-            18 => &mut self.machine_check,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
             i @ 32..=255 => &mut self.interrupts[i - 32],
@@ -501,6 +545,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
+            i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
             i => panic!("no entry with index {}", i),
         }
     }
@@ -530,9 +575,15 @@ pub type HandlerFuncWithErrCode =
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
+/// A handler function that must not return, e.g. for a machine check exception.
+pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
+/// A handler function with an error code that must not return, e.g. for a double fault exception.
+pub type DivergingHandlerFuncWithErrCode =
+    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
+    #[inline]
     pub const fn missing() -> Self {
         Entry {
             gdt_selector: 0,
@@ -552,7 +603,8 @@ impl<F> Entry<F> {
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
+    #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
         use crate::instructions::segmentation;
 
@@ -569,7 +621,7 @@ impl<F> Entry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
-        #[cfg(target_arch = "x86_64")]
+        #[cfg(feature = "instructions")]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
@@ -578,6 +630,7 @@ macro_rules! impl_set_handler_fn {
             ///
             /// The function returns a mutable reference to the entry's options that allows
             /// further customization.
+            #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
                 self.set_handler_addr(handler as u64)
             }
@@ -588,6 +641,8 @@ macro_rules! impl_set_handler_fn {
 impl_set_handler_fn!(HandlerFunc);
 impl_set_handler_fn!(HandlerFuncWithErrCode);
 impl_set_handler_fn!(PageFaultHandlerFunc);
+impl_set_handler_fn!(DivergingHandlerFunc);
+impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
@@ -596,11 +651,13 @@ pub struct EntryOptions(u16);
 
 impl EntryOptions {
     /// Creates a minimal options field with all the must-be-one bits set.
+    #[inline]
     const fn minimal() -> Self {
         EntryOptions(0b1110_0000_0000)
     }
 
     /// Set or reset the preset bit.
+    #[inline]
     pub fn set_present(&mut self, present: bool) -> &mut Self {
         self.0.set_bit(15, present);
         self
@@ -608,6 +665,7 @@ impl EntryOptions {
 
     /// Let the CPU disable hardware interrupts when the handler is invoked. By default,
     /// interrupts are disabled on handler invocation.
+    #[inline]
     pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {
         self.0.set_bit(8, !disable);
         self
@@ -617,6 +675,7 @@ impl EntryOptions {
     /// or 3, the default is 0. If CPL < DPL, a general protection fault occurs.
     ///
     /// This function panics for a DPL > 3.
+    #[inline]
     pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {
         self.0.set_bits(13..15, dpl as u16);
         self
@@ -634,6 +693,7 @@ impl EntryOptions {
     /// ## Safety
     /// This function is unsafe because the caller must ensure that the passed stack index is
     /// valid and not used by other interrupts. Otherwise, memory safety violations are possible.
+    #[inline]
     pub unsafe fn set_stack_index(&mut self, index: u16) -> &mut Self {
         // The hardware IST index starts at 1, but our software IST index
         // starts at 0. Therefore we need to add 1 here.
@@ -655,6 +715,7 @@ pub type ExceptionStackFrame = InterruptStackFrame;
 /// This wrapper type ensures that no accidental modification of the interrupt stack frame
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
+#[repr(C)]
 pub struct InterruptStackFrame {
     value: InterruptStackFrameValue,
 }
@@ -662,10 +723,14 @@ pub struct InterruptStackFrame {
 impl InterruptStackFrame {
     /// Gives mutable access to the contents of the interrupt stack frame.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe since modifying the content of the interrupt stack frame
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
+    #[allow(clippy::should_implement_trait)]
+    #[inline]
     pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
         &mut self.value
     }
@@ -674,12 +739,14 @@ impl InterruptStackFrame {
 impl Deref for InterruptStackFrame {
     type Target = InterruptStackFrameValue;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.value
     }
 }
 
 impl fmt::Debug for InterruptStackFrame {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.value.fmt(f)
     }
@@ -730,7 +797,7 @@ bitflags! {
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.
-        const PROTECTION_VIOLATION = 1 << 0;
+        const PROTECTION_VIOLATION = 1;
 
         /// If this flag is set, the memory access that caused the page fault was a write.
         /// Else the access that caused the page fault is a memory read. This bit does not

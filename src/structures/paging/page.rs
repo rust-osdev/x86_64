@@ -1,10 +1,10 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-use ux::*;
 
 /// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
 pub trait PageSize: Copy + Eq + PartialOrd + Ord {
@@ -66,6 +66,7 @@ impl<S: PageSize> Page<S> {
     /// Returns the page that starts at the given virtual address.
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
+    #[inline]
     pub fn from_start_address(address: VirtAddr) -> Result<Self, ()> {
         if !address.is_aligned(S::SIZE) {
             return Err(());
@@ -73,7 +74,23 @@ impl<S: PageSize> Page<S> {
         Ok(Page::containing_address(address))
     }
 
+    const_fn! {
+        /// Returns the page that starts at the given virtual address.
+        ///
+        /// ## Safety
+        ///
+        /// The address must be correctly aligned.
+        #[inline]
+        pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+            Page {
+                start_address,
+                size: PhantomData,
+            }
+        }
+    }
+
     /// Returns the page that contains the given virtual address.
+    #[inline]
     pub fn containing_address(address: VirtAddr) -> Self {
         Page {
             start_address: address.align_down(S::SIZE),
@@ -81,47 +98,72 @@ impl<S: PageSize> Page<S> {
         }
     }
 
-    /// Returns the start address of the page.
-    pub fn start_address(&self) -> VirtAddr {
-        self.start_address
+    const_fn! {
+        /// Returns the start address of the page.
+        #[inline]
+        pub fn start_address(self) -> VirtAddr {
+            self.start_address
+        }
     }
 
-    /// Returns the size the page (4KB, 2MB or 1GB).
-    pub const fn size(&self) -> u64 {
-        S::SIZE
+    const_fn! {
+        /// Returns the size the page (4KB, 2MB or 1GB).
+        #[inline]
+        pub fn size(self) -> u64 {
+            S::SIZE
+        }
     }
 
-    /// Returns the level 4 page table index of this page.
-    pub fn p4_index(&self) -> u9 {
-        self.start_address().p4_index()
+    const_fn! {
+        /// Returns the level 4 page table index of this page.
+        #[inline]
+        pub fn p4_index(self) -> PageTableIndex {
+            self.start_address().p4_index()
+        }
     }
 
-    /// Returns the level 3 page table index of this page.
-    pub fn p3_index(&self) -> u9 {
-        self.start_address().p3_index()
+    const_fn! {
+        /// Returns the level 3 page table index of this page.
+        #[inline]
+        pub fn p3_index(self) -> PageTableIndex {
+            self.start_address().p3_index()
+        }
     }
 
-    /// Returns a range of pages, exclusive `end`.
-    pub fn range(start: Self, end: Self) -> PageRange<S> {
-        PageRange { start, end }
+    const_fn! {
+        /// Returns a range of pages, exclusive `end`.
+        #[inline]
+        pub fn range(start: Self, end: Self) -> PageRange<S> {
+            PageRange { start, end }
+        }
     }
 
-    /// Returns a range of pages, inclusive `end`.
-    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
-        PageRangeInclusive { start, end }
+    const_fn! {
+        /// Returns a range of pages, inclusive `end`.
+        #[inline]
+        pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+            PageRangeInclusive { start, end }
+        }
     }
 }
 
 impl<S: NotGiantPageSize> Page<S> {
-    /// Returns the level 2 page table index of this page.
-    pub fn p2_index(&self) -> u9 {
-        self.start_address().p2_index()
+    const_fn! {
+        /// Returns the level 2 page table index of this page.
+        #[inline]
+        pub fn p2_index(self) -> PageTableIndex {
+            self.start_address().p2_index()
+        }
     }
 }
 
 impl Page<Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
-    pub fn from_page_table_indices_1gib(p4_index: u9, p3_index: u9) -> Self {
+    #[inline]
+    pub fn from_page_table_indices_1gib(
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+    ) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -133,7 +175,12 @@ impl Page<Size1GiB> {
 
 impl Page<Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
-    pub fn from_page_table_indices_2mib(p4_index: u9, p3_index: u9, p2_index: u9) -> Self {
+    #[inline]
+    pub fn from_page_table_indices_2mib(
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+    ) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -146,7 +193,13 @@ impl Page<Size2MiB> {
 
 impl Page<Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
-    pub fn from_page_table_indices(p4_index: u9, p3_index: u9, p2_index: u9, p1_index: u9) -> Self {
+    #[inline]
+    pub fn from_page_table_indices(
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+        p1_index: PageTableIndex,
+    ) -> Self {
         use bit_field::BitField;
 
         let mut addr = 0;
@@ -157,9 +210,12 @@ impl Page<Size4KiB> {
         Page::containing_address(VirtAddr::new(addr))
     }
 
-    /// Returns the level 1 page table index of this page.
-    pub fn p1_index(&self) -> u9 {
-        self.start_address().p1_index()
+    const_fn! {
+        /// Returns the level 1 page table index of this page.
+        #[inline]
+        pub fn p1_index(self) -> PageTableIndex {
+            self.start_address().p1_index()
+        }
     }
 }
 
@@ -175,32 +231,37 @@ impl<S: PageSize> fmt::Debug for Page<S> {
 
 impl<S: PageSize> Add<u64> for Page<S> {
     type Output = Self;
+    #[inline]
     fn add(self, rhs: u64) -> Self::Output {
-        Page::containing_address(self.start_address() + rhs * u64::from(S::SIZE))
+        Page::containing_address(self.start_address() + rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> AddAssign<u64> for Page<S> {
+    #[inline]
     fn add_assign(&mut self, rhs: u64) {
-        *self = self.clone() + rhs;
+        *self = *self + rhs;
     }
 }
 
 impl<S: PageSize> Sub<u64> for Page<S> {
     type Output = Self;
+    #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
-        Page::containing_address(self.start_address() - rhs * u64::from(S::SIZE))
+        Page::containing_address(self.start_address() - rhs * S::SIZE)
     }
 }
 
 impl<S: PageSize> SubAssign<u64> for Page<S> {
+    #[inline]
     fn sub_assign(&mut self, rhs: u64) {
-        *self = self.clone() - rhs;
+        *self = *self - rhs;
     }
 }
 
 impl<S: PageSize> Sub<Self> for Page<S> {
     type Output = u64;
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
     }
@@ -218,17 +279,19 @@ pub struct PageRange<S: PageSize = Size4KiB> {
 
 impl<S: PageSize> PageRange<S> {
     /// Returns wether this range contains no pages.
+    #[inline]
     pub fn is_empty(&self) -> bool {
-        !(self.start < self.end)
+        self.start >= self.end
     }
 }
 
 impl<S: PageSize> Iterator for PageRange<S> {
     type Item = Page<S>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
-            let page = self.start.clone();
+            let page = self.start;
             self.start += 1;
             Some(page)
         } else {
@@ -239,6 +302,7 @@ impl<S: PageSize> Iterator for PageRange<S> {
 
 impl PageRange<Size2MiB> {
     /// Converts the range of 2MiB pages to a range of 4KiB pages.
+    #[inline]
     pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
         PageRange {
             start: Page::containing_address(self.start.start_address()),
@@ -268,17 +332,19 @@ pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
 
 impl<S: PageSize> PageRangeInclusive<S> {
     /// Returns wether this range contains no pages.
+    #[inline]
     pub fn is_empty(&self) -> bool {
-        !(self.start <= self.end)
+        self.start > self.end
     }
 }
 
 impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     type Item = Page<S>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
-            let page = self.start.clone();
+            let page = self.start;
             self.start += 1;
             Some(page)
         } else {
@@ -305,11 +371,11 @@ mod tests {
         let page_size = Size4KiB::SIZE;
         let number = 1000;
 
-        let start_addr = VirtAddr::new(0xdeadbeaf);
+        let start_addr = VirtAddr::new(0xdead_beaf);
         let start: Page = Page::containing_address(start_addr);
-        let end = start.clone() + number;
+        let end = start + number;
 
-        let mut range = Page::range(start.clone(), end.clone());
+        let mut range = Page::range(start, end);
         for i in 0..number {
             assert_eq!(
                 range.next(),

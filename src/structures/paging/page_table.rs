@@ -7,7 +7,6 @@ use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 
 use bitflags::bitflags;
-use ux::*;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -28,26 +27,31 @@ pub struct PageTableEntry {
 
 impl PageTableEntry {
     /// Creates an unused page table entry.
-    pub fn new() -> Self {
+    #[inline]
+    pub const fn new() -> Self {
         PageTableEntry { entry: 0 }
     }
 
     /// Returns whether this entry is zero.
-    pub fn is_unused(&self) -> bool {
+    #[inline]
+    pub const fn is_unused(&self) -> bool {
         self.entry == 0
     }
 
     /// Sets this entry to zero.
+    #[inline]
     pub fn set_unused(&mut self) {
         self.entry = 0;
     }
 
     /// Returns the flags of this entry.
-    pub fn flags(&self) -> PageTableFlags {
+    #[inline]
+    pub const fn flags(&self) -> PageTableFlags {
         PageTableFlags::from_bits_truncate(self.entry)
     }
 
     /// Returns the physical address mapped by this entry, might be zero.
+    #[inline]
     pub fn addr(&self) -> PhysAddr {
         PhysAddr::new(self.entry & 0x000fffff_fffff000)
     }
@@ -59,6 +63,7 @@ impl PageTableEntry {
     /// - `FrameError::FrameNotPresent` if the entry doesn't have the `PRESENT` flag set.
     /// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the
     ///    `addr` function must be used)
+    #[inline]
     pub fn frame(&self) -> Result<PhysFrame, FrameError> {
         if !self.flags().contains(PageTableFlags::PRESENT) {
             Err(FrameError::FrameNotPresent)
@@ -70,18 +75,21 @@ impl PageTableEntry {
     }
 
     /// Map the entry to the specified physical address with the specified flags.
+    #[inline]
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
         assert!(addr.is_aligned(Size4KiB::SIZE));
         self.entry = (addr.as_u64()) | flags.bits();
     }
 
     /// Map the entry to the specified physical frame with the specified flags.
+    #[inline]
     pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
         assert!(!flags.contains(PageTableFlags::HUGE_PAGE));
         self.set_addr(frame.start_address(), flags)
     }
 
     /// Sets the flags of this entry.
+    #[inline]
     pub fn set_flags(&mut self, flags: PageTableFlags) {
         self.entry = self.addr().as_u64() | flags.bits();
     }
@@ -100,7 +108,7 @@ bitflags! {
     /// Possible flags for a page table entry.
     pub struct PageTableFlags: u64 {
         /// Specifies whether the mapped frame or page table is loaded in memory.
-        const PRESENT =         1 << 0;
+        const PRESENT =         1;
         /// Controls whether writes to the mapped frames are allowed.
         ///
         /// If this bit is unset in a level 1 page table entry, the mapped frame is read-only.
@@ -177,15 +185,26 @@ pub struct PageTable {
 
 impl PageTable {
     /// Creates an empty page table.
-    pub fn new() -> Self {
-        use array_init::array_init;
-
+    #[cfg(feature = "const_fn")]
+    #[inline]
+    pub const fn new() -> Self {
+        const EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
-            entries: array_init(|_| PageTableEntry::new()),
+            entries: [EMPTY; ENTRY_COUNT],
+        }
+    }
+
+    #[cfg(not(feature = "const_fn"))]
+    #[inline]
+    pub fn new() -> Self {
+        const EMPTY: PageTableEntry = PageTableEntry::new();
+        PageTable {
+            entries: [EMPTY; ENTRY_COUNT],
         }
     }
 
     /// Clears all entries.
+    #[inline]
     pub fn zero(&mut self) {
         for entry in self.entries.iter_mut() {
             entry.set_unused();
@@ -193,11 +212,13 @@ impl PageTable {
     }
 
     /// Returns an iterator over the entries of the page table.
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
         self.entries.iter()
     }
 
     /// Returns an iterator that allows modifying the entries of the page table.
+    #[inline]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
         self.entries.iter_mut()
     }
@@ -206,33 +227,146 @@ impl PageTable {
 impl Index<usize> for PageTable {
     type Output = PageTableEntry;
 
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         &self.entries[index]
     }
 }
 
 impl IndexMut<usize> for PageTable {
+    #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.entries[index]
     }
 }
 
-impl Index<u9> for PageTable {
+impl Index<PageTableIndex> for PageTable {
     type Output = PageTableEntry;
 
-    fn index(&self, index: u9) -> &Self::Output {
-        &self.entries[cast::usize(u16::from(index))]
+    #[inline]
+    fn index(&self, index: PageTableIndex) -> &Self::Output {
+        &self.entries[usize::from(index)]
     }
 }
 
-impl IndexMut<u9> for PageTable {
-    fn index_mut(&mut self, index: u9) -> &mut Self::Output {
-        &mut self.entries[cast::usize(u16::from(index))]
+impl IndexMut<PageTableIndex> for PageTable {
+    #[inline]
+    fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {
+        &mut self.entries[usize::from(index)]
+    }
+}
+
+impl Default for PageTable {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
 impl fmt::Debug for PageTable {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.entries[..].fmt(f)
+    }
+}
+
+/// A 9-bit index into a page table.
+///
+/// Can be used to select one of the 512 entries of a page table.
+///
+/// Guaranteed to only ever contain 0..512.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PageTableIndex(u16);
+
+impl PageTableIndex {
+    /// Creates a new index from the given `u16`. Panics if the given value is >=512.
+    #[inline]
+    pub fn new(index: u16) -> Self {
+        assert!(usize::from(index) < ENTRY_COUNT);
+        Self(index)
+    }
+
+    /// Creates a new index from the given `u16`. Throws away bits if the value is >=512.
+    #[inline]
+    pub const fn new_truncate(index: u16) -> Self {
+        Self(index % ENTRY_COUNT as u16)
+    }
+}
+
+impl From<PageTableIndex> for u16 {
+    #[inline]
+    fn from(index: PageTableIndex) -> Self {
+        index.0
+    }
+}
+
+impl From<PageTableIndex> for u32 {
+    #[inline]
+    fn from(index: PageTableIndex) -> Self {
+        u32::from(index.0)
+    }
+}
+
+impl From<PageTableIndex> for u64 {
+    #[inline]
+    fn from(index: PageTableIndex) -> Self {
+        u64::from(index.0)
+    }
+}
+
+impl From<PageTableIndex> for usize {
+    #[inline]
+    fn from(index: PageTableIndex) -> Self {
+        usize::from(index.0)
+    }
+}
+
+/// A 12-bit offset into a 4KiB Page.
+///
+/// This type is returned by the `VirtAddr::page_offset` method.
+///
+/// Guaranteed to only ever contain 0..4096.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PageOffset(u16);
+
+impl PageOffset {
+    /// Creates a new offset from the given `u16`. Panics if the passed value is >=4096.
+    #[inline]
+    pub fn new(offset: u16) -> Self {
+        assert!(offset < (1 << 12));
+        Self(offset)
+    }
+
+    /// Creates a new offset from the given `u16`. Throws away bits if the value is >=4096.
+    #[inline]
+    pub const fn new_truncate(offset: u16) -> Self {
+        Self(offset % (1 << 12))
+    }
+}
+
+impl From<PageOffset> for u16 {
+    #[inline]
+    fn from(offset: PageOffset) -> Self {
+        offset.0
+    }
+}
+
+impl From<PageOffset> for u32 {
+    #[inline]
+    fn from(offset: PageOffset) -> Self {
+        u32::from(offset.0)
+    }
+}
+
+impl From<PageOffset> for u64 {
+    #[inline]
+    fn from(offset: PageOffset) -> Self {
+        u64::from(offset.0)
+    }
+}
+
+impl From<PageOffset> for usize {
+    #[inline]
+    fn from(offset: PageOffset) -> Self {
+        usize::from(offset.0)
     }
 }

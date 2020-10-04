@@ -7,6 +7,8 @@
 pub trait PortRead {
     /// Reads a `Self` value from the given port.
     ///
+    /// ## Safety
+    ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
     unsafe fn read_from_port(port: u16) -> Self;
@@ -18,6 +20,8 @@ pub trait PortRead {
 /// or `u32` (via `inl`/`outl`). Therefore this trait is implemented for exactly these types.
 pub trait PortWrite {
     /// Writes a `Self` value to the given port.
+    ///
+    /// ## Safety
     ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.

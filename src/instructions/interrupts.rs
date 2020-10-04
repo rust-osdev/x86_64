@@ -1,6 +1,7 @@
 //! Enabling and disabling interrupts
 
 /// Returns whether interrupts are enabled.
+#[inline]
 pub fn are_enabled() -> bool {
     use crate::registers::rflags::{self, RFlags};
 
@@ -12,8 +13,13 @@ pub fn are_enabled() -> bool {
 /// This is a wrapper around the `sti` instruction.
 #[inline]
 pub fn enable() {
+    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("sti" :::: "volatile");
+        asm!("sti", options(nomem, nostack));
+    }
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_interrupt_enable();
     }
 }
 
@@ -22,8 +28,14 @@ pub fn enable() {
 /// This is a wrapper around the `cli` instruction.
 #[inline]
 pub fn disable() {
+    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("cli" :::: "volatile");
+        asm!("cli", options(nomem, nostack));
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_interrupt_disable();
     }
 }
 
@@ -47,6 +59,7 @@ pub fn disable() {
 /// });
 /// // interrupts are enabled again
 /// ```
+#[inline]
 pub fn without_interrupts<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
@@ -71,11 +84,72 @@ where
     ret
 }
 
+/// Atomically enable interrupts and put the CPU to sleep
+///
+/// Executes the `sti; hlt` instruction sequence. Since the `sti` instruction
+/// keeps interrupts disabled until after the immediately following
+/// instruction (called "interrupt shadow"), no interrupt can occur between the
+/// two instructions. (One exception to this are non-maskable interrupts; this
+/// is explained below.)
+///
+/// This function is useful to put the CPU to sleep without missing interrupts
+/// that occur immediately before the `hlt` instruction:
+///
+/// ```ignore
+/// // there is a race between the check and the `hlt` instruction here:
+///
+/// if nothing_to_do() {
+///     // <- race when the interrupt occurs here
+///     x86_64::instructions::hlt(); // wait for the next interrupt
+/// }
+///
+/// // avoid this race by using `enable_interrupts_and_hlt`:
+///
+/// x86_64::instructions::interrupts::disable();
+/// if nothing_to_do() {
+///     // <- no interrupts can occur here (interrupts are disabled)
+///     x86_64::instructions::interrupts::enable_interrupts_and_hlt();
+/// }
+///
+/// ```
+///
+/// ## Non-maskable Interrupts
+///
+/// On some processors, the interrupt shadow of `sti` does not apply to
+/// non-maskable interrupts (NMIs). This means that an NMI can occur between
+/// the `sti` and `hlt` instruction, with the result that the CPU is put to
+/// sleep even though a new interrupt occured.
+///
+/// To work around this, it is recommended to check in the NMI handler if
+/// the interrupt occured between `sti` and `hlt` instructions. If this is the
+/// case, the handler should increase the instruction pointer stored in the
+/// interrupt stack frame so that the `hlt` instruction is skipped.
+///
+/// See <http://lkml.iu.edu/hypermail/linux/kernel/1009.2/01406.html> for more
+/// information.
+#[inline]
+pub fn enable_interrupts_and_hlt() {
+    #[cfg(feature = "inline_asm")]
+    unsafe {
+        asm!("sti; hlt", options(nomem, nostack));
+    }
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_interrupt_enable_and_hlt();
+    }
+}
+
 /// Cause a breakpoint exception by invoking the `int3` instruction.
 #[inline]
 pub fn int3() {
+    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("int3" :::: "volatile");
+        asm!("int3", options(nomem, nostack));
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_int3();
     }
 }
 
@@ -84,9 +158,19 @@ pub fn int3() {
 /// This currently needs to be a macro because the `int` argument needs to be an
 /// immediate. This macro will be replaced by a generic function when support for
 /// const generics is implemented in Rust.
+#[cfg(feature = "inline_asm")]
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
-        asm!("int $0" :: "N" ($x) :: "volatile");
+        asm!("int {id}", id = const $x, options(nomem, nostack));
+    }};
+}
+
+/// Not implemented
+#[cfg(not(feature = "inline_asm"))]
+#[macro_export]
+macro_rules! software_interrupt {
+    ($x:expr) => {{
+        compile_error!("software_interrupt not implemented for non-nightly");
     }};
 }
