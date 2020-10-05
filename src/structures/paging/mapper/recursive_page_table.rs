@@ -81,6 +81,11 @@ impl<'a> RecursivePageTable<'a> {
         }
     }
 
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        &mut self.p4
+    }
+
     /// Internal helper function to create the page table of the next level if needed.
     ///
     /// If the passed entry is unused, a new frame is allocated from the given allocator, zeroed,
