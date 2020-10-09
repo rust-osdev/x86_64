@@ -3,6 +3,7 @@
 
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(feature = "const_fn", feature(const_fn))] // Needed for generic access to associated consts
+#![cfg_attr(feature = "const_fn", feature(const_panic))]
 #![cfg_attr(feature = "const_fn", feature(const_mut_refs))]
 #![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))]
 #![cfg_attr(feature = "const_fn", feature(const_in_array_repeat_expressions))]
@@ -22,16 +23,28 @@ pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 macro_rules! const_fn {
     (
         $(#[$attr:meta])*
-        pub $($fn:tt)*
+        $sv:vis fn $($fn:tt)*
     ) => {
         $(#[$attr])*
         #[cfg(feature = "const_fn")]
-        pub const $($fn)*
+        $sv const fn $($fn)*
 
         $(#[$attr])*
         #[cfg(not(feature = "const_fn"))]
-        pub $($fn)*
-    }
+        $sv fn $($fn)*
+    };
+    (
+        $(#[$attr:meta])*
+        $sv:vis unsafe fn $($fn:tt)*
+    ) => {
+        $(#[$attr])*
+        #[cfg(feature = "const_fn")]
+        $sv const unsafe fn $($fn)*
+
+        $(#[$attr])*
+        #[cfg(not(feature = "const_fn"))]
+        $sv unsafe fn $($fn)*
+    };
 }
 
 #[cfg(all(feature = "instructions", feature = "external_asm"))]
