@@ -19,7 +19,8 @@ pub struct TaskStateSegment {
     pub interrupt_stack_table: [VirtAddr; 7],
     reserved_3: u64,
     reserved_4: u16,
-    /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base.
+    /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base. It must not
+    /// exceed `0xDFFF`.
     pub iomap_base: u16,
 }
 
