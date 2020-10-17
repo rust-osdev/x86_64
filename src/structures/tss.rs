@@ -52,6 +52,24 @@ impl Default for TaskStateSegment {
     }
 }
 
+/// The given IO permissions bitmap is invalid.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum InvalidIoMap {
+    /// The IO permissions bitmap is too far from the TSS. It must be within `0xdfff` bytes of the
+    /// start of the TSS.
+    TooFarFromTss {
+        distance: usize,
+    },
+    /// The final byte of the IO permissions bitmap was not 0xff
+    InvalidTerminatingByte {
+        byte: u8,
+    },
+    /// The IO permissions bitmap exceeds the maximum length (8193).
+    TooLong {
+        len: usize
+    },
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
