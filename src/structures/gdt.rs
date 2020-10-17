@@ -5,7 +5,7 @@ use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
-use core::{fmt, cmp, mem};
+use core::{cmp, fmt, mem};
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
