@@ -468,7 +468,7 @@ impl Descriptor {
         let iomap_limit = tss.iomap_base as u64 + iomap_size as u64 - 1;
         low.set_bits(
             0..16,
-            cmp::max(mem::size_of::<TaskStateSegment>(), iomap_limit),
+            cmp::max(mem::size_of::<TaskStateSegment>() as u64, iomap_limit),
         );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
