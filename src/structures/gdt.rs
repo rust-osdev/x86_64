@@ -452,7 +452,14 @@ impl Descriptor {
             return Err(InvalidIoMap::TooLong { len: iomap.len() });
         }
 
-        let base = iomap.as_ptr() as usize - tss as *const _ as usize;
+        let iomap_addr = iomap.as_ptr() as usize;
+        let tss_addr = tss as *const _ as usize;
+
+        if tss_addr > iomap_addr {
+            return Err(InvalidIoMap::IoMapBeforeTss);
+        }
+
+        let base = iomap_addr - tss_addr;
         if base > 0xdfff {
             return Err(InvalidIoMap::TooFarFromTss { distance: base });
         }
