@@ -68,6 +68,11 @@ pub enum InvalidIoMap {
     TooLong {
         len: usize
     },
+    /// The `iomap_base` in the `TaskStateSegment` struct was not what was expected.
+    InvalidBase {
+        expected: u16,
+        got: u16,
+    }
 }
 
 #[cfg(test)]
