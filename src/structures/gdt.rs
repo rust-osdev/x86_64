@@ -457,7 +457,6 @@ impl Descriptor {
         iomap_size: u16,
     ) -> Descriptor {
         use self::DescriptorFlags as Flags;
-        use core::mem::size_of;
 
         let ptr = tss as *const _ as u64;
 
@@ -466,10 +465,10 @@ impl Descriptor {
         low.set_bits(16..40, ptr.get_bits(0..24));
         low.set_bits(56..64, ptr.get_bits(24..32));
         // limit (the `-1` is needed since the bound is inclusive)
-        let iomap_limit = tss.iomap_base as u64 + iomap_size as u64 - 1;
+        let iomap_limit = tss.iomap_base as u64 + iomap_size as u64;
         low.set_bits(
             0..16,
-            cmp::max(mem::size_of::<TaskStateSegment>() as u64, iomap_limit),
+            cmp::max(mem::size_of::<TaskStateSegment>() as u64, iomap_limit) - 1,
         );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
