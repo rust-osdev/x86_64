@@ -453,14 +453,21 @@ impl Descriptor {
             return Err(InvalidIoMap::TooLong { len: iomap.len() })
         }
 
-        let distance = iomap.as_ptr() as usize - tss as *const _ as usize;
-        if distance > 0xdfff {
-            return Err(InvalidIoMap::TooFarFromTss { distance })
+        let base = iomap.as_ptr() as usize - tss as *const _ as usize;
+        if base > 0xdfff {
+            return Err(InvalidIoMap::TooFarFromTss { distance: base })
         }
 
         let last_byte = *iomap.last().unwrap_or(&0xff);
         if last_byte != 0xff {
             return Err(InvalidIoMap::InvalidTerminatingByte { byte: last_byte })
+        }
+
+        if tss.iomap_base != base as u16 {
+            return Err(InvalidIoMap::InvalidBase {
+                expected: base as u16,
+                got: tss.iomap_base
+            });
         }
 
         // SAFETY: all invariants checked above
