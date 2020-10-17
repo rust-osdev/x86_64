@@ -59,24 +59,24 @@ pub enum InvalidIoMap {
     /// start of the TSS.
     TooFarFromTss {
         /// The distance of the IO permissions bitmap from the beginning of the TSS.
-        distance: usize
+        distance: usize,
     },
     /// The final byte of the IO permissions bitmap was not 0xff
     InvalidTerminatingByte {
         /// The byte found at the end of the IO permissions bitmap.
-        byte: u8
+        byte: u8,
     },
     /// The IO permissions bitmap exceeds the maximum length (8193).
     TooLong {
         /// The length of the IO permissions bitmap.
-        len: usize
+        len: usize,
     },
     /// The `iomap_base` in the `TaskStateSegment` struct was not what was expected.
     InvalidBase {
         /// The expected `iomap_base` to be set in the `TaskStateSegment` struct.
         expected: u16,
         /// The actual `iomap_base` set in the `TaskStateSegment` struct.
-        got: u16
+        got: u16,
     },
 }
 
