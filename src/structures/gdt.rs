@@ -439,17 +439,33 @@ impl Descriptor {
     /// being used.
     #[inline]
     pub unsafe fn tss_segment_unchecked(tss: *const TaskStateSegment) -> Descriptor {
+        // TODO: Remove this with a call to a function that takes a method
+        //       instead of a static reference.
+        // SAFETY: if iomap_size is zero, there are no requirements to uphold.
+        unsafe { Self::tss_segment_with_iomap(&*tss, 0) }
+    }
+
+    /// Creates a TSS system descriptor for the given TSS, setting up the IO permissions bitmap.
+    ///
+    /// # Safety
+    ///
+    /// If `iomap_size` is greater than zero, there **must** be a valid IO map at `tss_ptr + iomap_base`.
+    /// The size of the IO map must correspond with the given `iomap_size`.
+    pub unsafe fn tss_segment_with_iomap(tss: &'static TaskStateSegment, iomap_size: u16) -> Descriptor {
         use self::DescriptorFlags as Flags;
         use core::mem::size_of;
 
-        let ptr = tss as u64;
+        let ptr = tss as *const _ as u64;
 
         let mut low = Flags::PRESENT.bits();
         // base
         low.set_bits(16..40, ptr.get_bits(0..24));
         low.set_bits(56..64, ptr.get_bits(24..32));
-        // limit (the `-1` in needed since the bound is inclusive)
-        low.set_bits(0..16, (size_of::<TaskStateSegment>() - 1) as u64);
+        // limit (the `-1` is needed since the bound is inclusive)
+        low.set_bits(
+            0..16,
+            (size_of::<TaskStateSegment>() + (tss.iomap_base + iomap_size) as usize - 1) as u64
+        );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
 
