@@ -5,7 +5,7 @@ use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
-use core::fmt;
+use core::{fmt, cmp, mem};
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
@@ -449,8 +449,8 @@ impl Descriptor {
     ///
     /// # Safety
     ///
-    /// If `iomap_size` is greater than zero, there **must** be a valid IO map at `tss_ptr + iomap_base`.
-    /// The size of the IO map must correspond with the given `iomap_size`.
+    /// There must be a valid IO map at `(tss as *const u8).offset(tss.iomap_base)`
+    /// of length `iomap_size`
     pub unsafe fn tss_segment_with_iomap(
         tss: &'static TaskStateSegment,
         iomap_size: u16,
@@ -465,9 +465,10 @@ impl Descriptor {
         low.set_bits(16..40, ptr.get_bits(0..24));
         low.set_bits(56..64, ptr.get_bits(24..32));
         // limit (the `-1` is needed since the bound is inclusive)
+        let iomap_limit = tss.iomap_base as u64 + iomap_size as u64 - 1;
         low.set_bits(
             0..16,
-            (size_of::<TaskStateSegment>() + (tss.iomap_base + iomap_size) as usize - 1) as u64,
+            cmp::max(mem::size_of::<TaskStateSegment>(), iomap_limit),
         );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
