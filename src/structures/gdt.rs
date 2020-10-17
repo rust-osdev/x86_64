@@ -450,7 +450,8 @@ impl Descriptor {
     /// # Safety
     ///
     /// There must be a valid IO map at `(tss as *const u8).offset(tss.iomap_base)`
-    /// of length `iomap_size`
+    /// of length `iomap_size`, with the terminating `0xFF` byte. Additionally, `iomap_base` must
+    /// not exceed `0xDFFF`.
     pub unsafe fn tss_segment_with_iomap(
         tss: &'static TaskStateSegment,
         iomap_size: u16,
