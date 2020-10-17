@@ -1,7 +1,7 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
 pub use crate::registers::segmentation::SegmentSelector;
-use crate::structures::tss::TaskStateSegment;
+use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
@@ -9,7 +9,6 @@ use core::{cmp, fmt, mem};
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
-use crate::structures::tss::InvalidIoMap;
 
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 use core::sync::atomic::{AtomicU64 as EntryValue, Ordering};
@@ -450,23 +449,23 @@ impl Descriptor {
         iomap: &'static [u8],
     ) -> Result<Descriptor, InvalidIoMap> {
         if iomap.len() > 8193 {
-            return Err(InvalidIoMap::TooLong { len: iomap.len() })
+            return Err(InvalidIoMap::TooLong { len: iomap.len() });
         }
 
         let base = iomap.as_ptr() as usize - tss as *const _ as usize;
         if base > 0xdfff {
-            return Err(InvalidIoMap::TooFarFromTss { distance: base })
+            return Err(InvalidIoMap::TooFarFromTss { distance: base });
         }
 
         let last_byte = *iomap.last().unwrap_or(&0xff);
         if last_byte != 0xff {
-            return Err(InvalidIoMap::InvalidTerminatingByte { byte: last_byte })
+            return Err(InvalidIoMap::InvalidTerminatingByte { byte: last_byte });
         }
 
         if tss.iomap_base != base as u16 {
             return Err(InvalidIoMap::InvalidBase {
                 expected: base as u16,
-                got: tss.iomap_base
+                got: tss.iomap_base,
             });
         }
 
@@ -481,10 +480,7 @@ impl Descriptor {
     /// There must be a valid IO map at `(tss as *const u8).offset(tss.iomap_base)`
     /// of length `iomap_size`, with the terminating `0xFF` byte. Additionally, `iomap_base` must
     /// not exceed `0xDFFF`.
-    unsafe fn tss_segment_raw(
-        tss: *const TaskStateSegment,
-        iomap_size: u16,
-    ) -> Descriptor {
+    unsafe fn tss_segment_raw(tss: *const TaskStateSegment, iomap_size: u16) -> Descriptor {
         use self::DescriptorFlags as Flags;
 
         let ptr = tss as u64;
