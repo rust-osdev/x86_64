@@ -57,13 +57,27 @@ impl Default for TaskStateSegment {
 pub enum InvalidIoMap {
     /// The IO permissions bitmap is too far from the TSS. It must be within `0xdfff` bytes of the
     /// start of the TSS.
-    TooFarFromTss { distance: usize },
+    TooFarFromTss {
+        /// The distance of the IO permissions bitmap from the beginning of the TSS.
+        distance: usize
+    },
     /// The final byte of the IO permissions bitmap was not 0xff
-    InvalidTerminatingByte { byte: u8 },
+    InvalidTerminatingByte {
+        /// The byte found at the end of the IO permissions bitmap.
+        byte: u8
+    },
     /// The IO permissions bitmap exceeds the maximum length (8193).
-    TooLong { len: usize },
+    TooLong {
+        /// The length of the IO permissions bitmap.
+        len: usize
+    },
     /// The `iomap_base` in the `TaskStateSegment` struct was not what was expected.
-    InvalidBase { expected: u16, got: u16 },
+    InvalidBase {
+        /// The expected `iomap_base` to be set in the `TaskStateSegment` struct.
+        expected: u16,
+        /// The actual `iomap_base` set in the `TaskStateSegment` struct.
+        got: u16
+    },
 }
 
 #[cfg(test)]
