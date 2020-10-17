@@ -55,8 +55,11 @@ impl Default for TaskStateSegment {
 /// The given IO permissions bitmap is invalid.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum InvalidIoMap {
+    /// The IO permissions bitmap is before the TSS. It must be located after the TSS.
+    IoMapBeforeTss,
     /// The IO permissions bitmap is too far from the TSS. It must be within `0xdfff` bytes of the
-    /// start of the TSS.
+    /// start of the TSS. Note that if the IO permissions bitmap is located before the TSS, then
+    /// `IoMapBeforeTss` will be returned instead.
     TooFarFromTss {
         /// The distance of the IO permissions bitmap from the beginning of the TSS.
         distance: usize,
