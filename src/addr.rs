@@ -9,7 +9,8 @@ use bit_field::BitField;
 /// A canonical 64-bit virtual memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The `UsizeConversions` trait can be used for performing conversions
+/// on non 64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
@@ -22,7 +23,8 @@ pub struct VirtAddr(u64);
 /// A 64-bit physical memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The `UsizeConversions` trait can be used for performing conversions
+/// on non 64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
