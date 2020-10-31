@@ -150,4 +150,4 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - run: rustup toolchain install nightly --profile minimal --component clippy
-    - run: cargo +nightly clippy -- -D warnings
+    - run: cargo +nightly clippy
