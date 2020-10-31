@@ -1,7 +1,10 @@
 # Unreleased
 
-- Use `asm!` instead of perma-unstable `llvm_asm!` macro
+- Use `asm!` instead of perma-unstable `llvm_asm!` macro ([#165](https://github.com/rust-osdev/x86_64/pull/165))
+- Make `GlobalDescriptorTable::add_entry` a const fn ([#191](https://github.com/rust-osdev/x86_64/pull/191))
 - Rename `enable_interrupts_and_hlt` to `enable_and_hlt` ([#206](https://github.com/rust-osdev/x86_64/pull/206))
+- Provide functions for accessing the underlying L4 table for mapper types ([#184](https://github.com/rust-osdev/x86_64/pull/184))
+- Remove Trait constraint for Port::new() ([#188](https://github.com/rust-osdev/x86_64/pull/188))
 
 # 0.12.2 – 2020-09-29
 
