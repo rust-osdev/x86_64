@@ -84,9 +84,6 @@ jobs:
       run: cargo test --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
 
-    - name: 'Deny Warnings'
-      run: cargo build --features deny-warnings
-
     - name: "Install Rustup Targets"
       run: |
         rustup target add i686-unknown-linux-gnu
