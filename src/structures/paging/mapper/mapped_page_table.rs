@@ -53,7 +53,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
@@ -81,7 +81,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
@@ -114,7 +114,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
@@ -153,7 +153,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -261,7 +261,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -389,7 +389,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -643,7 +643,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
         allocator: &mut A,
     ) -> Result<&'b mut PageTable, PageTableCreateError>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let created;
 
