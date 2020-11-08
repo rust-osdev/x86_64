@@ -60,32 +60,48 @@ jobs:
       shell: bash
 
     - name: "Run cargo build"
-      run: cargo build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
 
     - name: "Run cargo build for stable without instructions"
-      run: cargo build --no-default-features
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --no-default-features
 
     - name: "Run cargo build for stable"
-      run: cargo build --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo build for stable on musl"
-      run: cargo build --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
 
     - name: "Run cargo test"
-      run: cargo test
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
 
     - name: "Run cargo test for stable"
-      run: cargo test --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo test for stable on musl"
-      run: cargo test --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
-
-    - name: 'Deny Warnings'
-      run: cargo build --features deny-warnings
 
     - name: "Install Rustup Targets"
       run: |
@@ -150,4 +166,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - run: rustup toolchain install nightly --profile minimal --component clippy
-    - run: cargo +nightly clippy -- -D warnings
+    - name: "Run `cargo clippy`"
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
