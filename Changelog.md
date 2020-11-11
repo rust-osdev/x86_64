@@ -1,6 +1,7 @@
 # Unreleased
 
 - Use `asm!` instead of perma-unstable `llvm_asm!` macro
+- Rename `enable_interrupts_and_hlt` to `enable_and_hlt` ([#206](https://github.com/rust-osdev/x86_64/pull/206))
 
 # 0.12.2 – 2020-09-29
 
