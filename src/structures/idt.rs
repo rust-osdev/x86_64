@@ -764,7 +764,7 @@ pub struct InterruptStackFrameValue {
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
-    /// return. See the documentation of the `InterruptDescriptorTable` fields for more details.
+    /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
     pub instruction_pointer: VirtAddr,
     /// The code segment selector, padded with zeros.
     pub code_segment: u64,

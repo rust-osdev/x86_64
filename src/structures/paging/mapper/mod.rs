@@ -325,7 +325,7 @@ pub trait Mapper<S: PageSize> {
     ///
     /// ## Safety
     ///
-    /// This is a convencience function that invokes [`map_to`] internally, so
+    /// This is a convencience function that invokes [`Mapper::map_to`] internally, so
     /// all safety requirements of it also apply for this function.
     #[inline]
     unsafe fn identity_map<A>(
