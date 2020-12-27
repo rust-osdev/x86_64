@@ -105,6 +105,31 @@ impl GlobalDescriptorTable {
         }
     }
 
+    /// Forms a GDT from a raw table and a next_free counter.
+    ///
+    /// # Safety
+    ///
+    /// The user must ensure that the provided table contains well formed entries
+    /// and that the value of `next_free` does not exceed the maximum size of the table.
+    #[inline]
+    pub const unsafe fn from_raw_parts(table: [u64; 8], next_free: usize) -> GlobalDescriptorTable {
+        GlobalDescriptorTable {
+            table,
+            next_free
+        }
+    }
+
+    /// Breaks a GDT into its raw parts (table and a next_free counter.)
+    #[inline]
+    pub const fn into_raw_parts(&self) -> ([u64; 8], usize) {
+        let Self {
+            table,
+            next_free,
+        } = *self;
+
+        (table, next_free)
+    }
+
     const_fn! {
         /// Adds the given segment descriptor to the GDT, returning the segment selector.
         ///
@@ -147,6 +172,25 @@ impl GlobalDescriptorTable {
         use crate::instructions::tables::lgdt;
         // SAFETY: static lifetime ensures no modification after loading.
         unsafe { lgdt(&self.pointer()) };
+    }
+
+    /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
+    /// segment registers; you **must** (re)load them yourself using [the appropriate
+    /// functions](crate::instructions::segmentation):
+    /// [load_ss](crate::instructions::segmentation::load_ss),
+    /// [set_cs](crate::instructions::segmentation::set_cs).
+    ///
+    /// # Safety
+    ///
+    /// Unlike `load` this function will not impose a static lifetime constraint
+    /// this means its up to the user to ensure that there will be no modifications
+    /// after loading and that the GDT will live for as long as it's loaded.
+    ///
+    #[cfg(feature = "instructions")]
+    #[inline]
+    pub unsafe fn load_unchecked(&self) {
+        use crate::instructions::tables::lgdt;
+        lgdt(&self.pointer());
     }
 
     const_fn! {
