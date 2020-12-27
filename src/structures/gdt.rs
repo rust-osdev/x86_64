@@ -113,19 +113,13 @@ impl GlobalDescriptorTable {
     /// and that the value of `next_free` does not exceed the maximum size of the table.
     #[inline]
     pub const unsafe fn from_raw_parts(table: [u64; 8], next_free: usize) -> GlobalDescriptorTable {
-        GlobalDescriptorTable {
-            table,
-            next_free
-        }
+        GlobalDescriptorTable { table, next_free }
     }
 
     /// Breaks a GDT into its raw parts (table and a next_free counter.)
     #[inline]
     pub const fn into_raw_parts(&self) -> ([u64; 8], usize) {
-        let Self {
-            table,
-            next_free,
-        } = *self;
+        let Self { table, next_free } = *self;
 
         (table, next_free)
     }
