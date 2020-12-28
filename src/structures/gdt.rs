@@ -1,7 +1,10 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
-use crate::structures::{tss::TaskStateSegment, DescriptorTablePointer};
 use crate::PrivilegeLevel;
+use crate::{
+    structures::{tss::TaskStateSegment, DescriptorTablePointer},
+    VirtAddr,
+};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
@@ -169,7 +172,7 @@ impl GlobalDescriptorTable {
     fn pointer(&self) -> DescriptorTablePointer {
         use core::mem::size_of;
         DescriptorTablePointer {
-            base: self.table.as_ptr() as u64,
+            base: VirtAddr::new(self.table.as_ptr() as u64),
             limit: (self.next_free * size_of::<u64>() - 1) as u16,
         }
     }
