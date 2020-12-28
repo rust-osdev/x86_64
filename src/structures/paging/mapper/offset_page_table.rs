@@ -48,12 +48,10 @@ struct PhysOffset {
     offset: VirtAddr,
 }
 
-impl PhysToVirt for PhysOffset {
+unsafe impl PhysToVirt for PhysOffset {
     #[inline]
-    fn phys_to_virt(&self, frame: PhysFrame) -> *mut PageTable {
-        let phys = frame.start_address().as_u64();
-        let virt = self.offset + phys;
-        virt.as_mut_ptr()
+    fn phys_to_virt(&self, phys_addr: PhysAddr) -> VirtAddr {
+        self.offset + phys_addr.as_u64()
     }
 }
 

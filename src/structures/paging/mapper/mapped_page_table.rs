@@ -605,7 +605,10 @@ impl<P: PhysToVirt> PageTableWalker<P> {
         &self,
         entry: &'b PageTableEntry,
     ) -> Result<&'b PageTable, PageTableWalkError> {
-        let page_table_ptr = self.phys_to_virt.phys_to_virt(entry.frame()?);
+        let page_table_ptr = self
+            .phys_to_virt
+            .phys_to_virt(entry.frame()?.start_address())
+            .as_mut_ptr();
         let page_table: &PageTable = unsafe { &*page_table_ptr };
 
         Ok(page_table)
@@ -621,7 +624,10 @@ impl<P: PhysToVirt> PageTableWalker<P> {
         &self,
         entry: &'b mut PageTableEntry,
     ) -> Result<&'b mut PageTable, PageTableWalkError> {
-        let page_table_ptr = self.phys_to_virt.phys_to_virt(entry.frame()?);
+        let page_table_ptr = self
+            .phys_to_virt
+            .phys_to_virt(entry.frame()?.start_address())
+            .as_mut_ptr();
         let page_table: &mut PageTable = unsafe { &mut *page_table_ptr };
 
         Ok(page_table)
@@ -758,21 +764,17 @@ impl From<PageTableWalkError> for TranslateError {
     }
 }
 
-/// Trait for converting a physical address to a virtual one.
+/// Convert a physical address to a virtual one.
 ///
 /// This only works if the physical address space is somehow mapped to the virtual
 /// address space, e.g. at an offset.
-pub trait PhysToVirt {
+///
+/// ## Safety
+///
+/// This trait is unsafe to implement because the implementer must ensure that
+/// `phys_to_virt` returns a valid virtual address for any given physical address.
+/// The returned address must be accessible when casted as a `*mut PageTable` pointer.
+pub unsafe trait PhysToVirt {
     /// Translate the given physical frame to a virtual page table pointer.
-    fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable;
-}
-
-impl<T> PhysToVirt for T
-where
-    T: Fn(PhysFrame) -> *mut PageTable,
-{
-    #[inline]
-    fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable {
-        self(phys_frame)
-    }
+    fn phys_to_virt(&self, phys_addr: PhysAddr) -> VirtAddr;
 }
