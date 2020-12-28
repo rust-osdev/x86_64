@@ -39,9 +39,15 @@ pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB>
     fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
         match self.translate(addr) {
             TranslateResult::PageNotMapped | TranslateResult::InvalidFrameAddress(_) => None,
-            TranslateResult::Frame4KiB { frame, offset } => Some(frame.start_address() + offset),
-            TranslateResult::Frame2MiB { frame, offset } => Some(frame.start_address() + offset),
-            TranslateResult::Frame1GiB { frame, offset } => Some(frame.start_address() + offset),
+            TranslateResult::Frame4KiB { frame, offset, .. } => {
+                Some(frame.start_address() + offset)
+            }
+            TranslateResult::Frame2MiB { frame, offset, .. } => {
+                Some(frame.start_address() + offset)
+            }
+            TranslateResult::Frame1GiB { frame, offset, .. } => {
+                Some(frame.start_address() + offset)
+            }
         }
     }
 }
@@ -58,6 +64,8 @@ pub enum TranslateResult {
         frame: PhysFrame<Size4KiB>,
         /// The offset whithin the mapped frame.
         offset: u64,
+        /// The flags for the frame.
+        flags: PageTableFlags,
     },
     /// The page is mapped to a physical frame of size 2MiB.
     Frame2MiB {
@@ -65,6 +73,8 @@ pub enum TranslateResult {
         frame: PhysFrame<Size2MiB>,
         /// The offset whithin the mapped frame.
         offset: u64,
+        /// The flags for the frame.
+        flags: PageTableFlags,
     },
     /// The page is mapped to a physical frame of size 2MiB.
     Frame1GiB {
@@ -72,6 +82,8 @@ pub enum TranslateResult {
         frame: PhysFrame<Size1GiB>,
         /// The offset whithin the mapped frame.
         offset: u64,
+        /// The flags for the frame.
+        flags: PageTableFlags,
     },
     /// The given page is not mapped to a physical frame.
     PageNotMapped,

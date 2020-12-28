@@ -776,9 +776,15 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
             return TranslateResult::PageNotMapped;
         }
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
-            let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
+            let entry = &p3[addr.p3_index()];
+            let frame = PhysFrame::containing_address(entry.addr());
             let offset = addr.as_u64() & 0o_777_777_7777;
-            return TranslateResult::Frame1GiB { frame, offset };
+            let flags = entry.flags();
+            return TranslateResult::Frame1GiB {
+                frame,
+                offset,
+                flags,
+            };
         }
 
         let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
@@ -787,9 +793,15 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
             return TranslateResult::PageNotMapped;
         }
         if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
-            let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
+            let entry = &p2[addr.p2_index()];
+            let frame = PhysFrame::containing_address(entry.addr());
             let offset = addr.as_u64() & 0o_777_7777;
-            return TranslateResult::Frame2MiB { frame, offset };
+            let flags = entry.flags();
+            return TranslateResult::Frame2MiB {
+                frame,
+                offset,
+                flags,
+            };
         }
 
         let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
@@ -806,7 +818,12 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
             Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
         };
         let offset = u64::from(addr.page_offset());
-        TranslateResult::Frame4KiB { frame, offset }
+        let flags = p1_entry.flags();
+        TranslateResult::Frame4KiB {
+            frame,
+            offset,
+            flags,
+        }
     }
 }
 
