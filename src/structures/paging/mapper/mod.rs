@@ -1,6 +1,6 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
-pub use self::mapped_page_table::{MappedPageTable, PhysToVirt};
+pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
 #[cfg(target_pointer_width = "64")]
 pub use self::offset_page_table::OffsetPageTable;
 #[cfg(feature = "instructions")]
