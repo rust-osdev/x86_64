@@ -2,6 +2,7 @@
 
 - **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
 - **Breaking:** Restructure the `TranslateResult` type and create separate `Translate` trait ([#211](https://github.com/rust-osdev/x86_64/pull/211))
+- **Breaking:** Change signature of `PhysToVirt::phys_to_virt` ([#213](https://github.com/rust-osdev/x86_64/pull/213))
 - **Breaking:** Use custom error types instead of `()` ([#199](https://github.com/rust-osdev/x86_64/pull/199))
 - **Breaking:** Remove deprecated items
   - `UnusedPhysFrame`
