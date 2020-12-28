@@ -112,8 +112,8 @@ impl GlobalDescriptorTable {
     /// * The user must make sure that the entries are well formed
     /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
     #[inline]
-    #[cfg(feature = "nightly")]
-    pub const unsafe fn from_raw_parts(slice: &[u64]) -> GlobalDescriptorTable {
+    #[cfg(feature = "const_fn")]
+    pub const unsafe fn from_raw_slice(slice: &[u64]) -> GlobalDescriptorTable {
         assert!(
             slice.len() <= 8,
             "initializing a GDT from a slice requires it to be **at most** 8 elements."
@@ -132,8 +132,10 @@ impl GlobalDescriptorTable {
     }
 
     /// Get a reference to the internal table.
+    ///
+    /// The resulting slice may contain system descriptors, which span two `u64`s.
     #[inline]
-    pub fn as_raw_parts(&self) -> &[u64] {
+    pub fn as_raw_slice(&self) -> &[u64] {
         &self.table[..self.next_free]
     }
 
