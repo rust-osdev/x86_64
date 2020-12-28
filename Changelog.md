@@ -17,6 +17,11 @@
 - **Breaking:** Remove `PortReadWrite` trait, which is no longer needed ([#217](https://github.com/rust-osdev/x86_64/pull/217))
 - Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
 
+# 0.12.4 – 2020-12-28
+
+- Fix bad conversion from llvm_asm! to asm! ([#218](https://github.com/rust-osdev/x86_64/pull/218))
+- GDT: Add `load_unchecked`, `from_raw_slice`, and `as_raw_slice` ([#210](https://github.com/rust-osdev/x86_64/pull/210))
+
 # 0.12.3 – 2020-10-31
 
 - Use `asm!` instead of perma-unstable `llvm_asm!` macro ([#165](https://github.com/rust-osdev/x86_64/pull/165))
