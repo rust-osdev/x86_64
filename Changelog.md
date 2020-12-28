@@ -11,6 +11,7 @@
   - `interrupts::enable_interrupts_and_hlt`
 - **Breaking:** Make `DescriptorTablePointer::base` a `VirtAddr` ([#215](https://github.com/rust-osdev/x86_64/pull/215))
 - **Breaking:** Change return type of `read_rip` to `VirtAddr` ([#216](https://github.com/rust-osdev/x86_64/pull/216))
+- **Breaking:** Make writing the RFLAGS register unsafe ([#219](https://github.com/rust-osdev/x86_64/pull/219))
 - **Breaking:** Remove `PortReadWrite` trait, which is no longer needed ([#217](https://github.com/rust-osdev/x86_64/pull/217))
 - Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
 
