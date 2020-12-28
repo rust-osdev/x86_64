@@ -14,7 +14,7 @@ pub use self::mapper::OffsetPageTable;
 #[cfg(feature = "instructions")]
 #[doc(no_inline)]
 pub use self::mapper::RecursivePageTable;
-pub use self::mapper::{Mapper, MapperAllSizes};
+pub use self::mapper::{Mapper, Translate};
 pub use self::page::{Page, PageSize, Size1GiB, Size2MiB, Size4KiB};
 pub use self::page_table::{PageOffset, PageTable, PageTableFlags, PageTableIndex};
 
