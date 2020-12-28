@@ -706,12 +706,6 @@ impl EntryOptions {
     }
 }
 
-/// Wrapper type for the exception stack frame pushed by the CPU.
-///
-/// Identical to [`InterruptStackFrame`].
-#[deprecated(note = "This type was renamed to InterruptStackFrame.")]
-pub type ExceptionStackFrame = InterruptStackFrame;
-
 /// Wrapper type for the interrupt stack frame pushed by the CPU.
 ///
 /// This type derefs to an [`InterruptStackFrameValue`], which allows reading the actual values.

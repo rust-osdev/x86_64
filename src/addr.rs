@@ -85,13 +85,6 @@ impl VirtAddr {
         VirtAddr(((addr << 16) as i64 >> 16) as u64)
     }
 
-    /// Alias for [`new_truncate`][VirtAddr::new_truncate] for backwards compatibility.
-    #[inline]
-    #[deprecated(note = "Use new_truncate or new_unsafe instead")]
-    pub const fn new_unchecked(addr: u64) -> VirtAddr {
-        Self::new_truncate(addr)
-    }
-
     /// Creates a new virtual address, without any checks.
     ///
     /// ## Safety

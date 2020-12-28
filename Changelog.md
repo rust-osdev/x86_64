@@ -3,6 +3,11 @@
 - **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
 - **Breaking:** Restructure the `TranslateResult` type and create separate `Translate` trait ([#211](https://github.com/rust-osdev/x86_64/pull/211))
 - **Breaking:** Use custom error types instead of `()` ([#199](https://github.com/rust-osdev/x86_64/pull/199))
+- **Breaking:** Remove deprecated items
+  - `UnusedPhysFrame`
+  - `ExceptionStackFrame`
+  - `VirtAddr::new_unchecked`
+  - `interrupts::enable_interrupts_and_hlt`
 - Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
 
 # 0.12.3 – 2020-10-31
