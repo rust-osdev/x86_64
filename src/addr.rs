@@ -1,4 +1,4 @@
-//! Physical and virtal addresses manipulation
+//! Physical and virtual addresses manipulation
 
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
@@ -9,7 +9,8 @@ use bit_field::BitField;
 /// A canonical 64-bit virtual memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The `UsizeConversions` trait can be used for performing conversions
+/// on non 64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
@@ -22,7 +23,8 @@ pub struct VirtAddr(u64);
 /// A 64-bit physical memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The `UsizeConversions` trait can be used for performing conversions
+/// on non 64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
@@ -43,8 +45,11 @@ pub struct VirtAddrNotValid(u64);
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
-    /// This function performs sign extension of bit 47 to make the address canonical. Panics
-    /// if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
+    /// This function performs sign extension of bit 47 to make the address canonical.
+    ///
+    /// ## Panics
+    ///
+    /// This function panics if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
     #[inline]
     pub fn new(addr: u64) -> VirtAddr {
         Self::try_new(addr).expect(
@@ -132,6 +137,12 @@ impl VirtAddr {
     #[inline]
     pub fn as_mut_ptr<T>(self) -> *mut T {
         self.as_ptr::<T>() as *mut T
+    }
+
+    /// Convenience method for checking if a virtual address is null.
+    #[inline]
+    pub const fn is_null(self) -> bool {
+        self.0 == 0
     }
 
     /// Aligns the virtual address upwards to the given alignment.
@@ -283,7 +294,9 @@ pub struct PhysAddrNotValid(u64);
 impl PhysAddr {
     /// Creates a new physical address.
     ///
-    /// Panics if a bit in the range 52 to 64 is set.
+    /// ## Panics
+    ///
+    /// This function panics if a bit in the range 52 to 64 is set.
     #[inline]
     pub fn new(addr: u64) -> PhysAddr {
         assert_eq!(

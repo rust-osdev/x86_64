@@ -1,5 +1,3 @@
-#![cfg(target_arch = "x86_64")]
-
 //! Access the page tables through a recursively mapped level 4 table.
 
 use super::*;
@@ -81,6 +79,11 @@ impl<'a> RecursivePageTable<'a> {
             p4: table,
             recursive_index,
         }
+    }
+
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        &mut self.p4
     }
 
     /// Internal helper function to create the page table of the next level if needed.

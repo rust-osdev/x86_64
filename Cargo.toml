@@ -22,22 +22,31 @@ license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.11.1"
+version = "0.12.3"
 edition = "2018"
 
 [dependencies]
 bit_field = "0.9.0"
 bitflags = "1.0.4"
-array-init = { version = "0.1.1", optional = true }
 
 [build-dependencies]
 cc = { version = "1.0.37", optional = true }
 
 [features]
-default = [ "nightly" ]
+default = [ "nightly", "instructions" ]
+instructions = []
 deny-warnings = []
-stable = [ "cc", "array-init" ]
+external_asm = [ "cc" ]
 nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
 inline_asm = []
 abi_x86_interrupt = []
 const_fn = []
+
+[package.metadata.release]
+no-dev-version = true
+pre-release-replacements = [
+    { file="Changelog.md", search="# Unreleased", replace="# Unreleased\n\n# {{version}} – {{date}}", exactly=1 },
+]
+pre-release-commit-message = "Release version {{version}}"
+disable-push = true
+disable-publish = true

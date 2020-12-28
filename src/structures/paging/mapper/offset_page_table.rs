@@ -1,4 +1,4 @@
-#![cfg(target_arch = "x86_64")]
+#![cfg(target_pointer_width = "64")]
 
 use crate::structures::paging::{
     frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
@@ -35,6 +35,11 @@ impl<'a> OffsetPageTable<'a> {
         Self {
             inner: MappedPageTable::new(level_4_table, phys_offset),
         }
+    }
+
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        self.inner.level_4_table()
     }
 }
 

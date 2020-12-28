@@ -4,7 +4,6 @@
 /// Used to obtain random numbers using x86_64's RDRAND opcode
 pub struct RdRand(());
 
-#[cfg(target_arch = "x86_64")]
 impl RdRand {
     /// Creates Some(RdRand) if RDRAND is supported, None otherwise
     #[inline]
@@ -66,7 +65,7 @@ impl RdRand {
     }
 }
 
-#[cfg(all(test, target_arch = "x86_64"))]
+#[cfg(all(test))]
 mod tests {
     use super::*;
 

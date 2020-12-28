@@ -15,7 +15,7 @@ pub fn are_enabled() -> bool {
 pub fn enable() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("sti" :::: "volatile");
+        asm!("sti", options(nomem, nostack));
     }
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
@@ -30,7 +30,7 @@ pub fn enable() {
 pub fn disable() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("cli" :::: "volatile");
+        asm!("cli", options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -103,12 +103,12 @@ where
 ///     x86_64::instructions::hlt(); // wait for the next interrupt
 /// }
 ///
-/// // avoid this race by using `enable_interrupts_and_hlt`:
+/// // avoid this race by using `enable_and_hlt`:
 ///
 /// x86_64::instructions::interrupts::disable();
 /// if nothing_to_do() {
 ///     // <- no interrupts can occur here (interrupts are disabled)
-///     x86_64::instructions::interrupts::enable_interrupts_and_hlt();
+///     x86_64::instructions::interrupts::enable_and_hlt();
 /// }
 ///
 /// ```
@@ -128,10 +128,10 @@ where
 /// See <http://lkml.iu.edu/hypermail/linux/kernel/1009.2/01406.html> for more
 /// information.
 #[inline]
-pub fn enable_interrupts_and_hlt() {
+pub fn enable_and_hlt() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("sti; hlt" :::: "volatile");
+        asm!("sti; hlt", options(nomem, nostack));
     }
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
@@ -139,12 +139,19 @@ pub fn enable_interrupts_and_hlt() {
     }
 }
 
+/// Alias for [`enable_and_hlt`][enable_and_hlt] for backwards compatibility.
+#[inline]
+#[deprecated(note = "Use enable_and_hlt instead")]
+pub fn enable_interrupts_and_hlt() {
+    enable_and_hlt();
+}
+
 /// Cause a breakpoint exception by invoking the `int3` instruction.
 #[inline]
 pub fn int3() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("int3" :::: "volatile");
+        asm!("int3", options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -162,7 +169,7 @@ pub fn int3() {
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
-        llvm_asm!("int $0" :: "N" ($x) :: "volatile");
+        asm!("int {id}", id = const $x, options(nomem, nostack));
     }};
 }
 

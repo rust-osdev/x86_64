@@ -9,7 +9,7 @@ impl PortRead for u8 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u8 {
         let value: u8;
-        llvm_asm!("inb $1, $0" : "={al}"(value) : "N{dx}"(port) :: "volatile");
+        asm!("in al, dx", out("al") value, in("dx") port, options(nomem, nostack));
         value
     }
 
@@ -25,7 +25,7 @@ impl PortRead for u16 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u16 {
         let value: u16;
-        llvm_asm!("inw $1, $0" : "={ax}"(value) : "N{dx}"(port) :: "volatile");
+        asm!("in ax, dx", out("ax") value, in("dx") port, options(nomem, nostack));
         value
     }
 
@@ -41,7 +41,7 @@ impl PortRead for u32 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u32 {
         let value: u32;
-        llvm_asm!("inl $1, $0" : "={eax}"(value) : "N{dx}"(port) :: "volatile");
+        asm!("in eax, dx", out("eax") value, in("dx") port, options(nomem, nostack));
         value
     }
 
@@ -56,7 +56,7 @@ impl PortWrite for u8 {
     #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
-        llvm_asm!("outb $1, $0" :: "N{dx}"(port), "{al}"(value) :: "volatile");
+        asm!("out dx, al", in("dx") port, in("al") value, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -70,7 +70,7 @@ impl PortWrite for u16 {
     #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
-        llvm_asm!("outw $1, $0" :: "N{dx}"(port), "{ax}"(value) :: "volatile");
+        asm!("out dx, ax", in("dx") port, in("ax") value, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -84,7 +84,7 @@ impl PortWrite for u32 {
     #[cfg(feature = "inline_asm")]
     #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
-        llvm_asm!("outl $1, $0" :: "N{dx}"(port), "{eax}"(value) :: "volatile");
+        asm!("out dx, eax", in("dx") port, in("eax") value, options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
@@ -100,37 +100,37 @@ impl PortReadWrite for u32 {}
 
 /// A read only I/O port.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PortReadOnly<T: PortRead> {
+pub struct PortReadOnly<T> {
     port: u16,
     phantom: PhantomData<T>,
 }
 
 /// A write only I/O port.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PortWriteOnly<T: PortWrite> {
+pub struct PortWriteOnly<T> {
     port: u16,
     phantom: PhantomData<T>,
 }
 
 /// An I/O port.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Port<T: PortReadWrite> {
+pub struct Port<T> {
     port: u16,
     phantom: PhantomData<T>,
 }
 
-impl<T: PortRead> PortReadOnly<T> {
-    const_fn! {
-        /// Creates a read only I/O port with the given port number.
-        #[inline]
-        pub fn new(port: u16) -> PortReadOnly<T> {
-            PortReadOnly {
-                port,
-                phantom: PhantomData,
-            }
+impl<T> PortReadOnly<T> {
+    /// Creates a read only I/O port with the given port number.
+    #[inline]
+    pub const fn new(port: u16) -> PortReadOnly<T> {
+        PortReadOnly {
+            port,
+            phantom: PhantomData,
         }
     }
+}
 
+impl<T: PortRead> PortReadOnly<T> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -143,18 +143,18 @@ impl<T: PortRead> PortReadOnly<T> {
     }
 }
 
-impl<T: PortWrite> PortWriteOnly<T> {
-    const_fn! {
-        /// Creates a write only I/O port with the given port number.
-        #[inline]
-        pub fn new(port: u16) -> PortWriteOnly<T> {
-            PortWriteOnly {
-                port,
-                phantom: PhantomData,
-            }
+impl<T> PortWriteOnly<T> {
+    /// Creates a write only I/O port with the given port number.
+    #[inline]
+    pub const fn new(port: u16) -> PortWriteOnly<T> {
+        PortWriteOnly {
+            port,
+            phantom: PhantomData,
         }
     }
+}
 
+impl<T: PortWrite> PortWriteOnly<T> {
     /// Writes to the port.
     ///
     /// ## Safety
@@ -167,18 +167,18 @@ impl<T: PortWrite> PortWriteOnly<T> {
     }
 }
 
-impl<T: PortReadWrite> Port<T> {
-    const_fn! {
-        /// Creates an I/O port with the given port number.
-        #[inline]
-        pub fn new(port: u16) -> Port<T> {
-            Port {
-                port,
-                phantom: PhantomData,
-            }
+impl<T> Port<T> {
+    /// Creates an I/O port with the given port number.
+    #[inline]
+    pub const fn new(port: u16) -> Port<T> {
+        Port {
+            port,
+            phantom: PhantomData,
         }
     }
+}
 
+impl<T: PortReadWrite> Port<T> {
     /// Reads from the port.
     ///
     /// ## Safety

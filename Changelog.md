@@ -1,3 +1,57 @@
+# Unreleased
+
+# 0.12.3 – 2020-10-31
+
+- Use `asm!` instead of perma-unstable `llvm_asm!` macro ([#165](https://github.com/rust-osdev/x86_64/pull/165))
+- Make `GlobalDescriptorTable::add_entry` a const fn ([#191](https://github.com/rust-osdev/x86_64/pull/191))
+- Rename `enable_interrupts_and_hlt` to `enable_and_hlt` ([#206](https://github.com/rust-osdev/x86_64/pull/206))
+- Provide functions for accessing the underlying L4 table for mapper types ([#184](https://github.com/rust-osdev/x86_64/pull/184))
+- Remove Trait constraint for `Port::new()` ([#188](https://github.com/rust-osdev/x86_64/pull/188))
+
+# 0.12.2 – 2020-09-29
+
+- Add additional `DescriptorFlags` and aliases compatible with `syscall`/`sysenter` ([#181](https://github.com/rust-osdev/x86_64/pull/181))
+- Fix (another) build error on latest nightly ([#186](https://github.com/rust-osdev/x86_64/pull/186))
+
+# 0.12.1 – 2020-09-24
+
+- Fix build error on latest nightly ([#182](https://github.com/rust-osdev/x86_64/pull/182))
+
+# 0.12.0 – 2020-09-23
+
+- **Breaking**: Decouple instructions into a separate feature flag ([#179](https://github.com/rust-osdev/x86_64/pull/179))
+  - Gates the `instructions` module by a new `instructions` feature (enabled by default).
+  - Rename the `stable` feature to `external_asm`
+  - `PageTable::new` is no longer a `const fn` on stable (i.e. without the `nightly` feature)
+
+# 0.11.8 – 2020-09-23
+
+- Add `VirtAddr::is_null` ([#180](https://github.com/rust-osdev/x86_64/pull/180))
+
+# 0.11.7 – 2020-09-11
+
+- Fix const_item_mutation warnings added in latest Rust nightly ([#178](https://github.com/rust-osdev/x86_64/pull/178))
+
+# 0.11.6 – 2020-09-11 (yanked)
+
+- (accidental empty release)
+
+# 0.11.5 – 2020-09-03
+
+- Don't rely on promotion of `PageTableEntry::new` inside a `const fn` ([#175](https://github.com/rust-osdev/x86_64/pull/175))
+
+# 0.11.4 – 2020-09-01
+
+- Add a function for the `nop` instruction ([#174](https://github.com/rust-osdev/x86_64/pull/174))
+
+# ~~0.11.3 – 2020-09-01~~
+
+- (accidental release, yanked)
+
+# 0.11.2 – 2020-08-13
+
+- Add rdfsbase, rdgsbase, wrfsbase, wrgsbase ([#172](https://github.com/rust-osdev/x86_64/pull/172))
+
 # 0.11.1
 
 - Export `PhysAddrNotValid` and `VirtAddrNotValid` error types ([#163](https://github.com/rust-osdev/x86_64/pull/163))
