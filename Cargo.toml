@@ -35,7 +35,6 @@ cc = { version = "1.0.37", optional = true }
 [features]
 default = [ "nightly", "instructions" ]
 instructions = []
-deny-warnings = []
 external_asm = [ "cc" ]
 nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
 inline_asm = []
