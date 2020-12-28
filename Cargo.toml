@@ -49,3 +49,4 @@ pre-release-replacements = [
 pre-release-commit-message = "Release version {{version}}"
 disable-push = true
 disable-publish = true
+disable-tag = true
