@@ -758,7 +758,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> MapperAllSizes for RecursivePageTable<'a> {
+impl<'a> Translate for RecursivePageTable<'a> {
     #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let page = Page::containing_address(addr);
@@ -766,7 +766,7 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         let p4 = &self.p4;
         let p4_entry = &p4[addr.p4_index()];
         if p4_entry.is_unused() {
-            return TranslateResult::PageNotMapped;
+            return TranslateResult::NotMapped;
         }
         if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             panic!("level 4 entry has huge page bit set")
@@ -775,15 +775,15 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         let p3 = unsafe { &*(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[addr.p3_index()];
         if p3_entry.is_unused() {
-            return TranslateResult::PageNotMapped;
+            return TranslateResult::NotMapped;
         }
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let entry = &p3[addr.p3_index()];
             let frame = PhysFrame::containing_address(entry.addr());
             let offset = addr.as_u64() & 0o_777_777_7777;
             let flags = entry.flags();
-            return TranslateResult::Frame1GiB {
-                frame,
+            return TranslateResult::Mapped {
+                frame: MappedFrame::Size1GiB(frame),
                 offset,
                 flags,
             };
@@ -792,15 +792,15 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         let p2 = unsafe { &*(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[addr.p2_index()];
         if p2_entry.is_unused() {
-            return TranslateResult::PageNotMapped;
+            return TranslateResult::NotMapped;
         }
         if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let entry = &p2[addr.p2_index()];
             let frame = PhysFrame::containing_address(entry.addr());
             let offset = addr.as_u64() & 0o_777_7777;
             let flags = entry.flags();
-            return TranslateResult::Frame2MiB {
-                frame,
+            return TranslateResult::Mapped {
+                frame: MappedFrame::Size2MiB(frame),
                 offset,
                 flags,
             };
@@ -809,7 +809,7 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         let p1 = unsafe { &*(p1_ptr(page, self.recursive_index)) };
         let p1_entry = &p1[addr.p1_index()];
         if p1_entry.is_unused() {
-            return TranslateResult::PageNotMapped;
+            return TranslateResult::NotMapped;
         }
         if p1_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             panic!("level 1 entry has huge page bit set")
@@ -821,8 +821,8 @@ impl<'a> MapperAllSizes for RecursivePageTable<'a> {
         };
         let offset = u64::from(addr.page_offset());
         let flags = p1_entry.flags();
-        TranslateResult::Frame4KiB {
-            frame,
+        TranslateResult::Mapped {
+            frame: MappedFrame::Size4KiB(frame),
             offset,
             flags,
         }

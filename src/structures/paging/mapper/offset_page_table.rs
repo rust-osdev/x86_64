@@ -260,7 +260,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 }
 
-impl<'a> MapperAllSizes for OffsetPageTable<'a> {
+impl<'a> Translate for OffsetPageTable<'a> {
     #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
