@@ -1,6 +1,7 @@
 # Unreleased
 
 - **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
+- Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
 
 # 0.12.3 – 2020-10-31
 

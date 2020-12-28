@@ -108,7 +108,7 @@ impl<'a> RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<&'b mut PageTable, MapToError<S>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         /// This inner function is used to limit the scope of `unsafe`.
         ///
@@ -120,7 +120,7 @@ impl<'a> RecursivePageTable<'a> {
             allocator: &mut A,
         ) -> Result<&'b mut PageTable, MapToError<S>>
         where
-            A: FrameAllocator<Size4KiB>,
+            A: FrameAllocator<Size4KiB> + ?Sized,
         {
             use crate::structures::paging::PageTableFlags as Flags;
 
@@ -165,7 +165,7 @@ impl<'a> RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
@@ -199,7 +199,7 @@ impl<'a> RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
@@ -243,7 +243,7 @@ impl<'a> RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.p4;
 
@@ -297,7 +297,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -419,7 +419,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -576,7 +576,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }

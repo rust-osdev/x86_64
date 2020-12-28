@@ -170,7 +170,7 @@ pub trait Mapper<S: PageSize> {
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let parent_table_flags = flags
             & (PageTableFlags::PRESENT
@@ -260,7 +260,7 @@ pub trait Mapper<S: PageSize> {
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
-        A: FrameAllocator<Size4KiB>;
+        A: FrameAllocator<Size4KiB> + ?Sized;
 
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
@@ -348,7 +348,7 @@ pub trait Mapper<S: PageSize> {
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
         S: PageSize,
         Self: Mapper<S>,
     {

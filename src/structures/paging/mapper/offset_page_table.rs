@@ -70,7 +70,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.inner
             .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
@@ -137,7 +137,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.inner
             .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
@@ -204,7 +204,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.inner
             .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
