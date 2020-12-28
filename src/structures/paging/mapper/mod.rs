@@ -38,7 +38,7 @@ pub trait Translate {
     /// Returns `None` if there is no valid mapping for the given address.
     ///
     /// This is a convenience method. For more information about a mapping see the
-    /// [`translate`](MapperAllSizes::translate) method.
+    /// [`translate`](Translate::translate) method.
     #[inline]
     fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
         match self.translate(addr) {
@@ -48,7 +48,7 @@ pub trait Translate {
     }
 }
 
-/// The return value of the [`MapperAllSizes::translate`] function.
+/// The return value of the [`Translate::translate`] function.
 ///
 /// If the given address has a valid mapping, a `Frame4KiB`, `Frame2MiB`, or `Frame1GiB` variant
 /// is returned, depending on the size of the mapped page. The remaining variants indicate errors.
