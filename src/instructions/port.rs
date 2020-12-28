@@ -2,7 +2,7 @@
 
 use core::marker::PhantomData;
 
-pub use crate::structures::port::{PortRead, PortReadWrite, PortWrite};
+pub use crate::structures::port::{PortRead, PortWrite};
 
 impl PortRead for u8 {
     #[cfg(feature = "inline_asm")]
@@ -94,10 +94,6 @@ impl PortWrite for u32 {
     }
 }
 
-impl PortReadWrite for u8 {}
-impl PortReadWrite for u16 {}
-impl PortReadWrite for u32 {}
-
 /// A read only I/O port.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PortReadOnly<T> {
@@ -178,7 +174,7 @@ impl<T> Port<T> {
     }
 }
 
-impl<T: PortReadWrite> Port<T> {
+impl<T: PortRead> Port<T> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -189,7 +185,9 @@ impl<T: PortReadWrite> Port<T> {
     pub unsafe fn read(&mut self) -> T {
         T::read_from_port(self.port)
     }
+}
 
+impl<T: PortWrite> Port<T> {
     /// Writes to the port.
     ///
     /// ## Safety
