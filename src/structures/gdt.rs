@@ -113,7 +113,11 @@ impl GlobalDescriptorTable {
     /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
     #[inline]
     pub const unsafe fn from_raw_parts(slice: &[u64]) -> GlobalDescriptorTable {
-        let next_free = if slice.len() >= 8 { 8 } else { slice.len() };
+        assert!(
+            slice.len() <= 8,
+            "initializing a GDT from a slice requires it to be **at most** 8 elements."
+        );
+        let next_free = slice.len();
 
         let mut table = [0; 8];
         let mut idx = 0;
@@ -126,12 +130,10 @@ impl GlobalDescriptorTable {
         GlobalDescriptorTable { table, next_free }
     }
 
-    /// Breaks a GDT into its raw parts (table and a next_free counter.)
+    /// Get a reference to the internal table.
     #[inline]
-    pub const fn into_raw_parts(&self) -> ([u64; 8], usize) {
-        let Self { table, next_free } = *self;
-
-        (table, next_free)
+    pub fn as_raw_parts(&self) -> &[u64] {
+        &self.table[..self.next_free]
     }
 
     const_fn! {
