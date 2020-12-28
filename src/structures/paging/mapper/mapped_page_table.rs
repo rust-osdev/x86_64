@@ -2,7 +2,7 @@ use crate::structures::paging::{
     frame::PhysFrame,
     frame_alloc::FrameAllocator,
     mapper::*,
-    page::{Page, Size1GiB, Size2MiB, Size4KiB},
+    page::{AddressNotAligned, Page, Size1GiB, Size2MiB, Size4KiB},
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
 };
 
@@ -178,7 +178,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         }
 
         let frame = PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|()| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
 
         p3_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
@@ -246,7 +246,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         }
 
         PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|()| TranslateError::InvalidFrameAddress(p3_entry.addr()))
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p3_entry.addr()))
     }
 }
 
@@ -289,7 +289,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         }
 
         let frame = PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|()| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
 
         p2_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
@@ -374,7 +374,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         }
 
         PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|()| TranslateError::InvalidFrameAddress(p2_entry.addr()))
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p2_entry.addr()))
     }
 }
 
@@ -518,7 +518,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         }
 
         PhysFrame::from_start_address(p1_entry.addr())
-            .map_err(|()| TranslateError::InvalidFrameAddress(p1_entry.addr()))
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p1_entry.addr()))
     }
 }
 
@@ -572,7 +572,7 @@ impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
 
         let frame = match PhysFrame::from_start_address(p1_entry.addr()) {
             Ok(frame) => frame,
-            Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
+            Err(AddressNotAligned) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
         };
         let offset = u64::from(addr.page_offset());
         let flags = p1_entry.flags();

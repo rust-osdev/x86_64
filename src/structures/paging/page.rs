@@ -67,9 +67,9 @@ impl<S: PageSize> Page<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
-    pub fn from_start_address(address: VirtAddr) -> Result<Self, ()> {
+    pub fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned(S::SIZE) {
-            return Err(());
+            return Err(AddressNotAligned);
         }
         Ok(Page::containing_address(address))
     }
@@ -359,6 +359,16 @@ impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
             .field("start", &self.start)
             .field("end", &self.end)
             .finish()
+    }
+}
+
+/// The given address was not sufficiently aligned.
+#[derive(Debug)]
+pub struct AddressNotAligned;
+
+impl fmt::Display for AddressNotAligned {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "the given address was not sufficiently aligned")
     }
 }
 
