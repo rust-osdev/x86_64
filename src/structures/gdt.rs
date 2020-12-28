@@ -105,14 +105,24 @@ impl GlobalDescriptorTable {
         }
     }
 
-    /// Forms a GDT from a raw table and a next_free counter.
+    /// Forms a GDT from a slice of `u64`.
     ///
     /// # Safety
     ///
-    /// The user must ensure that the provided table contains well formed entries
-    /// and that the value of `next_free` does not exceed the maximum size of the table.
+    /// * The user must make sure that the entries are well formed
+    /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
     #[inline]
-    pub const unsafe fn from_raw_parts(table: [u64; 8], next_free: usize) -> GlobalDescriptorTable {
+    pub const unsafe fn from_raw_parts(slice: &[u64]) -> GlobalDescriptorTable {
+        let next_free = if slice.len() >= 8 { 8 } else { slice.len() };
+
+        let mut table = [0; 8];
+        let mut idx = 0;
+
+        while idx != next_free {
+            table[idx] = slice[idx];
+            idx += 1;
+        }
+
         GlobalDescriptorTable { table, next_free }
     }
 
@@ -163,9 +173,8 @@ impl GlobalDescriptorTable {
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
-        use crate::instructions::tables::lgdt;
         // SAFETY: static lifetime ensures no modification after loading.
-        unsafe { lgdt(&self.pointer()) };
+        unsafe { self.load_unsafe() };
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
@@ -182,7 +191,7 @@ impl GlobalDescriptorTable {
     ///
     #[cfg(feature = "instructions")]
     #[inline]
-    pub unsafe fn load_unchecked(&self) {
+    pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::lgdt;
         lgdt(&self.pointer());
     }
