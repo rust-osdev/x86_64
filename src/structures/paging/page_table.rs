@@ -53,7 +53,7 @@ impl PageTableEntry {
     /// Returns the physical address mapped by this entry, might be zero.
     #[inline]
     pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & 0x000fffff_fffff000)
+        PhysAddr::new(self.entry & 0x000f_ffff_ffff_f000)
     }
 
     /// Returns the physical frame mapped by this entry.
