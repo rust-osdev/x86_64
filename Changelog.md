@@ -1,5 +1,7 @@
 # Unreleased
 
+- **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
+
 # 0.12.3 – 2020-10-31
 
 - Use `asm!` instead of perma-unstable `llvm_asm!` macro ([#165](https://github.com/rust-osdev/x86_64/pull/165))
