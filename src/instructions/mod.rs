@@ -1,4 +1,4 @@
-#![cfg(target_arch = "x86_64")]
+#![cfg(feature = "instructions")]
 
 //! Special x86_64 instructions.
 
@@ -14,12 +14,31 @@ pub mod tlb;
 pub fn hlt() {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        llvm_asm!("hlt" :::: "volatile");
+        asm!("hlt", options(nomem, nostack));
     }
 
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
         crate::asm::x86_64_asm_hlt();
+    }
+}
+
+/// Executes the `nop` instructions, which performs no operation (i.e. does nothing).
+///
+/// This operation is useful to work around the LLVM bug that endless loops are illegally
+/// optimized away (see [the issue](https://github.com/rust-lang/rust/issues/28728)). By invoking this
+/// instruction (which is marked as volatile), the compiler should no longer optimize the
+/// endless loop away.
+#[inline]
+pub fn nop() {
+    #[cfg(feature = "inline_asm")]
+    unsafe {
+        asm!("nop", options(nomem, nostack, preserves_flags));
+    }
+
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_nop();
     }
 }
 
@@ -29,6 +48,20 @@ pub fn hlt() {
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        llvm_asm!("xchgw %bx, %bx" :::: "volatile");
+        asm!("xchgw bx, bx", options(nomem, nostack));
     }
+}
+
+/// Gets the current instruction pointer. Note that this is only approximate as it requires a few
+/// instructions to execute.
+#[cfg(feature = "inline_asm")]
+#[inline(always)]
+pub fn read_rip() -> u64 {
+    let rip: u64;
+    unsafe {
+        asm!(
+            "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
+        );
+    }
+    rip
 }

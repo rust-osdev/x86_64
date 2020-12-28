@@ -125,7 +125,7 @@ bitflags! {
     }
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
     use crate::structures::paging::PhysFrame;
@@ -145,7 +145,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                llvm_asm!("mov %cr0, $0" : "=r" (value));
+                asm!("mov {}, cr0", out(reg) value, options(nomem));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -184,7 +184,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            llvm_asm!("mov $0, %cr0" :: "r" (value) : "memory");
+            asm!("mov cr0, {}", in(reg) value, options(nostack));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr0(value);
@@ -217,7 +217,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                llvm_asm!("mov %cr2, $0" : "=r" (value));
+                asm!("mov {}, cr2", out(reg) value, options(nomem));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -237,7 +237,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                llvm_asm!("mov %cr3, $0" : "=r" (value));
+                asm!("mov {}, cr3", out(reg) value, options(nomem));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -262,7 +262,7 @@ mod x86_64 {
             let value = addr.as_u64() | flags.bits();
 
             #[cfg(feature = "inline_asm")]
-            llvm_asm!("mov $0, %cr3" :: "r" (value) : "memory");
+            asm!("mov cr3, {}", in(reg) value, options(nostack));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr3(value)
@@ -283,7 +283,7 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                llvm_asm!("mov %cr4, $0" : "=r" (value));
+                asm!("mov {}, cr4", out(reg) value, options(nostack));
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -324,7 +324,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            llvm_asm!("mov $0, %cr4" :: "r" (value) : "memory");
+            asm!("mov cr4, {}", in(reg) value, options(nostack));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr4(value);

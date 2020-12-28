@@ -32,6 +32,12 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_nop"
+    )]
+    pub(crate) fn x86_64_asm_nop();
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_read_from_port_u8"
     )]
     pub(crate) fn x86_64_asm_read_from_port_u8(port: u16) -> u8;
@@ -203,4 +209,28 @@ extern "C" {
         link_name = "_x86_64_asm_write_rflags"
     )]
     pub(crate) fn x86_64_asm_write_rflags(val: u64);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_rdfsbase"
+    )]
+    pub(crate) fn x86_64_asm_rdfsbase() -> u64;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_wrfsbase"
+    )]
+    pub(crate) fn x86_64_asm_wrfsbase(val: u64);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_rdgsbase"
+    )]
+    pub(crate) fn x86_64_asm_rdgsbase() -> u64;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_wrgsbase"
+    )]
+    pub(crate) fn x86_64_asm_wrgsbase(val: u64);
 }

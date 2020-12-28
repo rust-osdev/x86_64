@@ -9,7 +9,7 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{PrivilegeLevel, VirtAddr};
+use crate::{structures::DescriptorTablePointer, PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
@@ -411,7 +411,7 @@ impl InterruptDescriptorTable {
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
         unsafe { self.load_unsafe() }
@@ -427,18 +427,22 @@ impl InterruptDescriptorTable {
     /// - `self` always stays at the same memory location. It is recommended to wrap it in
     /// a `Box`.
     ///
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     pub unsafe fn load_unsafe(&self) {
-        use crate::instructions::tables::{lidt, DescriptorTablePointer};
-        use core::mem::size_of;
+        use crate::instructions::tables::lidt;
+        lidt(&self.pointer());
+    }
 
-        let ptr = DescriptorTablePointer {
+    /// Creates the descriptor pointer for this table. This pointer can only be
+    /// safely used if the table is never modified or destroyed while in use.
+    #[cfg(feature = "instructions")]
+    fn pointer(&self) -> DescriptorTablePointer {
+        use core::mem::size_of;
+        DescriptorTablePointer {
             base: self as *const _ as u64,
             limit: (size_of::<Self>() - 1) as u16,
-        };
-
-        lidt(&ptr);
+        }
     }
 
     /// Returns a normalized and ranged check slice range from a RangeBounds trait object
@@ -603,7 +607,7 @@ impl<F> Entry<F> {
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(feature = "instructions")]
     #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
         use crate::instructions::segmentation;
@@ -621,7 +625,7 @@ impl<F> Entry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
-        #[cfg(target_arch = "x86_64")]
+        #[cfg(feature = "instructions")]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
@@ -760,7 +764,7 @@ pub struct InterruptStackFrameValue {
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
-    /// return. See the documentation of the `InterruptDescriptorTable` fields for more details.
+    /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
     pub instruction_pointer: VirtAddr,
     /// The code segment selector, padded with zeros.
     pub code_segment: u64,

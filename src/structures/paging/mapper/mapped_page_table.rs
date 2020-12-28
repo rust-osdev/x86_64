@@ -37,6 +37,11 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         }
     }
 
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        &mut self.level_4_table
+    }
+
     /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
     /// https://github.com/rust-lang/rfcs/pull/2585.
     fn map_to_1gib<A>(

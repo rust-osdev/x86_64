@@ -1,11 +1,6 @@
 //! Functions to read and write model specific registers.
 
-use crate::registers::rflags::RFlags;
-use crate::structures::gdt::SegmentSelector;
-use crate::PrivilegeLevel;
-use bit_field::BitField;
 use bitflags::bitflags;
-use core::convert::TryInto;
 
 /// A model specific register.
 #[derive(Debug)]
@@ -104,10 +99,15 @@ bitflags! {
     }
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
     use crate::addr::VirtAddr;
+    use crate::registers::rflags::RFlags;
+    use crate::structures::gdt::SegmentSelector;
+    use crate::PrivilegeLevel;
+    use bit_field::BitField;
+    use core::convert::TryInto;
 
     impl Msr {
         /// Read 64 bits msr register.
@@ -121,7 +121,7 @@ mod x86_64 {
             #[cfg(feature = "inline_asm")]
             {
                 let (high, low): (u32, u32);
-                llvm_asm!("rdmsr" : "={eax}" (low), "={edx}" (high) : "{ecx}" (self.0) : "memory" : "volatile");
+                asm!("rdmsr", out("eax") low, out("edx") high, in("ecx") self.0, options(nostack));
                 ((high as u64) << 32) | (low as u64)
             }
 
@@ -141,7 +141,7 @@ mod x86_64 {
             {
                 let low = value as u32;
                 let high = (value >> 32) as u32;
-                llvm_asm!("wrmsr" :: "{ecx}" (self.0), "{eax}" (low), "{edx}" (high) : "memory" : "volatile" );
+                asm!("wrmsr", in("ecx") self.0, in("eax") low, in("edx") high, options(nostack))
             }
 
             #[cfg(not(feature = "inline_asm"))]
@@ -189,7 +189,8 @@ mod x86_64 {
         /// break memory safety with wrong flags, e.g. by disabling long mode.
         #[inline]
         pub unsafe fn write_raw(flags: u64) {
-            Self::MSR.write(flags);
+            let mut msr = Self::MSR;
+            msr.write(flags);
         }
 
         /// Update EFER flags.
@@ -221,7 +222,8 @@ mod x86_64 {
         /// Write a given virtual address to the FS.Base register.
         #[inline]
         pub fn write(address: VirtAddr) {
-            unsafe { Self::MSR.write(address.as_u64()) };
+            let mut msr = Self::MSR;
+            unsafe { msr.write(address.as_u64()) };
         }
     }
 
@@ -235,7 +237,8 @@ mod x86_64 {
         /// Write a given virtual address to the GS.Base register.
         #[inline]
         pub fn write(address: VirtAddr) {
-            unsafe { Self::MSR.write(address.as_u64()) };
+            let mut msr = Self::MSR;
+            unsafe { msr.write(address.as_u64()) };
         }
     }
 
@@ -249,7 +252,8 @@ mod x86_64 {
         /// Write a given virtual address to the KernelGsBase register.
         #[inline]
         pub fn write(address: VirtAddr) {
-            unsafe { Self::MSR.write(address.as_u64()) };
+            let mut msr = Self::MSR;
+            unsafe { msr.write(address.as_u64()) };
         }
     }
 
@@ -316,7 +320,8 @@ mod x86_64 {
             let mut msr_value = 0u64;
             msr_value.set_bits(48..64, sysret.into());
             msr_value.set_bits(32..48, syscall.into());
-            Self::MSR.write(msr_value);
+            let mut msr = Self::MSR;
+            msr.write(msr_value);
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.
@@ -366,7 +371,8 @@ mod x86_64 {
         /// This holds the target RIP of a syscall.
         #[inline]
         pub fn write(address: VirtAddr) {
-            unsafe { Self::MSR.write(address.as_u64()) };
+            let mut msr = Self::MSR;
+            unsafe { msr.write(address.as_u64()) };
         }
     }
 
@@ -392,7 +398,8 @@ mod x86_64 {
         /// to 0, the corresponding rFLAGS bit is not modified.
         #[inline]
         pub fn write(value: RFlags) {
-            unsafe { Self::MSR.write(value.bits()) };
+            let mut msr = Self::MSR;
+            unsafe { msr.write(value.bits()) };
         }
     }
 }

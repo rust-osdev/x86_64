@@ -233,3 +233,33 @@ _x86_64_asm_wrmsr:
 _x86_64_asm_hlt:
     hlt
     retq
+
+.global _x86_64_asm_nop
+.p2align 4
+_x86_64_asm_nop:
+    nop
+    retq
+
+.global _x86_64_asm_rdfsbase
+.p2align 4
+_x86_64_asm_rdfsbase:
+    rdfsbase %rax
+    retq
+
+.global _x86_64_asm_wrfsbase
+.p2align 4
+_x86_64_asm_wrfsbase:
+    wrfsbase %rdi
+    retq
+
+.global _x86_64_asm_rdgsbase
+.p2align 4
+_x86_64_asm_rdgsbase:
+    rdgsbase %rax
+    retq
+
+.global _x86_64_asm_wrgsbase
+.p2align 4
+_x86_64_asm_wrgsbase:
+    wrgsbase %rdi
+    retq
