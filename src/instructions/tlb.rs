@@ -28,21 +28,21 @@ pub fn flush_all() {
 #[derive(Debug)]
 pub enum InvPicdCommand {
     /// The logical processor invalidates mappings—except global translations—for the linear address and PCID specified.
-    IndividualAddressInvalidation(VirtAddr, Pcid),
+    Address(VirtAddr, Pcid),
 
     /// The logical processor invalidates all mappings—except global translations—associated with the PCID.
-    SingleContextInvalidation(Pcid),
+    Single(Pcid),
 
     /// The logical processor invalidates all mappings—including global translations—associated with any PCID.
-    AllContextInvalidationIncludeGlobal,
+    All,
 
     /// The logical processor invalidates all mappings—except global translations—associated with any PCID.
-    AllContextInvalidationExcludeGlobal,
+    AllExceptGlobal,
 }
 
 /// The INVPCID descriptor comprises 128 bits and consists of a PCID and a linear address.
 /// For INVPCID type 0, the processor uses the full 64 bits of the linear address even outside 64-bit mode; the linear address is not used for other INVPCID types.
-#[repr(u128)]
+#[repr(C)]
 #[derive(Debug)]
 struct InvpcidDescriptor {
     address: u64,
@@ -52,55 +52,59 @@ struct InvpcidDescriptor {
 /// Structure of a PCID. A PCID has to be <= 4096 for x86_64.
 #[repr(transparent)]
 #[derive(Debug)]
-pub struct Pcid(u64);
+pub struct Pcid(u16);
 
 impl Pcid {
     /// Create a new PCID. Will result in a failure if the value of
     /// PCID is out of expected bounds.
-    pub fn new(pcid: u16) -> Result<Pcid, &'static str> {
+    pub const fn new(pcid: u16) -> Result<Pcid, &'static str> {
         if pcid >= 4096 {
             Err("PCID should be < 4096.")
         } else {
-            Ok(Pcid(pcid as u64))
+            Ok(Pcid(pcid))
         }
     }
 
     /// Get the value of the current PCID.
-    pub fn value(&self) -> u16 {
-        self.0 as u16
+    pub const fn value(&self) -> u16 {
+        self.0
     }
 }
 
 /// Invalidate the given address in the TLB using the `invpcid` instruction.
+///
+/// ## Safety
+/// This function is unsafe as it requires CPUID.(EAX=07H, ECX=0H):EBX.INVPCID to be 1.
 #[inline]
-pub fn flush_pcid(command: InvPicdCommand) {
+pub unsafe fn flush_pcid(command: InvPicdCommand) {
     let mut desc = InvpcidDescriptor {
         address: 0,
         pcid: 0,
     };
 
-    let kind;
+    let kind: u64;
     match command {
-        InvPicdCommand::IndividualAddressInvalidation(addr, pcid) => {
+        InvPicdCommand::Address(addr, pcid) => {
             kind = 0;
-            desc.pcid = pcid.value() as u64;
+            desc.pcid = pcid.value().into();
             desc.address = addr.as_u64()
         }
-        InvPicdCommand::SingleContextInvalidation(pcid) => {
+        InvPicdCommand::Single(pcid) => {
             kind = 1;
-            desc.pcid = pcid.0
+            desc.pcid = pcid.0.into()
         }
-        InvPicdCommand::AllContextInvalidationIncludeGlobal => kind = 2,
-        InvPicdCommand::AllContextInvalidationExcludeGlobal => kind = 3,
+        InvPicdCommand::All => kind = 2,
+        InvPicdCommand::AllExceptGlobal => kind = 3,
     }
 
     #[cfg(feature = "inline_asm")]
-    unsafe {
-        llvm_asm!("invpcid ($0), $1" :: "r" (&desc as *const InvpcidDescriptor as u64), "r" (kind) : "memory")
+    {
+        let desc_value = &desc as *const InvpcidDescriptor as u64;
+        asm!("invpcid ({0}), {1}", in(reg) desc_value, in(reg) kind);
     };
 
     #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+    {
         crate::asm::x86_64_asm_invpcid(kind, &desc as *const InvpcidDescriptor as u64)
     };
 }

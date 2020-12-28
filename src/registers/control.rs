@@ -128,8 +128,7 @@ bitflags! {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
-    use crate::structures::paging::PhysFrame;
-    use crate::{instructions::tlb::Pcid, PhysAddr, VirtAddr};
+    use crate::{instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr, VirtAddr};
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
@@ -233,6 +232,14 @@ mod x86_64 {
         /// Read the current P4 table address from the CR3 register.
         #[inline]
         pub fn read() -> (PhysFrame, Cr3Flags) {
+            let (frame, value) = Cr3::read_raw();
+            let flags = Cr3Flags::from_bits_truncate(value.into());
+            (frame, flags)
+        }
+
+        /// Read the current P4 table address from the CR3 register
+        #[inline]
+        pub fn read_raw() -> (PhysFrame, u16) {
             let value: u64;
 
             #[cfg(feature = "inline_asm")]
@@ -245,32 +252,18 @@ mod x86_64 {
                 value = crate::asm::x86_64_asm_read_cr3();
             }
 
-            let flags = Cr3Flags::from_bits_truncate(value);
             let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
             let frame = PhysFrame::containing_address(addr);
-            (frame, flags)
+            (frame, (value & 0xFFF) as u16)
         }
 
         /// Read the current P4 table address from the CR3 register along with PCID.
         /// The correct functioning of this requires CR4.PCIDE = 1.
+        /// See [`Cr4Flags::PCID`]
         #[inline]
-        pub fn read_as_pcid() -> (PhysFrame, u16) {
-            let value: u64;
-
-            #[cfg(feature = "inline_asm")]
-            unsafe {
-                llvm_asm!("mov %cr3, $0" : "=r" (value));
-            }
-
-            #[cfg(not(feature = "inline_asm"))]
-            unsafe {
-                value = crate::asm::x86_64_asm_read_cr3();
-            }
-
-            let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
-            let frame = PhysFrame::containing_address(addr);
-            let pcid = value & 0xFFF;
-            (frame, pcid as u16)
+        pub fn read_pcid() -> (PhysFrame, Pcid) {
+            let (frame, value) = Cr3::read_raw();
+            (frame, Pcid::new(value as u16).unwrap())
         }
 
         /// Write a new P4 table address into the CR3 register.
@@ -280,14 +273,7 @@ mod x86_64 {
         /// changing the page mapping.
         #[inline]
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
-            let addr = frame.start_address();
-            let value = addr.as_u64() | flags.bits();
-
-            #[cfg(feature = "inline_asm")]
-            asm!("mov cr3, {}", in(reg) value, options(nostack));
-
-            #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_write_cr3(value)
+            Cr3::write_raw(frame, flags.bits() as u16);
         }
 
         /// Write a new P4 table address into the CR3 register.
@@ -295,14 +281,24 @@ mod x86_64 {
         /// ## Safety
         /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
         /// changing the page mapping.
-        /// Also, using this requires CR4.PCIDE flag to be set.
+        /// [`Cr4Flags::PCID`] must be set before calling this method.
         #[inline]
         pub unsafe fn write_pcid(frame: PhysFrame, pcid: Pcid) {
+            Cr3::write_raw(frame, pcid.value());
+        }
+
+        /// Write a new P4 table address into the CR3 register.
+        ///
+        /// ## Safety
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        #[inline]
+        unsafe fn write_raw(frame: PhysFrame, val: u16) {
             let addr = frame.start_address();
-            let value = addr.as_u64() | pcid.value() as u64;
+            let value = addr.as_u64() | val as u64;
 
             #[cfg(feature = "inline_asm")]
-            llvm_asm!("mov $0, %cr3" :: "r" (value) : "memory");
+            asm!("mov cr3, {}", in(reg) value, options(nostack));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr3(value)
