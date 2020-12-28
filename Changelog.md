@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.13.0 – 2020-12-28
+
 - **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
 - **Breaking:** Restructure the `TranslateResult` type and create separate `Translate` trait ([#211](https://github.com/rust-osdev/x86_64/pull/211))
 - **Breaking:** Rename `PhysToVirt` trait to `PageTableFrameMapping` ([#214](https://github.com/rust-osdev/x86_64/pull/214))
