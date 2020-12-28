@@ -9,6 +9,7 @@
   - `ExceptionStackFrame`
   - `VirtAddr::new_unchecked`
   - `interrupts::enable_interrupts_and_hlt`
+- **Breaking:** Make `DescriptorTablePointer::base` a `VirtAddr` ([#215](https://github.com/rust-osdev/x86_64/pull/215))
 - Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
 
 # 0.12.3 – 2020-10-31
