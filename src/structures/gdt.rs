@@ -112,6 +112,7 @@ impl GlobalDescriptorTable {
     /// * The user must make sure that the entries are well formed
     /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
     #[inline]
+    #[cfg(feature = "nightly")]
     pub const unsafe fn from_raw_parts(slice: &[u64]) -> GlobalDescriptorTable {
         assert!(
             slice.len() <= 8,
