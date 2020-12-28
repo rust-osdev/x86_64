@@ -105,6 +105,40 @@ impl GlobalDescriptorTable {
         }
     }
 
+    /// Forms a GDT from a slice of `u64`.
+    ///
+    /// # Safety
+    ///
+    /// * The user must make sure that the entries are well formed
+    /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
+    #[inline]
+    #[cfg(feature = "const_fn")]
+    pub const unsafe fn from_raw_slice(slice: &[u64]) -> GlobalDescriptorTable {
+        assert!(
+            slice.len() <= 8,
+            "initializing a GDT from a slice requires it to be **at most** 8 elements."
+        );
+        let next_free = slice.len();
+
+        let mut table = [0; 8];
+        let mut idx = 0;
+
+        while idx != next_free {
+            table[idx] = slice[idx];
+            idx += 1;
+        }
+
+        GlobalDescriptorTable { table, next_free }
+    }
+
+    /// Get a reference to the internal table.
+    ///
+    /// The resulting slice may contain system descriptors, which span two `u64`s.
+    #[inline]
+    pub fn as_raw_slice(&self) -> &[u64] {
+        &self.table[..self.next_free]
+    }
+
     const_fn! {
         /// Adds the given segment descriptor to the GDT, returning the segment selector.
         ///
@@ -144,9 +178,27 @@ impl GlobalDescriptorTable {
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
-        use crate::instructions::tables::lgdt;
         // SAFETY: static lifetime ensures no modification after loading.
-        unsafe { lgdt(&self.pointer()) };
+        unsafe { self.load_unsafe() };
+    }
+
+    /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
+    /// segment registers; you **must** (re)load them yourself using [the appropriate
+    /// functions](crate::instructions::segmentation):
+    /// [load_ss](crate::instructions::segmentation::load_ss),
+    /// [set_cs](crate::instructions::segmentation::set_cs).
+    ///
+    /// # Safety
+    ///
+    /// Unlike `load` this function will not impose a static lifetime constraint
+    /// this means its up to the user to ensure that there will be no modifications
+    /// after loading and that the GDT will live for as long as it's loaded.
+    ///
+    #[cfg(feature = "instructions")]
+    #[inline]
+    pub unsafe fn load_unsafe(&self) {
+        use crate::instructions::tables::lgdt;
+        lgdt(&self.pointer());
     }
 
     const_fn! {
