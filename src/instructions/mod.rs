@@ -48,7 +48,7 @@ pub fn nop() {
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        asm!("xchgw bx, bx", options(nomem, nostack));
+        asm!("xchg bx, bx", options(nomem, nostack));
     }
 }
 
