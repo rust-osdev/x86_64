@@ -9,9 +9,7 @@
 #![cfg_attr(feature = "const_fn", feature(const_in_array_repeat_expressions))]
 #![cfg_attr(feature = "inline_asm", feature(asm))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![cfg_attr(feature = "deny-warnings", deny(missing_docs))]
-#![cfg_attr(not(feature = "deny-warnings"), warn(missing_docs))]
+#![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};

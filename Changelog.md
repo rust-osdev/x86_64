@@ -1,5 +1,22 @@
 # Unreleased
 
+# 0.13.0 – 2020-12-28
+
+- **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
+- **Breaking:** Restructure the `TranslateResult` type and create separate `Translate` trait ([#211](https://github.com/rust-osdev/x86_64/pull/211))
+- **Breaking:** Rename `PhysToVirt` trait to `PageTableFrameMapping` ([#214](https://github.com/rust-osdev/x86_64/pull/214))
+- **Breaking:** Use custom error types instead of `()` ([#199](https://github.com/rust-osdev/x86_64/pull/199))
+- **Breaking:** Remove deprecated items
+  - `UnusedPhysFrame`
+  - `ExceptionStackFrame`
+  - `VirtAddr::new_unchecked`
+  - `interrupts::enable_interrupts_and_hlt`
+- **Breaking:** Make `DescriptorTablePointer::base` a `VirtAddr` ([#215](https://github.com/rust-osdev/x86_64/pull/215))
+- **Breaking:** Change return type of `read_rip` to `VirtAddr` ([#216](https://github.com/rust-osdev/x86_64/pull/216))
+- **Breaking:** Make writing the RFLAGS register unsafe ([#219](https://github.com/rust-osdev/x86_64/pull/219))
+- **Breaking:** Remove `PortReadWrite` trait, which is no longer needed ([#217](https://github.com/rust-osdev/x86_64/pull/217))
+- Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
+
 # 0.12.4 – 2020-12-28
 
 - Fix bad conversion from llvm_asm! to asm! ([#218](https://github.com/rust-osdev/x86_64/pull/218))

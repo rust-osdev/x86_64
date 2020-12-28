@@ -440,7 +440,7 @@ impl InterruptDescriptorTable {
     fn pointer(&self) -> DescriptorTablePointer {
         use core::mem::size_of;
         DescriptorTablePointer {
-            base: self as *const _ as u64,
+            base: VirtAddr::new(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
         }
     }
@@ -705,12 +705,6 @@ impl EntryOptions {
         self
     }
 }
-
-/// Wrapper type for the exception stack frame pushed by the CPU.
-///
-/// Identical to [`InterruptStackFrame`].
-#[deprecated(note = "This type was renamed to InterruptStackFrame.")]
-pub type ExceptionStackFrame = InterruptStackFrame;
 
 /// Wrapper type for the interrupt stack frame pushed by the CPU.
 ///

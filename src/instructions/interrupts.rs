@@ -139,13 +139,6 @@ pub fn enable_and_hlt() {
     }
 }
 
-/// Alias for [`enable_and_hlt`][enable_and_hlt] for backwards compatibility.
-#[inline]
-#[deprecated(note = "Use enable_and_hlt instead")]
-pub fn enable_interrupts_and_hlt() {
-    enable_and_hlt();
-}
-
 /// Cause a breakpoint exception by invoking the `int3` instruction.
 #[inline]
 pub fn int3() {
