@@ -146,6 +146,12 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_invpcid"
+    )]
+    pub(crate) fn x86_64_asm_invpcid(kind: u64, desc: u64);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_read_cr0"
     )]
     pub(crate) fn x86_64_asm_read_cr0() -> u64;
