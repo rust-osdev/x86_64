@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.13.1 – 2020-12-29
+
 - PCID support instructions ([#169])(https://github.com/rust-osdev/x86_64/pull/169))
 
 # 0.13.0 – 2020-12-28
