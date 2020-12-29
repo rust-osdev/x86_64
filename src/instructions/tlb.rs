@@ -100,7 +100,7 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
     #[cfg(feature = "inline_asm")]
     {
         let desc_value = &desc as *const InvpcidDescriptor as u64;
-        asm!("invpcid ({0}), {1}", in(reg) desc_value, in(reg) kind);
+        asm!("invpcid {1}, [{0}]", in(reg) desc_value, in(reg) kind);
     };
 
     #[cfg(not(feature = "inline_asm"))]
