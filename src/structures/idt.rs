@@ -9,7 +9,7 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{structures::DescriptorTablePointer, PrivilegeLevel, VirtAddr};
+use crate::{structures::{DescriptorTablePointer, gdt::SegmentSelector}, PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
@@ -611,14 +611,27 @@ impl<F> Entry<F> {
     #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
         use crate::instructions::segmentation;
+        // SAFETY: CS segment is loaded directly from the register, so it's valid.
+        unsafe { self.set_handler_addr_unchecked(addr, segmentation::cs()) }
+    }
 
+    #[inline]
+    const unsafe fn set_handler_addr_unchecked(
+        &mut self,
+        addr: u64,
+        cs_segment: SegmentSelector,
+    ) -> &mut EntryOptions {
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
         self.pointer_high = (addr >> 32) as u32;
 
-        self.gdt_selector = segmentation::cs().0;
+        self.gdt_selector = cs_segment.0;
 
-        self.options.set_present(true);
+        // Note: we can't use `self.options.set_present` due to the underlying
+        // `set_bit` call being non-const... and that cant be const since
+        // `BitField` is a trait and traits cant have const associated methods.
+        *(&mut self.options.0) |= 1 << 15;
+
         &mut self.options
     }
 }
@@ -637,6 +650,27 @@ macro_rules! impl_set_handler_fn {
             #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
                 self.set_handler_addr(handler as u64)
+            }
+
+            const_fn! {
+                /// Set the handler function for the IDT entry and sets the present bit.
+                ///
+                /// # Safety
+                ///
+                /// For the code selector field, this function uses the code segment selector that
+                /// is passed in through the arguments, the user must take care to ensure that it is
+                /// valid.
+                ///
+                /// The function returns a mutable reference to the entry's options that allows
+                /// further customization.
+                #[inline]
+                pub unsafe fn set_handler_fn_unchecked(
+                    &mut self,
+                    handler: $h,
+                    cs_segment: SegmentSelector,
+                ) -> &mut EntryOptions {
+                    self.set_handler_addr_unchecked(handler as u64, cs_segment)
+                }
             }
         }
     };
