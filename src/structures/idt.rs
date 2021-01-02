@@ -9,7 +9,10 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{structures::{DescriptorTablePointer, gdt::SegmentSelector}, PrivilegeLevel, VirtAddr};
+use crate::{
+    structures::{gdt::SegmentSelector, DescriptorTablePointer},
+    PrivilegeLevel, VirtAddr,
+};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
