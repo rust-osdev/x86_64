@@ -615,27 +615,26 @@ impl<F> Entry<F> {
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
         use crate::instructions::segmentation;
         // SAFETY: CS segment is loaded directly from the register, so it's valid.
-        unsafe { self.set_handler_addr_unchecked(addr, segmentation::cs()) }
+        unsafe { self.set_handler_addr_with_segment(addr, segmentation::cs()) }
     }
 
-    #[inline]
-    const unsafe fn set_handler_addr_unchecked(
-        &mut self,
-        addr: u64,
-        cs_segment: SegmentSelector,
-    ) -> &mut EntryOptions {
-        self.pointer_low = addr as u16;
-        self.pointer_middle = (addr >> 16) as u16;
-        self.pointer_high = (addr >> 32) as u32;
+    const_fn! {
+        #[inline]
+        unsafe fn set_handler_addr_with_segment(
+            &mut self,
+            addr: u64,
+            cs_segment: SegmentSelector,
+        ) -> &mut EntryOptions {
+            self.pointer_low = addr as u16;
+            self.pointer_middle = (addr >> 16) as u16;
+            self.pointer_high = (addr >> 32) as u32;
 
-        self.gdt_selector = cs_segment.0;
+            self.gdt_selector = cs_segment.0;
 
-        // Note: we can't use `self.options.set_present` due to the underlying
-        // `set_bit` call being non-const... and that cant be const since
-        // `BitField` is a trait and traits cant have const associated methods.
-        *(&mut self.options.0) |= 1 << 15;
+            self.options.set_present(true);
 
-        &mut self.options
+            &mut self.options
+        }
     }
 }
 
@@ -667,12 +666,12 @@ macro_rules! impl_set_handler_fn {
                 /// The function returns a mutable reference to the entry's options that allows
                 /// further customization.
                 #[inline]
-                pub unsafe fn set_handler_fn_unchecked(
+                pub unsafe fn  set_handler_fn_with_segment(
                     &mut self,
                     handler: $h,
                     cs_segment: SegmentSelector,
                 ) -> &mut EntryOptions {
-                    self.set_handler_addr_unchecked(handler as u64, cs_segment)
+                    self.set_handler_addr_with_segment(handler as u64, cs_segment)
                 }
             }
         }
@@ -697,11 +696,18 @@ impl EntryOptions {
         EntryOptions(0b1110_0000_0000)
     }
 
-    /// Set or reset the preset bit.
-    #[inline]
-    pub fn set_present(&mut self, present: bool) -> &mut Self {
-        self.0.set_bit(15, present);
-        self
+    const_fn! {
+        /// Set or reset the preset bit.
+        #[inline]
+        pub fn set_present(&mut self, present: bool) -> &mut Self {
+            if present {
+                self.0 |= 1 << 15;
+            } else {
+                self.0 &= !(1 << 15);
+            }
+
+            self
+        }
     }
 
     /// Let the CPU disable hardware interrupts when the handler is invoked. By default,
