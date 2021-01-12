@@ -154,6 +154,12 @@ pub fn int3() {
 }
 
 /// Generate a software interrupt by invoking the `int` instruction.
+///
+/// ## Safety
+/// Invoking an arbitrary interrupt is unsafe. It can cause your system to
+/// crash if you invoke a double-fault (#8) or machine-check (#18) exception.
+/// It can also cause memory/register corruption depending on the interrupt
+/// implementation (if it expects values/pointers to be passed in registers).
 #[inline]
 #[cfg(feature = "inline_asm")]
 pub unsafe fn software_interrupt<const ID: u8>() {
