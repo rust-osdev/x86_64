@@ -659,7 +659,8 @@ pub struct EntryOptions {
 }
 
 impl EntryOptions {
-    /// Creates a minimal options field with all the must-be-one bits set.
+    /// Creates a minimal options field with all the must-be-one bits set. This
+    /// means the CS selector, IST, and DPL field are all 0.
     #[inline]
     const fn minimal() -> Self {
         EntryOptions {
@@ -668,8 +669,7 @@ impl EntryOptions {
         }
     }
 
-    /// Set the code segment that will be used by this interrupt. By default,
-    /// the current code segment is used.
+    /// Set the code segment that will be used by this interrupt.
     ///
     /// ## Safety
     /// This function is unsafe because the caller must ensure that the passed
