@@ -88,10 +88,10 @@ _x86_64_asm_get_cs:
     mov %cs, %ax
     retq
 
-.global _x86_64_asm_invlpg
+.global _x86_asm_invlpg
 .p2align 4
 _x86_64_asm_invlpg:
-    invlpg (%rdi)
+    invlpg (%edi)
     retq
 
 .global _x86_64_asm_invpcid

@@ -2,6 +2,7 @@
 
 //! Special x86_64 instructions.
 
+#[cfg(feature = "inline_asm")]
 use crate::VirtAddr;
 
 pub mod interrupts;
@@ -59,11 +60,12 @@ pub fn bochs_breakpoint() {
 #[cfg(feature = "inline_asm")]
 #[inline(always)]
 pub fn read_rip() -> VirtAddr {
-    let rip: u64;
+    use core::convert::TryInto;
+    let rip: usize;
     unsafe {
         asm!(
             "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
         );
     }
-    VirtAddr::new(rip)
+    VirtAddr::new(rip.try_into().unwrap())
 }

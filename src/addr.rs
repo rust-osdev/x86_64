@@ -125,11 +125,47 @@ impl VirtAddr {
         self.as_u64() as *const T
     }
 
+    /// Converts the address to a raw 32bit pointer.
+    /// Panics if it fails
+    #[cfg(target_pointer_width = "32")]
+    #[inline]
+    pub fn as_ptr<T>(self) -> *const T {
+        let ptr = self
+            .as_32b_ptr::<T>()
+            .expect("Converting 64bit pointer to 32bit failed. Pointer too large");
+        ptr as *const T
+    }
+
+    /// Converts the address to a raw 32bit pointer.
+    #[inline]
+    pub fn as_32b_ptr<T>(self) -> Result<*const T, core::num::TryFromIntError> {
+        use core::convert::TryFrom;
+        let u32_value = u32::try_from(self.as_u64())?;
+        Ok(u32_value as *const T)
+    }
+
     /// Converts the address to a mutable raw pointer.
     #[cfg(target_pointer_width = "64")]
     #[inline]
     pub fn as_mut_ptr<T>(self) -> *mut T {
         self.as_ptr::<T>() as *mut T
+    }
+
+    /// Converts the address to a mutable raw 32bit pointer.
+    /// Panics if it fails
+    #[cfg(target_pointer_width = "32")]
+    #[inline]
+    pub fn as_mut_ptr<T>(self) -> *mut T {
+        let ptr = self
+            .as_32b_ptr::<T>()
+            .expect("Converting 64bit pointer to 32bit failed. Pointer too large");
+        ptr as *mut T
+    }
+
+    /// Converts the address to a mutable raw 32bit pointer.
+    #[inline]
+    pub fn as_32b_mut_ptr<T>(self) -> Result<*mut T, core::num::TryFromIntError> {
+        Ok(self.as_32b_ptr::<T>()? as *mut T)
     }
 
     /// Convenience method for checking if a virtual address is null.

@@ -139,104 +139,160 @@ extern "C" {
     pub(crate) fn x86_64_asm_ltr(sel: u16);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_invlpg"
     )]
-    pub(crate) fn x86_64_asm_invlpg(addr: u64);
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_invlpg"
+    )]
+    pub(crate) fn x86_64_asm_invlpg(addr: usize);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_invpcid"
     )]
-    pub(crate) fn x86_64_asm_invpcid(kind: u64, desc: u64);
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_invpcid"
+    )]
+    pub(crate) fn x86_64_asm_invpcid(kind: usize, desc: usize);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_read_cr0"
     )]
-    pub(crate) fn x86_64_asm_read_cr0() -> u64;
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_read_cr0"
+    )]
+    pub(crate) fn x86_64_asm_read_cr0() -> usize;
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_write_cr0"
     )]
-    pub(crate) fn x86_64_asm_write_cr0(value: u64);
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_write_cr0"
+    )]
+    pub(crate) fn x86_64_asm_write_cr0(value: usize);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_read_cr2"
     )]
-    pub(crate) fn x86_64_asm_read_cr2() -> u64;
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_read_cr2"
+    )]
+    pub(crate) fn x86_64_asm_read_cr2() -> usize;
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_read_cr3"
     )]
-    pub(crate) fn x86_64_asm_read_cr3() -> u64;
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_read_cr3"
+    )]
+    pub(crate) fn x86_64_asm_read_cr3() -> usize;
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_write_cr3"
     )]
-    pub(crate) fn x86_64_asm_write_cr3(value: u64);
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_write_cr3"
+    )]
+    pub(crate) fn x86_64_asm_write_cr3(value: usize);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_read_cr4"
     )]
-    pub(crate) fn x86_64_asm_read_cr4() -> u64;
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_read_cr4"
+    )]
+    pub(crate) fn x86_64_asm_read_cr4() -> usize;
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_write_cr4"
     )]
-    pub(crate) fn x86_64_asm_write_cr4(value: u64);
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_write_cr4"
+    )]
+    pub(crate) fn x86_64_asm_write_cr4(value: usize);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_rdmsr"
+    )]
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_rdmsr"
     )]
     pub(crate) fn x86_64_asm_rdmsr(msr: u32) -> u64;
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_wrmsr"
+    )]
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_wrmsr"
     )]
     pub(crate) fn x86_64_asm_wrmsr(msr: u32, value: u64);
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_read_rflags"
     )]
-    pub(crate) fn x86_64_asm_read_rflags() -> u64;
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_read_rflags"
+    )]
+    pub(crate) fn x86_64_asm_read_rflags() -> usize;
 
     #[cfg_attr(
-        any(target_env = "gnu", target_env = "musl"),
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86_64"),
         link_name = "_x86_64_asm_write_rflags"
     )]
-    pub(crate) fn x86_64_asm_write_rflags(val: u64);
+    #[cfg_attr(
+        all(any(target_env = "gnu", target_env = "musl"), target_arch = "x86"),
+        link_name = "_x86_asm_write_rflags"
+    )]
+    pub(crate) fn x86_64_asm_write_rflags(val: usize);
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_rdfsbase"
     )]
+    #[cfg(target_arch = "x86_64")]
     pub(crate) fn x86_64_asm_rdfsbase() -> u64;
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_wrfsbase"
     )]
+    #[cfg(target_arch = "x86_64")]
     pub(crate) fn x86_64_asm_wrfsbase(val: u64);
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_rdgsbase"
     )]
+    #[cfg(target_arch = "x86_64")]
     pub(crate) fn x86_64_asm_rdgsbase() -> u64;
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_wrgsbase"
     )]
+    #[cfg(target_arch = "x86_64")]
     pub(crate) fn x86_64_asm_wrgsbase(val: u64);
 }

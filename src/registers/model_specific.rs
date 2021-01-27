@@ -386,7 +386,7 @@ mod x86_64 {
         /// to 0, the corresponding rFLAGS bit is not modified.
         #[inline]
         pub fn read() -> RFlags {
-            RFlags::from_bits(unsafe { Self::MSR.read() }).unwrap()
+            RFlags::from_bits(unsafe { Self::MSR.read().try_into().unwrap() }).unwrap()
         }
 
         /// Write to the SFMask register.
@@ -399,7 +399,7 @@ mod x86_64 {
         #[inline]
         pub fn write(value: RFlags) {
             let mut msr = Self::MSR;
-            unsafe { msr.write(value.bits()) };
+            unsafe { msr.write(value.bits().try_into().unwrap()) };
         }
     }
 }

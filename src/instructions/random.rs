@@ -10,7 +10,12 @@ impl RdRand {
     pub fn new() -> Option<Self> {
         // RDRAND support indicated by CPUID page 01h, ecx bit 30
         // https://en.wikipedia.org/wiki/RdRand#Overview
+        #[cfg(target_arch = "x86")]
+        let cpuid = unsafe { core::arch::x86::__cpuid(0x1) };
+
+        #[cfg(target_arch = "x86_64")]
         let cpuid = unsafe { core::arch::x86_64::__cpuid(0x1) };
+
         if cpuid.ecx & (1 << 30) != 0 {
             Some(RdRand(()))
         } else {
@@ -20,6 +25,7 @@ impl RdRand {
 
     /// Uniformly sampled u64.
     /// May fail in rare circumstances or heavy load.
+    #[cfg(target_arch = "x86_64")]
     #[inline]
     pub fn get_u64(self) -> Option<u64> {
         let mut res: u64 = 0;
@@ -39,7 +45,11 @@ impl RdRand {
     pub fn get_u32(self) -> Option<u32> {
         let mut res: u32 = 0;
         unsafe {
-            match core::arch::x86_64::_rdrand32_step(&mut res) {
+            #[cfg(target_arch = "x86")]
+            let rd = core::arch::x86::_rdrand32_step(&mut res);
+            #[cfg(target_arch = "x86_64")]
+            let rd = core::arch::x86_64::_rdrand32_step(&mut res);
+            match rd {
                 1 => Some(res),
                 x => {
                     debug_assert_eq!(x, 0, "rdrand32 returned non-binary value");
@@ -54,7 +64,11 @@ impl RdRand {
     pub fn get_u16(self) -> Option<u16> {
         let mut res: u16 = 0;
         unsafe {
-            match core::arch::x86_64::_rdrand16_step(&mut res) {
+            #[cfg(target_arch = "x86")]
+            let rd = core::arch::x86::_rdrand16_step(&mut res);
+            #[cfg(target_arch = "x86_64")]
+            let rd = core::arch::x86_64::_rdrand16_step(&mut res);
+            match rd {
                 1 => Some(res),
                 x => {
                     debug_assert_eq!(x, 0, "rdrand16 returned non-binary value");

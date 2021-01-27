@@ -4,9 +4,13 @@ fn main() {
     #[cfg(all(feature = "external_asm", windows))]
     compile_error!("\"external_asm\" feature is not available on windows toolchain!");
 
+    let _carch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     #[cfg(feature = "instructions")]
-    if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap() != "x86_64" {
-        panic!("\"instructions\" feature is only available for x86_64 targets!");
+    if _carch != "x86_64" && _carch != "x86" {
+        panic!(
+            "\"instructions\" feature is only available for x86_64 targets! Current target is: {}",
+            _carch
+        );
     }
 
     #[cfg(all(

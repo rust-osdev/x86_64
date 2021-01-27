@@ -7,12 +7,13 @@ use crate::VirtAddr;
 pub fn flush(addr: VirtAddr) {
     #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack))
+        asm!("invlpg [{}]", in(reg) addr.as_ptr::<usize>(), options(nostack))
     };
 
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
-        crate::asm::x86_64_asm_invlpg(addr.as_u64())
+        use core::convert::TryInto;
+        crate::asm::x86_64_asm_invlpg(addr.as_u64().try_into().unwrap())
     };
 }
 
@@ -82,7 +83,7 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
         pcid: 0,
     };
 
-    let kind: u64;
+    let kind: usize;
     match command {
         InvPicdCommand::Address(addr, pcid) => {
             kind = 0;
@@ -96,15 +97,14 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
         InvPicdCommand::All => kind = 2,
         InvPicdCommand::AllExceptGlobal => kind = 3,
     }
-
     #[cfg(feature = "inline_asm")]
     {
-        let desc_value = &desc as *const InvpcidDescriptor as u64;
+        let desc_value = &desc as *const InvpcidDescriptor as usize;
         asm!("invpcid {1}, [{0}]", in(reg) desc_value, in(reg) kind);
     };
 
     #[cfg(not(feature = "inline_asm"))]
     {
-        crate::asm::x86_64_asm_invpcid(kind, &desc as *const InvpcidDescriptor as u64)
+        crate::asm::x86_64_asm_invpcid(kind, &desc as *const InvpcidDescriptor as usize)
     };
 }

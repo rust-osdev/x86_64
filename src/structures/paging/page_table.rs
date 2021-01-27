@@ -194,6 +194,7 @@ impl PageTable {
         }
     }
 
+    /// Creates an empty page table.
     #[cfg(not(feature = "const_fn"))]
     #[inline]
     pub fn new() -> Self {

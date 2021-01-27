@@ -7,7 +7,7 @@ use bitflags::bitflags;
 
 bitflags! {
     /// The RFLAGS register.
-    pub struct RFlags: u64 {
+    pub struct RFlags: usize {
         /// Processor feature identification flag.
         ///
         /// If this flag is modifiable, the CPU supports CPUID.
@@ -76,8 +76,8 @@ mod x86_64 {
 
     /// Returns the raw current value of the RFLAGS register.
     #[inline]
-    pub fn read_raw() -> u64 {
-        let r: u64;
+    pub fn read_raw() -> usize {
+        let r: usize;
         #[cfg(feature = "inline_asm")]
         unsafe {
             asm!("pushf; pop {}", out(reg) r)
@@ -118,7 +118,7 @@ mod x86_64 {
     /// the `DF` flag must be unset in all Rust code. Also, modifying `CF`, `PF`, or any other
     /// flags also used by Rust/LLVM can result in undefined behavior too.
     #[inline]
-    pub unsafe fn write_raw(val: u64) {
+    pub unsafe fn write_raw(val: usize) {
         #[cfg(feature = "inline_asm")]
         {
             // FIXME - There's probably a better way than saying we preserve the flags even though we actually don't

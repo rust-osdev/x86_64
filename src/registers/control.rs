@@ -10,7 +10,7 @@ pub struct Cr0;
 
 bitflags! {
     /// Configuration flags of the Cr0 register.
-    pub struct Cr0Flags: u64 {
+    pub struct Cr0Flags: usize {
         /// Enables protected mode.
         const PROTECTED_MODE_ENABLE = 1;
         /// Enables monitoring of the coprocessor, typical for x87 instructions.
@@ -53,7 +53,7 @@ pub struct Cr3;
 
 bitflags! {
     /// Controls cache settings for the level 4 page table.
-    pub struct Cr3Flags: u64 {
+    pub struct Cr3Flags: usize {
         /// Use a writethrough cache policy for the P4 table (else a writeback policy is used).
         const PAGE_LEVEL_WRITETHROUGH = 1 << 3;
         /// Disable caching for the P4 table.
@@ -70,7 +70,7 @@ pub struct Cr4;
 
 bitflags! {
     /// Controls cache settings for the level 4 page table.
-    pub struct Cr4Flags: u64 {
+    pub struct Cr4Flags: usize {
         /// Enables hardware-supported performance enhancements for software running in
         /// virtual-8086 mode.
         const VIRTUAL_8086_MODE_EXTENSIONS = 1;
@@ -139,8 +139,8 @@ mod x86_64 {
 
         /// Read the current raw CR0 value.
         #[inline]
-        pub fn read_raw() -> u64 {
-            let value: u64;
+        pub fn read_raw() -> usize {
+            let value: usize;
 
             #[cfg(feature = "inline_asm")]
             unsafe {
@@ -181,7 +181,7 @@ mod x86_64 {
         /// This function is unsafe because it's possible to violate memory
         /// safety through it, e.g. by disabling paging.
         #[inline]
-        pub unsafe fn write_raw(value: u64) {
+        pub unsafe fn write_raw(value: usize) {
             #[cfg(feature = "inline_asm")]
             asm!("mov cr0, {}", in(reg) value, options(nostack));
 
@@ -212,7 +212,7 @@ mod x86_64 {
         /// Read the current page fault linear address from the CR2 register.
         #[inline]
         pub fn read() -> VirtAddr {
-            let value: u64;
+            let value: usize;
 
             #[cfg(feature = "inline_asm")]
             unsafe {
@@ -224,7 +224,7 @@ mod x86_64 {
                 value = crate::asm::x86_64_asm_read_cr2();
             }
 
-            VirtAddr::new(value)
+            VirtAddr::new(value as u64)
         }
     }
 
@@ -240,7 +240,7 @@ mod x86_64 {
         /// Read the current P4 table address from the CR3 register
         #[inline]
         pub fn read_raw() -> (PhysFrame, u16) {
-            let value: u64;
+            let value: usize;
 
             #[cfg(feature = "inline_asm")]
             unsafe {
@@ -252,7 +252,7 @@ mod x86_64 {
                 value = crate::asm::x86_64_asm_read_cr3();
             }
 
-            let addr = PhysAddr::new(value & 0x_000f_ffff_ffff_f000);
+            let addr = PhysAddr::new(value as u64 & 0x_000f_ffff_ffff_f000);
             let frame = PhysFrame::containing_address(addr);
             (frame, (value & 0xFFF) as u16)
         }
@@ -294,8 +294,9 @@ mod x86_64 {
         /// changing the page mapping.
         #[inline]
         unsafe fn write_raw(frame: PhysFrame, val: u16) {
+            use core::convert::TryFrom;
             let addr = frame.start_address();
-            let value = addr.as_u64() | val as u64;
+            let value = usize::try_from(addr.as_u64()).unwrap() | val as usize;
 
             #[cfg(feature = "inline_asm")]
             asm!("mov cr3, {}", in(reg) value, options(nostack));
@@ -314,8 +315,8 @@ mod x86_64 {
 
         /// Read the current raw CR4 value.
         #[inline]
-        pub fn read_raw() -> u64 {
-            let value: u64;
+        pub fn read_raw() -> usize {
+            let value: usize;
 
             #[cfg(feature = "inline_asm")]
             unsafe {
@@ -358,7 +359,7 @@ mod x86_64 {
         /// safety through it, e.g. by overwriting the physical address extension
         /// flag.
         #[inline]
-        pub unsafe fn write_raw(value: u64) {
+        pub unsafe fn write_raw(value: usize) {
             #[cfg(feature = "inline_asm")]
             asm!("mov cr4, {}", in(reg) value, options(nostack));
 
