@@ -54,7 +54,9 @@ pub struct Cr3;
 bitflags! {
     /// Controls cache settings for the level 4 page table.
     pub struct Cr3Flags: usize {
-        /// Use a writethrough cache policy for the P4 table (else a writeback policy is used).
+        /// Use a writeback cache policy for the P4 table.
+        const PAGE_LEVEL_WRITEBACK = 0 << 3;
+        /// Use a writethrough cache policy for the P4 table.
         const PAGE_LEVEL_WRITETHROUGH = 1 << 3;
         /// Disable caching for the P4 table.
         const PAGE_LEVEL_CACHE_DISABLE = 1 << 4;

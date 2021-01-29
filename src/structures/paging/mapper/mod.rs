@@ -5,6 +5,7 @@ pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
 pub use self::offset_page_table::OffsetPageTable;
 #[cfg(feature = "instructions")]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
+pub use self::legacy_offset_page_table::LegacyOffsetPageTable;
 
 use crate::structures::paging::{
     frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size1GiB,
@@ -16,6 +17,8 @@ mod mapped_page_table;
 mod offset_page_table;
 #[cfg(feature = "instructions")]
 mod recursive_page_table;
+mod legacy_offset_page_table;
+
 
 /// An empty convencience trait that requires the `Mapper` trait for all page sizes.
 pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}
