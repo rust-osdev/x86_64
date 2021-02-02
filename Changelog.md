@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.13.2 – 2021-02-02
+
 - Fix build on latest nightly: The feature `const_in_array_repeat_expressions` was removed ([#230](https://github.com/rust-osdev/x86_64/pull/230))
 
 # 0.13.1 – 2020-12-29
