@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.13.3 – 2021-03-16
+
 - Implement `Clone` for `PageTable` ([#236](https://github.com/rust-osdev/x86_64/pull/236))
 
 # 0.13.2 – 2021-02-02
