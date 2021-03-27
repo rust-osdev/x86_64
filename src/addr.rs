@@ -236,6 +236,13 @@ impl fmt::UpperHex for VirtAddr {
     }
 }
 
+impl fmt::Pointer for VirtAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Pointer::fmt(&(self.0 as *const ()), f)
+    }
+}
+
 impl Add<u64> for VirtAddr {
     type Output = Self;
     #[inline]
@@ -440,6 +447,13 @@ impl fmt::UpperHex for PhysAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::UpperHex::fmt(&self.0, f)
+    }
+}
+
+impl fmt::Pointer for PhysAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Pointer::fmt(&(self.0 as *const ()), f)
     }
 }
 
