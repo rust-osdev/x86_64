@@ -202,7 +202,9 @@ impl VirtAddr {
 
 impl fmt::Debug for VirtAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "VirtAddr({:#x})", self.0)
+        f.debug_tuple("VirtAddr")
+            .field(&format_args!("{:#x}", self.0))
+            .finish()
     }
 }
 
@@ -407,7 +409,9 @@ impl PhysAddr {
 
 impl fmt::Debug for PhysAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PhysAddr({:#x})", self.0)
+        f.debug_tuple("PhysAddr")
+            .field(&format_args!("{:#x}", self.0))
+            .finish()
     }
 }
 
