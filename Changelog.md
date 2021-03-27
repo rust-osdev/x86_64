@@ -1,5 +1,7 @@
 # Unreleased
 
+- Implement more fmt traits for addr types ([#237](https://github.com/rust-osdev/x86_64/pull/237))
+
 # 0.13.3 – 2021-03-16
 
 - Implement `Clone` for `PageTable` ([#236](https://github.com/rust-osdev/x86_64/pull/236))
