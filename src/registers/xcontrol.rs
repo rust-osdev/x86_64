@@ -24,6 +24,7 @@ bitflags! {
     }
 }
 
+#[cfg(all(feature = "instructions", feature = "inline_asm"))]
 mod x86_64 {
     use super::*;
     impl XCr0 {
