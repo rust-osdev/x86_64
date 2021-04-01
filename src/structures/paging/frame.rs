@@ -1,5 +1,6 @@
 //! Abstractions for default-sized and huge physical memory frames.
 
+use super::page::AddressNotAligned;
 use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
 use core::fmt;
@@ -19,9 +20,9 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
     #[inline]
-    pub fn from_start_address(address: PhysAddr) -> Result<Self, ()> {
+    pub fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned(S::SIZE) {
-            return Err(());
+            return Err(AddressNotAligned);
         }
         Ok(PhysFrame::containing_address(address))
     }

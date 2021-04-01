@@ -2,6 +2,8 @@
 
 //! Special x86_64 instructions.
 
+use crate::VirtAddr;
+
 pub mod interrupts;
 pub mod port;
 pub mod random;
@@ -48,7 +50,7 @@ pub fn nop() {
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        asm!("xchgw bx, bx", options(nomem, nostack));
+        asm!("xchg bx, bx", options(nomem, nostack));
     }
 }
 
@@ -56,12 +58,12 @@ pub fn bochs_breakpoint() {
 /// instructions to execute.
 #[cfg(feature = "inline_asm")]
 #[inline(always)]
-pub fn read_rip() -> u64 {
+pub fn read_rip() -> VirtAddr {
     let rip: u64;
     unsafe {
         asm!(
             "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
         );
     }
-    rip
+    VirtAddr::new(rip)
 }

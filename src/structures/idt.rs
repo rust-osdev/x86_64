@@ -9,7 +9,7 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{PrivilegeLevel, VirtAddr};
+use crate::{structures::DescriptorTablePointer, PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
@@ -430,15 +430,19 @@ impl InterruptDescriptorTable {
     #[cfg(feature = "instructions")]
     #[inline]
     pub unsafe fn load_unsafe(&self) {
-        use crate::instructions::tables::{lidt, DescriptorTablePointer};
+        use crate::instructions::tables::lidt;
+        lidt(&self.pointer());
+    }
+
+    /// Creates the descriptor pointer for this table. This pointer can only be
+    /// safely used if the table is never modified or destroyed while in use.
+    #[cfg(feature = "instructions")]
+    fn pointer(&self) -> DescriptorTablePointer {
         use core::mem::size_of;
-
-        let ptr = DescriptorTablePointer {
-            base: self as *const _ as u64,
+        DescriptorTablePointer {
+            base: VirtAddr::new(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
-        };
-
-        lidt(&ptr);
+        }
     }
 
     /// Returns a normalized and ranged check slice range from a RangeBounds trait object
@@ -702,12 +706,6 @@ impl EntryOptions {
     }
 }
 
-/// Wrapper type for the exception stack frame pushed by the CPU.
-///
-/// Identical to [`InterruptStackFrame`].
-#[deprecated(note = "This type was renamed to InterruptStackFrame.")]
-pub type ExceptionStackFrame = InterruptStackFrame;
-
 /// Wrapper type for the interrupt stack frame pushed by the CPU.
 ///
 /// This type derefs to an [`InterruptStackFrameValue`], which allows reading the actual values.
@@ -760,7 +758,7 @@ pub struct InterruptStackFrameValue {
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
-    /// return. See the documentation of the `InterruptDescriptorTable` fields for more details.
+    /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
     pub instruction_pointer: VirtAddr,
     /// The code segment selector, padded with zeros.
     pub code_segment: u64,

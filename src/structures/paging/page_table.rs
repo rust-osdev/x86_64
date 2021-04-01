@@ -53,7 +53,7 @@ impl PageTableEntry {
     /// Returns the physical address mapped by this entry, might be zero.
     #[inline]
     pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & 0x000fffff_fffff000)
+        PhysAddr::new(self.entry & 0x000f_ffff_ffff_f000)
     }
 
     /// Returns the physical frame mapped by this entry.
@@ -177,8 +177,12 @@ const ENTRY_COUNT: usize = 512;
 ///
 /// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed
 /// through index operations. For example, `page_table[15]` returns the 15th page table entry.
+///
+/// Note that while this type implements [`Clone`], the users must be careful not to introduce
+/// mutable aliasing by using the cloned page tables.
 #[repr(align(4096))]
 #[repr(C)]
+#[derive(Clone)]
 pub struct PageTable {
     entries: [PageTableEntry; ENTRY_COUNT],
 }

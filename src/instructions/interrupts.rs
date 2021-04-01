@@ -103,12 +103,12 @@ where
 ///     x86_64::instructions::hlt(); // wait for the next interrupt
 /// }
 ///
-/// // avoid this race by using `enable_interrupts_and_hlt`:
+/// // avoid this race by using `enable_and_hlt`:
 ///
 /// x86_64::instructions::interrupts::disable();
 /// if nothing_to_do() {
 ///     // <- no interrupts can occur here (interrupts are disabled)
-///     x86_64::instructions::interrupts::enable_interrupts_and_hlt();
+///     x86_64::instructions::interrupts::enable_and_hlt();
 /// }
 ///
 /// ```
@@ -128,7 +128,7 @@ where
 /// See <http://lkml.iu.edu/hypermail/linux/kernel/1009.2/01406.html> for more
 /// information.
 #[inline]
-pub fn enable_interrupts_and_hlt() {
+pub fn enable_and_hlt() {
     #[cfg(feature = "inline_asm")]
     unsafe {
         asm!("sti; hlt", options(nomem, nostack));

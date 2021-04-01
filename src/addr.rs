@@ -9,7 +9,8 @@ use bit_field::BitField;
 /// A canonical 64-bit virtual memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The `UsizeConversions` trait can be used for performing conversions
+/// on non 64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
@@ -22,7 +23,8 @@ pub struct VirtAddr(u64);
 /// A 64-bit physical memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The `UsizeConversions` trait can be used for performing conversions
+/// on non 64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
@@ -81,13 +83,6 @@ impl VirtAddr {
         // By doing the right shift as a signed operation (on a i64), it will
         // sign extend the value, repeating the leftmost bit.
         VirtAddr(((addr << 16) as i64 >> 16) as u64)
-    }
-
-    /// Alias for [`new_truncate`][VirtAddr::new_truncate] for backwards compatibility.
-    #[inline]
-    #[deprecated(note = "Use new_truncate or new_unsafe instead")]
-    pub const fn new_unchecked(addr: u64) -> VirtAddr {
-        Self::new_truncate(addr)
     }
 
     /// Creates a new virtual address, without any checks.
@@ -207,7 +202,44 @@ impl VirtAddr {
 
 impl fmt::Debug for VirtAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "VirtAddr({:#x})", self.0)
+        f.debug_tuple("VirtAddr")
+            .field(&format_args!("{:#x}", self.0))
+            .finish()
+    }
+}
+
+impl fmt::Binary for VirtAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Binary::fmt(&self.0, f)
+    }
+}
+
+impl fmt::LowerHex for VirtAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+impl fmt::Octal for VirtAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Octal::fmt(&self.0, f)
+    }
+}
+
+impl fmt::UpperHex for VirtAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::UpperHex::fmt(&self.0, f)
+    }
+}
+
+impl fmt::Pointer for VirtAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Pointer::fmt(&(self.0 as *const ()), f)
     }
 }
 
@@ -384,35 +416,44 @@ impl PhysAddr {
 
 impl fmt::Debug for PhysAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PhysAddr({:#x})", self.0)
+        f.debug_tuple("PhysAddr")
+            .field(&format_args!("{:#x}", self.0))
+            .finish()
     }
 }
 
 impl fmt::Binary for PhysAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        fmt::Binary::fmt(&self.0, f)
     }
 }
 
 impl fmt::LowerHex for PhysAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
 impl fmt::Octal for PhysAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        fmt::Octal::fmt(&self.0, f)
     }
 }
 
 impl fmt::UpperHex for PhysAddr {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        fmt::UpperHex::fmt(&self.0, f)
+    }
+}
+
+impl fmt::Pointer for PhysAddr {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Pointer::fmt(&(self.0 as *const ()), f)
     }
 }
 

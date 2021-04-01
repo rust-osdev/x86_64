@@ -94,6 +94,12 @@ _x86_64_asm_invlpg:
     invlpg (%rdi)
     retq
 
+.global _x86_64_asm_invpcid
+.p2align 4
+_x86_64_asm_invpcid:
+    invpcid (%rsi), %rdi
+    retq
+
 .global _x86_64_asm_ltr
 .p2align 4
 _x86_64_asm_ltr:

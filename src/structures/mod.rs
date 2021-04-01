@@ -1,5 +1,7 @@
 //! Representations of various x86 specific structures and descriptor tables.
 
+use crate::VirtAddr;
+
 pub mod gdt;
 
 // idt needs `feature(abi_x86_interrupt)`, which is not available on stable rust
@@ -18,5 +20,5 @@ pub struct DescriptorTablePointer {
     /// Size of the DT.
     pub limit: u16,
     /// Pointer to the memory region containing the DT.
-    pub base: u64,
+    pub base: VirtAddr,
 }

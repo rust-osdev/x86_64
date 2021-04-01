@@ -92,8 +92,14 @@ mod x86_64 {
     }
 
     /// Writes the RFLAGS register, preserves reserved bits.
+    ///
+    /// ## Safety
+    ///
+    /// Unsafe because undefined becavior can occur if certain flags are modified. For example,
+    /// the `DF` flag must be unset in all Rust code. Also, modifying `CF`, `PF`, or any other
+    /// flags also used by Rust/LLVM can result in undefined behavior too.
     #[inline]
-    pub fn write(flags: RFlags) {
+    pub unsafe fn write(flags: RFlags) {
         let old_value = read_raw();
         let reserved = old_value & !(RFlags::all().bits());
         let new_value = reserved | flags.bits();
@@ -104,16 +110,23 @@ mod x86_64 {
     /// Writes the RFLAGS register.
     ///
     /// Does not preserve any bits, including reserved bits.
+    ///
+    ///
+    /// ## Safety
+    ///
+    /// Unsafe because undefined becavior can occur if certain flags are modified. For example,
+    /// the `DF` flag must be unset in all Rust code. Also, modifying `CF`, `PF`, or any other
+    /// flags also used by Rust/LLVM can result in undefined behavior too.
     #[inline]
-    pub fn write_raw(val: u64) {
+    pub unsafe fn write_raw(val: u64) {
         #[cfg(feature = "inline_asm")]
-        unsafe {
+        {
             // FIXME - There's probably a better way than saying we preserve the flags even though we actually don't
             asm!("push {}; popf", in(reg) val, options(preserves_flags))
         };
 
         #[cfg(not(feature = "inline_asm"))]
-        unsafe {
+        {
             crate::asm::x86_64_asm_write_rflags(val)
         }
     }

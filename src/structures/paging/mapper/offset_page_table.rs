@@ -36,6 +36,11 @@ impl<'a> OffsetPageTable<'a> {
             inner: MappedPageTable::new(level_4_table, phys_offset),
         }
     }
+
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        self.inner.level_4_table()
+    }
 }
 
 #[derive(Debug)]
@@ -43,11 +48,9 @@ struct PhysOffset {
     offset: VirtAddr,
 }
 
-impl PhysToVirt for PhysOffset {
-    #[inline]
-    fn phys_to_virt(&self, frame: PhysFrame) -> *mut PageTable {
-        let phys = frame.start_address().as_u64();
-        let virt = self.offset + phys;
+unsafe impl PageTableFrameMapping for PhysOffset {
+    fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {
+        let virt = self.offset + frame.start_address().as_u64();
         virt.as_mut_ptr()
     }
 }
@@ -65,7 +68,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.inner
             .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
@@ -132,7 +135,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.inner
             .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
@@ -199,7 +202,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.inner
             .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
@@ -255,7 +258,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 }
 
-impl<'a> MapperAllSizes for OffsetPageTable<'a> {
+impl<'a> Translate for OffsetPageTable<'a> {
     #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)

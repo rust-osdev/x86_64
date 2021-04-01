@@ -15,6 +15,7 @@ jobs:
     name: "Test"
 
     strategy:
+      fail-fast: false
       matrix:
         platform: [
           ubuntu-latest,
@@ -32,7 +33,7 @@ jobs:
     - name: Install Rustup
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
-        echo ::add-path::$HOME/.cargo/bin
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       if: runner.os == 'macOS'
 
     - name: Set Rustup profile to minimal
@@ -56,36 +57,52 @@ jobs:
         path: binaries
         key: ${{ runner.OS }}-binaries
     - name: Add binaries/bin to PATH
-      run: echo ::add-path::$GITHUB_WORKSPACE/binaries/bin
+      run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
       shell: bash
 
     - name: "Run cargo build"
-      run: cargo build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
 
     - name: "Run cargo build for stable without instructions"
-      run: cargo build --no-default-features
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --no-default-features
 
     - name: "Run cargo build for stable"
-      run: cargo build --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo build for stable on musl"
-      run: cargo build --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
 
     - name: "Run cargo test"
-      run: cargo test
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
 
     - name: "Run cargo test for stable"
-      run: cargo test --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo test for stable on musl"
-      run: cargo test --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
       if: runner.os == 'Linux'
-
-    - name: 'Deny Warnings'
-      run: cargo build --features deny-warnings
 
     - name: "Install Rustup Targets"
       run: |
@@ -119,7 +136,7 @@ jobs:
     - name: Install Scoop (Windows)
       run: |
         Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-        echo ::add-path::$HOME\scoop\shims
+        echo "$HOME\scoop\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       if: runner.os == 'Windows'
       shell: pwsh
     - name: Install QEMU (Windows)
@@ -150,4 +167,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - run: rustup toolchain install nightly --profile minimal --component clippy
-    - run: cargo +nightly clippy -- -D warnings
+    - name: "Run `cargo clippy`"
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy

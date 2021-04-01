@@ -1,6 +1,50 @@
 # Unreleased
 
-- Use `asm!` instead of perma-unstable `llvm_asm!` macro
+# 0.13.4 – 2021-03-27
+
+- Implement more fmt traits for addr types ([#237](https://github.com/rust-osdev/x86_64/pull/237))
+
+# 0.13.3 – 2021-03-16
+
+- Implement `Clone` for `PageTable` ([#236](https://github.com/rust-osdev/x86_64/pull/236))
+
+# 0.13.2 – 2021-02-02
+
+- Fix build on latest nightly: The feature `const_in_array_repeat_expressions` was removed ([#230](https://github.com/rust-osdev/x86_64/pull/230))
+
+# 0.13.1 – 2020-12-29
+
+- PCID support instructions ([#169])(https://github.com/rust-osdev/x86_64/pull/169))
+
+# 0.13.0 – 2020-12-28
+
+- **Breaking:** Also return flags for `MapperAllSizes::translate()` ([#207](https://github.com/rust-osdev/x86_64/pull/207))
+- **Breaking:** Restructure the `TranslateResult` type and create separate `Translate` trait ([#211](https://github.com/rust-osdev/x86_64/pull/211))
+- **Breaking:** Rename `PhysToVirt` trait to `PageTableFrameMapping` ([#214](https://github.com/rust-osdev/x86_64/pull/214))
+- **Breaking:** Use custom error types instead of `()` ([#199](https://github.com/rust-osdev/x86_64/pull/199))
+- **Breaking:** Remove deprecated items
+  - `UnusedPhysFrame`
+  - `ExceptionStackFrame`
+  - `VirtAddr::new_unchecked`
+  - `interrupts::enable_interrupts_and_hlt`
+- **Breaking:** Make `DescriptorTablePointer::base` a `VirtAddr` ([#215](https://github.com/rust-osdev/x86_64/pull/215))
+- **Breaking:** Change return type of `read_rip` to `VirtAddr` ([#216](https://github.com/rust-osdev/x86_64/pull/216))
+- **Breaking:** Make writing the RFLAGS register unsafe ([#219](https://github.com/rust-osdev/x86_64/pull/219))
+- **Breaking:** Remove `PortReadWrite` trait, which is no longer needed ([#217](https://github.com/rust-osdev/x86_64/pull/217))
+- Relaxe `Sized` requirement for `FrameAllocator` in `Mapper::map_to` ([204](https://github.com/rust-osdev/x86_64/pull/204))
+
+# 0.12.4 – 2020-12-28
+
+- Fix bad conversion from llvm_asm! to asm! ([#218](https://github.com/rust-osdev/x86_64/pull/218))
+- GDT: Add `load_unchecked`, `from_raw_slice`, and `as_raw_slice` ([#210](https://github.com/rust-osdev/x86_64/pull/210))
+
+# 0.12.3 – 2020-10-31
+
+- Use `asm!` instead of perma-unstable `llvm_asm!` macro ([#165](https://github.com/rust-osdev/x86_64/pull/165))
+- Make `GlobalDescriptorTable::add_entry` a const fn ([#191](https://github.com/rust-osdev/x86_64/pull/191))
+- Rename `enable_interrupts_and_hlt` to `enable_and_hlt` ([#206](https://github.com/rust-osdev/x86_64/pull/206))
+- Provide functions for accessing the underlying L4 table for mapper types ([#184](https://github.com/rust-osdev/x86_64/pull/184))
+- Remove Trait constraint for `Port::new()` ([#188](https://github.com/rust-osdev/x86_64/pull/188))
 
 # 0.12.2 – 2020-09-29
 

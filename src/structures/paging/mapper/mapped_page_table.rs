@@ -2,7 +2,7 @@ use crate::structures::paging::{
     frame::PhysFrame,
     frame_alloc::FrameAllocator,
     mapper::*,
-    page::{Page, Size1GiB, Size2MiB, Size4KiB},
+    page::{AddressNotAligned, Page, Size1GiB, Size2MiB, Size4KiB},
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
 };
 
@@ -14,27 +14,32 @@ use crate::structures::paging::{
 /// memory are possible too, as long as they can be calculated as an `PhysAddr` to
 /// `VirtAddr` closure.
 #[derive(Debug)]
-pub struct MappedPageTable<'a, P: PhysToVirt> {
+pub struct MappedPageTable<'a, P: PageTableFrameMapping> {
     page_table_walker: PageTableWalker<P>,
     level_4_table: &'a mut PageTable,
 }
 
-impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
+impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     /// Creates a new `MappedPageTable` that uses the passed closure for converting virtual
     /// to physical addresses.
     ///
     /// ## Safety
     ///
-    /// This function is unsafe because the caller must guarantee that the passed `phys_to_virt`
+    /// This function is unsafe because the caller must guarantee that the passed `page_table_frame_mapping`
     /// closure is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
     #[inline]
-    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_to_virt: P) -> Self {
+    pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {
         Self {
             level_4_table,
-            page_table_walker: PageTableWalker::new(phys_to_virt),
+            page_table_walker: PageTableWalker::new(page_table_frame_mapping),
         }
+    }
+
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&mut self) -> &mut PageTable {
+        &mut self.level_4_table
     }
 
     /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
@@ -48,7 +53,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
@@ -76,7 +81,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
@@ -109,7 +114,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
@@ -137,7 +142,7 @@ impl<'a, P: PhysToVirt> MappedPageTable<'a, P> {
     }
 }
 
-impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
+impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -148,7 +153,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -173,7 +178,7 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         }
 
         let frame = PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|()| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
 
         p3_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
@@ -241,11 +246,11 @@ impl<'a, P: PhysToVirt> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         }
 
         PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|()| TranslateError::InvalidFrameAddress(p3_entry.addr()))
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p3_entry.addr()))
     }
 }
 
-impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
+impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -256,7 +261,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -284,7 +289,7 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         }
 
         let frame = PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|()| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
 
         p2_entry.set_unused();
         Ok((frame, MapperFlush::new(page)))
@@ -369,11 +374,11 @@ impl<'a, P: PhysToVirt> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         }
 
         PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|()| TranslateError::InvalidFrameAddress(p2_entry.addr()))
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p2_entry.addr()))
     }
 }
 
-impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
+impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -384,7 +389,7 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         allocator: &mut A,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }
@@ -513,64 +518,83 @@ impl<'a, P: PhysToVirt> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         }
 
         PhysFrame::from_start_address(p1_entry.addr())
-            .map_err(|()| TranslateError::InvalidFrameAddress(p1_entry.addr()))
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p1_entry.addr()))
     }
 }
 
-impl<'a, P: PhysToVirt> MapperAllSizes for MappedPageTable<'a, P> {
+impl<'a, P: PageTableFrameMapping> Translate for MappedPageTable<'a, P> {
     #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let p4 = &self.level_4_table;
         let p3 = match self.page_table_walker.next_table(&p4[addr.p4_index()]) {
             Ok(page_table) => page_table,
-            Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
+            Err(PageTableWalkError::NotMapped) => return TranslateResult::NotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 panic!("level 4 entry has huge page bit set")
             }
         };
         let p2 = match self.page_table_walker.next_table(&p3[addr.p3_index()]) {
             Ok(page_table) => page_table,
-            Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
+            Err(PageTableWalkError::NotMapped) => return TranslateResult::NotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
-                let frame = PhysFrame::containing_address(p3[addr.p3_index()].addr());
+                let entry = &p3[addr.p3_index()];
+                let frame = PhysFrame::containing_address(entry.addr());
                 let offset = addr.as_u64() & 0o_777_777_7777;
-                return TranslateResult::Frame1GiB { frame, offset };
+                let flags = entry.flags();
+                return TranslateResult::Mapped {
+                    frame: MappedFrame::Size1GiB(frame),
+                    offset,
+                    flags,
+                };
             }
         };
         let p1 = match self.page_table_walker.next_table(&p2[addr.p2_index()]) {
             Ok(page_table) => page_table,
-            Err(PageTableWalkError::NotMapped) => return TranslateResult::PageNotMapped,
+            Err(PageTableWalkError::NotMapped) => return TranslateResult::NotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
-                let frame = PhysFrame::containing_address(p2[addr.p2_index()].addr());
+                let entry = &p2[addr.p2_index()];
+                let frame = PhysFrame::containing_address(entry.addr());
                 let offset = addr.as_u64() & 0o_777_7777;
-                return TranslateResult::Frame2MiB { frame, offset };
+                let flags = entry.flags();
+                return TranslateResult::Mapped {
+                    frame: MappedFrame::Size2MiB(frame),
+                    offset,
+                    flags,
+                };
             }
         };
 
         let p1_entry = &p1[addr.p1_index()];
 
         if p1_entry.is_unused() {
-            return TranslateResult::PageNotMapped;
+            return TranslateResult::NotMapped;
         }
 
         let frame = match PhysFrame::from_start_address(p1_entry.addr()) {
             Ok(frame) => frame,
-            Err(()) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
+            Err(AddressNotAligned) => return TranslateResult::InvalidFrameAddress(p1_entry.addr()),
         };
         let offset = u64::from(addr.page_offset());
-        TranslateResult::Frame4KiB { frame, offset }
+        let flags = p1_entry.flags();
+        TranslateResult::Mapped {
+            frame: MappedFrame::Size4KiB(frame),
+            offset,
+            flags,
+        }
     }
 }
 
 #[derive(Debug)]
-struct PageTableWalker<P: PhysToVirt> {
-    phys_to_virt: P,
+struct PageTableWalker<P: PageTableFrameMapping> {
+    page_table_frame_mapping: P,
 }
 
-impl<P: PhysToVirt> PageTableWalker<P> {
+impl<P: PageTableFrameMapping> PageTableWalker<P> {
     #[inline]
-    pub unsafe fn new(phys_to_virt: P) -> Self {
-        Self { phys_to_virt }
+    pub unsafe fn new(page_table_frame_mapping: P) -> Self {
+        Self {
+            page_table_frame_mapping,
+        }
     }
 
     /// Internal helper function to get a reference to the page table of the next level.
@@ -583,7 +607,9 @@ impl<P: PhysToVirt> PageTableWalker<P> {
         &self,
         entry: &'b PageTableEntry,
     ) -> Result<&'b PageTable, PageTableWalkError> {
-        let page_table_ptr = self.phys_to_virt.phys_to_virt(entry.frame()?);
+        let page_table_ptr = self
+            .page_table_frame_mapping
+            .frame_to_pointer(entry.frame()?);
         let page_table: &PageTable = unsafe { &*page_table_ptr };
 
         Ok(page_table)
@@ -599,7 +625,9 @@ impl<P: PhysToVirt> PageTableWalker<P> {
         &self,
         entry: &'b mut PageTableEntry,
     ) -> Result<&'b mut PageTable, PageTableWalkError> {
-        let page_table_ptr = self.phys_to_virt.phys_to_virt(entry.frame()?);
+        let page_table_ptr = self
+            .page_table_frame_mapping
+            .frame_to_pointer(entry.frame()?);
         let page_table: &mut PageTable = unsafe { &mut *page_table_ptr };
 
         Ok(page_table)
@@ -621,7 +649,7 @@ impl<P: PhysToVirt> PageTableWalker<P> {
         allocator: &mut A,
     ) -> Result<&'b mut PageTable, PageTableCreateError>
     where
-        A: FrameAllocator<Size4KiB>,
+        A: FrameAllocator<Size4KiB> + ?Sized,
     {
         let created;
 
@@ -736,21 +764,16 @@ impl From<PageTableWalkError> for TranslateError {
     }
 }
 
-/// Trait for converting a physical address to a virtual one.
+/// Provides a virtual address mapping for physical page table frames.
 ///
 /// This only works if the physical address space is somehow mapped to the virtual
 /// address space, e.g. at an offset.
-pub trait PhysToVirt {
+///
+/// ## Safety
+///
+/// This trait is unsafe to implement because the implementer must ensure that
+/// `frame_to_pointer` returns a valid page table pointer for any given physical frame.
+pub unsafe trait PageTableFrameMapping {
     /// Translate the given physical frame to a virtual page table pointer.
-    fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable;
-}
-
-impl<T> PhysToVirt for T
-where
-    T: Fn(PhysFrame) -> *mut PageTable,
-{
-    #[inline]
-    fn phys_to_virt(&self, phys_frame: PhysFrame) -> *mut PageTable {
-        self(phys_frame)
-    }
+    fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;
 }

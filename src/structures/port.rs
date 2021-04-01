@@ -27,9 +27,3 @@ pub trait PortWrite {
     /// safety.
     unsafe fn write_to_port(port: u16, value: Self);
 }
-
-/// A helper trait that implements the read/write port operations.
-///
-/// On x86, I/O ports operate on either `u8` (via `inb`/`outb`), `u16` (via `inw`/`outw`),
-/// or `u32` (via `inl`/`outl`). Therefore this trait is implemented for exactly these types.
-pub trait PortReadWrite: PortRead + PortWrite {}
