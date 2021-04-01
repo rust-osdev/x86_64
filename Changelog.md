@@ -1,5 +1,7 @@
 # Unreleased
 
+- Add support for `XCR0` register ([#239](https://github.com/rust-osdev/x86_64/pull/239))
+
 # 0.13.4 – 2021-03-27
 
 - Implement more fmt traits for addr types ([#237](https://github.com/rust-osdev/x86_64/pull/237))
