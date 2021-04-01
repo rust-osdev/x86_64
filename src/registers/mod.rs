@@ -3,6 +3,7 @@
 pub mod control;
 pub mod model_specific;
 pub mod rflags;
+pub mod xcontrol;
 
 #[cfg(feature = "instructions")]
 pub use crate::instructions::segmentation::{rdfsbase, rdgsbase, wrfsbase, wrgsbase};
