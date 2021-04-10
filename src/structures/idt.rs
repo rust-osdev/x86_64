@@ -572,18 +572,17 @@ pub struct Entry<F> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
-pub type HandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame);
+pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
 /// A handler function for an exception that pushes an error code.
-pub type HandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64);
+pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
 /// A handler function that must not return, e.g. for a machine check exception.
-pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
+pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 pub type DivergingHandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).

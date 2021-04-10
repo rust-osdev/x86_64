@@ -57,6 +57,6 @@ pub fn init_test_idt() {
     TEST_IDT.load();
 }
 
-extern "x86-interrupt" fn breakpoint_handler(_stack_frame: &mut InterruptStackFrame) {
+extern "x86-interrupt" fn breakpoint_handler(_stack_frame: InterruptStackFrame) {
     BREAKPOINT_HANDLER_CALLED.fetch_add(1, Ordering::SeqCst);
 }
