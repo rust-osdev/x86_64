@@ -1,5 +1,7 @@
 # Unreleased
 
+- Add deprecation warnings to prevent misuse of `InterruptStackFrame` (fixed in [#242](https://github.com/rust-osdev/x86_64/pull/242))
+
 # 0.13.5 – 2021-04-01
 
 - Add support for `XCR0` register ([#239](https://github.com/rust-osdev/x86_64/pull/239))
