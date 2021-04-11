@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.14.0 – 2021-04-11
+
+- **Breaking:** Take the interrupt stack frame by value (not by reference) [#242](https://github.com/rust-osdev/x86_64/pull/242)
+- **Breaking:** Change `InterruptStackFrame::as_mut` to return a `Volatile<_>` wrapper [#242](https://github.com/rust-osdev/x86_64/pull/242)
+
 # 0.13.5 – 2021-04-01
 
 - Add support for `XCR0` register ([#239](https://github.com/rust-osdev/x86_64/pull/239))
