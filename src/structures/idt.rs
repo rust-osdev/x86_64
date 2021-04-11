@@ -32,6 +32,7 @@ use core::ops::{Deref, Index, IndexMut, RangeBounds};
 /// The field descriptions are taken from the
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
+#[allow(deprecated)]
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
 #[repr(C)]
@@ -474,6 +475,7 @@ impl InterruptDescriptorTable {
     ///
     /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
     /// exception
+    #[allow(deprecated)]
     #[inline]
     pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
@@ -484,6 +486,7 @@ impl InterruptDescriptorTable {
     ///
     /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
     /// exception
+    #[allow(deprecated)]
     #[inline]
     pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
@@ -491,6 +494,7 @@ impl InterruptDescriptorTable {
     }
 }
 
+#[allow(deprecated)]
 impl Index<usize> for InterruptDescriptorTable {
     type Output = Entry<HandlerFunc>;
 
@@ -572,16 +576,31 @@ pub struct Entry<F> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
+#[deprecated(
+    note = "Taking the InterruptStackFrame by reference no longer works on latest Rust nightlies. Please update to `x86_64` v0.14.0."
+)]
 pub type HandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame);
 /// A handler function for an exception that pushes an error code.
+#[deprecated(
+    note = "Taking the InterruptStackFrame by reference no longer works on latest Rust nightlies. Please update to `x86_64` v0.14.0."
+)]
 pub type HandlerFuncWithErrCode =
     extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
+#[deprecated(
+    note = "Taking the InterruptStackFrame by reference no longer works on latest Rust nightlies. Please update to `x86_64` v0.14.0."
+)]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
 /// A handler function that must not return, e.g. for a machine check exception.
+#[deprecated(
+    note = "Taking the InterruptStackFrame by reference no longer works on latest Rust nightlies. Please update to `x86_64` v0.14.0."
+)]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
+#[deprecated(
+    note = "Taking the InterruptStackFrame by reference no longer works on latest Rust nightlies. Please update to `x86_64` v0.14.0."
+)]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
 
@@ -626,6 +645,7 @@ impl<F> Entry<F> {
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
         #[cfg(feature = "instructions")]
+        #[allow(deprecated)]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
@@ -634,6 +654,7 @@ macro_rules! impl_set_handler_fn {
             ///
             /// The function returns a mutable reference to the entry's options that allows
             /// further customization.
+            #[deprecated(note = "Taking the InterruptStackFrame by reference no longer works on latest Rust nightlies. Please update to `x86_64` v0.14.0.")]
             #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
                 self.set_handler_addr(handler as u64)
@@ -727,6 +748,9 @@ impl InterruptStackFrame {
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
+    #[deprecated(
+        note = "Modifying the InterruptStackFrame no longer works without `volatile` on latest Rust nightlies. Please update to `x86_64` v0.14.0."
+    )]
     #[allow(clippy::should_implement_trait)]
     #[inline]
     pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
