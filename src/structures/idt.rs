@@ -16,6 +16,7 @@ use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use volatile::Volatile;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -720,16 +721,22 @@ pub struct InterruptStackFrame {
 impl InterruptStackFrame {
     /// Gives mutable access to the contents of the interrupt stack frame.
     ///
+    /// The `Volatile` wrapper is used because LLVM optimizations remove non-volatile
+    /// modifications of the interrupt stack frame.
+    ///
     /// ## Safety
     ///
     /// This function is unsafe since modifying the content of the interrupt stack frame
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
+    ///
+    /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
+    /// officially supported by LLVM's x86 interrupt calling convention.
     #[allow(clippy::should_implement_trait)]
     #[inline]
-    pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
-        &mut self.value
+    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
+        Volatile::new(&mut self.value)
     }
 }
 
