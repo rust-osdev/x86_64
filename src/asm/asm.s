@@ -119,6 +119,12 @@ _x86_64_asm_lidt:
     lidt (%rdi)
     retq
 
+.global _x86_64_asm_sidt
+.p2align 4
+_x86_64_asm_sidt:
+    sidt (%rdi)
+    retq
+
 .global _x86_64_asm_write_rflags
 .p2align 4
 _x86_64_asm_write_rflags:
