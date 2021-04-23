@@ -52,7 +52,7 @@ pub fn init_test_idt() {
 }
 
 extern "x86-interrupt" fn double_fault_handler(
-    _stack_frame: &mut InterruptStackFrame,
+    _stack_frame: InterruptStackFrame,
     _error_code: u64,
 ) -> ! {
     serial_println!("[ok]");

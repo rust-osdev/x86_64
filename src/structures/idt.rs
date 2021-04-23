@@ -9,13 +9,14 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{structures::DescriptorTablePointer, PrivilegeLevel, VirtAddr};
+use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use volatile::Volatile;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -437,9 +438,9 @@ impl InterruptDescriptorTable {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
-    fn pointer(&self) -> DescriptorTablePointer {
+    fn pointer(&self) -> crate::structures::DescriptorTablePointer {
         use core::mem::size_of;
-        DescriptorTablePointer {
+        crate::structures::DescriptorTablePointer {
             base: VirtAddr::new(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
         }
@@ -572,18 +573,17 @@ pub struct Entry<F> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
-pub type HandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame);
+pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
 /// A handler function for an exception that pushes an error code.
-pub type HandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64);
+pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
 /// A handler function that must not return, e.g. for a machine check exception.
-pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
+pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 pub type DivergingHandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -721,16 +721,22 @@ pub struct InterruptStackFrame {
 impl InterruptStackFrame {
     /// Gives mutable access to the contents of the interrupt stack frame.
     ///
+    /// The `Volatile` wrapper is used because LLVM optimizations remove non-volatile
+    /// modifications of the interrupt stack frame.
+    ///
     /// ## Safety
     ///
     /// This function is unsafe since modifying the content of the interrupt stack frame
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
+    ///
+    /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
+    /// officially supported by LLVM's x86 interrupt calling convention.
     #[allow(clippy::should_implement_trait)]
     #[inline]
-    pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
-        &mut self.value
+    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
+        Volatile::new(&mut self.value)
     }
 }
 

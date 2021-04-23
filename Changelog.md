@@ -1,5 +1,18 @@
 # Unreleased
 
+# 0.14.0 – 2021-04-11
+
+- **Breaking:** Take the interrupt stack frame by value (not by reference) [#242](https://github.com/rust-osdev/x86_64/pull/242)
+- **Breaking:** Change `InterruptStackFrame::as_mut` to return a `Volatile<_>` wrapper [#242](https://github.com/rust-osdev/x86_64/pull/242)
+
+# 0.13.5 – 2021-04-01
+
+- Add support for `XCR0` register ([#239](https://github.com/rust-osdev/x86_64/pull/239))
+
+# 0.13.4 – 2021-03-27
+
+- Implement more fmt traits for addr types ([#237](https://github.com/rust-osdev/x86_64/pull/237))
+
 # 0.13.3 – 2021-03-16
 
 - Implement `Clone` for `PageTable` ([#236](https://github.com/rust-osdev/x86_64/pull/236))
