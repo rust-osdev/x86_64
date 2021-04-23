@@ -1,5 +1,6 @@
 //! Access to I/O ports
 
+use core::fmt;
 use core::marker::PhantomData;
 
 pub use crate::structures::port::{PortRead, PortWrite};
@@ -95,21 +96,18 @@ impl PortWrite for u32 {
 }
 
 /// A read only I/O port.
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PortReadOnly<T> {
     port: u16,
     phantom: PhantomData<T>,
 }
 
 /// A write only I/O port.
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PortWriteOnly<T> {
     port: u16,
     phantom: PhantomData<T>,
 }
 
 /// An I/O port.
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Port<T> {
     port: u16,
     phantom: PhantomData<T>,
@@ -199,3 +197,36 @@ impl<T: PortWrite> Port<T> {
         T::write_to_port(self.port, value)
     }
 }
+
+macro_rules! impl_port_util_traits {
+    ($struct_name:ident) => {
+        impl<T> fmt::Debug for $struct_name<T> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.debug_struct(stringify!($struct_name))
+                    .field("port", &self.port)
+                    .finish()
+            }
+        }
+
+        impl<T> Clone for $struct_name<T> {
+            fn clone(&self) -> Self {
+                Self {
+                    port: self.port,
+                    phantom: PhantomData,
+                }
+            }
+        }
+
+        impl<T> PartialEq for $struct_name<T> {
+            fn eq(&self, other: &Self) -> bool {
+                self.port == other.port
+            }
+        }
+
+        impl<T> Eq for $struct_name<T> {}
+    };
+}
+
+impl_port_util_traits!(Port);
+impl_port_util_traits!(PortReadOnly);
+impl_port_util_traits!(PortWriteOnly);
