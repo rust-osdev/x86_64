@@ -94,76 +94,58 @@ impl PortWrite for u32 {
     }
 }
 
-/// A read only I/O port.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PortReadOnly<T> {
-    port: u16,
-    phantom: PhantomData<T>,
+/// A marker trait for access types which allow reading port values.
+pub trait PortReadAccess {}
+
+/// A marker trait for access types which allow writing port values.
+pub trait PortWriteAccess {}
+
+/// An access marker type indicating that a port is only allowed to read values.
+#[derive(Debug)]
+pub struct ReadOnlyAccess {
+    _priv: (),
 }
 
-/// A write only I/O port.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PortWriteOnly<T> {
-    port: u16,
-    phantom: PhantomData<T>,
+impl PortReadAccess for ReadOnlyAccess {}
+
+/// An access marker type indicating that a port is only allowed to write values.
+#[derive(Debug)]
+pub struct WriteOnlyAccess {
+    _priv: (),
 }
+
+impl PortWriteAccess for WriteOnlyAccess {}
+
+/// An access marker type indicating that a port is allowed to read or write values.
+#[derive(Debug)]
+pub struct ReadWriteAccess {
+    _priv: (),
+}
+
+impl PortReadAccess for ReadWriteAccess {}
+
+impl PortWriteAccess for ReadWriteAccess {}
 
 /// An I/O port.
+///
+/// The port reads or writes values of type `T` and has read/write access specified by `A`.
+///
+/// By default, `A` is `ReadWriteAccess`, meaning that values can be read from or written to the
+/// port. Use `ReadOnlyAccess` or `WriteOnlyAccess` for `A` (or the type aliases `PortReadOnly` or
+/// `PortWriteOnly`) if you want to restrict access further.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Port<T> {
+pub struct Port<T, A = ReadWriteAccess> {
     port: u16,
-    phantom: PhantomData<T>,
+    phantom: PhantomData<(T, A)>,
 }
 
-impl<T> PortReadOnly<T> {
-    /// Creates a read only I/O port with the given port number.
-    #[inline]
-    pub const fn new(port: u16) -> PortReadOnly<T> {
-        PortReadOnly {
-            port,
-            phantom: PhantomData,
-        }
-    }
-}
+/// A read-only I/O port.
+pub type PortReadOnly<T> = Port<T, ReadOnlyAccess>;
 
-impl<T: PortRead> PortReadOnly<T> {
-    /// Reads from the port.
-    ///
-    /// ## Safety
-    ///
-    /// This function is unsafe because the I/O port could have side effects that violate memory
-    /// safety.
-    #[inline]
-    pub unsafe fn read(&mut self) -> T {
-        T::read_from_port(self.port)
-    }
-}
+/// A write-only I/O port.
+pub type PortWriteOnly<T> = Port<T, WriteOnlyAccess>;
 
-impl<T> PortWriteOnly<T> {
-    /// Creates a write only I/O port with the given port number.
-    #[inline]
-    pub const fn new(port: u16) -> PortWriteOnly<T> {
-        PortWriteOnly {
-            port,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<T: PortWrite> PortWriteOnly<T> {
-    /// Writes to the port.
-    ///
-    /// ## Safety
-    ///
-    /// This function is unsafe because the I/O port could have side effects that violate memory
-    /// safety.
-    #[inline]
-    pub unsafe fn write(&mut self, value: T) {
-        T::write_to_port(self.port, value)
-    }
-}
-
-impl<T> Port<T> {
+impl<T, A> Port<T, A> {
     /// Creates an I/O port with the given port number.
     #[inline]
     pub const fn new(port: u16) -> Port<T> {
@@ -174,7 +156,7 @@ impl<T> Port<T> {
     }
 }
 
-impl<T: PortRead> Port<T> {
+impl<T: PortRead, A: PortReadAccess> Port<T, A> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -187,7 +169,7 @@ impl<T: PortRead> Port<T> {
     }
 }
 
-impl<T: PortWrite> Port<T> {
+impl<T: PortWrite, A: PortWriteAccess> Port<T, A> {
     /// Writes to the port.
     ///
     /// ## Safety
