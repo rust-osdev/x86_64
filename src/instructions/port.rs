@@ -148,7 +148,7 @@ pub type PortWriteOnly<T> = Port<T, WriteOnlyAccess>;
 impl<T, A> Port<T, A> {
     /// Creates an I/O port with the given port number.
     #[inline]
-    pub const fn new(port: u16) -> Port<T> {
+    pub const fn new(port: u16) -> Port<T, A> {
         Port {
             port,
             phantom: PhantomData,
