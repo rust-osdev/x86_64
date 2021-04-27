@@ -133,11 +133,6 @@ impl PortWriteAccess for ReadWriteAccess {}
 /// By default, `A` is `ReadWriteAccess`, meaning that values can be read from or written to the
 /// port. Use `ReadOnlyAccess` or `WriteOnlyAccess` for `A` (or the type aliases `PortReadOnly` or
 /// `PortWriteOnly`) if you want to restrict access further.
-///
-/// To create a new port, use the appropriate constructor for the access type you want:
-/// * `new` -> `ReadWriteAccess`
-/// * `new_read_only` -> `ReadOnlyAccess`
-/// * `new_write_only` -> `WriteOnlyAccess`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Port<T, A = ReadWriteAccess> {
     port: u16,
@@ -150,32 +145,10 @@ pub type PortReadOnly<T> = Port<T, ReadOnlyAccess>;
 /// A write-only I/O port.
 pub type PortWriteOnly<T> = Port<T, WriteOnlyAccess>;
 
-impl<T> Port<T> {
-    /// Creates a read-write I/O port with the given port number.
+impl<T, A> Port<T, A> {
+    /// Creates an I/O port with the given port number.
     #[inline]
-    pub const fn new(port: u16) -> Port<T> {
-        Port {
-            port,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<T> PortReadOnly<T> {
-    /// Creates a read-only I/O port with the given port number.
-    #[inline]
-    pub const fn new_read_only(port: u16) -> PortReadOnly<T> {
-        Port {
-            port,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<T> PortWriteOnly<T> {
-    /// Creates a write-only I/O port with the given port number.
-    #[inline]
-    pub const fn new_write_only(port: u16) -> PortWriteOnly<T> {
+    pub const fn new(port: u16) -> Port<T, A> {
         Port {
             port,
             phantom: PhantomData,
