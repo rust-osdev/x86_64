@@ -4,7 +4,7 @@
 
 use core::panic::PanicInfo;
 use testing::{exit_qemu, serial_print, serial_println, QemuExitCode};
-use x86_64::instructions::port::{Port, PortReadOnly, PortWriteOnly};
+use x86_64::instructions::port::{PortReadOnly, PortReadWrite, PortWriteOnly};
 
 // This port tells the data port which index to read from
 const CRT_INDEX_PORT: u16 = 0x3D4;
@@ -26,7 +26,7 @@ pub extern "C" fn _start() -> ! {
     serial_print!("port_read_write... ");
 
     let mut crt_index_port = PortWriteOnly::<u8>::new(CRT_INDEX_PORT);
-    let mut crt_read_write_data_port = Port::<u8>::new(CRT_DATA_PORT);
+    let mut crt_read_write_data_port = PortReadWrite::<u8>::new(CRT_DATA_PORT);
     let mut crt_data_read_only_port = PortReadOnly::<u8>::new(CRT_DATA_PORT);
 
     unsafe {
