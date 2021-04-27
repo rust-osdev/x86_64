@@ -130,33 +130,37 @@ impl PortWriteAccess for ReadWriteAccess {}
 ///
 /// The port reads or writes values of type `T` and has read/write access specified by `A`.
 ///
-/// By default, `A` is `ReadWriteAccess`, meaning that values can be read from or written to the
-/// port. Use `ReadOnlyAccess` or `WriteOnlyAccess` for `A` (or the type aliases `PortReadOnly` or
-/// `PortWriteOnly`) if you want to restrict access further.
+/// Use the provided marker types or aliases to get a port type with the access you need:
+/// * `PortGeneric<T, ReadWriteAccess>` -> `Port<T>`
+/// * `PortGeneric<T, ReadOnlyAccess>` -> `PortReadOnly<T>`
+/// * `PortGeneric<T, WriteOnlyAccess>` -> `PortWriteOnly<T>`
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Port<T, A = ReadWriteAccess> {
+pub struct PortGeneric<T, A> {
     port: u16,
     phantom: PhantomData<(T, A)>,
 }
 
+/// A read-write I/O port.
+pub type Port<T> = PortGeneric<T, ReadWriteAccess>;
+
 /// A read-only I/O port.
-pub type PortReadOnly<T> = Port<T, ReadOnlyAccess>;
+pub type PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>;
 
 /// A write-only I/O port.
-pub type PortWriteOnly<T> = Port<T, WriteOnlyAccess>;
+pub type PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>;
 
-impl<T, A> Port<T, A> {
+impl<T, A> PortGeneric<T, A> {
     /// Creates an I/O port with the given port number.
     #[inline]
-    pub const fn new(port: u16) -> Port<T, A> {
-        Port {
+    pub const fn new(port: u16) -> PortGeneric<T, A> {
+        PortGeneric {
             port,
             phantom: PhantomData,
         }
     }
 }
 
-impl<T: PortRead, A: PortReadAccess> Port<T, A> {
+impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -169,7 +173,7 @@ impl<T: PortRead, A: PortReadAccess> Port<T, A> {
     }
 }
 
-impl<T: PortWrite, A: PortWriteAccess> Port<T, A> {
+impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     /// Writes to the port.
     ///
     /// ## Safety
