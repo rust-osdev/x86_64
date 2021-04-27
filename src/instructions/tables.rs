@@ -1,6 +1,7 @@
 //! Functions to load GDT, IDT, and TSS structures.
 
 use crate::structures::gdt::SegmentSelector;
+use crate::VirtAddr;
 
 pub use crate::structures::DescriptorTablePointer;
 
@@ -42,6 +43,25 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_lidt(idt as *const _);
+}
+
+/// Get the address of the current IDT.
+#[inline]
+pub fn sidt() -> DescriptorTablePointer {
+    let mut idt: DescriptorTablePointer = DescriptorTablePointer {
+        limit: 0,
+        base: VirtAddr::new(0),
+    };
+    #[cfg(feature = "inline_asm")]
+    unsafe {
+        asm!("sidt [{}]", in(reg) &mut idt, options(nostack));
+    }
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        crate::asm::x86_64_asm_sidt(&mut idt as *mut _);
+    }
+
+    idt
 }
 
 /// Load the task state register using the `ltr` instruction.
