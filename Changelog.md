@@ -2,6 +2,7 @@
 
 - Add support for `sidt` instruction ([#246](https://github.com/rust-osdev/x86_64/pull/246))
 - Fix Debug and PartialEq implementations for IDT entry type ([#249](https://github.com/rust-osdev/x86_64/pull/249))
+- Looser trait bounds for Port types ([#247](https://github.com/rust-osdev/x86_64/pull/247))
 
 # 0.14.0 – 2021-04-11
 
