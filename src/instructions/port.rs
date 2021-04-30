@@ -1,5 +1,6 @@
 //! Access to I/O ports
 
+use core::fmt;
 use core::marker::PhantomData;
 
 pub use crate::structures::port::{PortRead, PortWrite};
@@ -134,7 +135,6 @@ impl PortWriteAccess for ReadWriteAccess {}
 /// * `Port<T, ReadWriteAccess>` -> `PortReadWrite<T>`
 /// * `Port<T, ReadOnlyAccess>` -> `PortReadOnly<T>`
 /// * `Port<T, WriteOnlyAccess>` -> `PortWriteOnly<T>`
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Port<T, A> {
     port: u16,
     phantom: PhantomData<(T, A)>,
@@ -185,3 +185,26 @@ impl<T: PortWrite, A: PortWriteAccess> Port<T, A> {
         T::write_to_port(self.port, value)
     }
 }
+
+impl<T, A> fmt::Debug for Port<T, A> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Port").field("port", &self.port).finish()
+    }
+}
+
+impl<T, A> Clone for Port<T, A> {
+    fn clone(&self) -> Self {
+        Self {
+            port: self.port,
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<T, A> PartialEq for Port<T, A> {
+    fn eq(&self, other: &Self) -> bool {
+        self.port == other.port
+    }
+}
+
+impl<T, A> Eq for Port<T, A> {}

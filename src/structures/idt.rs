@@ -560,7 +560,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
@@ -570,6 +570,30 @@ pub struct Entry<F> {
     pointer_high: u32,
     reserved: u32,
     phantom: PhantomData<F>,
+}
+
+impl<T> fmt::Debug for Entry<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Entry")
+            .field("pointer_low", &self.pointer_low)
+            .field("gdt_selector", &self.gdt_selector)
+            .field("options", &self.options)
+            .field("pointer_middle", &self.pointer_middle)
+            .field("pointer_high", &self.pointer_high)
+            .field("reserved", &self.reserved)
+            .finish()
+    }
+}
+
+impl<T> PartialEq for Entry<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.pointer_low == other.pointer_low
+            && self.gdt_selector == other.gdt_selector
+            && self.options == other.options
+            && self.pointer_middle == other.pointer_middle
+            && self.pointer_high == other.pointer_high
+            && self.reserved == other.reserved
+    }
 }
 
 /// A handler function for an interrupt or an exception without error code.
@@ -832,5 +856,20 @@ mod test {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+    }
+
+    #[test]
+    fn entry_derive_test() {
+        fn foo(_: impl Clone + Copy + PartialEq + fmt::Debug) {}
+
+        foo(Entry::<HandlerFuncWithErrCode> {
+            pointer_low: 0,
+            gdt_selector: 0,
+            options: EntryOptions(0),
+            pointer_middle: 0,
+            pointer_high: 0,
+            reserved: 0,
+            phantom: PhantomData,
+        })
     }
 }

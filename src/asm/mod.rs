@@ -134,6 +134,12 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_sidt"
+    )]
+    pub(crate) fn x86_64_asm_sidt(idt: *mut crate::instructions::tables::DescriptorTablePointer);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_ltr"
     )]
     pub(crate) fn x86_64_asm_ltr(sel: u16);
