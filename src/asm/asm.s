@@ -224,21 +224,19 @@ _x86_64_asm_write_cr4:
 .global _x86_64_asm_rdmsr
 .p2align 4
 _x86_64_asm_rdmsr:
-    mov   %edi,%ecx
+    mov    %edi, %ecx    # First param is the MSR number
     rdmsr
-    shl    $0x20,%rdx   # shift edx to upper 32bit
-    mov    %eax,%eax    # clear upper 32bit of rax
-    or     %rdx,%rax    # or with rdx
+    shl    $32,  %rdx    # shift edx to upper 32bit
+    mov    %eax, %eax    # clear upper 32bit of rax
+    or     %rdx, %rax    # or with rdx
     retq
 
 .global _x86_64_asm_wrmsr
 .p2align 4
 _x86_64_asm_wrmsr:
-    mov   %edi,%ecx
-    movq  %rsi,%rax
-    movq  %rsi,%rdx
-    shr   $0x20,%rdx
-    wrmsr
+    movl  %edi, %ecx    # First param is the MSR number
+    movl  %esi, %eax    # Second param is the low 32-bits
+    wrmsr               # Third param (high 32-bits) is already in %edx
     retq
 
 .global _x86_64_asm_hlt

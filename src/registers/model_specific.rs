@@ -142,20 +142,19 @@ mod x86_64 {
         /// effects.
         #[inline]
         pub unsafe fn write(&mut self, value: u64) {
+            let low = value as u32;
+            let high = (value >> 32) as u32;
+
             #[cfg(feature = "inline_asm")]
-            {
-                let low = value as u32;
-                let high = (value >> 32) as u32;
-                asm!(
-                    "wrmsr",
-                    in("ecx") self.0,
-                    in("eax") low, in("edx") high,
-                    options(nostack, preserves_flags),
-                );
-            }
+            asm!(
+                "wrmsr",
+                in("ecx") self.0,
+                in("eax") low, in("edx") high,
+                options(nostack, preserves_flags),
+            );
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_wrmsr(self.0, value);
+            crate::asm::x86_64_asm_wrmsr(self.0, low, high);
         }
     }
 

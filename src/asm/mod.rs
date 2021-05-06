@@ -214,7 +214,7 @@ extern "C" {
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_wrmsr"
     )]
-    pub(crate) fn x86_64_asm_wrmsr(msr: u32, value: u64);
+    pub(crate) fn x86_64_asm_wrmsr(msr: u32, low: u32, high: u32);
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
