@@ -13,12 +13,11 @@ pub fn are_enabled() -> bool {
 /// This is a wrapper around the `sti` instruction.
 #[inline]
 pub fn enable() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("sti", options(nomem, nostack));
-    }
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_interrupt_enable();
     }
 }
@@ -28,13 +27,11 @@ pub fn enable() {
 /// This is a wrapper around the `cli` instruction.
 #[inline]
 pub fn disable() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("cli", options(nomem, nostack));
-    }
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_interrupt_disable();
     }
 }
@@ -129,12 +126,11 @@ where
 /// information.
 #[inline]
 pub fn enable_and_hlt() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("sti; hlt", options(nomem, nostack));
-    }
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_interrupt_enable_and_hlt();
     }
 }
@@ -142,13 +138,11 @@ pub fn enable_and_hlt() {
 /// Cause a breakpoint exception by invoking the `int3` instruction.
 #[inline]
 pub fn int3() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("int3", options(nomem, nostack));
-    }
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_int3();
     }
 }

@@ -12,13 +12,11 @@ pub mod tlb;
 /// Halts the CPU until the next interrupt arrives.
 #[inline]
 pub fn hlt() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("hlt", options(nomem, nostack));
-    }
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_hlt();
     }
 }
@@ -31,13 +29,11 @@ pub fn hlt() {
 /// endless loop away.
 #[inline]
 pub fn nop() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("nop", options(nomem, nostack, preserves_flags));
-    }
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_nop();
     }
 }

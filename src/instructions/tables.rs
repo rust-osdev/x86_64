@@ -52,15 +52,13 @@ pub fn sidt() -> DescriptorTablePointer {
         limit: 0,
         base: VirtAddr::new(0),
     };
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("sidt [{}]", in(reg) &mut idt, options(nostack));
-    }
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_sidt(&mut idt as *mut _);
     }
-
     idt
 }
 
@@ -77,5 +75,5 @@ pub unsafe fn load_tss(sel: SegmentSelector) {
     asm!("ltr {0:x}", in(reg) sel.0, options(nostack, nomem));
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_ltr(sel.0)
+    crate::asm::x86_64_asm_ltr(sel.0);
 }

@@ -146,7 +146,6 @@ mod x86_64 {
             unsafe {
                 asm!("mov {}, cr0", out(reg) value, options(nomem));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr0();
@@ -218,7 +217,6 @@ mod x86_64 {
             unsafe {
                 asm!("mov {}, cr2", out(reg) value, options(nomem));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr2();
@@ -246,7 +244,6 @@ mod x86_64 {
             unsafe {
                 asm!("mov {}, cr3", out(reg) value, options(nomem));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr3();
@@ -321,7 +318,6 @@ mod x86_64 {
             unsafe {
                 asm!("mov {}, cr4", out(reg) value, options(nostack));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr4();

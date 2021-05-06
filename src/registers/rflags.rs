@@ -78,15 +78,15 @@ mod x86_64 {
     #[inline]
     pub fn read_raw() -> u64 {
         let r: u64;
+
         #[cfg(feature = "inline_asm")]
         unsafe {
-            asm!("pushf; pop {}", out(reg) r)
-        };
-
+            asm!("pushf; pop {}", out(reg) r);
+        }
         #[cfg(not(feature = "inline_asm"))]
         unsafe {
             r = crate::asm::x86_64_asm_read_rflags();
-        };
+        }
 
         r
     }
