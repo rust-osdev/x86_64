@@ -8,6 +8,7 @@
 #![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))]
 #![cfg_attr(feature = "inline_asm", feature(asm))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 

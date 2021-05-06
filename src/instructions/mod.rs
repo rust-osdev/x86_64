@@ -53,14 +53,16 @@ pub fn bochs_breakpoint() {
 
 /// Gets the current instruction pointer. Note that this is only approximate as it requires a few
 /// instructions to execute.
-#[cfg(feature = "inline_asm")]
+#[cfg_attr(docsrs, doc(cfg(feature = "nightly")))]
 #[inline(always)]
 pub fn read_rip() -> crate::VirtAddr {
     let rip: u64;
+    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!(
-            "lea {}, [rip]", out(reg) rip, options(nostack, nomem, preserves_flags)
-        );
+        asm!("lea {}, [rip]", out(reg) rip, options(nostack, nomem, preserves_flags));
     }
+
+    #[cfg(not(feature = "inline_asm"))]
+    compile_error!("read_rip() requires \"nightly\" feature");
     crate::VirtAddr::new(rip)
 }
