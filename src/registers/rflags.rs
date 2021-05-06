@@ -81,7 +81,7 @@ mod x86_64 {
 
         #[cfg(feature = "inline_asm")]
         unsafe {
-            asm!("pushf; pop {}", out(reg) r, options(nomem, preserves_flags));
+            asm!("pushfq; pop {}", out(reg) r, options(nomem, preserves_flags));
         }
         #[cfg(not(feature = "inline_asm"))]
         unsafe {
@@ -122,7 +122,7 @@ mod x86_64 {
         // HACK: we mark this function as preserves_flags to prevent Rust from restoring
         // saved flags after the "popf" below. See above note on safety.
         #[cfg(feature = "inline_asm")]
-        asm!("push {}; popf", in(reg) val, options(nomem, preserves_flags));
+        asm!("push {}; popfq", in(reg) val, options(nomem, preserves_flags));
 
         #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_write_rflags(val);

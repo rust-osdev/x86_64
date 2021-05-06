@@ -135,11 +135,8 @@ _x86_64_asm_write_rflags:
 .global _x86_64_asm_read_rflags
 .p2align 4
 _x86_64_asm_read_rflags:
-    pushq   %rbp
-    movq    %rsp, %rbp
     pushfq
     popq    %rax
-    popq    %rbp
     retq
 
 .global _x86_64_asm_load_ss
