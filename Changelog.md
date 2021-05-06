@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.1 – 2021-05-06
+
 - Use new `const_fn_trait_bound` feature to fix build on latest nightly ([#250](https://github.com/rust-osdev/x86_64/pull/250))
   - _Attention:_ The `const_fn` feature now requires at least Rust nightly `2021-05-06`.
 - Add support for `sidt` instruction ([#246](https://github.com/rust-osdev/x86_64/pull/246))
