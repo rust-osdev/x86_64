@@ -24,6 +24,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
         "1:",
         sel = in(reg) u64::from(sel.0),
         tmp = lateout(reg) _,
+        options(preserves_flags),
     );
 
     #[cfg(not(feature = "inline_asm"))]
@@ -39,7 +40,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov ss, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov ss, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_ss(sel.0);
@@ -54,7 +55,7 @@ pub unsafe fn load_ss(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov ds, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov ds, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_ds(sel.0);
@@ -69,7 +70,7 @@ pub unsafe fn load_ds(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov es, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov es, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_es(sel.0);
@@ -84,7 +85,7 @@ pub unsafe fn load_es(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov fs, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov fs, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_fs(sel.0);
@@ -99,7 +100,7 @@ pub unsafe fn load_fs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov gs, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov gs, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_gs(sel.0);
@@ -114,7 +115,7 @@ pub unsafe fn load_gs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn swap_gs() {
     #[cfg(feature = "inline_asm")]
-    asm!("swapgs", options(nostack));
+    asm!("swapgs", options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_swapgs();
@@ -127,7 +128,7 @@ pub fn cs() -> SegmentSelector {
 
     #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("mov {0:x}, cs", out(reg) segment, options(nostack, nomem));
+        asm!("mov {0:x}, cs", out(reg) segment, options(nomem, nostack, preserves_flags));
     }
     #[cfg(not(feature = "inline_asm"))]
     unsafe {
@@ -149,7 +150,7 @@ pub fn cs() -> SegmentSelector {
 #[inline]
 pub unsafe fn wrfsbase(val: u64) {
     #[cfg(feature = "inline_asm")]
-    asm!("wrfsbase {}", in(reg) val, options(nomem, nostack));
+    asm!("wrfsbase {}", in(reg) val, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_wrfsbase(val);
@@ -165,7 +166,7 @@ pub unsafe fn rdfsbase() -> u64 {
     #[cfg(feature = "inline_asm")]
     {
         let val: u64;
-        asm!("rdfsbase {}", out(reg) val, options(nomem, nostack));
+        asm!("rdfsbase {}", out(reg) val, options(nomem, nostack, preserves_flags));
         val
     }
 
@@ -184,7 +185,7 @@ pub unsafe fn rdfsbase() -> u64 {
 #[inline]
 pub unsafe fn wrgsbase(val: u64) {
     #[cfg(feature = "inline_asm")]
-    asm!("wrgsbase {}", in(reg) val, options(nomem, nostack));
+    asm!("wrgsbase {}", in(reg) val, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_wrgsbase(val);
@@ -200,7 +201,7 @@ pub unsafe fn rdgsbase() -> u64 {
     #[cfg(feature = "inline_asm")]
     {
         let val: u64;
-        asm!("rdgsbase {}", out(reg) val, options(nomem, nostack));
+        asm!("rdgsbase {}", out(reg) val, options(nomem, nostack, preserves_flags));
         val
     }
 

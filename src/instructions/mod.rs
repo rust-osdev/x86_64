@@ -14,7 +14,7 @@ pub mod tlb;
 pub fn hlt() {
     unsafe {
         #[cfg(feature = "inline_asm")]
-        asm!("hlt", options(nomem, nostack));
+        asm!("hlt", options(nomem, nostack, preserves_flags));
 
         #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_hlt();
@@ -44,7 +44,7 @@ pub fn nop() {
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        asm!("xchg bx, bx", options(nomem, nostack));
+        asm!("xchg bx, bx", options(nomem, nostack, preserves_flags));
     }
 }
 
@@ -56,7 +56,7 @@ pub fn read_rip() -> crate::VirtAddr {
     let rip: u64;
     unsafe {
         asm!(
-            "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
+            "lea {}, [rip]", out(reg) rip, options(nostack, nomem, preserves_flags)
         );
     }
     crate::VirtAddr::new(rip)

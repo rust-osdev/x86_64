@@ -37,20 +37,15 @@ mod x86_64 {
         /// Read the current raw XCR0 value.
         #[inline]
         pub fn read_raw() -> u64 {
-            let low: u32;
-            let high: u32;
-
+            let (low, high): (u32, u32);
             unsafe {
-                asm!("
-                    xor rcx, rcx
-                    xgetbv
-                    ",
-                    lateout("rdx") high,
-                    lateout("rax") low,
-                    lateout("rcx") _,
+                asm!(
+                    "xgetbv",
+                    in("ecx") 0,
+                    out("rax") low, out("rdx") high,
+                    options(nomem, nostack, preserves_flags),
                 );
             }
-
             (high as u64) << 32 | (low as u64)
         }
 
@@ -81,15 +76,13 @@ mod x86_64 {
         /// enable features that are not supported by the architecture
         #[inline]
         pub unsafe fn write_raw(value: u64) {
-            let high: u32 = (value >> 32) as u32;
-            let low: u32 = (value) as u32;
-            asm!("
-                    xor ecx, ecx
-                    xsetbv
-                    ",
-                    in("edx") high,
-                    in("eax") low,
-                    lateout("ecx") _,
+            let low = value as u32;
+            let high = (value >> 32) as u32;
+            asm!(
+                "xsetbv",
+                in("ecx") 0,
+                in("rax") low, in("rdx") high,
+                options(nomem, nostack, preserves_flags),
             );
         }
     }

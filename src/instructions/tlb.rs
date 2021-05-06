@@ -7,7 +7,7 @@ use crate::VirtAddr;
 pub fn flush(addr: VirtAddr) {
     unsafe {
         #[cfg(feature = "inline_asm")]
-        asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack));
+        asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
 
         #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_invlpg(addr.as_u64());
@@ -96,7 +96,7 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
     }
 
     #[cfg(feature = "inline_asm")]
-    asm!("invpcid {1}, [{0}]", in(reg) &desc, in(reg) kind);
+    asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
