@@ -757,7 +757,6 @@ impl InterruptStackFrame {
     ///
     /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
     /// officially supported by LLVM's x86 interrupt calling convention.
-    #[allow(clippy::should_implement_trait)]
     #[inline]
     pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
         Volatile::new(&mut self.value)
