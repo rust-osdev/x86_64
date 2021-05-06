@@ -152,14 +152,11 @@ pub fn int3() {
 /// This currently needs to be a macro because the `int` argument needs to be an
 /// immediate. This macro will be replaced by a generic function when support for
 /// const generics is implemented in Rust.
-#[cfg_attr(docsrs, doc(cfg(feature = "nightly")))]
+#[cfg(feature = "inline_asm")]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "nightly", feature = "inline_asm"))))]
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
-        #[cfg(feature = "inline_asm")]
         asm!("int {id}", id = const $x, options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        compile_error!("software_interrupt!() requires \"nightly\" feature");
     }};
 }
