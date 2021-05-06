@@ -1,5 +1,7 @@
 # Unreleased
 
+- Use new `const_fn_trait_bound` feature to fix build on latest nightly ([#250](https://github.com/rust-osdev/x86_64/pull/250))
+  - _Attention:_ The `const_fn` feature now requires at least Rust nightly `2021-05-06`.
 - Add support for `sidt` instruction ([#246](https://github.com/rust-osdev/x86_64/pull/246))
 - Fix Debug and PartialEq implementations for IDT entry type ([#249](https://github.com/rust-osdev/x86_64/pull/249))
 - Looser trait bounds for Port types ([#247](https://github.com/rust-osdev/x86_64/pull/247))
