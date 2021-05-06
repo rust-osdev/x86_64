@@ -251,4 +251,16 @@ extern "C" {
         link_name = "_x86_64_asm_wrgsbase"
     )]
     pub(crate) fn x86_64_asm_wrgsbase(val: u64);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_xgetbv"
+    )]
+    pub(crate) fn x86_64_asm_xgetbv(xcr: u32) -> u64;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_xsetbv"
+    )]
+    pub(crate) fn x86_64_asm_xsetbv(xcr: u32, low: u32, high: u32);
 }

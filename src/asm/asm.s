@@ -280,3 +280,21 @@ _x86_64_asm_rdgsbase:
 _x86_64_asm_wrgsbase:
     wrgsbase %rdi
     retq
+
+.global _x86_64_asm_xgetbv
+.p2align 4
+_x86_64_asm_xgetbv:
+    mov    %edi, %ecx    # First param is the XCR number
+    xgetbv
+    shl    $32,  %rdx    # shift edx to upper 32bit
+    mov    %eax, %eax    # clear upper 32bit of rax
+    or     %rdx, %rax    # or with rdx
+    retq
+
+.global _x86_64_asm_xsetbv
+.p2align 4
+_x86_64_asm_xsetbv:
+    movl  %edi, %ecx    # First param is the XCR number
+    movl  %esi, %eax    # Second param is the low 32-bits
+    xsetbv              # Third param (high 32-bits) is already in %edx
+    retq
