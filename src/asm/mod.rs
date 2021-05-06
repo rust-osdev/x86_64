@@ -38,6 +38,12 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_bochs"
+    )]
+    pub(crate) fn x86_64_asm_bochs();
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_read_from_port_u8"
     )]
     pub(crate) fn x86_64_asm_read_from_port_u8(port: u16) -> u8;

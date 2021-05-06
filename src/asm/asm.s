@@ -1,6 +1,10 @@
 .text
 .code64
 
+# REMEMBER: This code uses the AMD64 calling convention:
+#   Arguments: RDI, RSI, RDX, RCX
+#   Return: RAX
+
 .global _x86_64_asm_interrupt_enable
 .p2align 4
 _x86_64_asm_interrupt_enable:
@@ -247,6 +251,12 @@ _x86_64_asm_hlt:
 .p2align 4
 _x86_64_asm_nop:
     nop
+    retq
+
+.global _x86_64_asm_bochs
+.p2align 4
+_x86_64_asm_bochs:
+    xchgw %bx, %bx
     retq
 
 .global _x86_64_asm_rdfsbase
