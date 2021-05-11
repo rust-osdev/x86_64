@@ -4,7 +4,7 @@
 
 use core::panic::PanicInfo;
 use testing::{exit_qemu, serial_print, serial_println, QemuExitCode};
-use x86_64::instructions::port::{PortReadOnly, PortReadWrite, PortWriteOnly};
+use x86_64::instructions::port::{Port, PortReadOnly, PortWriteOnly};
 
 // This port tells the data port which index to read from
 const CRT_INDEX_PORT: u16 = 0x3D4;
@@ -26,7 +26,7 @@ pub extern "C" fn _start() -> ! {
     serial_print!("port_read_write... ");
 
     let mut crt_index_port = PortWriteOnly::<u8>::new(CRT_INDEX_PORT);
-    let mut crt_read_write_data_port = PortReadWrite::<u8>::new(CRT_DATA_PORT);
+    let mut crt_read_write_data_port = Port::<u8>::new(CRT_DATA_PORT);
     let mut crt_data_read_only_port = PortReadOnly::<u8>::new(CRT_DATA_PORT);
 
     unsafe {
@@ -39,7 +39,7 @@ pub extern "C" fn _start() -> ! {
         // Read the test value using PortReadOnly
         let read_only_test_value = crt_data_read_only_port.read() & 0xFF;
 
-        // Read the test value using PortReadWrite
+        // Read the test value using Port
         let read_write_test_value = crt_read_write_data_port.read() & 0xFF;
 
         if read_only_test_value != TEST_VALUE {
@@ -51,7 +51,7 @@ pub extern "C" fn _start() -> ! {
 
         if read_write_test_value != TEST_VALUE {
             panic!(
-                "PortReadWrite: {} does not match expected value {}",
+                "Port: {} does not match expected value {}",
                 read_write_test_value, TEST_VALUE
             );
         }
