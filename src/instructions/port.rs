@@ -126,35 +126,35 @@ impl PortWriteAccess for ReadWriteAccess {}
 /// The port reads or writes values of type `T` and has read/write access specified by `A`.
 ///
 /// Use the provided marker types or aliases to get a port type with the access you need:
-/// * `Port<T, ReadWriteAccess>` -> `PortReadWrite<T>`
-/// * `Port<T, ReadOnlyAccess>` -> `PortReadOnly<T>`
-/// * `Port<T, WriteOnlyAccess>` -> `PortWriteOnly<T>`
-pub struct Port<T, A> {
+/// * `PortGeneric<T, ReadWriteAccess>` -> `Port<T>`
+/// * `PortGeneric<T, ReadOnlyAccess>` -> `PortReadOnly<T>`
+/// * `PortGeneric<T, WriteOnlyAccess>` -> `PortWriteOnly<T>`
+pub struct PortGeneric<T, A> {
     port: u16,
     phantom: PhantomData<(T, A)>,
 }
 
 /// A read-write I/O port.
-pub type PortReadWrite<T> = Port<T, ReadWriteAccess>;
+pub type Port<T> = PortGeneric<T, ReadWriteAccess>;
 
 /// A read-only I/O port.
-pub type PortReadOnly<T> = Port<T, ReadOnlyAccess>;
+pub type PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>;
 
 /// A write-only I/O port.
-pub type PortWriteOnly<T> = Port<T, WriteOnlyAccess>;
+pub type PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>;
 
-impl<T, A> Port<T, A> {
+impl<T, A> PortGeneric<T, A> {
     /// Creates an I/O port with the given port number.
     #[inline]
-    pub const fn new(port: u16) -> Port<T, A> {
-        Port {
+    pub const fn new(port: u16) -> PortGeneric<T, A> {
+        PortGeneric {
             port,
             phantom: PhantomData,
         }
     }
 }
 
-impl<T: PortRead, A: PortReadAccess> Port<T, A> {
+impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -167,7 +167,7 @@ impl<T: PortRead, A: PortReadAccess> Port<T, A> {
     }
 }
 
-impl<T: PortWrite, A: PortWriteAccess> Port<T, A> {
+impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     /// Writes to the port.
     ///
     /// ## Safety
@@ -180,13 +180,15 @@ impl<T: PortWrite, A: PortWriteAccess> Port<T, A> {
     }
 }
 
-impl<T, A> fmt::Debug for Port<T, A> {
+impl<T, A> fmt::Debug for PortGeneric<T, A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Port").field("port", &self.port).finish()
+        f.debug_struct("PortGeneric")
+            .field("port", &self.port)
+            .finish()
     }
 }
 
-impl<T, A> Clone for Port<T, A> {
+impl<T, A> Clone for PortGeneric<T, A> {
     fn clone(&self) -> Self {
         Self {
             port: self.port,
@@ -195,10 +197,10 @@ impl<T, A> Clone for Port<T, A> {
     }
 }
 
-impl<T, A> PartialEq for Port<T, A> {
+impl<T, A> PartialEq for PortGeneric<T, A> {
     fn eq(&self, other: &Self) -> bool {
         self.port == other.port
     }
 }
 
-impl<T, A> Eq for Port<T, A> {}
+impl<T, A> Eq for PortGeneric<T, A> {}
