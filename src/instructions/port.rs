@@ -103,25 +103,19 @@ pub trait PortWriteAccess {}
 
 /// An access marker type indicating that a port is only allowed to read values.
 #[derive(Debug)]
-pub struct ReadOnlyAccess {
-    _priv: (),
-}
+pub struct ReadOnlyAccess(());
 
 impl PortReadAccess for ReadOnlyAccess {}
 
 /// An access marker type indicating that a port is only allowed to write values.
 #[derive(Debug)]
-pub struct WriteOnlyAccess {
-    _priv: (),
-}
+pub struct WriteOnlyAccess(());
 
 impl PortWriteAccess for WriteOnlyAccess {}
 
 /// An access marker type indicating that a port is allowed to read or write values.
 #[derive(Debug)]
-pub struct ReadWriteAccess {
-    _priv: (),
-}
+pub struct ReadWriteAccess(());
 
 impl PortReadAccess for ReadWriteAccess {}
 
