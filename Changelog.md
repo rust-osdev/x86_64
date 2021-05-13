@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.2 – 2021-05-13
+
 - Multiple improvements to assembly code ([#251](https://github.com/rust-osdev/x86_64/pull/251))
   - Added `external_asm` implementations for `bochs_breakpoint` and `XCr0`
   - Updated `options` for `asm!` blocks (to improve performance)
