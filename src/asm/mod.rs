@@ -38,6 +38,12 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_bochs"
+    )]
+    pub(crate) fn x86_64_asm_bochs();
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_read_from_port_u8"
     )]
     pub(crate) fn x86_64_asm_read_from_port_u8(port: u16) -> u8;
@@ -208,7 +214,7 @@ extern "C" {
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_wrmsr"
     )]
-    pub(crate) fn x86_64_asm_wrmsr(msr: u32, value: u64);
+    pub(crate) fn x86_64_asm_wrmsr(msr: u32, low: u32, high: u32);
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
@@ -245,4 +251,16 @@ extern "C" {
         link_name = "_x86_64_asm_wrgsbase"
     )]
     pub(crate) fn x86_64_asm_wrgsbase(val: u64);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_xgetbv"
+    )]
+    pub(crate) fn x86_64_asm_xgetbv(xcr: u32) -> u64;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_xsetbv"
+    )]
+    pub(crate) fn x86_64_asm_xsetbv(xcr: u32, low: u32, high: u32);
 }

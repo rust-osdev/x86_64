@@ -78,15 +78,15 @@ mod x86_64 {
     #[inline]
     pub fn read_raw() -> u64 {
         let r: u64;
+
         #[cfg(feature = "inline_asm")]
         unsafe {
-            asm!("pushf; pop {}", out(reg) r)
-        };
-
+            asm!("pushfq; pop {}", out(reg) r, options(nomem, preserves_flags));
+        }
         #[cfg(not(feature = "inline_asm"))]
         unsafe {
             r = crate::asm::x86_64_asm_read_rflags();
-        };
+        }
 
         r
     }
@@ -119,16 +119,13 @@ mod x86_64 {
     /// flags also used by Rust/LLVM can result in undefined behavior too.
     #[inline]
     pub unsafe fn write_raw(val: u64) {
+        // HACK: we mark this function as preserves_flags to prevent Rust from restoring
+        // saved flags after the "popf" below. See above note on safety.
         #[cfg(feature = "inline_asm")]
-        {
-            // FIXME - There's probably a better way than saying we preserve the flags even though we actually don't
-            asm!("push {}; popf", in(reg) val, options(preserves_flags))
-        };
+        asm!("push {}; popfq", in(reg) val, options(nomem, preserves_flags));
 
         #[cfg(not(feature = "inline_asm"))]
-        {
-            crate::asm::x86_64_asm_write_rflags(val)
-        }
+        crate::asm::x86_64_asm_write_rflags(val);
     }
 
     #[cfg(test)]

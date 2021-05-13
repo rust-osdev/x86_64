@@ -1,5 +1,10 @@
 # Unreleased
 
+- Multiple improvements to assembly code ([#251](https://github.com/rust-osdev/x86_64/pull/251))
+  - Added `external_asm` implementations for `bochs_breakpoint` and `XCr0`
+  - Updated `options` for `asm!` blocks (to improve performance)
+  - Updated docs to use [`doc_cfg`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html)
+
 # 0.14.1 – 2021-05-06
 
 - Use new `const_fn_trait_bound` feature to fix build on latest nightly ([#250](https://github.com/rust-osdev/x86_64/pull/250))
