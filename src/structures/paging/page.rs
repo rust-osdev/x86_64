@@ -210,12 +210,10 @@ impl Page<Size4KiB> {
         Page::containing_address(VirtAddr::new(addr))
     }
 
-    const_fn! {
-        /// Returns the level 1 page table index of this page.
-        #[inline]
-        pub fn p1_index(self) -> PageTableIndex {
-            self.start_address().p1_index()
-        }
+    /// Returns the level 1 page table index of this page.
+    #[inline]
+    pub const fn p1_index(self) -> PageTableIndex {
+        self.start_address.p1_index()
     }
 }
 

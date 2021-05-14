@@ -1,5 +1,10 @@
 # Unreleased
 
+- The following methods no longer require the `nightly` feature to be `const fn`s`:
+  - `PageTable::new`
+  - `GlobalDescriptorTable::from_raw_slice`
+  - `MappedFrame::{start_address, size}`
+  - `Page<Size4KiB>::p1_index`
 - Add `Debug` implementation for `InterruptDescriptorTable` ([#253](https://github.com/rust-osdev/x86_64/pull/253))
   - Improve `Debug` implementations for `Entry` and `EntryOptions`
 
