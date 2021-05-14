@@ -80,58 +80,33 @@ impl PortWrite for u32 {
     }
 }
 
-/// A marker trait for access types which allow reading port values.
-pub trait PortReadAccess {}
-
-/// A marker trait for access types which allow writing port values.
-pub trait PortWriteAccess {}
-
-/// An access marker type indicating that a port is only allowed to read values.
-#[derive(Debug)]
-pub struct ReadOnlyAccess(());
-
-impl PortReadAccess for ReadOnlyAccess {}
-
-/// An access marker type indicating that a port is only allowed to write values.
-#[derive(Debug)]
-pub struct WriteOnlyAccess(());
-
-impl PortWriteAccess for WriteOnlyAccess {}
-
-/// An access marker type indicating that a port is allowed to read or write values.
-#[derive(Debug)]
-pub struct ReadWriteAccess(());
-
-impl PortReadAccess for ReadWriteAccess {}
-
-impl PortWriteAccess for ReadWriteAccess {}
-
 /// An I/O port.
 ///
-/// The port reads or writes values of type `T` and has read/write access specified by `A`.
+/// The port reads or writes values of type `T` and has read/write access
+/// specified by the `R` and `W` const generic parameters.
 ///
 /// Use the provided marker types or aliases to get a port type with the access you need:
-/// * `PortGeneric<T, ReadWriteAccess>` -> `Port<T>`
-/// * `PortGeneric<T, ReadOnlyAccess>` -> `PortReadOnly<T>`
-/// * `PortGeneric<T, WriteOnlyAccess>` -> `PortWriteOnly<T>`
-pub struct PortGeneric<T, A> {
+/// * `PortGeneric<T, true, true>` -> `Port<T>`
+/// * `PortGeneric<T, true, false>` -> `PortReadOnly<T>`
+/// * `PortGeneric<T, false, true>` -> `PortWriteOnly<T>`
+pub struct PortGeneric<T, const R: bool, const W: bool> {
     port: u16,
-    phantom: PhantomData<(T, A)>,
+    phantom: PhantomData<T>,
 }
 
 /// A read-write I/O port.
-pub type Port<T> = PortGeneric<T, ReadWriteAccess>;
+pub type Port<T> = PortGeneric<T, true, true>;
 
 /// A read-only I/O port.
-pub type PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>;
+pub type PortReadOnly<T> = PortGeneric<T, true, false>;
 
 /// A write-only I/O port.
-pub type PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>;
+pub type PortWriteOnly<T> = PortGeneric<T, false, true>;
 
-impl<T, A> PortGeneric<T, A> {
+impl<T, const R: bool, const W: bool> PortGeneric<T, R, W> {
     /// Creates an I/O port with the given port number.
     #[inline]
-    pub const fn new(port: u16) -> PortGeneric<T, A> {
+    pub const fn new(port: u16) -> Self {
         PortGeneric {
             port,
             phantom: PhantomData,
@@ -139,7 +114,7 @@ impl<T, A> PortGeneric<T, A> {
     }
 }
 
-impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
+impl<T: PortRead, const W: bool> PortGeneric<T, true, W> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -152,7 +127,7 @@ impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     }
 }
 
-impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
+impl<T: PortWrite, const R: bool> PortGeneric<T, R, true> {
     /// Writes to the port.
     ///
     /// ## Safety
@@ -165,15 +140,18 @@ impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     }
 }
 
-impl<T, A> fmt::Debug for PortGeneric<T, A> {
+impl<T, const R: bool, const W: bool> fmt::Debug for PortGeneric<T, R, W> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PortGeneric")
             .field("port", &self.port)
+            .field("size", &core::mem::size_of::<T>())
+            .field("read", &R)
+            .field("write", &W)
             .finish()
     }
 }
 
-impl<T, A> Clone for PortGeneric<T, A> {
+impl<T, const R: bool, const W: bool> Clone for PortGeneric<T, R, W> {
     fn clone(&self) -> Self {
         Self {
             port: self.port,
@@ -182,10 +160,10 @@ impl<T, A> Clone for PortGeneric<T, A> {
     }
 }
 
-impl<T, A> PartialEq for PortGeneric<T, A> {
+impl<T, const R: bool, const W: bool> PartialEq for PortGeneric<T, R, W> {
     fn eq(&self, other: &Self) -> bool {
         self.port == other.port
     }
 }
 
-impl<T, A> Eq for PortGeneric<T, A> {}
+impl<T, const R: bool, const W: bool> Eq for PortGeneric<T, R, W> {}
