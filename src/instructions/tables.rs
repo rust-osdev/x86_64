@@ -19,7 +19,7 @@ pub use crate::structures::DescriptorTablePointer;
 #[inline]
 pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
     #[cfg(feature = "inline_asm")]
-    asm!("lgdt [{}]", in(reg) gdt, options(nostack));
+    asm!("lgdt [{}]", in(reg) gdt, options(readonly, nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_lgdt(gdt as *const _);
@@ -39,7 +39,7 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
 #[inline]
 pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     #[cfg(feature = "inline_asm")]
-    asm!("lidt [{}]", in(reg) idt, options(nostack));
+    asm!("lidt [{}]", in(reg) idt, options(readonly, nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_lidt(idt as *const _);
@@ -52,15 +52,13 @@ pub fn sidt() -> DescriptorTablePointer {
         limit: 0,
         base: VirtAddr::new(0),
     };
-    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("sidt [{}]", in(reg) &mut idt, options(nostack));
-    }
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(feature = "inline_asm")]
+        asm!("sidt [{}]", in(reg) &mut idt, options(nostack, preserves_flags));
+
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_sidt(&mut idt as *mut _);
     }
-
     idt
 }
 
@@ -74,8 +72,8 @@ pub fn sidt() -> DescriptorTablePointer {
 #[inline]
 pub unsafe fn load_tss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("ltr {0:x}", in(reg) sel.0, options(nostack, nomem));
+    asm!("ltr {0:x}", in(reg) sel.0, options(nomem, nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_ltr(sel.0)
+    crate::asm::x86_64_asm_ltr(sel.0);
 }

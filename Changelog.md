@@ -1,5 +1,16 @@
 # Unreleased
 
+# 0.14.2 – 2021-05-13
+
+- Multiple improvements to assembly code ([#251](https://github.com/rust-osdev/x86_64/pull/251))
+  - Added `external_asm` implementations for `bochs_breakpoint` and `XCr0`
+  - Updated `options` for `asm!` blocks (to improve performance)
+  - Updated docs to use [`doc_cfg`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html)
+
+# 0.14.1 – 2021-05-06
+
+- Use new `const_fn_trait_bound` feature to fix build on latest nightly ([#250](https://github.com/rust-osdev/x86_64/pull/250))
+  - _Attention:_ The `const_fn` feature now requires at least Rust nightly `2021-05-06`.
 - Add support for `sidt` instruction ([#246](https://github.com/rust-osdev/x86_64/pull/246))
 - Fix Debug and PartialEq implementations for IDT entry type ([#249](https://github.com/rust-osdev/x86_64/pull/249))
 - Looser trait bounds for Port types ([#247](https://github.com/rust-osdev/x86_64/pull/247))

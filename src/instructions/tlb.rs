@@ -5,15 +5,13 @@ use crate::VirtAddr;
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
 pub fn flush(addr: VirtAddr) {
-    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack))
-    };
+        #[cfg(feature = "inline_asm")]
+        asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
-        crate::asm::x86_64_asm_invlpg(addr.as_u64())
-    };
+        #[cfg(not(feature = "inline_asm"))]
+        crate::asm::x86_64_asm_invlpg(addr.as_u64());
+    }
 }
 
 /// Invalidate the TLB completely by reloading the CR3 register.
@@ -98,13 +96,8 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
     }
 
     #[cfg(feature = "inline_asm")]
-    {
-        let desc_value = &desc as *const InvpcidDescriptor as u64;
-        asm!("invpcid {1}, [{0}]", in(reg) desc_value, in(reg) kind);
-    };
+    asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
-    {
-        crate::asm::x86_64_asm_invpcid(kind, &desc as *const InvpcidDescriptor as u64)
-    };
+    crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
 }

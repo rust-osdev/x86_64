@@ -16,26 +16,19 @@ use crate::structures::gdt::SegmentSelector;
 #[inline]
 pub unsafe fn set_cs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    #[inline(always)]
-    unsafe fn inner(sel: SegmentSelector) {
-        asm!(
-            "push {sel}",
-            "lea {tmp}, [1f + rip]",
-            "push {tmp}",
-            "retfq",
-            "1:",
-            sel = in(reg) u64::from(sel.0),
-            tmp = lateout(reg) _,
-        );
-    }
+    asm!(
+        "push {sel}",
+        "lea {tmp}, [1f + rip]",
+        "push {tmp}",
+        "retfq",
+        "1:",
+        sel = in(reg) u64::from(sel.0),
+        tmp = lateout(reg) _,
+        options(preserves_flags),
+    );
 
     #[cfg(not(feature = "inline_asm"))]
-    #[inline(always)]
-    unsafe fn inner(sel: SegmentSelector) {
-        crate::asm::x86_64_asm_set_cs(u64::from(sel.0))
-    }
-
-    inner(sel)
+    crate::asm::x86_64_asm_set_cs(u64::from(sel.0));
 }
 
 /// Reload stack segment register.
@@ -47,7 +40,7 @@ pub unsafe fn set_cs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov ss, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov ss, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_ss(sel.0);
@@ -62,7 +55,7 @@ pub unsafe fn load_ss(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov ds, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov ds, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_ds(sel.0);
@@ -77,7 +70,7 @@ pub unsafe fn load_ds(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov es, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov es, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_es(sel.0);
@@ -92,7 +85,7 @@ pub unsafe fn load_es(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov fs, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov fs, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_fs(sel.0);
@@ -107,7 +100,7 @@ pub unsafe fn load_fs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("mov gs, {0:x}", in(reg) sel.0, options(nostack));
+    asm!("mov gs, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_load_gs(sel.0);
@@ -122,7 +115,7 @@ pub unsafe fn load_gs(sel: SegmentSelector) {
 #[inline]
 pub unsafe fn swap_gs() {
     #[cfg(feature = "inline_asm")]
-    asm!("swapgs", options(nostack));
+    asm!("swapgs", options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_swapgs();
@@ -131,18 +124,18 @@ pub unsafe fn swap_gs() {
 /// Returns the current value of the code segment register.
 #[inline]
 pub fn cs() -> SegmentSelector {
+    let segment: u16;
+
     #[cfg(feature = "inline_asm")]
-    {
-        let segment: u16;
-        unsafe { asm!("mov {0:x}, cs", out(reg) segment, options(nostack, nomem)) };
-        SegmentSelector(segment)
+    unsafe {
+        asm!("mov {0:x}, cs", out(reg) segment, options(nomem, nostack, preserves_flags));
+    }
+    #[cfg(not(feature = "inline_asm"))]
+    unsafe {
+        segment = crate::asm::x86_64_asm_get_cs();
     }
 
-    #[cfg(not(feature = "inline_asm"))]
-    {
-        let segment: u16 = unsafe { crate::asm::x86_64_asm_get_cs() };
-        SegmentSelector(segment)
-    }
+    SegmentSelector(segment)
 }
 
 /// Writes the FS segment base address
@@ -157,18 +150,10 @@ pub fn cs() -> SegmentSelector {
 #[inline]
 pub unsafe fn wrfsbase(val: u64) {
     #[cfg(feature = "inline_asm")]
-    #[inline(always)]
-    unsafe fn inner(val: u64) {
-        asm!("wrfsbase {}", in(reg) val, options(nomem, nostack));
-    }
+    asm!("wrfsbase {}", in(reg) val, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
-    #[inline(always)]
-    unsafe fn inner(val: u64) {
-        crate::asm::x86_64_asm_wrfsbase(val)
-    }
-
-    inner(val)
+    crate::asm::x86_64_asm_wrfsbase(val);
 }
 
 /// Reads the FS segment base address
@@ -179,20 +164,14 @@ pub unsafe fn wrfsbase(val: u64) {
 #[inline]
 pub unsafe fn rdfsbase() -> u64 {
     #[cfg(feature = "inline_asm")]
-    #[inline(always)]
-    unsafe fn inner() -> u64 {
+    {
         let val: u64;
-        asm!("rdfsbase {}", out(reg) val, options(nomem, nostack));
+        asm!("rdfsbase {}", out(reg) val, options(nomem, nostack, preserves_flags));
         val
     }
 
     #[cfg(not(feature = "inline_asm"))]
-    #[inline(always)]
-    unsafe fn inner() -> u64 {
-        crate::asm::x86_64_asm_rdfsbase()
-    }
-
-    inner()
+    crate::asm::x86_64_asm_rdfsbase()
 }
 
 /// Writes the GS segment base address
@@ -206,18 +185,10 @@ pub unsafe fn rdfsbase() -> u64 {
 #[inline]
 pub unsafe fn wrgsbase(val: u64) {
     #[cfg(feature = "inline_asm")]
-    #[inline(always)]
-    unsafe fn inner(val: u64) {
-        asm!("wrgsbase {}", in(reg) val, options(nomem, nostack))
-    }
+    asm!("wrgsbase {}", in(reg) val, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
-    #[inline(always)]
-    unsafe fn inner(val: u64) {
-        crate::asm::x86_64_asm_wrgsbase(val)
-    }
-
-    inner(val)
+    crate::asm::x86_64_asm_wrgsbase(val);
 }
 
 /// Reads the GS segment base address
@@ -228,18 +199,12 @@ pub unsafe fn wrgsbase(val: u64) {
 #[inline]
 pub unsafe fn rdgsbase() -> u64 {
     #[cfg(feature = "inline_asm")]
-    #[inline(always)]
-    unsafe fn inner() -> u64 {
+    {
         let val: u64;
-        asm!("rdgsbase {}", out(reg) val, options(nomem, nostack));
+        asm!("rdgsbase {}", out(reg) val, options(nomem, nostack, preserves_flags));
         val
     }
 
     #[cfg(not(feature = "inline_asm"))]
-    #[inline(always)]
-    unsafe fn inner() -> u64 {
-        crate::asm::x86_64_asm_rdgsbase()
-    }
-
-    inner()
+    crate::asm::x86_64_asm_rdgsbase()
 }
