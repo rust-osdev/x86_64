@@ -1,5 +1,8 @@
 # Unreleased
 
+- Add `Debug` implementation for `InterruptDescriptorTable` ([#253](https://github.com/rust-osdev/x86_64/pull/253))
+  - Improve `Debug` implementations for `Entry` and `EntryOptions`
+
 # 0.14.2 – 2021-05-13
 
 - Multiple improvements to assembly code ([#251](https://github.com/rust-osdev/x86_64/pull/251))

@@ -33,8 +33,7 @@ use volatile::Volatile;
 /// The field descriptions are taken from the
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
-#[allow(missing_debug_implementations)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 #[repr(align(16))]
 pub struct InterruptDescriptorTable {
@@ -575,12 +574,9 @@ pub struct Entry<F> {
 impl<T> fmt::Debug for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Entry")
-            .field("pointer_low", &self.pointer_low)
+            .field("handler_addr", &format_args!("{:#x}", self.handler_addr()))
             .field("gdt_selector", &self.gdt_selector)
             .field("options", &self.options)
-            .field("pointer_middle", &self.pointer_middle)
-            .field("pointer_high", &self.pointer_high)
-            .field("reserved", &self.reserved)
             .finish()
     }
 }
@@ -645,6 +641,13 @@ impl<F> Entry<F> {
         self.options.set_present(true);
         &mut self.options
     }
+
+    #[inline]
+    fn handler_addr(&self) -> u64 {
+        self.pointer_low as u64
+            | (self.pointer_middle as u64) << 16
+            | (self.pointer_high as u64) << 32
+    }
 }
 
 macro_rules! impl_set_handler_fn {
@@ -674,8 +677,16 @@ impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct EntryOptions(u16);
+
+impl fmt::Debug for EntryOptions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_tuple("EntryOptions")
+            .field(&format_args!("{:#06x}", self.0))
+            .finish()
+    }
+}
 
 impl EntryOptions {
     /// Creates a minimal options field with all the must-be-one bits set.
@@ -757,7 +768,6 @@ impl InterruptStackFrame {
     ///
     /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
     /// officially supported by LLVM's x86 interrupt calling convention.
-    #[allow(clippy::should_implement_trait)]
     #[inline]
     pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
         Volatile::new(&mut self.value)
