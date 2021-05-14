@@ -39,7 +39,7 @@ pub extern "C" fn _start() -> ! {
         // Read the test value using PortReadOnly
         let read_only_test_value = crt_data_read_only_port.read() & 0xFF;
 
-        // Read the test value using PortReadWrite
+        // Read the test value using Port
         let read_write_test_value = crt_read_write_data_port.read() & 0xFF;
 
         if read_only_test_value != TEST_VALUE {
@@ -51,7 +51,7 @@ pub extern "C" fn _start() -> ! {
 
         if read_write_test_value != TEST_VALUE {
             panic!(
-                "PortReadWrite: {} does not match expected value {}",
+                "Port: {} does not match expected value {}",
                 read_write_test_value, TEST_VALUE
             );
         }
