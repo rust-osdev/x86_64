@@ -80,84 +80,80 @@ impl PortWrite for u32 {
     }
 }
 
-/// A read only I/O port.
-pub struct PortReadOnly<T> {
-    port: u16,
-    phantom: PhantomData<T>,
+mod sealed {
+    pub trait Access {
+        const DEBUG_NAME: &'static str;
+    }
 }
 
-/// A write only I/O port.
-pub struct PortWriteOnly<T> {
-    port: u16,
-    phantom: PhantomData<T>,
+/// A marker trait for access types which allow reading port values.
+pub trait PortReadAccess: sealed::Access {}
+
+/// A marker trait for access types which allow writing port values.
+pub trait PortWriteAccess: sealed::Access {}
+
+/// An access marker type indicating that a port is only allowed to read values.
+#[derive(Debug)]
+pub struct ReadOnlyAccess(());
+
+impl sealed::Access for ReadOnlyAccess {
+    const DEBUG_NAME: &'static str = "ReadOnly";
 }
+impl PortReadAccess for ReadOnlyAccess {}
+
+/// An access marker type indicating that a port is only allowed to write values.
+#[derive(Debug)]
+pub struct WriteOnlyAccess(());
+
+impl sealed::Access for WriteOnlyAccess {
+    const DEBUG_NAME: &'static str = "WriteOnly";
+}
+impl PortWriteAccess for WriteOnlyAccess {}
+
+/// An access marker type indicating that a port is allowed to read or write values.
+#[derive(Debug)]
+pub struct ReadWriteAccess(());
+
+impl sealed::Access for ReadWriteAccess {
+    const DEBUG_NAME: &'static str = "ReadWrite";
+}
+impl PortReadAccess for ReadWriteAccess {}
+impl PortWriteAccess for ReadWriteAccess {}
 
 /// An I/O port.
-pub struct Port<T> {
+///
+/// The port reads or writes values of type `T` and has read/write access specified by `A`.
+///
+/// Use the provided marker types or aliases to get a port type with the access you need:
+/// * `PortGeneric<T, ReadWriteAccess>` -> `Port<T>`
+/// * `PortGeneric<T, ReadOnlyAccess>` -> `PortReadOnly<T>`
+/// * `PortGeneric<T, WriteOnlyAccess>` -> `PortWriteOnly<T>`
+pub struct PortGeneric<T, A> {
     port: u16,
-    phantom: PhantomData<T>,
+    phantom: PhantomData<(T, A)>,
 }
 
-impl<T> PortReadOnly<T> {
-    /// Creates a read only I/O port with the given port number.
-    #[inline]
-    pub const fn new(port: u16) -> PortReadOnly<T> {
-        PortReadOnly {
-            port,
-            phantom: PhantomData,
-        }
-    }
-}
+/// A read-write I/O port.
+pub type Port<T> = PortGeneric<T, ReadWriteAccess>;
 
-impl<T: PortRead> PortReadOnly<T> {
-    /// Reads from the port.
-    ///
-    /// ## Safety
-    ///
-    /// This function is unsafe because the I/O port could have side effects that violate memory
-    /// safety.
-    #[inline]
-    pub unsafe fn read(&mut self) -> T {
-        T::read_from_port(self.port)
-    }
-}
+/// A read-only I/O port.
+pub type PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>;
 
-impl<T> PortWriteOnly<T> {
-    /// Creates a write only I/O port with the given port number.
-    #[inline]
-    pub const fn new(port: u16) -> PortWriteOnly<T> {
-        PortWriteOnly {
-            port,
-            phantom: PhantomData,
-        }
-    }
-}
+/// A write-only I/O port.
+pub type PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>;
 
-impl<T: PortWrite> PortWriteOnly<T> {
-    /// Writes to the port.
-    ///
-    /// ## Safety
-    ///
-    /// This function is unsafe because the I/O port could have side effects that violate memory
-    /// safety.
-    #[inline]
-    pub unsafe fn write(&mut self, value: T) {
-        T::write_to_port(self.port, value)
-    }
-}
-
-impl<T> Port<T> {
+impl<T, A> PortGeneric<T, A> {
     /// Creates an I/O port with the given port number.
     #[inline]
-    pub const fn new(port: u16) -> Port<T> {
-        Port {
+    pub const fn new(port: u16) -> PortGeneric<T, A> {
+        PortGeneric {
             port,
             phantom: PhantomData,
         }
     }
 }
 
-impl<T: PortRead> Port<T> {
+impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     /// Reads from the port.
     ///
     /// ## Safety
@@ -170,7 +166,7 @@ impl<T: PortRead> Port<T> {
     }
 }
 
-impl<T: PortWrite> Port<T> {
+impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     /// Writes to the port.
     ///
     /// ## Safety
@@ -183,35 +179,29 @@ impl<T: PortWrite> Port<T> {
     }
 }
 
-macro_rules! impl_port_util_traits {
-    ($struct_name:ident) => {
-        impl<T> fmt::Debug for $struct_name<T> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.debug_struct(stringify!($struct_name))
-                    .field("port", &self.port)
-                    .finish()
-            }
-        }
-
-        impl<T> Clone for $struct_name<T> {
-            fn clone(&self) -> Self {
-                Self {
-                    port: self.port,
-                    phantom: PhantomData,
-                }
-            }
-        }
-
-        impl<T> PartialEq for $struct_name<T> {
-            fn eq(&self, other: &Self) -> bool {
-                self.port == other.port
-            }
-        }
-
-        impl<T> Eq for $struct_name<T> {}
-    };
+impl<T, A: sealed::Access> fmt::Debug for PortGeneric<T, A> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PortGeneric")
+            .field("port", &self.port)
+            .field("size", &core::mem::size_of::<T>())
+            .field("access", &format_args!("{}", A::DEBUG_NAME))
+            .finish()
+    }
 }
 
-impl_port_util_traits!(Port);
-impl_port_util_traits!(PortReadOnly);
-impl_port_util_traits!(PortWriteOnly);
+impl<T, A> Clone for PortGeneric<T, A> {
+    fn clone(&self) -> Self {
+        Self {
+            port: self.port,
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<T, A> PartialEq for PortGeneric<T, A> {
+    fn eq(&self, other: &Self) -> bool {
+        self.port == other.port
+    }
+}
+
+impl<T, A> Eq for PortGeneric<T, A> {}

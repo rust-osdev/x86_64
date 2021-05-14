@@ -1,6 +1,10 @@
 # Unreleased
 
-- The following methods no longer require the `nightly` feature to be `const fn`s`:
+- Make the following types aliases of the new `PortGeneric` type ([#248](https://github.com/rust-osdev/x86_64/pull/248)):
+  - `Port<T> = PortGeneric<T, ReadWriteAccess>`
+  - `PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>`
+  - `PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>`
+- The following methods no longer require the `nightly` feature to be `const fn`s` ([#255](https://github.com/rust-osdev/x86_64/pull/255)):
   - `PageTable::new`
   - `GlobalDescriptorTable::from_raw_slice`
   - `MappedFrame::{start_address, size}`
