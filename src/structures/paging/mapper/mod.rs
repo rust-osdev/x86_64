@@ -85,25 +85,21 @@ pub enum MappedFrame {
 }
 
 impl MappedFrame {
-    const_fn! {
-        /// Returns the start address of the frame.
-        pub fn start_address(&self) -> PhysAddr {
-            match self {
-                MappedFrame::Size4KiB(frame) => frame.start_address(),
-                MappedFrame::Size2MiB(frame) => frame.start_address(),
-                MappedFrame::Size1GiB(frame) => frame.start_address(),
-            }
+    /// Returns the start address of the frame.
+    pub const fn start_address(&self) -> PhysAddr {
+        match self {
+            MappedFrame::Size4KiB(frame) => frame.start_address,
+            MappedFrame::Size2MiB(frame) => frame.start_address,
+            MappedFrame::Size1GiB(frame) => frame.start_address,
         }
     }
 
-    const_fn! {
-        /// Returns the size the frame (4KB, 2MB or 1GB).
-        pub fn size(&self) -> u64 {
-            match self {
-                MappedFrame::Size4KiB(frame) => frame.size(),
-                MappedFrame::Size2MiB(frame) => frame.size(),
-                MappedFrame::Size1GiB(frame) => frame.size(),
-            }
+    /// Returns the size the frame (4KB, 2MB or 1GB).
+    pub const fn size(&self) -> u64 {
+        match self {
+            MappedFrame::Size4KiB(_) => Size4KiB::SIZE,
+            MappedFrame::Size2MiB(_) => Size2MiB::SIZE,
+            MappedFrame::Size1GiB(_) => Size1GiB::SIZE,
         }
     }
 }
