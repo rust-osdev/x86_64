@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.3 – 2021-05-14
+
 - Make the following types aliases of the new `PortGeneric` type ([#248](https://github.com/rust-osdev/x86_64/pull/248)):
   - `Port<T> = PortGeneric<T, ReadWriteAccess>`
   - `PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>`
