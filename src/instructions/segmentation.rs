@@ -193,41 +193,49 @@ impl GS {
 }
 
 /// Alias for [`CS::set_reg()`]
+#[deprecated(since = "0.14.4", note = "use `CS::set_reg()` instead")]
 #[inline]
 pub unsafe fn set_cs(sel: SegmentSelector) {
     CS::set_reg(sel)
 }
 /// Alias for [`SS::set_reg()`]
+#[deprecated(since = "0.14.4", note = "use `SS::set_reg()` instead")]
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
     SS::set_reg(sel)
 }
 /// Alias for [`DS::set_reg()`]
+#[deprecated(since = "0.14.4", note = "use `DS::set_reg()` instead")]
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
     DS::set_reg(sel)
 }
 /// Alias for [`ES::set_reg()`]
+#[deprecated(since = "0.14.4", note = "use `ES::set_reg()` instead")]
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
     ES::set_reg(sel)
 }
 /// Alias for [`FS::set_reg()`]
+#[deprecated(since = "0.14.4", note = "use `FS::set_reg()` instead")]
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
     FS::set_reg(sel)
 }
 /// Alias for [`GS::set_reg()`]
+#[deprecated(since = "0.14.4", note = "use `GS::set_reg()` instead")]
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
     GS::set_reg(sel)
 }
 /// Alias for [`GS::swap()`]
+#[deprecated(since = "0.14.4", note = "use `GS::swap()` instead")]
 #[inline]
 pub unsafe fn swap_gs() {
     GS::swap()
 }
 /// Alias for [`CS::get_reg()`]
+#[deprecated(since = "0.14.4", note = "use `CS::get_reg()` instead")]
 #[inline]
 pub fn cs() -> SegmentSelector {
     CS::get_reg()
@@ -235,11 +243,13 @@ pub fn cs() -> SegmentSelector {
 /// Alias for [`FS::write_base()`].
 ///
 /// Raises #GP if the provided address is non-canonical.
+#[deprecated(since = "0.14.4", note = "use `FS::write_base()` instead")]
 #[inline]
 pub unsafe fn wrfsbase(val: u64) {
     FS::write_base(VirtAddr::new(val))
 }
 /// Alias for [`FS::read_base()`]
+#[deprecated(since = "0.14.4", note = "use `FS::read_base()` instead")]
 #[inline]
 pub unsafe fn rdfsbase() -> u64 {
     FS::read_base().as_u64()
@@ -247,11 +257,13 @@ pub unsafe fn rdfsbase() -> u64 {
 /// Alias for [`GS::write_base()`].
 ///
 /// Raises #GP if the provided address is non-canonical.
+#[deprecated(since = "0.14.4", note = "use `GS::write_base()` instead")]
 #[inline]
 pub unsafe fn wrgsbase(val: u64) {
     GS::write_base(VirtAddr::new(val))
 }
 /// Alias for [`GS::read_base()`]
+#[deprecated(since = "0.14.4", note = "use `GS::read_base()` instead")]
 #[inline]
 pub unsafe fn rdgsbase() -> u64 {
     GS::read_base().as_u64()
