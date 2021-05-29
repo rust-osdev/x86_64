@@ -1,210 +1,258 @@
 //! Provides functions to read and write segment registers.
 
-use crate::structures::gdt::SegmentSelector;
+#[cfg(docsrs)]
+use crate::structures::gdt::GlobalDescriptorTable;
+use crate::{structures::gdt::SegmentSelector, VirtAddr};
 
-/// Reload code segment register.
+/// An x86 segment
 ///
-/// Note this is special since we can not directly move
-/// to cs. Instead we push the new segment selector
-/// and return value on the stack and use retf
-/// to reload cs and continue at 1:.
+/// Segment registers on x86 are 16-bit [`SegmentSelector`]s, which index into
+/// the [`GlobalDescriptorTable`]. The corresponding GDT entry is used to
+/// configure the segment itself. Note that most segmentation functionality is
+/// disabled in 64-bit mode. See the individual segments for more information.
+pub trait Segment {
+    /// Returns the current value of the segment register.
+    fn get_reg() -> SegmentSelector;
+    /// Reload the segment register. Depending on the segment, this may also
+    /// reconfigure the corresponding segment.
+    ///
+    /// ## Safety
+    ///
+    /// This function is unsafe because the caller must ensure that `sel`
+    /// is a valid segment descriptor, and that reconfiguring the segment will
+    /// not cause undefined behavior.
+    unsafe fn set_reg(sel: SegmentSelector);
+}
+
+/// An x86 segment which is actually used in 64-bit mode
 ///
-/// ## Safety
+/// While most segments are unused in 64-bit mode, the FS and GS segments are
+/// still partially used. Only the 64-bit segment base address is used, and this
+/// address can be set via the GDT, or by using the `FSGSBASE` instructions.
+pub trait Segment64: Segment {
+    /// Reads the segment base address
+    ///
+    /// ## Safety
+    ///
+    /// If `CR4.FSGSBASE` is not set, this instruction will throw a `#UD`.
+    unsafe fn read_base() -> VirtAddr;
+    /// Writes the segment base address
+    ///
+    /// ## Safety
+    ///
+    /// If `CR4.FSGSBASE` is not set, this instruction will throw a `#UD`.
+    ///
+    /// The caller must ensure that this write operation has no unsafe side
+    /// effects, as the segment base address might be in use.
+    unsafe fn write_base(base: VirtAddr);
+}
+
+macro_rules! get_reg_impl {
+    ($name:literal, $asm_get:ident) => {
+        fn get_reg() -> SegmentSelector {
+            let segment: u16;
+            #[cfg(feature = "inline_asm")]
+            unsafe {
+                asm!(concat!("mov {0:x}, ", $name), out(reg) segment, options(nomem, nostack, preserves_flags));
+            }
+            #[cfg(not(feature = "inline_asm"))]
+            unsafe {
+                segment = crate::asm::$asm_get();
+            }
+            SegmentSelector(segment)
+        }
+    };
+}
+
+macro_rules! segment_impl {
+    ($type:ty, $name:literal, $asm_get:ident, $asm_load:ident) => {
+        impl Segment for $type {
+            get_reg_impl!($name, $asm_get);
+
+            unsafe fn set_reg(sel: SegmentSelector) {
+                #[cfg(feature = "inline_asm")]
+                asm!(concat!("mov ", $name, ", {0:x}"), in(reg) sel.0, options(nostack, preserves_flags));
+
+                #[cfg(not(feature = "inline_asm"))]
+                crate::asm::$asm_load(sel.0);
+            }
+        }
+    };
+}
+
+macro_rules! segment64_impl {
+    ($type:ty, $name:literal, $asm_rd:ident, $asm_wr:ident) => {
+        impl Segment64 for $type {
+            unsafe fn read_base() -> VirtAddr {
+                #[cfg(feature = "inline_asm")]
+                {
+                    let val: u64;
+                    asm!(concat!("rd", $name, "base {}"), out(reg) val, options(nomem, nostack, preserves_flags));
+                    VirtAddr::new_unsafe(val)
+                }
+                #[cfg(not(feature = "inline_asm"))]
+                VirtAddr::new_unsafe(crate::asm::$asm_rd())
+            }
+
+            unsafe fn write_base(base: VirtAddr) {
+                #[cfg(feature = "inline_asm")]
+                asm!(concat!("wr", $name, "base {}"), in(reg) base.as_u64(), options(nostack, preserves_flags));
+
+                #[cfg(not(feature = "inline_asm"))]
+                crate::asm::$asm_wr(base.as_u64());
+            }
+        }
+    };
+}
+
+/// Code Segment
 ///
-/// This function is unsafe because the caller must ensure that `sel`
-/// is a valid code segment descriptor.
+/// The segment base and limit are unused in 64-bit mode. Only the L (long), D
+/// (default operation size), and DPL (descriptor privilege-level) fields of the
+/// descriptor are recognized. So chaning the segment register can be used to
+/// change privilege level or enable/disable long mode.
+#[derive(Debug)]
+pub struct CS;
+impl Segment for CS {
+    get_reg_impl!("cs", x86_64_asm_get_cs);
+
+    unsafe fn set_reg(sel: SegmentSelector) {
+        // Note this is special since we cannot directly move to cs. Instead we
+        // push the new segment selector and return value on the stack and use
+        // retfq to reload cs and continue at 1:.
+        #[cfg(feature = "inline_asm")]
+        asm!(
+            "push {sel}",
+            "lea {tmp}, [1f + rip]",
+            "push {tmp}",
+            "retfq",
+            "1:",
+            sel = in(reg) u64::from(sel.0),
+            tmp = lateout(reg) _,
+            options(preserves_flags),
+        );
+
+        #[cfg(not(feature = "inline_asm"))]
+        crate::asm::x86_64_asm_set_cs(u64::from(sel.0));
+    }
+}
+
+/// Stack Segment
+///
+/// Entirely unused in 64-bit mode, setting the segment register does nothing.
+#[derive(Debug)]
+pub struct SS;
+segment_impl!(SS, "ss", x86_64_asm_get_ss, x86_64_asm_load_ss);
+
+/// Data Segment
+///
+/// Entirely unused in 64-bit mode, setting the segment register does nothing.
+#[derive(Debug)]
+pub struct DS;
+segment_impl!(DS, "ds", x86_64_asm_get_ds, x86_64_asm_load_ds);
+
+/// ES Segment
+///
+/// Entirely unused in 64-bit mode, setting the segment register does nothing.
+#[derive(Debug)]
+pub struct ES;
+segment_impl!(ES, "es", x86_64_asm_get_es, x86_64_asm_load_es);
+
+/// FS Segment
+///
+/// Only base is used in 64-bit mode, see [`Segment64`]. This is often used in
+/// user-mode for Thread-Local Storage (TLS).
+#[derive(Debug)]
+pub struct FS;
+segment_impl!(FS, "fs", x86_64_asm_get_fs, x86_64_asm_load_fs);
+segment64_impl!(FS, "fs", x86_64_asm_rdfsbase, x86_64_asm_wrfsbase);
+
+/// GS Segment
+///
+/// Only base is used in 64-bit mode, see [`Segment64`]. In kernel-mode, the GS
+/// base often points to a per-cpu kernel data structure.
+#[derive(Debug)]
+pub struct GS;
+segment_impl!(GS, "gs", x86_64_asm_get_gs, x86_64_asm_load_gs);
+segment64_impl!(GS, "gs", x86_64_asm_rdgsbase, x86_64_asm_wrgsbase);
+
+impl GS {
+    /// Swap `KernelGsBase` MSR and `GsBase` MSR.
+    ///
+    /// ## Safety
+    ///
+    /// This function is unsafe because the caller must ensure that the
+    /// swap operation cannot lead to undefined behavior.
+    pub unsafe fn swap() {
+        #[cfg(feature = "inline_asm")]
+        asm!("swapgs", options(nostack, preserves_flags));
+
+        #[cfg(not(feature = "inline_asm"))]
+        crate::asm::x86_64_asm_swapgs();
+    }
+}
+
+/// Alias for [`CS::set_reg()`]
 #[inline]
 pub unsafe fn set_cs(sel: SegmentSelector) {
-    #[cfg(feature = "inline_asm")]
-    asm!(
-        "push {sel}",
-        "lea {tmp}, [1f + rip]",
-        "push {tmp}",
-        "retfq",
-        "1:",
-        sel = in(reg) u64::from(sel.0),
-        tmp = lateout(reg) _,
-        options(preserves_flags),
-    );
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_set_cs(u64::from(sel.0));
+    CS::set_reg(sel)
 }
-
-/// Reload stack segment register.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that `sel`
-/// is a valid stack segment descriptor.
+/// Alias for [`SS::set_reg()`]
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
-    #[cfg(feature = "inline_asm")]
-    asm!("mov ss, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_load_ss(sel.0);
+    SS::set_reg(sel)
 }
-
-/// Reload data segment register.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that `sel`
-/// is a valid data segment descriptor.
+/// Alias for [`DS::set_reg()`]
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
-    #[cfg(feature = "inline_asm")]
-    asm!("mov ds, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_load_ds(sel.0);
+    DS::set_reg(sel)
 }
-
-/// Reload es segment register.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that `sel`
-/// is a valid extra segment descriptor.
+/// Alias for [`ES::set_reg()`]
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
-    #[cfg(feature = "inline_asm")]
-    asm!("mov es, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_load_es(sel.0);
+    ES::set_reg(sel)
 }
-
-/// Reload fs segment register.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that `sel`
-/// is a valid fs segment descriptor.
+/// Alias for [`FS::set_reg()`]
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
-    #[cfg(feature = "inline_asm")]
-    asm!("mov fs, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_load_fs(sel.0);
+    FS::set_reg(sel)
 }
-
-/// Reload gs segment register.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that `sel`
-/// is a valid gs segment descriptor.
+/// Alias for [`GS::set_reg()`]
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
-    #[cfg(feature = "inline_asm")]
-    asm!("mov gs, {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_load_gs(sel.0);
+    GS::set_reg(sel)
 }
-
-/// Swap `KernelGsBase` MSR and `GsBase` MSR.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that the
-/// swap operation cannot lead to undefined behavior.
+/// Alias for [`GS::swap()`]
 #[inline]
 pub unsafe fn swap_gs() {
-    #[cfg(feature = "inline_asm")]
-    asm!("swapgs", options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_swapgs();
+    GS::swap()
 }
-
-/// Returns the current value of the code segment register.
+/// Alias for [`CS::get_reg()`]
 #[inline]
 pub fn cs() -> SegmentSelector {
-    let segment: u16;
-
-    #[cfg(feature = "inline_asm")]
-    unsafe {
-        asm!("mov {0:x}, cs", out(reg) segment, options(nomem, nostack, preserves_flags));
-    }
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
-        segment = crate::asm::x86_64_asm_get_cs();
-    }
-
-    SegmentSelector(segment)
+    CS::get_reg()
 }
-
-/// Writes the FS segment base address
+/// Alias for [`FS::write_base()`].
 ///
-/// ## Safety
-///
-/// If `CR4.FSGSBASE` is not set, this instruction will throw an `#UD`.
-///
-/// The caller must ensure that this write operation has no unsafe side
-/// effects, as the FS segment base address is often used for thread
-/// local storage.
+/// Raises #GP if the provided address is non-canonical.
 #[inline]
 pub unsafe fn wrfsbase(val: u64) {
-    #[cfg(feature = "inline_asm")]
-    asm!("wrfsbase {}", in(reg) val, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_wrfsbase(val);
+    FS::write_base(VirtAddr::new(val))
 }
-
-/// Reads the FS segment base address
-///
-/// ## Safety
-///
-/// If `CR4.FSGSBASE` is not set, this instruction will throw an `#UD`.
+/// Alias for [`FS::read_base()`]
 #[inline]
 pub unsafe fn rdfsbase() -> u64 {
-    #[cfg(feature = "inline_asm")]
-    {
-        let val: u64;
-        asm!("rdfsbase {}", out(reg) val, options(nomem, nostack, preserves_flags));
-        val
-    }
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_rdfsbase()
+    FS::read_base().as_u64()
 }
-
-/// Writes the GS segment base address
+/// Alias for [`GS::write_base()`].
 ///
-/// ## Safety
-///
-/// If `CR4.FSGSBASE` is not set, this instruction will throw an `#UD`.
-///
-/// The caller must ensure that this write operation has no unsafe side
-/// effects, as the GS segment base address might be in use.
+/// Raises #GP if the provided address is non-canonical.
 #[inline]
 pub unsafe fn wrgsbase(val: u64) {
-    #[cfg(feature = "inline_asm")]
-    asm!("wrgsbase {}", in(reg) val, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_wrgsbase(val);
+    GS::write_base(VirtAddr::new(val))
 }
-
-/// Reads the GS segment base address
-///
-/// ## Safety
-///
-/// If `CR4.FSGSBASE` is not set, this instruction will throw an `#UD`.
+/// Alias for [`GS::read_base()`]
 #[inline]
 pub unsafe fn rdgsbase() -> u64 {
-    #[cfg(feature = "inline_asm")]
-    {
-        let val: u64;
-        asm!("rdgsbase {}", out(reg) val, options(nomem, nostack, preserves_flags));
-        val
-    }
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_rdgsbase()
+    GS::read_base().as_u64()
 }
