@@ -1,8 +1,12 @@
 //! Provides functions to read and write segment registers.
 
 #[cfg(docsrs)]
-use crate::structures::gdt::GlobalDescriptorTable;
-use crate::{structures::gdt::SegmentSelector, VirtAddr};
+use crate::{registers::control::Cr4Flags, structures::gdt::GlobalDescriptorTable};
+use crate::{
+    registers::model_specific::{FsBase, GsBase, Msr},
+    structures::gdt::SegmentSelector,
+    VirtAddr,
+};
 
 /// An x86 segment
 ///
@@ -30,17 +34,20 @@ pub trait Segment {
 /// still partially used. Only the 64-bit segment base address is used, and this
 /// address can be set via the GDT, or by using the `FSGSBASE` instructions.
 pub trait Segment64: Segment {
+    /// MSR containing the segment base. This MSR can be used to set the base
+    /// when [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set.
+    const BASE: Msr;
     /// Reads the segment base address
     ///
     /// ## Safety
     ///
-    /// If `CR4.FSGSBASE` is not set, this instruction will throw a `#UD`.
+    /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set, this instruction will throw a `#UD`.
     unsafe fn read_base() -> VirtAddr;
     /// Writes the segment base address
     ///
     /// ## Safety
     ///
-    /// If `CR4.FSGSBASE` is not set, this instruction will throw a `#UD`.
+    /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set, this instruction will throw a `#UD`.
     ///
     /// The caller must ensure that this write operation has no unsafe side
     /// effects, as the segment base address might be in use.
@@ -81,8 +88,9 @@ macro_rules! segment_impl {
 }
 
 macro_rules! segment64_impl {
-    ($type:ty, $name:literal, $asm_rd:ident, $asm_wr:ident) => {
+    ($type:ty, $name:literal, $base:ty, $asm_rd:ident, $asm_wr:ident) => {
         impl Segment64 for $type {
+            const BASE: Msr = <$base>::MSR;
             unsafe fn read_base() -> VirtAddr {
                 #[cfg(feature = "inline_asm")]
                 {
@@ -165,7 +173,7 @@ segment_impl!(ES, "es", x86_64_asm_get_es, x86_64_asm_load_es);
 #[derive(Debug)]
 pub struct FS;
 segment_impl!(FS, "fs", x86_64_asm_get_fs, x86_64_asm_load_fs);
-segment64_impl!(FS, "fs", x86_64_asm_rdfsbase, x86_64_asm_wrfsbase);
+segment64_impl!(FS, "fs", FsBase, x86_64_asm_rdfsbase, x86_64_asm_wrfsbase);
 
 /// GS Segment
 ///
@@ -174,7 +182,7 @@ segment64_impl!(FS, "fs", x86_64_asm_rdfsbase, x86_64_asm_wrfsbase);
 #[derive(Debug)]
 pub struct GS;
 segment_impl!(GS, "gs", x86_64_asm_get_gs, x86_64_asm_load_gs);
-segment64_impl!(GS, "gs", x86_64_asm_rdgsbase, x86_64_asm_wrgsbase);
+segment64_impl!(GS, "gs", GsBase, x86_64_asm_rdgsbase, x86_64_asm_wrgsbase);
 
 impl GS {
     /// Swap `KernelGsBase` MSR and `GsBase` MSR.
