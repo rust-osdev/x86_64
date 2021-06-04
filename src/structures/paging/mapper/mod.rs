@@ -7,8 +7,9 @@ pub use self::offset_page_table::OffsetPageTable;
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use crate::structures::paging::{
+    frame::PhysFrameRange,
     frame_alloc::{FrameAllocator, FrameDeallocator},
-    page::PageRangeInclusive,
+    page::{PageRange, PageRangeInclusive},
     page_table::PageTableFlags,
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
@@ -197,6 +198,52 @@ pub trait Mapper<S: PageSize> {
         }
     }
 
+    /// Maps the given range of frames to the range of virtual pages.
+    ///
+    /// ## Safety
+    ///
+    /// This is a convencience function that invokes [`Mapper::map_to`] internally, so
+    /// all safety requirements of it also apply for this function.
+    ///
+    /// ## Panics
+    ///
+    /// This function panics if the amount of pages does not equal the amount of frames.
+    ///
+    /// ## Errors
+    ///
+    /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the frames that were successfully mapped.
+    #[inline]
+    unsafe fn map_to_range<A>(
+        &mut self,
+        pages: PageRange<S>,
+        frames: PhysFrameRange<S>,
+        flags: PageTableFlags,
+        frame_allocator: &mut A,
+    ) -> Result<MapperFlushRange<S>, (MapToError<S>, MapperFlushRange<S>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + ?Sized,
+    {
+        assert_eq!(pages.count(), frames.count());
+
+        pages
+            .zip(frames)
+            .try_for_each(|(page, frame)| {
+                unsafe { self.map_to(page, frame, flags, frame_allocator) }
+                    .map(|_| ())
+                    .map_err(|e| {
+                        (
+                            e,
+                            MapperFlushRange::new(PageRange {
+                                start: pages.start,
+                                end: page,
+                            }),
+                        )
+                    })
+            })
+            .map(|_| MapperFlushRange::new(pages))
+    }
+
     /// Creates a new mapping in the page table.
     ///
     /// This function might need additional physical frames to create new page tables. These
@@ -279,10 +326,150 @@ pub trait Mapper<S: PageSize> {
         Self: Sized,
         A: FrameAllocator<Size4KiB> + ?Sized;
 
+    /// Maps the given range of frames to the range of virtual pages.
+    ///
+    /// ## Safety
+    ///
+    /// This is a convencience function that invokes [`Mapper::map_to_with_table_flags`] internally, so
+    /// all safety requirements of it also apply for this function.
+    ///
+    /// ## Panics
+    ///
+    /// This function panics if the amount of pages does not equal the amount of frames.
+    ///
+    /// ## Errors
+    ///
+    /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the frames that were successfully mapped.
+    unsafe fn map_to_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<S>,
+        frames: PhysFrameRange<S>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        frame_allocator: &mut A,
+    ) -> Result<MapperFlushRange<S>, (MapToError<S>, MapperFlushRange<S>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + ?Sized,
+    {
+        assert_eq!(pages.count(), frames.count());
+
+        pages
+            .zip(frames)
+            .try_for_each(|(page, frame)| {
+                unsafe {
+                    self.map_to_with_table_flags(
+                        page,
+                        frame,
+                        flags,
+                        parent_table_flags,
+                        frame_allocator,
+                    )
+                }
+                .map(|_| ())
+                .map_err(|e| {
+                    (
+                        e,
+                        MapperFlushRange::new(PageRange {
+                            start: pages.start,
+                            end: page,
+                        }),
+                    )
+                })
+            })
+            .map(|_| MapperFlushRange::new(pages))
+    }
+
+    /// Maps frames from the allocator to the given range of virtual pages.
+    ///
+    /// ## Safety
+    ///
+    /// This is a convencience function that invokes [`Mapper::map_to_with_table_flags`] internally, so
+    /// all safety requirements of it also apply for this function.
+    ///
+    /// ## Errors
+    ///
+    /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the frames that were successfully mapped.
+    unsafe fn map_range_with_table_flags<A>(
+        &mut self,
+        mut pages: PageRange<S>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        frame_allocator: &mut A,
+    ) -> Result<MapperFlushRange<S>, (MapToError<S>, MapperFlushRange<S>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + FrameAllocator<S> + ?Sized,
+    {
+        pages
+            .try_for_each(|page| {
+                let frame = frame_allocator
+                    .allocate_frame()
+                    .ok_or((MapToError::FrameAllocationFailed, page))?;
+
+                unsafe {
+                    self.map_to_with_table_flags(
+                        page,
+                        frame,
+                        flags,
+                        parent_table_flags,
+                        frame_allocator,
+                    )
+                }
+                .map(|_| ())
+                .map_err(|e| (e, page))
+            })
+            .map(|_| MapperFlushRange::new(pages))
+            .map_err(|(e, page)| {
+                (
+                    e,
+                    MapperFlushRange::new(PageRange {
+                        start: pages.start,
+                        end: page,
+                    }),
+                )
+            })
+    }
+
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
     /// Note that no page tables or pages are deallocated.
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
+
+    /// Removes a range of mapping from the page table and deallocate the frames that used to be mapped.
+    ///
+    /// Note that no page tables or pages are deallocated.
+    ///
+    /// ## Errors
+    /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the pages that were successfully unmapped.
+    fn unmap_range<D>(
+        &mut self,
+        pages: PageRange<S>,
+        deallocator: &mut D,
+    ) -> Result<MapperFlushRange<S>, (UnmapError, MapperFlushRange<S>)>
+    where
+        D: FrameDeallocator<S>,
+    {
+        pages
+            .clone()
+            .try_for_each(|page| {
+                let (frame, _) = self.unmap(page).map_err(|e| {
+                    (
+                        e,
+                        MapperFlushRange::new(PageRange {
+                            start: pages.start,
+                            end: page,
+                        }),
+                    )
+                })?;
+                unsafe {
+                    // SAFETY: the page has been unmapped so the frame is unused
+                    deallocator.deallocate_frame(frame);
+                }
+                Ok(())
+            })
+            .map(|_| MapperFlushRange::new(pages))
+    }
 
     /// Updates the flags of an existing mapping.
     ///
@@ -298,6 +485,41 @@ pub trait Mapper<S: PageSize> {
         page: Page<S>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
+
+    /// Updates the flags of a range of existing mappings.
+    ///
+    /// ## Safety
+    ///
+    /// This method is unsafe because changing the flags of a mapping
+    /// might result in undefined behavior. For example, setting the
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
+    /// of values stored in that page from processes running in other address
+    /// spaces.
+    ///
+    /// ## Errors
+    /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the pages that were successfully updated.
+    unsafe fn update_flags_range(
+        &mut self,
+        pages: PageRange<S>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushRange<S>, (FlagUpdateError, MapperFlushRange<S>)> {
+        pages
+            .clone()
+            .try_for_each(|page| {
+                unsafe { self.update_flags(page, flags) }
+                    .map(|_| ())
+                    .map_err(|e| {
+                        (
+                            e,
+                            MapperFlushRange::new(PageRange {
+                                start: pages.start,
+                                end: page,
+                            }),
+                        )
+                    })
+            })
+            .map(|_| MapperFlushRange::new(pages))
+    }
 
     /// Set the flags of an existing page level 4 table entry
     ///
@@ -372,6 +594,31 @@ pub trait Mapper<S: PageSize> {
         let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
         unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
+
+    /// Maps the given range of frames to the range of virtual pages with the same address.
+    ///
+    /// ## Safety
+    ///
+    /// This is a convencience function that invokes [`Mapper::map_to_range`] internally, so
+    /// all safety requirements of it also apply for this function.
+    #[inline]
+    unsafe fn identity_map_range<A>(
+        &mut self,
+        frames: PhysFrameRange<S>,
+        flags: PageTableFlags,
+        frame_allocator: &mut A,
+    ) -> Result<MapperFlushRange<S>, (MapToError<S>, MapperFlushRange<S>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + ?Sized,
+        S: PageSize,
+        Self: Mapper<S>,
+    {
+        let start = Page::containing_address(VirtAddr::new(frames.start.start_address().as_u64()));
+        let end = Page::containing_address(VirtAddr::new(frames.end.start_address().as_u64()));
+        let pages = PageRange { start, end };
+        unsafe { self.map_to_range(pages, frames, flags, frame_allocator) }
+    }
 }
 
 /// This type represents a page whose mapping has changed in the page table.
@@ -403,6 +650,41 @@ impl<S: PageSize> MapperFlush<S> {
     /// Don't flush the TLB and silence the “must be used” warning.
     #[inline]
     pub fn ignore(self) {}
+}
+
+/// This type represents a range of pages whose mappings have changed in the page table.
+///
+/// The old mappings might be still cached in the translation lookaside buffer (TLB), so they need
+/// to be flushed from the TLB before they're accessed. This type is returned from a function that
+/// changed the mappings of a range of pages to ensure that the TLB flush is not forgotten.
+#[derive(Debug)]
+#[must_use = "Page Table changes must be flushed or ignored."]
+pub struct MapperFlushRange<S: PageSize>(PageRange<S>);
+
+impl<S: PageSize> MapperFlushRange<S> {
+    /// Create a new flush promise
+    #[inline]
+    fn new(pages: PageRange<S>) -> Self {
+        MapperFlushRange(pages)
+    }
+
+    /// Flush the page from the TLB to ensure that the newest mapping is used.
+    #[cfg(feature = "instructions")]
+    #[inline]
+    pub fn flush(self) {
+        for page in self.0 {
+            crate::instructions::tlb::flush(page.start_address())
+        }
+    }
+
+    /// Don't flush the TLB and silence the “must be used” warning.
+    #[inline]
+    pub fn ignore(self) {}
+
+    /// Get the range of changed pages.
+    pub fn pages(&self) -> PageRange<S> {
+        self.0
+    }
 }
 
 /// This type represents a change of a page table requiring a complete TLB flush
