@@ -1,6 +1,8 @@
+use core::ops::RangeInclusive;
+
 use crate::structures::paging::{
     frame::PhysFrame,
-    frame_alloc::FrameAllocator,
+    frame_alloc::{FrameAllocator, FrameDeallocator},
     mapper::*,
     page::{AddressNotAligned, Page, Size1GiB, Size2MiB, Size4KiB},
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
@@ -139,6 +141,97 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         p1[page.p1_index()].set_frame(frame, flags);
 
         Ok(MapperFlush::new(page))
+    }
+
+    /// Remove all empty P1-P3 tables
+    #[inline]
+    pub fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.clean_up_with_filter(|_| true, frame_deallocator)
+    }
+
+    /// Recursivly iterate through all page tables and conditionally remove empty P1-P3 tables
+    ///
+    /// On each level `filter` is called with the range of the virtual memory addressable by the page table.
+    /// If `filter` returns `true` the algorithm recurses for each used entry and if at the end all entries are unused, it is deallocated
+    ///
+    /// ```
+    /// # use core::ops::RangeInclusive;
+    /// # use x86_64::{VirtAddr, structures::paging::{
+    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::PageTableFrameMapping,
+    /// # }};
+    /// # unsafe fn test<P: PageTableFrameMapping>(page_table: &mut MappedPageTable<P>, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// fn ranges_intersect(a: &RangeInclusive<VirtAddr>, b: &RangeInclusive<VirtAddr>) -> bool {
+    ///     a.start() <= b.end() && b.start() <= a.end()
+    /// }
+    ///
+    /// // clean up all page tables in the lower half of the address space
+    /// let lower_half = VirtAddr::new(0)..=VirtAddr::new(0x0000_7fff_ffff_ffff);
+    /// page_table.clean_up_with_filter(|range| ranges_intersect(&range, &lower_half), frame_deallocator);
+    /// # }
+    /// ```
+    pub fn clean_up_with_filter<F, D>(&mut self, mut filter: F, frame_deallocator: &mut D)
+    where
+        F: FnMut(RangeInclusive<VirtAddr>) -> bool,
+        D: FrameDeallocator<Size4KiB>,
+    {
+        fn clean_up<P: PageTableFrameMapping>(
+            page_table: &mut PageTable,
+            page_table_walker: &PageTableWalker<P>,
+            base_addr: VirtAddr,
+            level: u8,
+            filter: &mut impl FnMut(RangeInclusive<VirtAddr>) -> bool,
+            frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
+        ) -> bool {
+            let start = base_addr;
+            let end = start + ((1u64 << ((level * 9) + 12)) - 1);
+
+            if !filter(start..=end) {
+                return false;
+            }
+
+            let mut is_empty = true;
+            for (i, entry) in page_table.iter_mut().enumerate() {
+                if level != 1 {
+                    if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
+                        let offset = 1u64 << (((level - 1) * 9) + 12);
+                        let base_addr = base_addr + (offset * (i as u64) - 1);
+                        if clean_up(
+                            page_table,
+                            page_table_walker,
+                            base_addr,
+                            level - 1,
+                            filter,
+                            frame_deallocator,
+                        ) {
+                            let frame = entry.frame().unwrap();
+                            entry.set_unused();
+                            unsafe {
+                                // SAFETY: the frame is no longer used
+                                frame_deallocator.deallocate_frame(frame);
+                            }
+                        }
+                    }
+                }
+
+                if !entry.is_unused() {
+                    is_empty = false;
+                }
+            }
+
+            is_empty
+        }
+
+        clean_up(
+            self.level_4_table,
+            &self.page_table_walker,
+            VirtAddr::new(0),
+            4,
+            &mut filter,
+            frame_deallocator,
+        );
     }
 }
 

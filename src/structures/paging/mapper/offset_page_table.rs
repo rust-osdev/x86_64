@@ -1,7 +1,9 @@
 #![cfg(target_pointer_width = "64")]
 
+use core::ops::RangeInclusive;
+
 use crate::structures::paging::{
-    frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
+    frame::PhysFrame, mapper::*, page_table::PageTable, FrameDeallocator, Page, PageTableFlags,
 };
 
 /// A Mapper implementation that requires that the complete physically memory is mapped at some
@@ -40,6 +42,44 @@ impl<'a> OffsetPageTable<'a> {
     /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
     pub fn level_4_table(&mut self) -> &mut PageTable {
         self.inner.level_4_table()
+    }
+
+    /// Remove all empty P1-P3 tables
+    #[inline]
+    pub fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.clean_up(frame_deallocator)
+    }
+
+    /// Recursivly iterate through all page tables and conditionally remove empty P1-P3 tables
+    ///
+    /// On each level `filter` is called with the range of the virtual memory addressable by the page table.
+    /// If `filter` returns `true` the algorithm recurses for each used entry and if at the end all entries are unused, it is deallocated
+    ///
+    /// ```
+    /// # use core::ops::RangeInclusive;
+    /// # use x86_64::{VirtAddr, structures::paging::{
+    /// #    FrameDeallocator, Size4KiB, OffsetPageTable,
+    /// # }};
+    /// # unsafe fn test(page_table: &mut OffsetPageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// fn ranges_intersect(a: &RangeInclusive<VirtAddr>, b: &RangeInclusive<VirtAddr>) -> bool {
+    ///     a.start() <= b.end() && b.start() <= a.end()
+    /// }
+    ///
+    /// // clean up all page tables in the lower half of the address space
+    /// let lower_half = VirtAddr::new(0)..=VirtAddr::new(0x0000_7fff_ffff_ffff);
+    /// page_table.clean_up_with_filter(|range| ranges_intersect(&range, &lower_half), frame_deallocator);
+    /// # }
+    /// ```
+    #[inline]
+    pub fn clean_up_with_filter<F, D>(&mut self, filter: F, frame_deallocator: &mut D)
+    where
+        F: FnMut(RangeInclusive<VirtAddr>) -> bool,
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.clean_up_with_filter(filter, frame_deallocator)
     }
 }
 
