@@ -373,8 +373,8 @@ pub trait Mapper<S: PageSize> {
 /// This type represents a page whose mapping has changed in the page table.
 ///
 /// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
-/// to be flushed from the TLB before it's accessed. This type is returned from function that
-/// change the mapping of a page to ensure that the TLB flush is not forgotten.
+/// to be flushed from the TLB before it's accessed. This type is returned from a function that
+/// changed the mapping of a page to ensure that the TLB flush is not forgotten.
 #[derive(Debug)]
 #[must_use = "Page Table changes must be flushed or ignored."]
 pub struct MapperFlush<S: PageSize>(Page<S>);
