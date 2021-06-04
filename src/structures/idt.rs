@@ -18,6 +18,8 @@ use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
 use volatile::Volatile;
 
+use super::gdt::SegmentSelector;
+
 /// An Interrupt Descriptor Table with 256 entries.
 ///
 /// The first 32 entries are used for CPU exceptions. These entries can be either accessed through
@@ -748,10 +750,8 @@ impl EntryOptions {
 /// This wrapper type ensures that no accidental modification of the interrupt stack frame
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
-#[repr(C)]
-pub struct InterruptStackFrame {
-    value: InterruptStackFrameValue,
-}
+#[repr(transparent)]
+pub struct InterruptStackFrame(InterruptStackFrameValue);
 
 impl InterruptStackFrame {
     /// Gives mutable access to the contents of the interrupt stack frame.
@@ -770,7 +770,7 @@ impl InterruptStackFrame {
     /// officially supported by LLVM's x86 interrupt calling convention.
     #[inline]
     pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
-        Volatile::new(&mut self.value)
+        Volatile::new(&mut self.0)
     }
 }
 
@@ -779,14 +779,14 @@ impl Deref for InterruptStackFrame {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        &self.value
+        &self.0
     }
 }
 
 impl fmt::Debug for InterruptStackFrame {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.value.fmt(f)
+        self.0.fmt(f)
     }
 }
 
@@ -800,14 +800,16 @@ pub struct InterruptStackFrameValue {
     /// this value points to the faulting instruction, so that the instruction is restarted on
     /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
     pub instruction_pointer: VirtAddr,
-    /// The code segment selector, padded with zeros.
-    pub code_segment: u64,
+    /// The code segment selector at the time of the interrupt.
+    pub code_segment: SegmentSelector,
+    _reserved1: [u8; 6],
     /// The flags register before the interrupt handler was invoked.
     pub cpu_flags: u64,
     /// The stack pointer at the time of the interrupt.
     pub stack_pointer: VirtAddr,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
-    pub stack_segment: u64,
+    pub stack_segment: SegmentSelector,
+    _reserved2: [u8; 6],
 }
 
 impl fmt::Debug for InterruptStackFrameValue {
@@ -866,6 +868,8 @@ mod test {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+        assert_eq!(size_of::<InterruptStackFrame>(), 40);
+        assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
     }
 
     #[test]
