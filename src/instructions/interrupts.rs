@@ -150,6 +150,6 @@ pub fn int3() {
 /// Generate a software interrupt by invoking the `int` instruction.
 #[cfg(feature = "inline_asm")]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "nightly", feature = "inline_asm"))))]
-pub unsafe fn software_interrupt<const X: u8>() {
-    asm!("int {id}", id = const X, options(nomem, nostack));
+pub unsafe fn software_interrupt<const NUM: u8>() {
+    asm!("int {num}", num = const NUM, options(nomem, nostack));
 }
