@@ -286,7 +286,7 @@ pub trait Mapper<S: PageSize> {
     ///
     /// This method is unsafe because changing the flags of a mapping
     /// might result in undefined behavior. For example, setting the
-    /// `GLOBAL` and `MUTABLE` flags for a page might result in the corruption
+    /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
     /// of values stored in that page from processes running in other address
     /// spaces.
     unsafe fn update_flags(
