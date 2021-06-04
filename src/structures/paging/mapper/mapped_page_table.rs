@@ -1,10 +1,8 @@
-use core::ops::RangeInclusive;
-
 use crate::structures::paging::{
     frame::PhysFrame,
     frame_alloc::{FrameAllocator, FrameDeallocator},
     mapper::*,
-    page::{AddressNotAligned, Page, Size1GiB, Size2MiB, Size4KiB},
+    page::{AddressNotAligned, Page, PageRangeInclusive, Size1GiB, Size2MiB, Size4KiB},
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
 };
 
@@ -160,21 +158,24 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::PageTableFrameMapping,
+    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::PageTableFrameMapping, page::{Page, PageRangeInclusive},
     /// # }};
     /// # unsafe fn test<P: PageTableFrameMapping>(page_table: &mut MappedPageTable<P>, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
-    /// fn ranges_intersect(a: &RangeInclusive<VirtAddr>, b: &RangeInclusive<VirtAddr>) -> bool {
-    ///     a.start() <= b.end() && b.start() <= a.end()
+    /// fn ranges_intersect(a: PageRangeInclusive, b: PageRangeInclusive) -> bool {
+    ///     a.start <= b.end && b.start <= a.end
     /// }
     ///
     /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = VirtAddr::new(0)..=VirtAddr::new(0x0000_7fff_ffff_ffff);
-    /// page_table.clean_up_with_filter(|range| ranges_intersect(&range, &lower_half), frame_deallocator);
+    /// let lower_half = PageRangeInclusive {
+    ///     start: Page::containing_address(VirtAddr::new(0)),
+    ///     end: Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    /// };
+    /// page_table.clean_up_with_filter(|range| ranges_intersect(range, lower_half), frame_deallocator);
     /// # }
     /// ```
     pub fn clean_up_with_filter<F, D>(&mut self, mut filter: F, frame_deallocator: &mut D)
     where
-        F: FnMut(RangeInclusive<VirtAddr>) -> bool,
+        F: FnMut(PageRangeInclusive) -> bool,
         D: FrameDeallocator<Size4KiB>,
     {
         fn clean_up<P: PageTableFrameMapping>(
@@ -182,13 +183,14 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             page_table_walker: &PageTableWalker<P>,
             base_addr: VirtAddr,
             level: u8,
-            filter: &mut impl FnMut(RangeInclusive<VirtAddr>) -> bool,
+            filter: &mut impl FnMut(PageRangeInclusive) -> bool,
             frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
         ) -> bool {
-            let start = base_addr;
-            let end = start + ((1u64 << ((level * 9) + 12)) - 1);
+            let start = Page::containing_address(base_addr);
+            let end = Page::containing_address(base_addr + ((1u64 << ((level * 9) + 12)) - 1));
 
-            if !filter(start..=end) {
+            let range = PageRangeInclusive { start, end };
+            if !filter(range) {
                 return false;
             }
 

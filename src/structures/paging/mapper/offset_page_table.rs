@@ -1,9 +1,8 @@
 #![cfg(target_pointer_width = "64")]
 
-use core::ops::RangeInclusive;
-
 use crate::structures::paging::{
-    frame::PhysFrame, mapper::*, page_table::PageTable, FrameDeallocator, Page, PageTableFlags,
+    frame::PhysFrame, mapper::*, page::PageRangeInclusive, page_table::PageTable, FrameDeallocator,
+    Page, PageTableFlags,
 };
 
 /// A Mapper implementation that requires that the complete physically memory is mapped at some
@@ -61,22 +60,25 @@ impl<'a> OffsetPageTable<'a> {
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, OffsetPageTable,
+    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::OffsetPageTable, page::{Page, PageRangeInclusive},
     /// # }};
     /// # unsafe fn test(page_table: &mut OffsetPageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
-    /// fn ranges_intersect(a: &RangeInclusive<VirtAddr>, b: &RangeInclusive<VirtAddr>) -> bool {
-    ///     a.start() <= b.end() && b.start() <= a.end()
+    /// fn ranges_intersect(a: PageRangeInclusive, b: PageRangeInclusive) -> bool {
+    ///     a.start <= b.end && b.start <= a.end
     /// }
     ///
     /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = VirtAddr::new(0)..=VirtAddr::new(0x0000_7fff_ffff_ffff);
-    /// page_table.clean_up_with_filter(|range| ranges_intersect(&range, &lower_half), frame_deallocator);
+    /// let lower_half = PageRangeInclusive {
+    ///     start: Page::containing_address(VirtAddr::new(0)),
+    ///     end: Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    /// };
+    /// page_table.clean_up_with_filter(|range| ranges_intersect(range, lower_half), frame_deallocator);
     /// # }
     /// ```
     #[inline]
     pub fn clean_up_with_filter<F, D>(&mut self, filter: F, frame_deallocator: &mut D)
     where
-        F: FnMut(RangeInclusive<VirtAddr>) -> bool,
+        F: FnMut(PageRangeInclusive) -> bool,
         D: FrameDeallocator<Size4KiB>,
     {
         self.inner.clean_up_with_filter(filter, frame_deallocator)
