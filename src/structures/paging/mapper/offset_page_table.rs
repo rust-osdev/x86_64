@@ -78,11 +78,64 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    unsafe fn map_to_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<Size1GiB>,
+        frames: PhysFrameRange<Size1GiB>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlushRange<Size1GiB>, (MapToError<Size1GiB>, MapperFlushRange<Size1GiB>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + ?Sized,
+    {
+        unsafe {
+            self.inner.map_to_range_with_table_flags(
+                pages,
+                frames,
+                flags,
+                parent_table_flags,
+                allocator,
+            )
+        }
+    }
+
+    #[inline]
+    unsafe fn map_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<Size1GiB>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlushRange<Size1GiB>, (MapToError<Size1GiB>, MapperFlushRange<Size1GiB>)>
+    where
+        A: FrameAllocator<Size4KiB> + FrameAllocator<Size1GiB> + ?Sized,
+    {
+        unsafe {
+            self.inner
+                .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
+        }
+    }
+
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
     ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
         self.inner.unmap(page)
+    }
+
+    #[inline]
+    fn unmap_range<D>(
+        &mut self,
+        pages: PageRange<Size1GiB>,
+        deallocator: &mut D,
+    ) -> Result<MapperFlushRange<Size1GiB>, (UnmapError, MapperFlushRange<Size1GiB>)>
+    where
+        D: FrameDeallocator<Size1GiB>,
+    {
+        self.inner.unmap_range(pages, deallocator)
     }
 
     #[inline]
@@ -147,11 +200,64 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    unsafe fn map_to_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<Size2MiB>,
+        frames: PhysFrameRange<Size2MiB>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlushRange<Size2MiB>, (MapToError<Size2MiB>, MapperFlushRange<Size2MiB>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + ?Sized,
+    {
+        unsafe {
+            self.inner.map_to_range_with_table_flags(
+                pages,
+                frames,
+                flags,
+                parent_table_flags,
+                allocator,
+            )
+        }
+    }
+
+    #[inline]
+    unsafe fn map_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<Size2MiB>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlushRange<Size2MiB>, (MapToError<Size2MiB>, MapperFlushRange<Size2MiB>)>
+    where
+        A: FrameAllocator<Size4KiB> + FrameAllocator<Size2MiB> + ?Sized,
+    {
+        unsafe {
+            self.inner
+                .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
+        }
+    }
+
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
     ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
         self.inner.unmap(page)
+    }
+
+    #[inline]
+    fn unmap_range<D>(
+        &mut self,
+        pages: PageRange<Size2MiB>,
+        deallocator: &mut D,
+    ) -> Result<MapperFlushRange<Size2MiB>, (UnmapError, MapperFlushRange<Size2MiB>)>
+    where
+        D: FrameDeallocator<Size2MiB>,
+    {
+        self.inner.unmap_range(pages, deallocator)
     }
 
     #[inline]
@@ -216,11 +322,64 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    unsafe fn map_to_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<Size4KiB>,
+        frames: PhysFrameRange<Size4KiB>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlushRange<Size4KiB>, (MapToError<Size4KiB>, MapperFlushRange<Size4KiB>)>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + ?Sized,
+    {
+        unsafe {
+            self.inner.map_to_range_with_table_flags(
+                pages,
+                frames,
+                flags,
+                parent_table_flags,
+                allocator,
+            )
+        }
+    }
+
+    #[inline]
+    unsafe fn map_range_with_table_flags<A>(
+        &mut self,
+        pages: PageRange<Size4KiB>,
+        flags: PageTableFlags,
+        parent_table_flags: PageTableFlags,
+        allocator: &mut A,
+    ) -> Result<MapperFlushRange<Size4KiB>, (MapToError<Size4KiB>, MapperFlushRange<Size4KiB>)>
+    where
+        A: FrameAllocator<Size4KiB> + ?Sized,
+    {
+        unsafe {
+            self.inner
+                .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
+        }
+    }
+
+    #[inline]
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
     ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
         self.inner.unmap(page)
+    }
+
+    #[inline]
+    fn unmap_range<D>(
+        &mut self,
+        pages: PageRange<Size4KiB>,
+        deallocator: &mut D,
+    ) -> Result<MapperFlushRange<Size4KiB>, (UnmapError, MapperFlushRange<Size4KiB>)>
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.unmap_range(pages, deallocator)
     }
 
     #[inline]

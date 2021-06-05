@@ -668,6 +668,15 @@ impl<S: PageSize> MapperFlushRange<S> {
         MapperFlushRange(pages)
     }
 
+    /// Create a new empty flush promise
+    #[inline]
+    fn empty() -> Self {
+        MapperFlushRange::new(PageRange {
+            start: Page::containing_address(VirtAddr::zero()),
+            end: Page::containing_address(VirtAddr::zero()),
+        })
+    }
+
     /// Flush the page from the TLB to ensure that the newest mapping is used.
     #[cfg(feature = "instructions")]
     #[inline]
