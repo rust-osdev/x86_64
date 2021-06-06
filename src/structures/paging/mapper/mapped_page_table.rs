@@ -143,36 +143,33 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
 
     /// Remove all empty P1-P3 tables
     /// ## Safety
-    /// This is a convenience method. For more information [`clean_up_with_filter`](Mapper::clean_up_with_filter) method.
+    /// This is a convenience method. For more information [`clean_up_addr_range`](Mapper::clean_up_addr_range) method.
     #[inline]
     pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        self.clean_up_with_filter(|_| true, frame_deallocator)
+        self.clean_up_addr_range(
+            PageRangeInclusive {
+                start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
+                end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+            },
+            frame_deallocator,
+        )
     }
 
-    /// Recursivly iterate through all page tables and conditionally remove empty P1-P3 tables
-    ///
-    /// On each level `filter` is called with the range of the virtual memory addressable by the page table.
-    /// If `filter` returns `true` the algorithm recurses for each used entry and if at the end all entries are unused, it is deallocated
-    ///
+    /// Remove all empty P1-P3 tables in a certain range
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
     /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::PageTableFrameMapping, page::{Page, PageRangeInclusive},
     /// # }};
     /// # unsafe fn test<P: PageTableFrameMapping>(page_table: &mut MappedPageTable<P>, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
-    /// fn ranges_intersect(a: PageRangeInclusive, b: PageRangeInclusive) -> bool {
-    ///     a.start <= b.end && b.start <= a.end
-    /// }
-    ///
-    /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = PageRangeInclusive {
-    ///     start: Page::containing_address(VirtAddr::new(0)),
-    ///     end: Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
-    /// };
-    /// page_table.clean_up_with_filter(|range| ranges_intersect(range, lower_half), frame_deallocator);
+    /// let lower_half = Page::range_inclusive(
+    ///     Page::containing_address(VirtAddr::new(0)),
+    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    /// );
+    /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }
     /// ```
     ///
@@ -180,47 +177,52 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     /// The caller has to guarantee that it's safe to free page table frames:
     /// All page table frames must only be used once and only in this page table
     /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
-    pub unsafe fn clean_up_with_filter<F, D>(&mut self, mut filter: F, frame_deallocator: &mut D)
-    where
-        F: FnMut(PageRangeInclusive) -> bool,
+    pub unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
         D: FrameDeallocator<Size4KiB>,
     {
-        fn clean_up<P: PageTableFrameMapping>(
+        unsafe fn clean_up<P: PageTableFrameMapping>(
             page_table: &mut PageTable,
             page_table_walker: &PageTableWalker<P>,
-            base_addr: VirtAddr,
             level: u8,
-            filter: &mut impl FnMut(PageRangeInclusive) -> bool,
+            range: PageRangeInclusive,
             frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
         ) -> bool {
-            let start = Page::containing_address(base_addr);
-            let end = Page::containing_address(base_addr + ((1u64 << ((level * 9) + 12)) - 1));
-
-            let range = PageRangeInclusive { start, end };
-            if !filter(range) {
+            if range.is_empty() {
                 return false;
             }
 
+            let table_addr = range
+                .start
+                .start_address()
+                .align_down(1u64 << (level * 9 + 12));
+
+            let start = range.start.p_index(level);
+            let end = range.end.p_index(level);
+
             let mut is_empty = true;
+
+            let offset_per_entry = 1u64 << (((level - 1) * 9) + 12);
             for (i, entry) in page_table.iter_mut().enumerate() {
-                if level != 1 {
+                if usize::from(start) < i && i <= usize::from(end) && level != 1 {
                     if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
-                        let offset = 1u64 << (((level - 1) * 9) + 12);
-                        let base_addr = base_addr + (offset * (i as u64) - 1);
+                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let end = start + offset_per_entry;
+                        let start = Page::<Size4KiB>::containing_address(start);
+                        let end = Page::<Size4KiB>::containing_address(end) - 1;
                         if clean_up(
                             page_table,
                             page_table_walker,
-                            base_addr,
                             level - 1,
-                            filter,
+                            Page::range_inclusive(start, end),
                             frame_deallocator,
                         ) {
                             let frame = entry.frame().unwrap();
                             entry.set_unused();
-                            unsafe {
-                                // SAFETY: the frame is no longer used
-                                frame_deallocator.deallocate_frame(frame);
-                            }
+                            frame_deallocator.deallocate_frame(frame);
                         }
                     }
                 }
@@ -236,9 +238,8 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         clean_up(
             self.level_4_table,
             &self.page_table_walker,
-            VirtAddr::new(0),
             4,
-            &mut filter,
+            range,
             frame_deallocator,
         );
     }

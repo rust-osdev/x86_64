@@ -49,41 +49,35 @@ impl<'a> OffsetPageTable<'a> {
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        self.clean_up_with_filter(|_| true, frame_deallocator)
+        unsafe {
+            // SAFETY: page tables are only used exactly once
+            self.inner.clean_up(frame_deallocator)
+        }
     }
 
-    /// Recursivly iterate through all page tables and conditionally remove empty P1-P3 tables
-    ///
-    /// On each level `filter` is called with the range of the virtual memory addressable by the page table.
-    /// If `filter` returns `true` the algorithm recurses for each used entry and if at the end all entries are unused, it is deallocated
-    ///
+    /// Remove all empty P1-P3 tables in a certain range
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
     /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::OffsetPageTable, page::{Page, PageRangeInclusive},
     /// # }};
     /// # unsafe fn test(page_table: &mut OffsetPageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
-    /// fn ranges_intersect(a: PageRangeInclusive, b: PageRangeInclusive) -> bool {
-    ///     a.start <= b.end && b.start <= a.end
-    /// }
-    ///
     /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = PageRangeInclusive {
-    ///     start: Page::containing_address(VirtAddr::new(0)),
-    ///     end: Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
-    /// };
-    /// page_table.clean_up_with_filter(|range| ranges_intersect(range, lower_half), frame_deallocator);
+    /// let lower_half = Page::range_inclusive(
+    ///     Page::containing_address(VirtAddr::new(0)),
+    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    /// );
+    /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }
     /// ```
     #[inline]
-    pub fn clean_up_with_filter<F, D>(&mut self, filter: F, frame_deallocator: &mut D)
+    pub fn clean_up_addr_range<D>(&mut self, range: PageRangeInclusive, frame_deallocator: &mut D)
     where
-        F: FnMut(PageRangeInclusive) -> bool,
         D: FrameDeallocator<Size4KiB>,
     {
         unsafe {
             // SAFETY: page tables are only used exactly once
-            self.inner.clean_up_with_filter(filter, frame_deallocator)
+            self.inner.clean_up_addr_range(range, frame_deallocator)
         }
     }
 }
