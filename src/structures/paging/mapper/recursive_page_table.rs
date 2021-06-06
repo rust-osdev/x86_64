@@ -4,12 +4,11 @@ use core::fmt;
 
 use super::*;
 use crate::registers::control::Cr3;
-use crate::structures::paging::PageTableIndex;
 use crate::structures::paging::{
     frame_alloc::FrameAllocator,
-    page::{AddressNotAligned, NotGiantPageSize},
+    page::{AddressNotAligned, NotGiantPageSize, PageRangeInclusive},
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    FrameDeallocator, Page, PageSize, PageTableIndex, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::VirtAddr;
 
@@ -285,6 +284,104 @@ impl<'a> RecursivePageTable<'a> {
         p1[page.p1_index()].set_frame(frame, flags);
 
         Ok(MapperFlush::new(page))
+    }
+
+    /// Remove all empty P1-P3 tables
+    #[inline]
+    pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.clean_up_addr_range(
+            PageRangeInclusive {
+                start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
+                end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+            },
+            frame_deallocator,
+        )
+    }
+
+    /// Remove all empty P1-P3 tables in a certain range
+    /// ```
+    /// # use core::ops::RangeInclusive;
+    /// # use x86_64::{VirtAddr, structures::paging::{
+    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::RecursivePageTable, page::{Page, PageRangeInclusive},
+    /// # }};
+    /// # unsafe fn test(page_table: &mut RecursivePageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// // clean up all page tables in the lower half of the address space
+    /// let lower_half = Page::range_inclusive(
+    ///     Page::containing_address(VirtAddr::new(0)),
+    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    /// );
+    /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
+    /// # }
+    /// ```
+    pub fn clean_up_addr_range<D>(&mut self, range: PageRangeInclusive, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        fn clean_up(
+            recursive_index: PageTableIndex,
+            page_table: &mut PageTable,
+            level: u8,
+            range: PageRangeInclusive,
+            frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
+        ) -> bool {
+            if range.is_empty() {
+                return false;
+            }
+
+            let table_addr = range
+                .start
+                .start_address()
+                .align_down(1u64 << (level * 9 + 12));
+
+            let start = range.start.p_index(level);
+            let end = range.end.p_index(level);
+
+            let mut is_empty = true;
+
+            let offset_per_entry = 1u64 << (((level - 1) * 9) + 12);
+            for (i, entry) in page_table.iter_mut().enumerate() {
+                if usize::from(start) < i && i <= usize::from(end) && level != 1 {
+                    if let Ok(frame) = entry.frame() {
+                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let end = start + offset_per_entry;
+                        let start = Page::<Size4KiB>::containing_address(start);
+                        let end = Page::<Size4KiB>::containing_address(end) - 1;
+                        let page_table =
+                            [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);
+                        let page_table = unsafe { &mut *page_table };
+                        if clean_up(
+                            recursive_index,
+                            page_table,
+                            level - 1,
+                            Page::range_inclusive(start, end),
+                            frame_deallocator,
+                        ) {
+                            entry.set_unused();
+                            unsafe {
+                                frame_deallocator.deallocate_frame(frame);
+                            }
+                        }
+                    }
+                }
+
+                if !entry.is_unused() {
+                    is_empty = false;
+                }
+            }
+
+            is_empty
+        }
+
+        clean_up(
+            self.recursive_index,
+            self.level_4_table(),
+            4,
+            range,
+            frame_deallocator,
+        );
     }
 }
 
