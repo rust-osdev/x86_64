@@ -142,8 +142,10 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     }
 
     /// Remove all empty P1-P3 tables
+    /// ## Safety
+    /// This is a convenience method. For more information [`clean_up_with_filter`](Mapper::clean_up_with_filter) method.
     #[inline]
-    pub fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where
         D: FrameDeallocator<Size4KiB>,
     {
@@ -173,7 +175,12 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     /// page_table.clean_up_with_filter(|range| ranges_intersect(range, lower_half), frame_deallocator);
     /// # }
     /// ```
-    pub fn clean_up_with_filter<F, D>(&mut self, mut filter: F, frame_deallocator: &mut D)
+    ///
+    /// ## Safety
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
+    pub unsafe fn clean_up_with_filter<F, D>(&mut self, mut filter: F, frame_deallocator: &mut D)
     where
         F: FnMut(PageRangeInclusive) -> bool,
         D: FrameDeallocator<Size4KiB>,

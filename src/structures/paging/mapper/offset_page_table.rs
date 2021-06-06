@@ -49,7 +49,7 @@ impl<'a> OffsetPageTable<'a> {
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        self.inner.clean_up(frame_deallocator)
+        self.clean_up_with_filter(|_| true, frame_deallocator)
     }
 
     /// Recursivly iterate through all page tables and conditionally remove empty P1-P3 tables
@@ -81,7 +81,10 @@ impl<'a> OffsetPageTable<'a> {
         F: FnMut(PageRangeInclusive) -> bool,
         D: FrameDeallocator<Size4KiB>,
     {
-        self.inner.clean_up_with_filter(filter, frame_deallocator)
+        unsafe {
+            // SAFETY: page tables are only used exactly once
+            self.inner.clean_up_with_filter(filter, frame_deallocator)
+        }
     }
 }
 
