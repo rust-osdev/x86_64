@@ -348,7 +348,9 @@ impl<'a> RecursivePageTable<'a> {
                         let start = table_addr + (offset_per_entry * (i as u64));
                         let end = start + offset_per_entry;
                         let start = Page::<Size4KiB>::containing_address(start);
+                        let start = start.max(range.start);
                         let end = Page::<Size4KiB>::containing_address(end) - 1;
+                        let end = end.min(range.end);
                         let page_table =
                             [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);
                         let page_table = unsafe { &mut *page_table };
