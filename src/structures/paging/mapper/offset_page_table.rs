@@ -127,7 +127,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size1GiB>,
         deallocator: &mut D,
@@ -135,7 +135,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     where
         D: FrameDeallocator<Size1GiB>,
     {
-        self.inner.unmap_range(pages, deallocator)
+        unsafe { self.inner.unmap_range(pages, deallocator) }
     }
 
     #[inline]
@@ -249,7 +249,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size2MiB>,
         deallocator: &mut D,
@@ -257,7 +257,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     where
         D: FrameDeallocator<Size2MiB>,
     {
-        self.inner.unmap_range(pages, deallocator)
+        unsafe { self.inner.unmap_range(pages, deallocator) }
     }
 
     #[inline]
@@ -371,7 +371,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size4KiB>,
         deallocator: &mut D,
@@ -379,7 +379,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        self.inner.unmap_range(pages, deallocator)
+        unsafe { self.inner.unmap_range(pages, deallocator) }
     }
 
     #[inline]

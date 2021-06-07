@@ -444,7 +444,11 @@ pub trait Mapper<S: PageSize> {
     ///
     /// ## Errors
     /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the pages that were successfully unmapped.
-    fn unmap_range<D>(
+    ///
+    /// ## Safety
+    /// The caller has to guarantee that it's safe to deallocate frames:
+    /// All unmapped frames must only be only in this page table.
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<S>,
         deallocator: &mut D,

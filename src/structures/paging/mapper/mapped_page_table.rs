@@ -645,7 +645,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size1GiB>,
         deallocator: &mut D,
@@ -850,7 +850,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size2MiB>,
         deallocator: &mut D,
@@ -1068,7 +1068,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size4KiB>,
         deallocator: &mut D,

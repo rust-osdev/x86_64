@@ -818,7 +818,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size1GiB>,
         deallocator: &mut D,
@@ -1040,7 +1040,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size2MiB>,
         deallocator: &mut D,
@@ -1291,7 +1291,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     }
 
     #[inline]
-    fn unmap_range<D>(
+    unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<Size4KiB>,
         deallocator: &mut D,
