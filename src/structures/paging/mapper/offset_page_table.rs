@@ -102,7 +102,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    unsafe fn map_range_with_table_flags<A>(
+    fn map_range_with_table_flags<A>(
         &mut self,
         pages: PageRange<Size1GiB>,
         flags: PageTableFlags,
@@ -112,10 +112,8 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     where
         A: FrameAllocator<Size4KiB> + FrameAllocator<Size1GiB> + ?Sized,
     {
-        unsafe {
-            self.inner
-                .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
-        }
+        self.inner
+            .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
     }
 
     #[inline]
@@ -224,7 +222,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    unsafe fn map_range_with_table_flags<A>(
+    fn map_range_with_table_flags<A>(
         &mut self,
         pages: PageRange<Size2MiB>,
         flags: PageTableFlags,
@@ -234,10 +232,8 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     where
         A: FrameAllocator<Size4KiB> + FrameAllocator<Size2MiB> + ?Sized,
     {
-        unsafe {
-            self.inner
-                .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
-        }
+        self.inner
+            .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
     }
 
     #[inline]
@@ -346,7 +342,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
-    unsafe fn map_range_with_table_flags<A>(
+    fn map_range_with_table_flags<A>(
         &mut self,
         pages: PageRange<Size4KiB>,
         flags: PageTableFlags,
@@ -356,10 +352,8 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
-        unsafe {
-            self.inner
-                .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
-        }
+        self.inner
+            .map_range_with_table_flags(pages, flags, parent_table_flags, allocator)
     }
 
     #[inline]
