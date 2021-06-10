@@ -202,6 +202,7 @@ impl VirtAddr {
     /// Returns the 9-bit level page table index.
     ///
     /// ## Panics
+    ///
     /// Panics if level is not between 1 and 4
     #[inline]
     pub fn p_index(self, level: u8) -> PageTableIndex {

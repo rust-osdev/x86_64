@@ -72,6 +72,7 @@ impl Pcid {
 /// Invalidate the given address in the TLB using the `invpcid` instruction.
 ///
 /// ## Safety
+///
 /// This function is unsafe as it requires CPUID.(EAX=07H, ECX=0H):EBX.INVPCID to be 1.
 #[inline]
 pub unsafe fn flush_pcid(command: InvPicdCommand) {

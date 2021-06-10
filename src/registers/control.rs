@@ -266,6 +266,7 @@ mod x86_64 {
         /// Write a new P4 table address into the CR3 register.
         ///
         /// ## Safety
+        ///
         /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
         /// changing the page mapping.
         #[inline]
@@ -276,6 +277,7 @@ mod x86_64 {
         /// Write a new P4 table address into the CR3 register.
         ///
         /// ## Safety
+        ///
         /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
         /// changing the page mapping.
         /// [`Cr4Flags::PCID`] must be set before calling this method.
@@ -287,6 +289,7 @@ mod x86_64 {
         /// Write a new P4 table address into the CR3 register.
         ///
         /// ## Safety
+        ///
         /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
         /// changing the page mapping.
         #[inline]
@@ -365,6 +368,7 @@ mod x86_64 {
         /// Updates CR4 flags.
         ///
         /// Preserves the value of reserved fields.
+        ///
         /// ## Safety
         ///
         /// This function is unsafe because it's possible to violate memory

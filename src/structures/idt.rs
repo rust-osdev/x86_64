@@ -730,6 +730,7 @@ impl EntryOptions {
     /// This function panics if the index is not in the range 0..7.
     ///
     /// ## Safety
+    ///
     /// This function is unsafe because the caller must ensure that the passed stack index is
     /// valid and not used by other interrupts. Otherwise, memory safety violations are possible.
     #[inline]

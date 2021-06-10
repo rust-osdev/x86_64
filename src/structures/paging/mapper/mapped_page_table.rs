@@ -142,7 +142,9 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     }
 
     /// Remove all empty P1-P3 tables
+    ///
     /// ## Safety
+    ///
     /// This is a convenience method. For more information [`clean_up_addr_range`](Mapper::clean_up_addr_range) method.
     #[inline]
     pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
@@ -174,6 +176,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     /// ```
     ///
     /// ## Safety
+    ///
     /// The caller has to guarantee that it's safe to free page table frames:
     /// All page table frames must only be used once and only in this page table
     /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
