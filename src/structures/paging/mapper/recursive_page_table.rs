@@ -287,6 +287,12 @@ impl<'a> RecursivePageTable<'a> {
     }
 
     /// Remove all empty P1-P3 tables
+    ///
+    /// ## Safety
+    ///
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
     #[inline]
     pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where
@@ -316,8 +322,17 @@ impl<'a> RecursivePageTable<'a> {
     /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }
     /// ```
-    pub fn clean_up_addr_range<D>(&mut self, range: PageRangeInclusive, frame_deallocator: &mut D)
-    where
+    ///
+    /// ## Safety
+    ///
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
+    pub unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
         D: FrameDeallocator<Size4KiB>,
     {
         fn clean_up(
