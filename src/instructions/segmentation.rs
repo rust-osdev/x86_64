@@ -35,19 +35,21 @@ pub trait Segment {
 /// address can be set via the GDT, or by using the `FSGSBASE` instructions.
 pub trait Segment64: Segment {
     /// MSR containing the segment base. This MSR can be used to set the base
-    /// when [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set.
+    /// when [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is **not** set.
     const BASE: Msr;
     /// Reads the segment base address
     ///
-    /// ## Safety
+    /// ## Exceptions
     ///
     /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set, this instruction will throw a `#UD`.
-    unsafe fn read_base() -> VirtAddr;
+    fn read_base() -> VirtAddr;
     /// Writes the segment base address
     ///
-    /// ## Safety
+    /// ## Exceptions
     ///
     /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set, this instruction will throw a `#UD`.
+    ///
+    /// ## Safety
     ///
     /// The caller must ensure that this write operation has no unsafe side
     /// effects, as the segment base address might be in use.
@@ -91,15 +93,17 @@ macro_rules! segment64_impl {
     ($type:ty, $name:literal, $base:ty, $asm_rd:ident, $asm_wr:ident) => {
         impl Segment64 for $type {
             const BASE: Msr = <$base>::MSR;
-            unsafe fn read_base() -> VirtAddr {
+            fn read_base() -> VirtAddr {
                 #[cfg(feature = "inline_asm")]
-                {
+                unsafe {
                     let val: u64;
                     asm!(concat!("rd", $name, "base {}"), out(reg) val, options(nomem, nostack, preserves_flags));
                     VirtAddr::new_unsafe(val)
                 }
                 #[cfg(not(feature = "inline_asm"))]
-                VirtAddr::new_unsafe(crate::asm::$asm_rd())
+                unsafe {
+                    VirtAddr::new_unsafe(crate::asm::$asm_rd())
+                }
             }
 
             unsafe fn write_base(base: VirtAddr) {
