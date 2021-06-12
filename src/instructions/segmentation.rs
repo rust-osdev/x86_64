@@ -121,7 +121,7 @@ macro_rules! segment64_impl {
 ///
 /// The segment base and limit are unused in 64-bit mode. Only the L (long), D
 /// (default operation size), and DPL (descriptor privilege-level) fields of the
-/// descriptor are recognized. So chaning the segment register can be used to
+/// descriptor are recognized. So changing the segment register can be used to
 /// change privilege level or enable/disable long mode.
 #[derive(Debug)]
 pub struct CS;
