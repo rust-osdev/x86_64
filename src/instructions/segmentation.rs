@@ -151,21 +151,25 @@ impl Segment for CS {
 
 /// Stack Segment
 ///
-/// Entirely unused in 64-bit mode, setting the segment register does nothing.
+/// Entirely unused in 64-bit mode; setting the segment register does nothing.
+/// However, this register is often set by the `syscall`/`sysret` and
+/// `sysenter`/`sysexit` instructions (even on 64-bit transitions). This is to
+/// maintain symmetry with 32-bit transitions where setting SS actually will
+/// actually have an effect.
 #[derive(Debug)]
 pub struct SS;
 segment_impl!(SS, "ss", x86_64_asm_get_ss, x86_64_asm_load_ss);
 
 /// Data Segment
 ///
-/// Entirely unused in 64-bit mode, setting the segment register does nothing.
+/// Entirely unused in 64-bit mode; setting the segment register does nothing.
 #[derive(Debug)]
 pub struct DS;
 segment_impl!(DS, "ds", x86_64_asm_get_ds, x86_64_asm_load_ds);
 
 /// ES Segment
 ///
-/// Entirely unused in 64-bit mode, setting the segment register does nothing.
+/// Entirely unused in 64-bit mode; setting the segment register does nothing.
 #[derive(Debug)]
 pub struct ES;
 segment_impl!(ES, "es", x86_64_asm_get_es, x86_64_asm_load_es);
