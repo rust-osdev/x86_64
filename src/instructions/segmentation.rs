@@ -128,10 +128,10 @@ pub struct CS;
 impl Segment for CS {
     get_reg_impl!("cs", x86_64_asm_get_cs);
 
+    /// Note this is special since we cannot directly move to [`CS`]. Instead we
+    /// push the new segment selector and return value on the stack and use
+    /// `retfq` to reload [`CS`] and continue at the end of our function.
     unsafe fn set_reg(sel: SegmentSelector) {
-        // Note this is special since we cannot directly move to cs. Instead we
-        // push the new segment selector and return value on the stack and use
-        // retfq to reload cs and continue at 1:.
         #[cfg(feature = "inline_asm")]
         asm!(
             "push {sel}",
