@@ -18,6 +18,8 @@ use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
 use volatile::Volatile;
 
+use super::gdt::SegmentSelector;
+
 /// An Interrupt Descriptor Table with 256 entries.
 ///
 /// The first 32 entries are used for CPU exceptions. These entries can be either accessed through
@@ -557,13 +559,11 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 
 /// An Interrupt Descriptor Table entry.
 ///
-/// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
-/// on the interrupt vector.
+/// The generic parameter is some [`InterruptFn`], depending on the interrupt vector.
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
-    gdt_selector: u16,
     options: EntryOptions,
     pointer_middle: u16,
     pointer_high: u32,
@@ -575,7 +575,6 @@ impl<T> fmt::Debug for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Entry")
             .field("handler_addr", &format_args!("{:#x}", self.handler_addr()))
-            .field("gdt_selector", &self.gdt_selector)
             .field("options", &self.options)
             .finish()
     }
@@ -584,7 +583,6 @@ impl<T> fmt::Debug for Entry<T> {
 impl<T> PartialEq for Entry<T> {
     fn eq(&self, other: &Self) -> bool {
         self.pointer_low == other.pointer_low
-            && self.gdt_selector == other.gdt_selector
             && self.options == other.options
             && self.pointer_middle == other.pointer_middle
             && self.pointer_high == other.pointer_high
@@ -610,7 +608,6 @@ impl<F> Entry<F> {
     #[inline]
     pub const fn missing() -> Self {
         Entry {
-            gdt_selector: 0,
             pointer_low: 0,
             pointer_middle: 0,
             pointer_high: 0,
@@ -618,28 +615,6 @@ impl<F> Entry<F> {
             reserved: 0,
             phantom: PhantomData,
         }
-    }
-
-    /// Set the handler address for the IDT entry and sets the present bit.
-    ///
-    /// For the code selector field, this function uses the code segment selector currently
-    /// active in the CPU.
-    ///
-    /// The function returns a mutable reference to the entry's options that allows
-    /// further customization.
-    #[cfg(feature = "instructions")]
-    #[inline]
-    fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use crate::instructions::segmentation;
-
-        self.pointer_low = addr as u16;
-        self.pointer_middle = (addr >> 16) as u16;
-        self.pointer_high = (addr >> 32) as u32;
-
-        self.gdt_selector = segmentation::cs().0;
-
-        self.options.set_present(true);
-        &mut self.options
     }
 
     #[inline]
@@ -650,63 +625,113 @@ impl<F> Entry<F> {
     }
 }
 
-macro_rules! impl_set_handler_fn {
+#[cfg(feature = "instructions")]
+impl<F: InterruptFn> Entry<F> {
+    /// Sets the handler function for the IDT entry and sets the following defaults:
+    ///   - The code selector is the code segment currently active in the CPU
+    ///   - The present bit is set
+    ///   - Interrupts are disabled on handler invocation
+    ///   - The privilege level (DPL) is [`PrivilegeLevel::Ring0`]
+    ///   - No IST is configured (existing stack will be used)
+    ///
+    /// The function returns a mutable reference to the entry's options that allows
+    /// further customization.
+    pub fn set_handler_fn(&mut self, handler: F) -> &mut EntryOptions {
+        use crate::instructions::segmentation;
+
+        let addr = handler.addr().as_u64();
+        self.pointer_low = addr as u16;
+        self.pointer_middle = (addr >> 16) as u16;
+        self.pointer_high = (addr >> 32) as u32;
+
+        self.options = EntryOptions::minimal();
+        // SAFETY: The current CS is a valid, long-mode code segment.
+        unsafe { self.options.set_code_selector(segmentation::cs()) };
+        self.options.set_present(true);
+        &mut self.options
+    }
+}
+
+/// A trait for function pointers that can be used as interrupt handlers
+pub trait InterruptFn {
+    /// The virtual address of this function pointer
+    fn addr(self) -> VirtAddr;
+}
+
+macro_rules! impl_interrupt_fn {
     ($h:ty) => {
-        #[cfg(feature = "instructions")]
-        impl Entry<$h> {
-            /// Set the handler function for the IDT entry and sets the present bit.
-            ///
-            /// For the code selector field, this function uses the code segment selector currently
-            /// active in the CPU.
-            ///
-            /// The function returns a mutable reference to the entry's options that allows
-            /// further customization.
-            #[inline]
-            pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
-                self.set_handler_addr(handler as u64)
+        #[cfg(target_pointer_width = "64")]
+        impl InterruptFn for $h {
+            fn addr(self) -> VirtAddr {
+                VirtAddr::from_ptr(self as *const ())
             }
         }
     };
 }
 
-impl_set_handler_fn!(HandlerFunc);
-impl_set_handler_fn!(HandlerFuncWithErrCode);
-impl_set_handler_fn!(PageFaultHandlerFunc);
-impl_set_handler_fn!(DivergingHandlerFunc);
-impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
+impl_interrupt_fn!(HandlerFunc);
+impl_interrupt_fn!(HandlerFuncWithErrCode);
+impl_interrupt_fn!(PageFaultHandlerFunc);
+impl_interrupt_fn!(DivergingHandlerFunc);
+impl_interrupt_fn!(DivergingHandlerFuncWithErrCode);
 
-/// Represents the options field of an IDT entry.
-#[repr(transparent)]
+/// Represents the 4 non-offset bytes of an IDT entry.
+#[repr(C)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct EntryOptions(u16);
+pub struct EntryOptions {
+    cs: SegmentSelector,
+    bits: u16,
+}
 
 impl fmt::Debug for EntryOptions {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("EntryOptions")
-            .field(&format_args!("{:#06x}", self.0))
+        f.debug_struct("EntryOptions")
+            .field("code_selector", &self.cs)
+            .field("stack_index", &self.stack_index())
+            .field("type", &format_args!("{:#04b}", self.bits.get_bits(8..12)))
+            .field("privilege_level", &self.privilege_level())
+            .field("present", &self.present())
             .finish()
     }
 }
 
 impl EntryOptions {
-    /// Creates a minimal options field with all the must-be-one bits set.
+    /// Creates a minimal options field with all the must-be-one bits set. This
+    /// means the CS selector, IST, and DPL field are all 0.
     #[inline]
     const fn minimal() -> Self {
-        EntryOptions(0b1110_0000_0000)
+        EntryOptions {
+            cs: SegmentSelector(0),
+            bits: 0b1110_0000_0000, // Default to a 64-bit Interrupt Gate
+        }
+    }
+
+    /// Set the code segment that will be used by this interrupt.
+    ///
+    /// ## Safety
+    /// This function is unsafe because the caller must ensure that the passed
+    /// segment selector points to a valid, long-mode code segment.
+    pub unsafe fn set_code_selector(&mut self, cs: SegmentSelector) -> &mut Self {
+        self.cs = cs;
+        self
     }
 
     /// Set or reset the preset bit.
     #[inline]
     pub fn set_present(&mut self, present: bool) -> &mut Self {
-        self.0.set_bit(15, present);
+        self.bits.set_bit(15, present);
         self
+    }
+
+    fn present(&self) -> bool {
+        self.bits.get_bit(15)
     }
 
     /// Let the CPU disable hardware interrupts when the handler is invoked. By default,
     /// interrupts are disabled on handler invocation.
     #[inline]
     pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {
-        self.0.set_bit(8, !disable);
+        self.bits.set_bit(8, !disable);
         self
     }
 
@@ -716,8 +741,12 @@ impl EntryOptions {
     /// This function panics for a DPL > 3.
     #[inline]
     pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {
-        self.0.set_bits(13..15, dpl as u16);
+        self.bits.set_bits(13..15, dpl as u16);
         self
+    }
+
+    fn privilege_level(&self) -> PrivilegeLevel {
+        PrivilegeLevel::from_u16(self.bits.get_bits(13..15))
     }
 
     /// Assigns a Interrupt Stack Table (IST) stack to this handler. The CPU will then always
@@ -736,8 +765,12 @@ impl EntryOptions {
     pub unsafe fn set_stack_index(&mut self, index: u16) -> &mut Self {
         // The hardware IST index starts at 1, but our software IST index
         // starts at 0. Therefore we need to add 1 here.
-        self.0.set_bits(0..3, index + 1);
+        self.bits.set_bits(0..3, index + 1);
         self
+    }
+
+    fn stack_index(&self) -> u16 {
+        self.bits.get_bits(0..3) - 1
     }
 }
 
@@ -874,8 +907,7 @@ mod test {
 
         foo(Entry::<HandlerFuncWithErrCode> {
             pointer_low: 0,
-            gdt_selector: 0,
-            options: EntryOptions(0),
+            options: EntryOptions::minimal(),
             pointer_middle: 0,
             pointer_high: 0,
             reserved: 0,
