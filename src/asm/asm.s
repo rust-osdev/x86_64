@@ -173,6 +173,36 @@ _x86_64_asm_load_gs:
     mov %di, %gs
     retq
 
+.global _x86_64_asm_get_ss
+.p2align 4
+_x86_64_asm_get_ss:
+    mov %ss, %ax
+    retq
+
+.global _x86_64_asm_get_ds
+.p2align 4
+_x86_64_asm_get_ds:
+    mov %ds, %ax
+    retq
+
+.global _x86_64_asm_get_es
+.p2align 4
+_x86_64_asm_get_es:
+    mov %es, %ax
+    retq
+
+.global _x86_64_asm_get_fs
+.p2align 4
+_x86_64_asm_get_fs:
+    mov %fs, %ax
+    retq
+
+.global _x86_64_asm_get_gs
+.p2align 4
+_x86_64_asm_get_gs:
+    mov %gs, %ax
+    retq
+
 .global _x86_64_asm_swapgs
 .p2align 4
 _x86_64_asm_swapgs:

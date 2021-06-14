@@ -630,13 +630,13 @@ impl<F> Entry<F> {
     #[cfg(feature = "instructions")]
     #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use crate::instructions::segmentation;
+        use crate::instructions::segmentation::{Segment, CS};
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
         self.pointer_high = (addr >> 32) as u32;
 
-        self.gdt_selector = segmentation::cs().0;
+        self.gdt_selector = CS::get_reg().0;
 
         self.options.set_present(true);
         &mut self.options
