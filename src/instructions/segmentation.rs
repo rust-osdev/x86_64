@@ -1,7 +1,10 @@
 //! Provides functions to read and write segment registers.
 
 #[cfg(docsrs)]
-use crate::{registers::control::Cr4Flags, structures::gdt::GlobalDescriptorTable};
+use crate::{
+    registers::control::Cr4Flags,
+    structures::gdt::{Descriptor, GlobalDescriptorTable},
+};
 use crate::{
     registers::model_specific::{FsBase, GsBase, Msr},
     structures::gdt::SegmentSelector,
@@ -152,7 +155,11 @@ impl Segment for CS {
 /// Stack Segment
 ///
 /// Entirely unused in 64-bit mode; setting the segment register does nothing.
-/// However, this register is often set by the `syscall`/`sysret` and
+/// However, in ring 3, the SS register still has to point to a valid
+/// [`Descriptor`] (it cannot be zero). This means a user-mode read/write
+/// segment descriptor must be present in the GDT.
+///
+/// This register is also set by the `syscall`/`sysret` and
 /// `sysenter`/`sysexit` instructions (even on 64-bit transitions). This is to
 /// maintain symmetry with 32-bit transitions where setting SS actually will
 /// actually have an effect.
