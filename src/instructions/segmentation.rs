@@ -266,7 +266,7 @@ pub fn cs() -> SegmentSelector {
 }
 /// Alias for [`FS::write_base()`].
 ///
-/// Raises #GP if the provided address is non-canonical.
+/// Panics if the provided address is non-canonical.
 #[deprecated(since = "0.14.4", note = "use `FS::write_base()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
@@ -282,7 +282,7 @@ pub unsafe fn rdfsbase() -> u64 {
 }
 /// Alias for [`GS::write_base()`].
 ///
-/// Raises #GP if the provided address is non-canonical.
+/// Panics if the provided address is non-canonical.
 #[deprecated(since = "0.14.4", note = "use `GS::write_base()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
