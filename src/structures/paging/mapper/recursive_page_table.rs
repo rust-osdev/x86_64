@@ -715,7 +715,7 @@ impl<'a> RecursivePageTable<'a> {
                 if !entry.is_unused() {
                     return Err(MapToError::PageAlreadyMapped(frame));
                 }
-                entry.set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
+                entry.set_addr(frame.start_address(), flags);
                 Ok(())
             },
             (parent_table_flags, allocator),
