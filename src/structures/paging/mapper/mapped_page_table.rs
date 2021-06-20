@@ -588,8 +588,8 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         self.map_to_range_1gib(
             pages,
             |page, _| {
-                let offset = pages.start - page;
-                Some(frames.start + (offset / Size1GiB::SIZE))
+                let offset = page - pages.start;
+                Some(frames.start + offset)
             },
             flags,
             parent_table_flags,
@@ -790,8 +790,8 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         self.map_range_2mib(
             pages,
             |page, _| {
-                let offset = pages.start - page;
-                Some(frames.start + (offset / Size2MiB::SIZE))
+                let offset = page - pages.start;
+                Some(frames.start + offset)
             },
             flags,
             parent_table_flags,
@@ -1012,8 +1012,8 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         self.map_to_range_4kib(
             pages,
             |page, _| {
-                let offset = pages.start - page;
-                Some(frames.start + (offset / Size4KiB::SIZE))
+                let offset = page - pages.start;
+                Some(frames.start + offset)
             },
             flags,
             parent_table_flags,
