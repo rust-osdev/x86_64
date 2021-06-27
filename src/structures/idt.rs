@@ -10,7 +10,6 @@
 //! Provides types for the Interrupt Descriptor Table and its entries.
 //!
 //! # For the users who use this module with the stable Rust
-//!
 //! The following types are not used and not constructable.
 //!
 //! - [`DivergingHandlerFunc`]
