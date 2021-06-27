@@ -703,6 +703,9 @@ macro_rules! impl_set_handler_fn {
             ///
             /// The function returns a mutable reference to the entry's options that allows
             /// further customization.
+            ///
+            /// This method is only usable with the `abi_x86_interrupt` feature enabled. Without it, the
+            /// unsafe [`Entry::set_handler_addr`] method has to be used instead.
             #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
                 let handler = VirtAddr::new(handler as u64);
