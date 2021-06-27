@@ -664,7 +664,8 @@ impl<F> Entry<F> {
     ///
     /// # Safety
     ///
-    /// The caller must ensure that `addr` is the correct address to the handler function.
+    /// The caller must ensure that `addr` is the address of a valid interrupt handler function,
+    /// and the signature of such a function is correct for the entry type.
     #[cfg(feature = "instructions")]
     #[inline]
     pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
