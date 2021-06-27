@@ -593,17 +593,51 @@ impl<T> PartialEq for Entry<T> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
+/// This type is a dummy.
+///
+/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+pub type HandlerFunc = ();
+
 /// A handler function for an exception that pushes an error code.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
+/// This type is a dummy.
+///
+/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+pub type HandlerFuncWithErrCode = ();
+
 /// A page fault handler function that pushes a page fault error code.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
+/// This type is a dummy.
+///
+/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+pub type PageFaultHandlerFunc = ();
+
 /// A handler function that must not return, e.g. for a machine check exception.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
+/// This type is a dummy.
+///
+/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+pub type DivergingHandlerFunc = ();
+
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
+/// This type is a dummy.
+///
+/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+pub type DivergingHandlerFuncWithErrCode = ();
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -627,10 +661,16 @@ impl<F> Entry<F> {
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `addr` is the correct address to the handler function.
     #[cfg(feature = "instructions")]
     #[inline]
-    fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
+    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
         use crate::instructions::segmentation::{Segment, CS};
+
+        let addr = addr.as_u64();
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
@@ -652,7 +692,7 @@ impl<F> Entry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
-        #[cfg(feature = "instructions")]
+        #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
@@ -663,7 +703,8 @@ macro_rules! impl_set_handler_fn {
             /// further customization.
             #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
-                self.set_handler_addr(handler as u64)
+                let handler = VirtAddr::new(handler as u64);
+                unsafe { self.set_handler_addr(handler) }
             }
         }
     };
