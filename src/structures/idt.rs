@@ -608,33 +608,38 @@ impl<T> PartialEq for Entry<T> {
 #[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
 #[cfg(not(feature = "abi_x86_interrupt"))]
-pub type HandlerFunc = ();
+#[derive(Copy, Clone, Debug)]
+pub struct HandlerFunc(());
 
 /// A handler function for an exception that pushes an error code.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
 #[cfg(not(feature = "abi_x86_interrupt"))]
-pub type HandlerFuncWithErrCode = ();
+#[derive(Copy, Clone, Debug)]
+pub struct HandlerFuncWithErrCode(());
 
 /// A page fault handler function that pushes a page fault error code.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
 #[cfg(not(feature = "abi_x86_interrupt"))]
-pub type PageFaultHandlerFunc = ();
+#[derive(Copy, Clone, Debug)]
+pub struct PageFaultHandlerFunc(());
 
 /// A handler function that must not return, e.g. for a machine check exception.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
 #[cfg(not(feature = "abi_x86_interrupt"))]
-pub type DivergingHandlerFunc = ();
+#[derive(Copy, Clone, Debug)]
+pub struct DivergingHandlerFunc(());
 
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
 #[cfg(not(feature = "abi_x86_interrupt"))]
-pub type DivergingHandlerFuncWithErrCode = ();
+#[derive(Copy, Clone, Debug)]
+pub struct DivergingHandlerFuncWithErrCode(());
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
