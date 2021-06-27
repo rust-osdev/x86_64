@@ -8,6 +8,18 @@
 // except according to those terms.
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
+//!
+//! # For the users who use this module with the stable Rust
+//!
+//! The following types are not used and not constructable.
+//!
+//! - [`DivergingHandlerFunc`]
+//! - [`DivergingHandlerFuncWithErrCode`]
+//! - [`HandlerFunc`]
+//! - [`HandlerFuncWithErrCode`]
+//! - [`PageFaultHandlerFunc`]
+//!
+//! These types are defined for the compatibility with the Nightly Rust.
 
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
@@ -595,18 +607,12 @@ impl<T> PartialEq for Entry<T> {
 /// A handler function for an interrupt or an exception without error code.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
-/// This type is a dummy.
-///
-/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 pub type HandlerFunc = ();
 
 /// A handler function for an exception that pushes an error code.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
-/// This type is a dummy.
-///
-/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 pub type HandlerFuncWithErrCode = ();
 
@@ -614,18 +620,12 @@ pub type HandlerFuncWithErrCode = ();
 #[cfg(feature = "abi_x86_interrupt")]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
-/// This type is a dummy.
-///
-/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 pub type PageFaultHandlerFunc = ();
 
 /// A handler function that must not return, e.g. for a machine check exception.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
-/// This type is a dummy.
-///
-/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 pub type DivergingHandlerFunc = ();
 
@@ -633,9 +633,6 @@ pub type DivergingHandlerFunc = ();
 #[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
-/// This type is a dummy.
-///
-/// This type alias is not used for builds which do not use the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 pub type DivergingHandlerFuncWithErrCode = ();
 
