@@ -19,7 +19,7 @@
 //! - [`HandlerFuncWithErrCode`]
 //! - [`PageFaultHandlerFunc`]
 //!
-//! These types are defined for the compatibility with the Nightly Rust.
+//! These types are defined for the compatibility with the Nightly Rust build.
 
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
