@@ -9,7 +9,7 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 //!
-//! # For the users who use this module with the stable Rust
+//! # For the builds without the `abi_x86_interrupt` feature
 //! The following types are opaque and non-constructable instead of function pointers.
 //!
 //! - [`DivergingHandlerFunc`]
