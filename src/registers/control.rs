@@ -144,9 +144,8 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov {}, cr0", out(reg) value, options(nomem));
+                asm!("mov {}, cr0", out(reg) value, options(nomem, nostack, preserves_flags));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr0();
@@ -183,7 +182,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            asm!("mov cr0, {}", in(reg) value, options(nostack));
+            asm!("mov cr0, {}", in(reg) value, options(nostack, preserves_flags));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr0(value);
@@ -216,9 +215,8 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov {}, cr2", out(reg) value, options(nomem));
+                asm!("mov {}, cr2", out(reg) value, options(nomem, nostack, preserves_flags));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr2();
@@ -244,9 +242,8 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov {}, cr3", out(reg) value, options(nomem));
+                asm!("mov {}, cr3", out(reg) value, options(nomem, nostack, preserves_flags));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr3();
@@ -298,7 +295,7 @@ mod x86_64 {
             let value = addr.as_u64() | val as u64;
 
             #[cfg(feature = "inline_asm")]
-            asm!("mov cr3, {}", in(reg) value, options(nostack));
+            asm!("mov cr3, {}", in(reg) value, options(nostack, preserves_flags));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr3(value)
@@ -319,9 +316,8 @@ mod x86_64 {
 
             #[cfg(feature = "inline_asm")]
             unsafe {
-                asm!("mov {}, cr4", out(reg) value, options(nostack));
+                asm!("mov {}, cr4", out(reg) value, options(nomem, nostack, preserves_flags));
             }
-
             #[cfg(not(feature = "inline_asm"))]
             unsafe {
                 value = crate::asm::x86_64_asm_read_cr4();
@@ -360,7 +356,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            asm!("mov cr4, {}", in(reg) value, options(nostack));
+            asm!("mov cr4, {}", in(reg) value, options(nostack, preserves_flags));
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_write_cr4(value);

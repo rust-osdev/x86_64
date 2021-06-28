@@ -1,5 +1,43 @@
 # Unreleased
 
+# 0.14.3 – 2021-05-14
+
+- Make the following types aliases of the new `PortGeneric` type ([#248](https://github.com/rust-osdev/x86_64/pull/248)):
+  - `Port<T> = PortGeneric<T, ReadWriteAccess>`
+  - `PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>`
+  - `PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>`
+- The following methods no longer require the `nightly` feature to be `const fn`s` ([#255](https://github.com/rust-osdev/x86_64/pull/255)):
+  - `PageTable::new`
+  - `GlobalDescriptorTable::from_raw_slice`
+  - `MappedFrame::{start_address, size}`
+  - `Page<Size4KiB>::p1_index`
+- Add `Debug` implementation for `InterruptDescriptorTable` ([#253](https://github.com/rust-osdev/x86_64/pull/253))
+  - Improve `Debug` implementations for `Entry` and `EntryOptions`
+
+# 0.14.2 – 2021-05-13
+
+- Multiple improvements to assembly code ([#251](https://github.com/rust-osdev/x86_64/pull/251))
+  - Added `external_asm` implementations for `bochs_breakpoint` and `XCr0`
+  - Updated `options` for `asm!` blocks (to improve performance)
+  - Updated docs to use [`doc_cfg`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html)
+
+# 0.14.1 – 2021-05-06
+
+- Use new `const_fn_trait_bound` feature to fix build on latest nightly ([#250](https://github.com/rust-osdev/x86_64/pull/250))
+  - _Attention:_ The `const_fn` feature now requires at least Rust nightly `2021-05-06`.
+- Add support for `sidt` instruction ([#246](https://github.com/rust-osdev/x86_64/pull/246))
+- Fix Debug and PartialEq implementations for IDT entry type ([#249](https://github.com/rust-osdev/x86_64/pull/249))
+- Looser trait bounds for Port types ([#247](https://github.com/rust-osdev/x86_64/pull/247))
+
+# 0.14.0 – 2021-04-11
+
+- **Breaking:** Take the interrupt stack frame by value (not by reference) [#242](https://github.com/rust-osdev/x86_64/pull/242)
+- **Breaking:** Change `InterruptStackFrame::as_mut` to return a `Volatile<_>` wrapper [#242](https://github.com/rust-osdev/x86_64/pull/242)
+
+# 0.13.5 – 2021-04-01
+
+- Add support for `XCR0` register ([#239](https://github.com/rust-osdev/x86_64/pull/239))
+
 # 0.13.4 – 2021-03-27
 
 - Implement more fmt traits for addr types ([#237](https://github.com/rust-osdev/x86_64/pull/237))

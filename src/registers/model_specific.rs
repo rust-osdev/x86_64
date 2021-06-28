@@ -1,5 +1,11 @@
 //! Functions to read and write model specific registers.
 
+#[cfg(docsrs)]
+use crate::{
+    instructions::segmentation::{Segment64, FS, GS},
+    registers::control::Cr4Flags,
+};
+
 use bitflags::bitflags;
 
 /// A model specific register.
@@ -18,15 +24,19 @@ impl Msr {
 #[derive(Debug)]
 pub struct Efer;
 
-/// FS.Base Model Specific Register.
+/// [FS].Base Model Specific Register.
 #[derive(Debug)]
 pub struct FsBase;
 
-/// GS.Base Model Specific Register.
+/// [GS].Base Model Specific Register.
+///
+/// [`GS::swap`] swaps this register with [`KernelGsBase`].
 #[derive(Debug)]
 pub struct GsBase;
 
 /// KernelGsBase Model Specific Register.
+///
+/// [`GS::swap`] swaps this register with [`GsBase`].
 #[derive(Debug)]
 pub struct KernelGsBase;
 
@@ -121,7 +131,12 @@ mod x86_64 {
             #[cfg(feature = "inline_asm")]
             {
                 let (high, low): (u32, u32);
-                asm!("rdmsr", out("eax") low, out("edx") high, in("ecx") self.0, options(nostack));
+                asm!(
+                    "rdmsr",
+                    in("ecx") self.0,
+                    out("eax") low, out("edx") high,
+                    options(nomem, nostack, preserves_flags),
+                );
                 ((high as u64) << 32) | (low as u64)
             }
 
@@ -137,15 +152,19 @@ mod x86_64 {
         /// effects.
         #[inline]
         pub unsafe fn write(&mut self, value: u64) {
+            let low = value as u32;
+            let high = (value >> 32) as u32;
+
             #[cfg(feature = "inline_asm")]
-            {
-                let low = value as u32;
-                let high = (value >> 32) as u32;
-                asm!("wrmsr", in("ecx") self.0, in("eax") low, in("edx") high, options(nostack))
-            }
+            asm!(
+                "wrmsr",
+                in("ecx") self.0,
+                in("eax") low, in("edx") high,
+                options(nostack, preserves_flags),
+            );
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_wrmsr(self.0, value);
+            crate::asm::x86_64_asm_wrmsr(self.0, low, high);
         }
     }
 
@@ -214,12 +233,18 @@ mod x86_64 {
 
     impl FsBase {
         /// Read the current FsBase register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`FS::read_base`] can be used instead.
         #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the FS.Base register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`FS::write_base`] can be used instead.
         #[inline]
         pub fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
@@ -229,12 +254,18 @@ mod x86_64 {
 
     impl GsBase {
         /// Read the current GsBase register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`GS::read_base`] can be used instead.
         #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the GS.Base register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`GS::write_base`] can be used instead.
         #[inline]
         pub fn write(address: VirtAddr) {
             let mut msr = Self::MSR;

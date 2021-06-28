@@ -3,8 +3,10 @@
 pub mod control;
 pub mod model_specific;
 pub mod rflags;
+pub mod xcontrol;
 
 #[cfg(feature = "instructions")]
+#[allow(deprecated)]
 pub use crate::instructions::segmentation::{rdfsbase, rdgsbase, wrfsbase, wrgsbase};
 
 #[cfg(all(feature = "instructions", feature = "inline_asm"))]

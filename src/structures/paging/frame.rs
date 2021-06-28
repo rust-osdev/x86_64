@@ -11,7 +11,7 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
-    start_address: PhysAddr,
+    pub(crate) start_address: PhysAddr, // TODO: remove when start_address() is const
     size: PhantomData<S>,
 }
 

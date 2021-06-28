@@ -1,6 +1,10 @@
 .text
 .code64
 
+# REMEMBER: This code uses the AMD64 calling convention:
+#   Arguments: RDI, RSI, RDX, RCX
+#   Return: RAX
+
 .global _x86_64_asm_interrupt_enable
 .p2align 4
 _x86_64_asm_interrupt_enable:
@@ -119,6 +123,12 @@ _x86_64_asm_lidt:
     lidt (%rdi)
     retq
 
+.global _x86_64_asm_sidt
+.p2align 4
+_x86_64_asm_sidt:
+    sidt (%rdi)
+    retq
+
 .global _x86_64_asm_write_rflags
 .p2align 4
 _x86_64_asm_write_rflags:
@@ -129,11 +139,8 @@ _x86_64_asm_write_rflags:
 .global _x86_64_asm_read_rflags
 .p2align 4
 _x86_64_asm_read_rflags:
-    pushq   %rbp
-    movq    %rsp, %rbp
     pushfq
     popq    %rax
-    popq    %rbp
     retq
 
 .global _x86_64_asm_load_ss
@@ -164,6 +171,36 @@ _x86_64_asm_load_fs:
 .p2align 4
 _x86_64_asm_load_gs:
     mov %di, %gs
+    retq
+
+.global _x86_64_asm_get_ss
+.p2align 4
+_x86_64_asm_get_ss:
+    mov %ss, %ax
+    retq
+
+.global _x86_64_asm_get_ds
+.p2align 4
+_x86_64_asm_get_ds:
+    mov %ds, %ax
+    retq
+
+.global _x86_64_asm_get_es
+.p2align 4
+_x86_64_asm_get_es:
+    mov %es, %ax
+    retq
+
+.global _x86_64_asm_get_fs
+.p2align 4
+_x86_64_asm_get_fs:
+    mov %fs, %ax
+    retq
+
+.global _x86_64_asm_get_gs
+.p2align 4
+_x86_64_asm_get_gs:
+    mov %gs, %ax
     retq
 
 .global _x86_64_asm_swapgs
@@ -217,21 +254,19 @@ _x86_64_asm_write_cr4:
 .global _x86_64_asm_rdmsr
 .p2align 4
 _x86_64_asm_rdmsr:
-    mov   %edi,%ecx
+    mov    %edi, %ecx    # First param is the MSR number
     rdmsr
-    shl    $0x20,%rdx   # shift edx to upper 32bit
-    mov    %eax,%eax    # clear upper 32bit of rax
-    or     %rdx,%rax    # or with rdx
+    shl    $32,  %rdx    # shift edx to upper 32bit
+    mov    %eax, %eax    # clear upper 32bit of rax
+    or     %rdx, %rax    # or with rdx
     retq
 
 .global _x86_64_asm_wrmsr
 .p2align 4
 _x86_64_asm_wrmsr:
-    mov   %edi,%ecx
-    movq  %rsi,%rax
-    movq  %rsi,%rdx
-    shr   $0x20,%rdx
-    wrmsr
+    movl  %edi, %ecx    # First param is the MSR number
+    movl  %esi, %eax    # Second param is the low 32-bits
+    wrmsr               # Third param (high 32-bits) is already in %edx
     retq
 
 .global _x86_64_asm_hlt
@@ -244,6 +279,12 @@ _x86_64_asm_hlt:
 .p2align 4
 _x86_64_asm_nop:
     nop
+    retq
+
+.global _x86_64_asm_bochs
+.p2align 4
+_x86_64_asm_bochs:
+    xchgw %bx, %bx
     retq
 
 .global _x86_64_asm_rdfsbase
@@ -268,4 +309,22 @@ _x86_64_asm_rdgsbase:
 .p2align 4
 _x86_64_asm_wrgsbase:
     wrgsbase %rdi
+    retq
+
+.global _x86_64_asm_xgetbv
+.p2align 4
+_x86_64_asm_xgetbv:
+    mov    %edi, %ecx    # First param is the XCR number
+    xgetbv
+    shl    $32,  %rdx    # shift edx to upper 32bit
+    mov    %eax, %eax    # clear upper 32bit of rax
+    or     %rdx, %rax    # or with rdx
+    retq
+
+.global _x86_64_asm_xsetbv
+.p2align 4
+_x86_64_asm_xsetbv:
+    movl  %edi, %ecx    # First param is the XCR number
+    movl  %esi, %eax    # Second param is the low 32-bits
+    xsetbv              # Third param (high 32-bits) is already in %edx
     retq

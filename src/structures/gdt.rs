@@ -1,10 +1,7 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
-use crate::{
-    structures::{tss::TaskStateSegment, DescriptorTablePointer},
-    VirtAddr,
-};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
@@ -115,16 +112,18 @@ impl GlobalDescriptorTable {
     /// * The user must make sure that the entries are well formed
     /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
     #[inline]
-    #[cfg(feature = "const_fn")]
     pub const unsafe fn from_raw_slice(slice: &[u64]) -> GlobalDescriptorTable {
-        assert!(
-            slice.len() <= 8,
-            "initializing a GDT from a slice requires it to be **at most** 8 elements."
-        );
         let next_free = slice.len();
-
         let mut table = [0; 8];
         let mut idx = 0;
+
+        #[cfg(feature = "const_fn")]
+        assert!(
+            next_free <= 8,
+            "initializing a GDT from a slice requires it to be **at most** 8 elements."
+        );
+        #[cfg(not(feature = "const_fn"))]
+        table[next_free]; // Will fail if slice.len() > 8
 
         while idx != next_free {
             table[idx] = slice[idx];
@@ -221,10 +220,10 @@ impl GlobalDescriptorTable {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
-    fn pointer(&self) -> DescriptorTablePointer {
+    fn pointer(&self) -> super::DescriptorTablePointer {
         use core::mem::size_of;
-        DescriptorTablePointer {
-            base: VirtAddr::new(self.table.as_ptr() as u64),
+        super::DescriptorTablePointer {
+            base: crate::VirtAddr::new(self.table.as_ptr() as u64),
             limit: (self.next_free * size_of::<u64>() - 1) as u16,
         }
     }

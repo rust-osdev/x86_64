@@ -9,13 +9,14 @@
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
 
-use crate::{structures::DescriptorTablePointer, PrivilegeLevel, VirtAddr};
+use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use volatile::Volatile;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -32,8 +33,7 @@ use core::ops::{Deref, Index, IndexMut, RangeBounds};
 /// The field descriptions are taken from the
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
-#[allow(missing_debug_implementations)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 #[repr(align(16))]
 pub struct InterruptDescriptorTable {
@@ -437,9 +437,9 @@ impl InterruptDescriptorTable {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
-    fn pointer(&self) -> DescriptorTablePointer {
+    fn pointer(&self) -> crate::structures::DescriptorTablePointer {
         use core::mem::size_of;
-        DescriptorTablePointer {
+        crate::structures::DescriptorTablePointer {
             base: VirtAddr::new(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
         }
@@ -559,7 +559,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
 ///
 /// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
 /// on the interrupt vector.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
@@ -571,19 +571,39 @@ pub struct Entry<F> {
     phantom: PhantomData<F>,
 }
 
+impl<T> fmt::Debug for Entry<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Entry")
+            .field("handler_addr", &format_args!("{:#x}", self.handler_addr()))
+            .field("gdt_selector", &self.gdt_selector)
+            .field("options", &self.options)
+            .finish()
+    }
+}
+
+impl<T> PartialEq for Entry<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.pointer_low == other.pointer_low
+            && self.gdt_selector == other.gdt_selector
+            && self.options == other.options
+            && self.pointer_middle == other.pointer_middle
+            && self.pointer_high == other.pointer_high
+            && self.reserved == other.reserved
+    }
+}
+
 /// A handler function for an interrupt or an exception without error code.
-pub type HandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame);
+pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
 /// A handler function for an exception that pushes an error code.
-pub type HandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64);
+pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
 /// A page fault handler function that pushes a page fault error code.
 pub type PageFaultHandlerFunc =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: PageFaultErrorCode);
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
 /// A handler function that must not return, e.g. for a machine check exception.
-pub type DivergingHandlerFunc = extern "x86-interrupt" fn(&mut InterruptStackFrame) -> !;
+pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 pub type DivergingHandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(&mut InterruptStackFrame, error_code: u64) -> !;
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -610,16 +630,23 @@ impl<F> Entry<F> {
     #[cfg(feature = "instructions")]
     #[inline]
     fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
-        use crate::instructions::segmentation;
+        use crate::instructions::segmentation::{Segment, CS};
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
         self.pointer_high = (addr >> 32) as u32;
 
-        self.gdt_selector = segmentation::cs().0;
+        self.gdt_selector = CS::get_reg().0;
 
         self.options.set_present(true);
         &mut self.options
+    }
+
+    #[inline]
+    fn handler_addr(&self) -> u64 {
+        self.pointer_low as u64
+            | (self.pointer_middle as u64) << 16
+            | (self.pointer_high as u64) << 32
     }
 }
 
@@ -650,8 +677,16 @@ impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct EntryOptions(u16);
+
+impl fmt::Debug for EntryOptions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_tuple("EntryOptions")
+            .field(&format_args!("{:#06x}", self.0))
+            .finish()
+    }
+}
 
 impl EntryOptions {
     /// Creates a minimal options field with all the must-be-one bits set.
@@ -721,16 +756,21 @@ pub struct InterruptStackFrame {
 impl InterruptStackFrame {
     /// Gives mutable access to the contents of the interrupt stack frame.
     ///
+    /// The `Volatile` wrapper is used because LLVM optimizations remove non-volatile
+    /// modifications of the interrupt stack frame.
+    ///
     /// ## Safety
     ///
     /// This function is unsafe since modifying the content of the interrupt stack frame
     /// can easily lead to undefined behavior. For example, by writing an invalid value to
     /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
     /// interrupt.
-    #[allow(clippy::should_implement_trait)]
+    ///
+    /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
+    /// officially supported by LLVM's x86 interrupt calling convention.
     #[inline]
-    pub unsafe fn as_mut(&mut self) -> &mut InterruptStackFrameValue {
-        &mut self.value
+    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
+        Volatile::new(&mut self.value)
     }
 }
 
@@ -826,5 +866,20 @@ mod test {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+    }
+
+    #[test]
+    fn entry_derive_test() {
+        fn foo(_: impl Clone + Copy + PartialEq + fmt::Debug) {}
+
+        foo(Entry::<HandlerFuncWithErrCode> {
+            pointer_low: 0,
+            gdt_selector: 0,
+            options: EntryOptions(0),
+            pointer_middle: 0,
+            pointer_high: 0,
+            reserved: 0,
+            phantom: PhantomData,
+        })
     }
 }

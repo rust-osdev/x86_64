@@ -2,8 +2,6 @@
 
 //! Special x86_64 instructions.
 
-use crate::VirtAddr;
-
 pub mod interrupts;
 pub mod port;
 pub mod random;
@@ -14,13 +12,11 @@ pub mod tlb;
 /// Halts the CPU until the next interrupt arrives.
 #[inline]
 pub fn hlt() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
-        asm!("hlt", options(nomem, nostack));
-    }
+        #[cfg(feature = "inline_asm")]
+        asm!("hlt", options(nomem, nostack, preserves_flags));
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_hlt();
     }
 }
@@ -33,37 +29,37 @@ pub fn hlt() {
 /// endless loop away.
 #[inline]
 pub fn nop() {
-    #[cfg(feature = "inline_asm")]
     unsafe {
+        #[cfg(feature = "inline_asm")]
         asm!("nop", options(nomem, nostack, preserves_flags));
-    }
 
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
+        #[cfg(not(feature = "inline_asm"))]
         crate::asm::x86_64_asm_nop();
     }
 }
 
 /// Emits a '[magic breakpoint](https://wiki.osdev.org/Bochs#Magic_Breakpoint)' instruction for the [Bochs](http://bochs.sourceforge.net/) CPU
 /// emulator. Make sure to set `magic_break: enabled=1` in your `.bochsrc` file.
-#[cfg(feature = "inline_asm")]
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        asm!("xchg bx, bx", options(nomem, nostack));
+        #[cfg(feature = "inline_asm")]
+        asm!("xchg bx, bx", options(nomem, nostack, preserves_flags));
+
+        #[cfg(not(feature = "inline_asm"))]
+        crate::asm::x86_64_asm_bochs();
     }
 }
 
 /// Gets the current instruction pointer. Note that this is only approximate as it requires a few
 /// instructions to execute.
 #[cfg(feature = "inline_asm")]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "nightly", feature = "inline_asm"))))]
 #[inline(always)]
-pub fn read_rip() -> VirtAddr {
+pub fn read_rip() -> crate::VirtAddr {
     let rip: u64;
     unsafe {
-        asm!(
-            "lea {}, [rip]", out(reg) rip, options(nostack, nomem)
-        );
+        asm!("lea {}, [rip]", out(reg) rip, options(nostack, nomem, preserves_flags));
     }
-    VirtAddr::new(rip)
+    crate::VirtAddr::new(rip)
 }
