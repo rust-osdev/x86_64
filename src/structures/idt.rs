@@ -606,6 +606,7 @@ impl<T> PartialEq for Entry<T> {
 /// A handler function for an interrupt or an exception without error code.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
+/// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 #[derive(Copy, Clone, Debug)]
 pub struct HandlerFunc(());
@@ -613,6 +614,7 @@ pub struct HandlerFunc(());
 /// A handler function for an exception that pushes an error code.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
+/// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 #[derive(Copy, Clone, Debug)]
 pub struct HandlerFuncWithErrCode(());
@@ -621,6 +623,7 @@ pub struct HandlerFuncWithErrCode(());
 #[cfg(feature = "abi_x86_interrupt")]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
+/// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
@@ -628,6 +631,7 @@ pub struct PageFaultHandlerFunc(());
 /// A handler function that must not return, e.g. for a machine check exception.
 #[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
+/// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFunc(());
@@ -636,6 +640,7 @@ pub struct DivergingHandlerFunc(());
 #[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
+/// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(feature = "abi_x86_interrupt"))]
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFuncWithErrCode(());
