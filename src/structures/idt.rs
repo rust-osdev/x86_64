@@ -8,6 +8,17 @@
 // except according to those terms.
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
+//!
+//! # For the builds without the `abi_x86_interrupt` feature
+//! The following types are opaque and non-constructable instead of function pointers.
+//!
+//! - [`DivergingHandlerFunc`]
+//! - [`DivergingHandlerFuncWithErrCode`]
+//! - [`HandlerFunc`]
+//! - [`HandlerFuncWithErrCode`]
+//! - [`PageFaultHandlerFunc`]
+//!
+//! These types are defined for the compatibility with the Nightly Rust build.
 
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
@@ -593,17 +604,56 @@ impl<T> PartialEq for Entry<T> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct HandlerFunc(());
+
 /// A handler function for an exception that pushes an error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct HandlerFuncWithErrCode(());
+
 /// A page fault handler function that pushes a page fault error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct PageFaultHandlerFunc(());
+
 /// A handler function that must not return, e.g. for a machine check exception.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct DivergingHandlerFunc(());
+
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct DivergingHandlerFuncWithErrCode(());
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -627,10 +677,17 @@ impl<F> Entry<F> {
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `addr` is the address of a valid interrupt handler function,
+    /// and the signature of such a function is correct for the entry type.
     #[cfg(feature = "instructions")]
     #[inline]
-    fn set_handler_addr(&mut self, addr: u64) -> &mut EntryOptions {
+    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
         use crate::instructions::segmentation::{Segment, CS};
+
+        let addr = addr.as_u64();
 
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
@@ -652,7 +709,7 @@ impl<F> Entry<F> {
 
 macro_rules! impl_set_handler_fn {
     ($h:ty) => {
-        #[cfg(feature = "instructions")]
+        #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
         impl Entry<$h> {
             /// Set the handler function for the IDT entry and sets the present bit.
             ///
@@ -661,9 +718,13 @@ macro_rules! impl_set_handler_fn {
             ///
             /// The function returns a mutable reference to the entry's options that allows
             /// further customization.
+            ///
+            /// This method is only usable with the `abi_x86_interrupt` feature enabled. Without it, the
+            /// unsafe [`Entry::set_handler_addr`] method has to be used instead.
             #[inline]
             pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
-                self.set_handler_addr(handler as u64)
+                let handler = VirtAddr::new(handler as u64);
+                unsafe { self.set_handler_addr(handler) }
             }
         }
     };
