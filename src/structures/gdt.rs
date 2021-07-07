@@ -123,7 +123,7 @@ impl GlobalDescriptorTable {
             "initializing a GDT from a slice requires it to be **at most** 8 elements."
         );
         #[cfg(not(feature = "const_fn"))]
-        table[next_free]; // Will fail if slice.len() > 8
+        [(); 1][!(next_free <= 8) as usize];
 
         while idx != next_free {
             table[idx] = slice[idx];
