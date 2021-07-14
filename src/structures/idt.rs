@@ -940,12 +940,12 @@ pub struct SelectorErrorCode {
 
 impl SelectorErrorCode {
     ///  When set, the exception originated externally to the processor
-    fn external(&self) -> bool {
+    pub fn external(&self) -> bool {
         self.flags.get_bit(0)
     }
 
     /// The descriptor table where the exception occurred.
-    fn descriptor_table(&self) -> DescriptorTable {
+    pub fn descriptor_table(&self) -> DescriptorTable {
         match self.flags.get_bits(1..3) {
             0b00 => DescriptorTable::Gdt,
             0b01 => DescriptorTable::Idt,
@@ -956,7 +956,7 @@ impl SelectorErrorCode {
     }
 
     /// The index of the descriptor table.
-    fn index(&self) -> u64 {
+    pub fn index(&self) -> u64 {
         self.flags.get_bits(3..16)
     }
 }
