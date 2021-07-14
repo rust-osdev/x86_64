@@ -236,7 +236,7 @@ pub struct InterruptDescriptorTable {
     /// that loaded the segment selector resulting in the `#NP`.
     ///
     /// The vector number of the `#NP` exception is 11.
-    pub segment_not_present: Entry<SegmentNotPresentHandlerFunc>,
+    pub segment_not_present: Entry<HandlerFuncWithErrCode>,
 
     /// An stack segment exception (`#SS`) can occur in the following situations:
     ///
@@ -634,7 +634,7 @@ pub type PageFaultHandlerFunc =
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
 
-/// A Page fault handler function that pushes a selector error code.
+/// A segment not present handler function that pushes a selector error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
 #[cfg(feature = "abi_x86_interrupt")]
