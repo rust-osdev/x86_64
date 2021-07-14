@@ -972,9 +972,11 @@ impl fmt::Debug for SelectorErrorCode {
     }
 }
 
-/// The descriptor tables.
+/// The possible descriptor table values.
+///
+/// Used by the [`SelectorErrorCode`] to represent where the exception occurred.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum DescriptorTable {
+pub enum DescriptorTable {
     /// Global Descriptor Table.
     Gdt,
     /// Interrupt Descriptor Table.
