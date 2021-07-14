@@ -236,7 +236,7 @@ pub struct InterruptDescriptorTable {
     /// that loaded the segment selector resulting in the `#NP`.
     ///
     /// The vector number of the `#NP` exception is 11.
-    pub segment_not_present: Entry<HandlerFuncWithErrCode>,
+    pub segment_not_present: Entry<SegmentNotPresentHandlerFunc>,
 
     /// An stack segment exception (`#SS`) can occur in the following situations:
     ///
@@ -634,6 +634,18 @@ pub type PageFaultHandlerFunc =
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
 
+/// A Page fault handler function that pushes a selector error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
+pub type SegmentNotPresentHandlerFunc =
+    extern "x86-interrupt" fn(InterruptStackFrame, error_code: SelectorErrorCode);
+
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct SegmentNotPresentHandlerFunc(());
+
 /// A handler function that must not return, e.g. for a machine check exception.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
@@ -733,6 +745,7 @@ macro_rules! impl_set_handler_fn {
 impl_set_handler_fn!(HandlerFunc);
 impl_set_handler_fn!(HandlerFuncWithErrCode);
 impl_set_handler_fn!(PageFaultHandlerFunc);
+impl_set_handler_fn!(SegmentNotPresentHandlerFunc);
 impl_set_handler_fn!(DivergingHandlerFunc);
 impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
@@ -916,6 +929,57 @@ bitflags! {
         /// instruction fetch.
         const INSTRUCTION_FETCH = 1 << 4;
     }
+}
+
+// https://wiki.osdev.org/Exceptions#Selector_Error_Code
+/// Describes a segment selector error code.
+#[repr(transparent)]
+pub struct SelectorErrorCode {
+    flags: u64,
+}
+
+impl SelectorErrorCode {
+    ///  When set, the exception originated externally to the processor
+    fn external(&self) -> bool {
+        self.flags.get_bit(0)
+    }
+
+    /// The descriptor table where the exception occurred.
+    fn descriptor_table(&self) -> DescriptorTable {
+        match self.flags.get_bits(1..3) {
+            0b00 => DescriptorTable::Gdt,
+            0b01 => DescriptorTable::Idt,
+            0b10 => DescriptorTable::Ldt,
+            0b11 => DescriptorTable::Idt,
+            _ => unreachable!(),
+        }
+    }
+
+    /// The index of the descriptor table.
+    fn index(&self) -> u64 {
+        self.flags.get_bits(3..16)
+    }
+}
+
+impl fmt::Debug for SelectorErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = f.debug_struct("Selector Error");
+        s.field("external", &self.external());
+        s.field("descriptor table", &self.descriptor_table());
+        s.field("index", &self.index());
+        s.finish()
+    }
+}
+
+/// The descriptor tables.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DescriptorTable {
+    /// Global Descriptor Table.
+    Gdt,
+    /// Interrupt Descriptor Table.
+    Idt,
+    /// Logical Descriptor Table.
+    Ldt,
 }
 
 #[cfg(test)]
