@@ -933,6 +933,7 @@ bitflags! {
 
 // https://wiki.osdev.org/Exceptions#Selector_Error_Code
 /// Describes a segment selector error code.
+#[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct SelectorErrorCode {
     flags: u64,
