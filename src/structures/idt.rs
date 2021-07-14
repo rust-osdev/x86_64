@@ -940,7 +940,7 @@ pub struct SelectorErrorCode {
 }
 
 impl SelectorErrorCode {
-    ///  When set, the exception originated externally to the processor
+    ///  If this flag is set, it indicates that the exception originated externally to the processor
     pub fn external(&self) -> bool {
         self.flags.get_bit(0)
     }
