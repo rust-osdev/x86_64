@@ -940,6 +940,22 @@ pub struct SelectorErrorCode {
 }
 
 impl SelectorErrorCode {
+    /// Create a SelectorErrorCode. Returns None is any of the reserved bits (16-64) are set.
+    pub const fn new(value: u64) -> Option<Self> {
+        if value > u16::MAX as u64 {
+            None
+        } else {
+            Some(Self { flags: value })
+        }
+    }
+
+    /// Create a new SelectorErrorCode dropping any reserved bits (16-64).
+    pub const fn new_truncate(value: u64) -> Self {
+        Self {
+            flags: (value as u16) as u64,
+        }
+    }
+
     ///  If this flag is set, it indicates that the exception originated externally to the processor
     pub fn external(&self) -> bool {
         self.flags.get_bit(0)
