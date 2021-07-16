@@ -971,7 +971,7 @@ impl SelectorErrorCode {
         }
     }
 
-    /// The index of the descriptor table.
+    /// The index of the selector which caused the error.
     pub fn index(&self) -> u64 {
         self.flags.get_bits(3..16)
     }
