@@ -931,8 +931,7 @@ bitflags! {
     }
 }
 
-// https://wiki.osdev.org/Exceptions#Selector_Error_Code
-/// Describes a segment selector error code.
+/// Describes an error code referencing a segment selector.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct SelectorErrorCode {
