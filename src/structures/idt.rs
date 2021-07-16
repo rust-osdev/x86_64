@@ -933,7 +933,7 @@ bitflags! {
 
 // https://wiki.osdev.org/Exceptions#Selector_Error_Code
 /// Describes a segment selector error code.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct SelectorErrorCode {
     flags: u64,
@@ -991,7 +991,7 @@ impl fmt::Debug for SelectorErrorCode {
 /// The possible descriptor table values.
 ///
 /// Used by the [`SelectorErrorCode`] to represent where the exception occurred.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DescriptorTable {
     /// Global Descriptor Table.
     Gdt,
