@@ -955,7 +955,8 @@ impl SelectorErrorCode {
         }
     }
 
-    ///  If this flag is set, it indicates that the exception originated externally to the processor
+    /// If true, indicates that the exception occurred during delivery of an event
+    /// external to the program, such as an interrupt or an earlier exception.
     pub fn external(&self) -> bool {
         self.flags.get_bit(0)
     }
