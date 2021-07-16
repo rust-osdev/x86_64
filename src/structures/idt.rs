@@ -961,7 +961,7 @@ impl SelectorErrorCode {
         self.flags.get_bit(0)
     }
 
-    /// The descriptor table where the exception occurred.
+    /// The descriptor table this error code refers to.
     pub fn descriptor_table(&self) -> DescriptorTable {
         match self.flags.get_bits(1..3) {
             0b00 => DescriptorTable::Gdt,
