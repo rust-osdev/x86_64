@@ -963,6 +963,11 @@ impl SelectorErrorCode {
     pub fn index(&self) -> u64 {
         self.flags.get_bits(3..16)
     }
+
+    /// If true, the #SS or #GP has returned zero as opposed to a SelectorErrorCode.
+    pub fn is_null(&self) -> bool {
+        self.flags == 0
+    }
 }
 
 impl fmt::Debug for SelectorErrorCode {
