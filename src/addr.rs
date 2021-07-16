@@ -535,11 +535,7 @@ impl Sub<PhysAddr> for PhysAddr {
 ///  a power of 2.
 #[inline]
 pub const fn align_down(addr: u64, align: u64) -> u64 {
-    #[cfg(feature = "const_fn")]
-    assert!(align.is_power_of_two(), "`align` must be a power of two");
-    #[cfg(not(feature = "const_fn"))]
-    [(); 1][!align.is_power_of_two() as usize];
-
+    const_assert!(align.is_power_of_two(), "`align` must be a power of two");
     addr & !(align - 1)
 }
 
@@ -549,11 +545,7 @@ pub const fn align_down(addr: u64, align: u64) -> u64 {
 /// a power of 2.
 #[inline]
 pub const fn align_up(addr: u64, align: u64) -> u64 {
-    #[cfg(feature = "const_fn")]
-    assert!(align.is_power_of_two(), "`align` must be a power of two");
-    #[cfg(not(feature = "const_fn"))]
-    [(); 1][!align.is_power_of_two() as usize];
-
+    const_assert!(align.is_power_of_two(), "`align` must be a power of two");
     let align_mask = align - 1;
     if addr & align_mask == 0 {
         addr // already aligned

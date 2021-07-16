@@ -117,13 +117,10 @@ impl GlobalDescriptorTable {
         let mut table = [0; 8];
         let mut idx = 0;
 
-        #[cfg(feature = "const_fn")]
-        assert!(
+        const_assert!(
             next_free <= 8,
             "initializing a GDT from a slice requires it to be **at most** 8 elements."
         );
-        #[cfg(not(feature = "const_fn"))]
-        [(); 1][!(next_free <= 8) as usize];
 
         while idx != next_free {
             table[idx] = slice[idx];
