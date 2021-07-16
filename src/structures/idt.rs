@@ -634,18 +634,6 @@ pub type PageFaultHandlerFunc =
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
 
-/// A segment not present handler function that pushes a selector error code.
-///
-/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
-pub type SegmentNotPresentHandlerFunc =
-    extern "x86-interrupt" fn(InterruptStackFrame, error_code: SelectorErrorCode);
-
-/// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
-#[derive(Copy, Clone, Debug)]
-pub struct SegmentNotPresentHandlerFunc(());
-
 /// A handler function that must not return, e.g. for a machine check exception.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
@@ -745,7 +733,6 @@ macro_rules! impl_set_handler_fn {
 impl_set_handler_fn!(HandlerFunc);
 impl_set_handler_fn!(HandlerFuncWithErrCode);
 impl_set_handler_fn!(PageFaultHandlerFunc);
-impl_set_handler_fn!(SegmentNotPresentHandlerFunc);
 impl_set_handler_fn!(DivergingHandlerFunc);
 impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
