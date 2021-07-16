@@ -989,7 +989,7 @@ impl fmt::Debug for SelectorErrorCode {
 
 /// The possible descriptor table values.
 ///
-/// Used by the [`SelectorErrorCode`] to represent where the exception occurred.
+/// Used by the [`SelectorErrorCode`] to indicate which table caused the error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DescriptorTable {
     /// Global Descriptor Table.
