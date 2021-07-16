@@ -918,8 +918,7 @@ bitflags! {
     }
 }
 
-// https://wiki.osdev.org/Exceptions#Selector_Error_Code
-/// Describes a segment selector error code.
+/// Describes an error code referencing a segment selector.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct SelectorErrorCode {
@@ -943,12 +942,13 @@ impl SelectorErrorCode {
         }
     }
 
-    ///  If this flag is set, it indicates that the exception originated externally to the processor
+    /// If true, indicates that the exception occurred during delivery of an event
+    /// external to the program, such as an interrupt or an earlier exception.
     pub fn external(&self) -> bool {
         self.flags.get_bit(0)
     }
 
-    /// The descriptor table where the exception occurred.
+    /// The descriptor table this error code refers to.
     pub fn descriptor_table(&self) -> DescriptorTable {
         match self.flags.get_bits(1..3) {
             0b00 => DescriptorTable::Gdt,
@@ -959,7 +959,7 @@ impl SelectorErrorCode {
         }
     }
 
-    /// The index of the descriptor table.
+    /// The index of the selector which caused the error.
     pub fn index(&self) -> u64 {
         self.flags.get_bits(3..16)
     }
@@ -977,7 +977,7 @@ impl fmt::Debug for SelectorErrorCode {
 
 /// The possible descriptor table values.
 ///
-/// Used by the [`SelectorErrorCode`] to represent where the exception occurred.
+/// Used by the [`SelectorErrorCode`] to indicate which table caused the error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DescriptorTable {
     /// Global Descriptor Table.
