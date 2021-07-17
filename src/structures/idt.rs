@@ -918,6 +918,81 @@ bitflags! {
     }
 }
 
+/// Describes an error code referencing a segment selector.
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+pub struct SelectorErrorCode {
+    flags: u64,
+}
+
+impl SelectorErrorCode {
+    /// Create a SelectorErrorCode. Returns None is any of the reserved bits (16-64) are set.
+    pub const fn new(value: u64) -> Option<Self> {
+        if value > u16::MAX as u64 {
+            None
+        } else {
+            Some(Self { flags: value })
+        }
+    }
+
+    /// Create a new SelectorErrorCode dropping any reserved bits (16-64).
+    pub const fn new_truncate(value: u64) -> Self {
+        Self {
+            flags: (value as u16) as u64,
+        }
+    }
+
+    /// If true, indicates that the exception occurred during delivery of an event
+    /// external to the program, such as an interrupt or an earlier exception.
+    pub fn external(&self) -> bool {
+        self.flags.get_bit(0)
+    }
+
+    /// The descriptor table this error code refers to.
+    pub fn descriptor_table(&self) -> DescriptorTable {
+        match self.flags.get_bits(1..3) {
+            0b00 => DescriptorTable::Gdt,
+            0b01 => DescriptorTable::Idt,
+            0b10 => DescriptorTable::Ldt,
+            0b11 => DescriptorTable::Idt,
+            _ => unreachable!(),
+        }
+    }
+
+    /// The index of the selector which caused the error.
+    pub fn index(&self) -> u64 {
+        self.flags.get_bits(3..16)
+    }
+
+    /// If true, the #SS or #GP has returned zero as opposed to a SelectorErrorCode.
+    pub fn is_null(&self) -> bool {
+        self.flags == 0
+    }
+}
+
+impl fmt::Debug for SelectorErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = f.debug_struct("Selector Error");
+        s.field("external", &self.external());
+        s.field("descriptor table", &self.descriptor_table());
+        s.field("index", &self.index());
+        s.finish()
+    }
+}
+
+/// The possible descriptor table values.
+///
+/// Used by the [`SelectorErrorCode`] to indicate which table caused the error.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DescriptorTable {
+    /// Global Descriptor Table.
+    Gdt,
+    /// Interrupt Descriptor Table.
+    Idt,
+    /// Logical Descriptor Table.
+    Ldt,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
