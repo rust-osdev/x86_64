@@ -123,6 +123,12 @@ _x86_64_asm_lidt:
     lidt (%rdi)
     retq
 
+.global _x86_64_asm_sgdt
+.p2align 4
+_x86_64_asm_sgdt:
+    sgdt (%rdi)
+    retq
+
 .global _x86_64_asm_sidt
 .p2align 4
 _x86_64_asm_sidt:
