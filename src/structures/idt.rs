@@ -8,6 +8,17 @@
 // except according to those terms.
 
 //! Provides types for the Interrupt Descriptor Table and its entries.
+//!
+//! # For the builds without the `abi_x86_interrupt` feature
+//! The following types are opaque and non-constructable instead of function pointers.
+//!
+//! - [`DivergingHandlerFunc`]
+//! - [`DivergingHandlerFuncWithErrCode`]
+//! - [`HandlerFunc`]
+//! - [`HandlerFuncWithErrCode`]
+//! - [`PageFaultHandlerFunc`]
+//!
+//! These types are defined for the compatibility with the Nightly Rust build.
 
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
@@ -591,17 +602,56 @@ impl<T> PartialEq for Entry<T> {
 }
 
 /// A handler function for an interrupt or an exception without error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct HandlerFunc(());
+
 /// A handler function for an exception that pushes an error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct HandlerFuncWithErrCode(());
+
 /// A page fault handler function that pushes a page fault error code.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct PageFaultHandlerFunc(());
+
 /// A handler function that must not return, e.g. for a machine check exception.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct DivergingHandlerFunc(());
+
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
+///
+/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
+#[cfg(feature = "abi_x86_interrupt")]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
+/// This type is not usable without the `abi_x86_interrupt` feature.
+#[cfg(not(feature = "abi_x86_interrupt"))]
+#[derive(Copy, Clone, Debug)]
+pub struct DivergingHandlerFuncWithErrCode(());
 
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
@@ -615,6 +665,35 @@ impl<F> Entry<F> {
             reserved: 0,
             phantom: PhantomData,
         }
+    }
+
+    /// Set the handler address for the IDT entry and sets the present bit.
+    ///
+    /// For the code selector field, this function uses the code segment selector currently
+    /// active in the CPU.
+    ///
+    /// The function returns a mutable reference to the entry's options that allows
+    /// further customization.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `addr` is the address of a valid interrupt handler function,
+    /// and the signature of such a function is correct for the entry type.
+    #[cfg(feature = "instructions")]
+    #[inline]
+    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
+        use crate::instructions::segmentation::{Segment, CS};
+
+        let addr = addr.as_u64();
+        self.pointer_low = addr as u16;
+        self.pointer_middle = (addr >> 16) as u16;
+        self.pointer_high = (addr >> 32) as u32;
+
+        self.options = EntryOptions::minimal();
+        // SAFETY: The current CS is a valid, long-mode code segment.
+        self.options.set_code_selector(CS::get_reg());
+        self.options.set_present(true);
+        &mut self.options
     }
 
     #[inline]
@@ -637,18 +716,7 @@ impl<F: InterruptFn> Entry<F> {
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
     pub fn set_handler_fn(&mut self, handler: F) -> &mut EntryOptions {
-        use crate::instructions::segmentation;
-
-        let addr = handler.addr().as_u64();
-        self.pointer_low = addr as u16;
-        self.pointer_middle = (addr >> 16) as u16;
-        self.pointer_high = (addr >> 32) as u32;
-
-        self.options = EntryOptions::minimal();
-        // SAFETY: The current CS is a valid, long-mode code segment.
-        unsafe { self.options.set_code_selector(segmentation::cs()) };
-        self.options.set_present(true);
-        &mut self.options
+        unsafe { self.set_handler_addr(handler.addr()) }
     }
 }
 
@@ -660,7 +728,7 @@ pub trait InterruptFn {
 
 macro_rules! impl_interrupt_fn {
     ($h:ty) => {
-        #[cfg(target_pointer_width = "64")]
+        #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
         impl InterruptFn for $h {
             fn addr(self) -> VirtAddr {
                 VirtAddr::from_ptr(self as *const ())
@@ -888,6 +956,81 @@ bitflags! {
         /// instruction fetch.
         const INSTRUCTION_FETCH = 1 << 4;
     }
+}
+
+/// Describes an error code referencing a segment selector.
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+pub struct SelectorErrorCode {
+    flags: u64,
+}
+
+impl SelectorErrorCode {
+    /// Create a SelectorErrorCode. Returns None is any of the reserved bits (16-64) are set.
+    pub const fn new(value: u64) -> Option<Self> {
+        if value > u16::MAX as u64 {
+            None
+        } else {
+            Some(Self { flags: value })
+        }
+    }
+
+    /// Create a new SelectorErrorCode dropping any reserved bits (16-64).
+    pub const fn new_truncate(value: u64) -> Self {
+        Self {
+            flags: (value as u16) as u64,
+        }
+    }
+
+    /// If true, indicates that the exception occurred during delivery of an event
+    /// external to the program, such as an interrupt or an earlier exception.
+    pub fn external(&self) -> bool {
+        self.flags.get_bit(0)
+    }
+
+    /// The descriptor table this error code refers to.
+    pub fn descriptor_table(&self) -> DescriptorTable {
+        match self.flags.get_bits(1..3) {
+            0b00 => DescriptorTable::Gdt,
+            0b01 => DescriptorTable::Idt,
+            0b10 => DescriptorTable::Ldt,
+            0b11 => DescriptorTable::Idt,
+            _ => unreachable!(),
+        }
+    }
+
+    /// The index of the selector which caused the error.
+    pub fn index(&self) -> u64 {
+        self.flags.get_bits(3..16)
+    }
+
+    /// If true, the #SS or #GP has returned zero as opposed to a SelectorErrorCode.
+    pub fn is_null(&self) -> bool {
+        self.flags == 0
+    }
+}
+
+impl fmt::Debug for SelectorErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = f.debug_struct("Selector Error");
+        s.field("external", &self.external());
+        s.field("descriptor table", &self.descriptor_table());
+        s.field("index", &self.index());
+        s.finish()
+    }
+}
+
+/// The possible descriptor table values.
+///
+/// Used by the [`SelectorErrorCode`] to indicate which table caused the error.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DescriptorTable {
+    /// Global Descriptor Table.
+    Gdt,
+    /// Interrupt Descriptor Table.
+    Idt,
+    /// Logical Descriptor Table.
+    Ldt,
 }
 
 #[cfg(test)]

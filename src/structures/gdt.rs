@@ -117,13 +117,10 @@ impl GlobalDescriptorTable {
         let mut table = [0; 8];
         let mut idx = 0;
 
-        #[cfg(feature = "const_fn")]
-        assert!(
+        const_assert!(
             next_free <= 8,
             "initializing a GDT from a slice requires it to be **at most** 8 elements."
         );
-        #[cfg(not(feature = "const_fn"))]
-        table[next_free]; // Will fail if slice.len() > 8
 
         while idx != next_free {
             table[idx] = slice[idx];
@@ -144,7 +141,8 @@ impl GlobalDescriptorTable {
     const_fn! {
         /// Adds the given segment descriptor to the GDT, returning the segment selector.
         ///
-        /// Panics if the GDT has no free entries left.
+        /// Panics if the GDT has no free entries left.  Without the `const_fn`
+        /// feature, the panic message will be "index out of bounds".
         #[inline]
         pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
             let index = match entry {
