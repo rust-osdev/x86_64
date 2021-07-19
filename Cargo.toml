@@ -22,7 +22,7 @@ license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.14.3"
+version = "0.14.4"
 edition = "2018"
 
 [dependencies]
