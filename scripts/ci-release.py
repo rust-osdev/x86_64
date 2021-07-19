@@ -24,7 +24,7 @@ if new_version:
     subprocess.run(["git", "tag", tag_name], check=True)
 
     print("  Running `cargo publish`")
-    subprocess.run(["cargo", "publish", "--dry-run"], check=True)
+    subprocess.run(["cargo", "publish"], check=True)
 
     print("  Done")
 else:
