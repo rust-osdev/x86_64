@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.4 – 2021-07-19
+
 - Add `instructions::tables::sgdt` ([#279](https://github.com/rust-osdev/x86_64/pull/279))
 - Improve control register bits ([#273](https://github.com/rust-osdev/x86_64/pull/273))
   - Add `Cr0` bits: `EXTENSION_TYPE` (ET)
