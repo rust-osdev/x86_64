@@ -10,6 +10,7 @@ jobs:
     name: "Release"
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: crates_io_release
 
     steps:
       - name: "Checkout Repository"
@@ -21,3 +22,5 @@ jobs:
 
       - name: "Run release script"
         run: "python3 scripts/ci-release.py"
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
