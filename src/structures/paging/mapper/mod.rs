@@ -346,7 +346,39 @@ pub trait Mapper<S: PageSize> {
     /// error otherwise.
     fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
 
+    /// Maps the given page to an unused frame obtained from the frame_allocator.
+    ///
+    /// This function allocates at least one physical frame from the given
+    /// frame allocator. It might also need additional physical frames to create
+    /// new page tables, which are also allocated from the `frame_allocator`
+    /// argument. At most four frames are required from the allocator in total.
+    ///
+    /// ## Safety
+    ///
+    /// This is a convencience function that invokes [`map_to`] internally, so
+    /// all safety requirements of it also apply for this function.
+    #[inline]
+    unsafe fn map<A>(
+        &mut self,
+        page: Page<S>,
+        flags: PageTableFlags,
+        frame_allocator: &mut A,
+    ) -> Result<MapperFlush<S>, MapToError<S>>
+    where
+        Self: Sized,
+        A: FrameAllocator<Size4KiB> + FrameAllocator<S>,
+    {
+        let frame = frame_allocator
+            .allocate_frame()
+            .ok_or(MapToError::FrameAllocationFailed)?;
+        self.map_to(page, frame, flags, frame_allocator)
+    }
+
     /// Maps the given frame to the virtual page with the same address.
+    ///
+    /// This function might need additional physical frames to create new page
+    /// tables. These frames are allocated from the `frame_allocator` argument.
+    /// At most three frames are required.
     ///
     /// ## Safety
     ///
