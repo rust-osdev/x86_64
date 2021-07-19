@@ -24,8 +24,13 @@ if new_version:
 
     tag_name = "v" + crate_version
     print("  Tagging commit as " + tag_name)
-    subprocess.run(["git", "tag", tag_name], check=True)
-    subprocess.run(["git", "push", "origin", tag_name], check=True)
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], check=True, stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
+    subprocess.run([
+        "gh", "api", "/repos/rust-osdev/x86_64/git/refs",
+        "-X", "POST", "-H", "Accept: application/vnd.github.v3+json",
+        "-F", "ref=refs/tags/" + tag_name,
+        "-F", "sha="+sha
+    ])
 
     print("  Done")
 else:
