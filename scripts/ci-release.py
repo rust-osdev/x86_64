@@ -19,12 +19,13 @@ for version in crates_io_versions["versions"]:
 if new_version:
     print("Could not find version " + crate_version + " on crates.io; creating a new release")
 
+    print("  Running `cargo publish`")
+    subprocess.run(["cargo", "publish"], check=True)
+
     tag_name = "v" + crate_version
     print("  Tagging commit as " + tag_name)
     subprocess.run(["git", "tag", tag_name], check=True)
-
-    print("  Running `cargo publish`")
-    subprocess.run(["cargo", "publish"], check=True)
+    subprocess.run(["git", "push", "origin", tag_name], check=True)
 
     print("  Done")
 else:
