@@ -1,0 +1,19 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'ci-release'
+
+jobs:
+  release:
+    name: "Release"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v1
+
+      - name: "Run release script"
+        run: "python3 scripts/ci-release.py"
