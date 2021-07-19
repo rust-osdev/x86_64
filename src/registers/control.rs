@@ -143,7 +143,7 @@ bitflags! {
         ///
         /// Also enables access to the PKRU register (via the `RDPKRU`/`WRPKRU`
         /// instructions) to set user-mode protection key access controls.
-        const PROTECTION_KEY = 1 << 22;
+        const PROTECTION_KEY_USER = 1 << 22;
         /// Enables Control-flow Enforcement Technology (CET)
         ///
         /// This enables the shadow stack feature, ensuring return addresses read

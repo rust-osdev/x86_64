@@ -19,11 +19,11 @@ bitflags! {
         /// Enables using MXCSR and the XMM registers
         /// with `XSAVE`/`XRSTOR`.
         ///
-        /// Must be set if [`YMM`](XCr0Flags::YMM) is set.
+        /// Must be set if [`AVX`](XCr0Flags::AVX) is set.
         const SSE = 1<<1;
-        /// Enables AVX instructions and using the upper halves of the YMM registers
+        /// Enables AVX instructions and using the upper halves of the AVX registers
         /// with `XSAVE`/`XRSTOR`.
-        const YMM = 1<<2;
+        const AVX = 1<<2;
         /// Enables MPX instructions and using the BND0-BND3 bound registers
         /// with `XSAVE`/`XRSTOR` (Intel Only).
         const BNDREG = 1 << 3;
@@ -95,10 +95,10 @@ mod x86_64 {
             let new_value = reserved | flags.bits();
 
             assert!(flags.contains(XCr0Flags::X87), "The X87 flag must be set");
-            if flags.contains(XCr0Flags::YMM) {
+            if flags.contains(XCr0Flags::AVX) {
                 assert!(
                     flags.contains(XCr0Flags::SSE),
-                    "AVX/YMM cannot be enabled without enabling SSE"
+                    "AVX cannot be enabled without enabling SSE"
                 );
             }
             let mpx = XCr0Flags::BNDREG | XCr0Flags::BNDCSR;
@@ -111,8 +111,8 @@ mod x86_64 {
             let avx512 = XCr0Flags::OPMASK | XCr0Flags::ZMM_HI256 | XCr0Flags::HI16_ZMM;
             if flags.intersects(avx512) {
                 assert!(
-                    flags.contains(XCr0Flags::YMM),
-                    "AVX-512 cannot be enabled without enabling AVX/YMM"
+                    flags.contains(XCr0Flags::AVX),
+                    "AVX-512 cannot be enabled without enabling AVX"
                 );
                 assert!(
                     flags.contains(avx512),
