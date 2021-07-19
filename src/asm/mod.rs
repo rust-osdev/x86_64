@@ -1,5 +1,5 @@
 #[link(name = "x86_64_asm", kind = "static")]
-extern "C" {
+extern "sysv64" {
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_interrupt_enable"
@@ -116,6 +116,36 @@ extern "C" {
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_get_ss"
+    )]
+    pub(crate) fn x86_64_asm_get_ss() -> u16;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_get_ds"
+    )]
+    pub(crate) fn x86_64_asm_get_ds() -> u16;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_get_es"
+    )]
+    pub(crate) fn x86_64_asm_get_es() -> u16;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_get_fs"
+    )]
+    pub(crate) fn x86_64_asm_get_fs() -> u16;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_get_gs"
+    )]
+    pub(crate) fn x86_64_asm_get_gs() -> u16;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
         link_name = "_x86_64_asm_swapgs"
     )]
     pub(crate) fn x86_64_asm_swapgs();
@@ -137,6 +167,12 @@ extern "C" {
         link_name = "_x86_64_asm_lidt"
     )]
     pub(crate) fn x86_64_asm_lidt(idt: *const crate::instructions::tables::DescriptorTablePointer);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_sgdt"
+    )]
+    pub(crate) fn x86_64_asm_sgdt(gdt: *mut crate::instructions::tables::DescriptorTablePointer);
 
     #[cfg_attr(
         any(target_env = "gnu", target_env = "musl"),

@@ -45,6 +45,19 @@ macro_rules! const_fn {
     };
 }
 
+// Helper method for assert! in const fn. Uses out of bounds indexing if an
+// assertion fails and the "const_fn" feature is not enabled.
+#[cfg(feature = "const_fn")]
+macro_rules! const_assert {
+    ($cond:expr, $($arg:tt)+) => { assert!($cond, $($arg)*) };
+}
+#[cfg(not(feature = "const_fn"))]
+macro_rules! const_assert {
+    ($cond:expr, $($arg:tt)+) => {
+        [(); 1][!($cond as bool) as usize]
+    };
+}
+
 #[cfg(all(feature = "instructions", feature = "external_asm"))]
 pub(crate) mod asm;
 

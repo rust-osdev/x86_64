@@ -45,6 +45,23 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     crate::asm::x86_64_asm_lidt(idt as *const _);
 }
 
+/// Get the address of the current GDT.
+#[inline]
+pub fn sgdt() -> DescriptorTablePointer {
+    let mut gdt: DescriptorTablePointer = DescriptorTablePointer {
+        limit: 0,
+        base: VirtAddr::new(0),
+    };
+    unsafe {
+        #[cfg(feature = "inline_asm")]
+        asm!("sgdt [{}]", in(reg) &mut gdt, options(nostack, preserves_flags));
+
+        #[cfg(not(feature = "inline_asm"))]
+        crate::asm::x86_64_asm_sgdt(&mut gdt as *mut _);
+    }
+    gdt
+}
+
 /// Get the address of the current IDT.
 #[inline]
 pub fn sidt() -> DescriptorTablePointer {
