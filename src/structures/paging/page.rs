@@ -4,7 +4,7 @@ use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Range, Sub, SubAssign};
 
 /// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
 pub trait PageSize: Copy + Eq + PartialOrd + Ord {
@@ -266,6 +266,11 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 }
 
 /// A range of pages with exclusive upper bound.
+///
+/// ```rust
+/// # use x86_64::structures::paging::{Size4KiB, page::PageRange};
+/// let _: PageRange<Size4KiB> = (0x1000..0x4000u64).into();
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct PageRange<S: PageSize = Size4KiB> {
@@ -273,6 +278,15 @@ pub struct PageRange<S: PageSize = Size4KiB> {
     pub start: Page<S>,
     /// The end of the range, exclusive.
     pub end: Page<S>,
+}
+
+impl<S: PageSize> From<Range<u64>> for PageRange<S> {
+    fn from(range: Range<u64>) -> Self {
+        let start = Page::containing_address(VirtAddr::new(range.start));
+        let end = Page::containing_address(VirtAddr::new(range.end));
+
+        Self { start, end }
+    }
 }
 
 impl<S: PageSize> PageRange<S> {
@@ -319,6 +333,11 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 }
 
 /// A range of pages with inclusive upper bound.
+///
+/// ```rust
+/// # use x86_64::structures::paging::{Size4KiB, page::PageRangeInclusive};
+/// let _: PageRangeInclusive<Size4KiB> = (0x1000..0x4000u64).into();
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
@@ -326,6 +345,15 @@ pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
     pub start: Page<S>,
     /// The end of the range, inclusive.
     pub end: Page<S>,
+}
+
+impl<S: PageSize> From<Range<u64>> for PageRangeInclusive<S> {
+    fn from(range: Range<u64>) -> Self {
+        let start = Page::containing_address(VirtAddr::new(range.start));
+        let end = Page::containing_address(VirtAddr::new(range.end));
+
+        Self { start, end }
+    }
 }
 
 impl<S: PageSize> PageRangeInclusive<S> {
