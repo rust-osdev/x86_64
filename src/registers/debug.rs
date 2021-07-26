@@ -1,0 +1,580 @@
+//! Functions to read and write debug registers.
+
+#![deny(unsafe_op_in_unsafe_fn)]
+
+use core::convert::TryFrom;
+use core::ops::Range;
+
+use crate::VirtAddr;
+
+use bit_field::BitField;
+use bitflags::bitflags;
+
+/// Debug Address Register
+///
+/// Holds the address of a hardware breakpoint.
+pub trait DebugAddressRegister {
+    /// Reads the current breakpoint address.
+    fn read() -> VirtAddr;
+
+    /// Writes the provided breakpoint address.
+    fn write(addr: VirtAddr);
+}
+
+macro_rules! debug_address_register_struct {
+    ($Dr:ident) => {
+        /// Debug Address Register
+        ///
+        /// Holds the address of a hardware breakpoint.
+        #[derive(Debug)]
+        pub struct $Dr;
+    };
+}
+
+debug_address_register_struct!(Dr0);
+debug_address_register_struct!(Dr1);
+debug_address_register_struct!(Dr2);
+debug_address_register_struct!(Dr3);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(transparent)]
+/// A valid debug address register number.
+///
+/// Must be between 0 and 3 (inclusive).
+pub struct DebugAddressRegisterNumber(u8);
+
+impl DebugAddressRegisterNumber {
+    /// Creates a debug address register number without checking the value.
+    ///
+    /// # Safety
+    ///
+    /// The value must be between 0 and 3 (inclusive).
+    pub const unsafe fn new_unchecked(n: u8) -> Self {
+        Self(n)
+    }
+
+    /// Creates a debug address register number if it is valid.
+    pub const fn new(n: u8) -> Option<Self> {
+        match n {
+            0..=3 => Some(Self(n)),
+            _ => None,
+        }
+    }
+
+    /// Returns the number as a primitive type.
+    pub const fn get(self) -> u8 {
+        self.0
+    }
+}
+
+/// The error type returned when a checked integral type conversion fails.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TryFromIntError(());
+
+impl From<core::num::TryFromIntError> for TryFromIntError {
+    fn from(_: core::num::TryFromIntError) -> Self {
+        Self(())
+    }
+}
+
+impl TryFrom<u8> for DebugAddressRegisterNumber {
+    type Error = TryFromIntError;
+
+    fn try_from(n: u8) -> Result<Self, Self::Error> {
+        Self::new(n).ok_or(TryFromIntError(()))
+    }
+}
+
+/// Debug Status Register (DR6).
+///
+/// Reports debug conditions from the last debug exception.
+#[derive(Debug)]
+pub struct Dr6;
+
+bitflags! {
+    /// Debug condition flags of the [`Dr6`] register.
+    pub struct Dr6Flags: u64 {
+        /// Breakpoint condition 0 was detected.
+        const TRAP0 = 1;
+
+        /// Breakpoint condition 1 was detected.
+        const TRAP1 = 1 << 1;
+
+        /// Breakpoint condition 2 was detected.
+        const TRAP2 = 1 << 2;
+
+        /// Breakpoint condition 3 was detected.
+        const TRAP3 = 1 << 3;
+
+        /// Breakpoint condition was detected.
+        const TRAP = Self::TRAP0.bits | Self::TRAP1.bits | Self::TRAP2.bits | Self::TRAP3.bits;
+
+        /// Next instruction accesses one of the debug registers.
+        ///
+        /// Enabled via [`Dr7Flags::GENERAL_DETECT_ENABLE`].
+        const ACCESS_DETECTED = 1 << 13;
+
+        /// CPU is in single-step execution mode.
+        ///
+        /// Enabled via [`RFlags::TRAP_FLAG`].
+        const STEP = 1 << 14;
+
+        /// Task switch.
+        ///
+        /// Enabled via the debug trap flag in the TSS of the target task.
+        const SWITCH = 1 << 15;
+
+        /// When *clear*, indicates a debug or breakpoint exception inside an RTM region.
+        ///
+        /// Enabled via [`Dr7Flags::RESTRICTED_TRANSACTIONAL_MEMORY`] and the
+        /// RTM flag in the `IA32_DEBUGCTL` [`Msr`].
+        const RTM = 1 << 16;
+    }
+}
+
+impl Dr6Flags {
+    /// Returns the trap flag of the provided debug address register.
+    pub fn trap(n: DebugAddressRegisterNumber) -> Self {
+        match n.0 {
+            0 => Self::TRAP0,
+            1 => Self::TRAP1,
+            2 => Self::TRAP2,
+            3 => Self::TRAP3,
+            _ => unreachable!(),
+        }
+    }
+}
+
+bitflags! {
+    /// Debug control flags of the [`Dr7`] register.
+    #[repr(transparent)]
+    pub struct Dr7Flags: u64 {
+        /// Breakpoint 0 is enabled for the current task.
+        const LOCAL_BREAKPOINT_0_ENABLE = 1;
+
+        /// Breakpoint 1 is enabled for the current task.
+        const LOCAL_BREAKPOINT_1_ENABLE = 1 << 2;
+
+        /// Breakpoint 2 is enabled for the current task.
+        const LOCAL_BREAKPOINT_2_ENABLE = 1 << 4;
+
+        /// Breakpoint 3 is enabled for the current task.
+        const LOCAL_BREAKPOINT_3_ENABLE = 1 << 6;
+
+        /// Breakpoint 0 is enabled for all tasks.
+        const GLOBAL_BREAKPOINT_0_ENABLE = 1 << 1;
+
+        /// Breakpoint 1 is enabled for all tasks.
+        const GLOBAL_BREAKPOINT_1_ENABLE = 1 << 3;
+
+        /// Breakpoint 2 is enabled for all tasks.
+        const GLOBAL_BREAKPOINT_2_ENABLE = 1 << 5;
+
+        /// Breakpoint 3 is enabled for all tasks.
+        const GLOBAL_BREAKPOINT_3_ENABLE = 1 << 7;
+
+        /// Enable detection of exact instruction causing a data breakpoint condition for the current task.
+        ///
+        /// This is not supported by `x86_64` processors, but is recommended to be enabled for backward and forward compatibility.
+        const LOCAL_EXACT_BREAKPOINT_ENABLE = 1 << 8;
+
+        /// Enable detection of exact instruction causing a data breakpoint condition for all tasks.
+        ///
+        /// This is not supported by `x86_64` processors, but is recommended to be enabled for backward and forward compatibility.
+        const GLOBAL_EXACT_BREAKPOINT_ENABLE = 1 << 9;
+
+        /// Enables advanced debugging of RTM transactional regions.
+        ///
+        /// The RTM flag in the `IA32_DEBUGCTL` [`Msr`] must also be set.
+        const RESTRICTED_TRANSACTIONAL_MEMORY = 1 << 11;
+
+        /// Enables debug register protection.
+        ///
+        /// This will cause a debug exception before any access to a debug register.
+        const GENERAL_DETECT_ENABLE = 1 << 13;
+    }
+}
+
+impl Dr7Flags {
+    /// Returns the local breakpoint enable flag of the provided debug address register.
+    pub fn local_breakpoint_enable(n: DebugAddressRegisterNumber) -> Self {
+        match n.0 {
+            0 => Self::LOCAL_BREAKPOINT_0_ENABLE,
+            1 => Self::LOCAL_BREAKPOINT_1_ENABLE,
+            2 => Self::LOCAL_BREAKPOINT_2_ENABLE,
+            3 => Self::LOCAL_BREAKPOINT_3_ENABLE,
+            _ => unreachable!(),
+        }
+    }
+
+    /// Returns the global breakpoint enable flag of the provided debug address register.
+    pub fn global_breakpoint_enable(n: DebugAddressRegisterNumber) -> Self {
+        match n.0 {
+            0 => Self::GLOBAL_BREAKPOINT_0_ENABLE,
+            1 => Self::GLOBAL_BREAKPOINT_1_ENABLE,
+            2 => Self::GLOBAL_BREAKPOINT_2_ENABLE,
+            3 => Self::GLOBAL_BREAKPOINT_3_ENABLE,
+            _ => unreachable!(),
+        }
+    }
+}
+
+/// The condition for a hardware breakpoint.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum HwBreakpointCondition {
+    /// Instruction execution
+    InstructionExecution = 0b00,
+
+    /// Data writes
+    DataWrites = 0b01,
+
+    /// I/O reads or writes
+    IoReadsWrites = 0b10,
+
+    /// Data reads or writes but not instruction fetches
+    DataReadsWrites = 0b11,
+}
+
+impl HwBreakpointCondition {
+    /// Creates a new hardware breakpoint condition if `bits` is valid.
+    pub const fn from_bits(bits: u64) -> Option<Self> {
+        match bits {
+            0b00 => Some(Self::InstructionExecution),
+            0b01 => Some(Self::DataWrites),
+            0b10 => Some(Self::IoReadsWrites),
+            0b11 => Some(Self::DataReadsWrites),
+            _ => None,
+        }
+    }
+
+    const fn bit_range(n: DebugAddressRegisterNumber) -> Range<usize> {
+        let lsb = (16 + 4 * n.0) as usize;
+        lsb..lsb + 2
+    }
+}
+
+/// The size of a hardware breakpoint.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum HwBreakpointSize {
+    /// 1 byte length
+    Length1B = 0b00,
+
+    /// 2 byte length
+    Length2B = 0b01,
+
+    /// 8 byte length
+    Length8B = 0b10,
+
+    /// 4 byte length
+    Length4B = 0b11,
+}
+
+impl HwBreakpointSize {
+    /// Creates a new hardware breakpoint size if `size` is valid.
+    pub const fn new(size: usize) -> Option<Self> {
+        match size {
+            1 => Some(Self::Length1B),
+            2 => Some(Self::Length2B),
+            8 => Some(Self::Length8B),
+            4 => Some(Self::Length4B),
+            _ => None,
+        }
+    }
+
+    /// Creates a new hardware breakpoint size if `bits` is valid.
+    pub const fn from_bits(bits: u64) -> Option<Self> {
+        match bits {
+            0b00 => Some(Self::Length1B),
+            0b01 => Some(Self::Length2B),
+            0b10 => Some(Self::Length8B),
+            0b11 => Some(Self::Length4B),
+            _ => None,
+        }
+    }
+
+    const fn bit_range(n: DebugAddressRegisterNumber) -> Range<usize> {
+        let lsb = (18 + 4 * n.0) as usize;
+        lsb..lsb + 2
+    }
+}
+
+impl TryFrom<usize> for HwBreakpointSize {
+    type Error = TryFromIntError;
+
+    fn try_from(size: usize) -> Result<Self, Self::Error> {
+        Self::new(size).ok_or(TryFromIntError(()))
+    }
+}
+
+/// A valid value of the [`Dr7`] debug register.
+///
+/// In addition to the [`Dr7Flags`] this value has a condition field and a size field for each debug address register.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct Dr7Value {
+    bits: u64,
+}
+
+impl From<Dr7Flags> for Dr7Value {
+    fn from(dr7_flags: Dr7Flags) -> Self {
+        Self::from_bits_truncate(dr7_flags.bits())
+    }
+}
+
+impl Dr7Value {
+    const fn valid_bits() -> u64 {
+        let field_valid_bits = (1 << 32) - (1 << 16);
+        let flag_valid_bits = Dr7Flags::all().bits();
+        field_valid_bits | flag_valid_bits
+    }
+
+    /// Convert from underlying bit representation, unless that representation contains bits that do not correspond to a field.
+    #[inline]
+    pub const fn from_bits(bits: u64) -> Option<Self> {
+        if (bits & !Self::valid_bits()) == 0 {
+            Some(Self { bits })
+        } else {
+            None
+        }
+    }
+
+    /// Convert from underlying bit representation, dropping any bits that do not correspond to fields.
+    #[inline]
+    pub const fn from_bits_truncate(bits: u64) -> Self {
+        Self {
+            bits: bits & Self::valid_bits(),
+        }
+    }
+
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined field).
+    ///
+    /// # Safety
+    ///
+    /// The bit representation must be a valid [`Dr7Value`].
+    #[inline]
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self { bits }
+    }
+
+    /// Returns the raw value of the fields currently stored.
+    #[inline]
+    pub const fn bits(&self) -> u64 {
+        self.bits
+    }
+
+    /// Returns the [`Dr7Flags`] in this value.
+    #[inline]
+    pub const fn flags(self) -> Dr7Flags {
+        Dr7Flags::from_bits_truncate(self.bits)
+    }
+
+    /// Inserts the specified [`Dr7Flags`] in-place.
+    #[inline]
+    pub fn insert_flags(&mut self, flags: Dr7Flags) {
+        self.bits |= flags.bits();
+    }
+
+    /// Removes the specified [`Dr7Flags`] in-place.
+    #[inline]
+    pub fn remove_flags(&mut self, flags: Dr7Flags) {
+        self.bits &= !flags.bits();
+    }
+
+    /// Toggles the specified [`Dr7Flags`] in-place.
+    #[inline]
+    pub fn toggle_flags(&mut self, flags: Dr7Flags) {
+        self.bits ^= flags.bits();
+    }
+
+    /// Inserts or removes the specified [`Dr7Flags`] depending on the passed value.
+    #[inline]
+    pub fn set_flags(&mut self, flags: Dr7Flags, value: bool) {
+        if value {
+            self.insert_flags(flags);
+        } else {
+            self.remove_flags(flags);
+        }
+    }
+
+    /// Returns the condition field of a debug address register.
+    pub fn get_condition(&self, n: DebugAddressRegisterNumber) -> HwBreakpointCondition {
+        let condition = self.bits.get_bits(HwBreakpointCondition::bit_range(n));
+        HwBreakpointCondition::from_bits(condition).expect("condition should be always valid")
+    }
+
+    /// Sets the condition field of a debug address register.
+    pub fn set_condition(
+        &mut self,
+        n: DebugAddressRegisterNumber,
+        condition: HwBreakpointCondition,
+    ) {
+        self.bits
+            .set_bits(HwBreakpointCondition::bit_range(n), condition as u64);
+    }
+
+    /// Returns the size field of a debug address register.
+    pub fn get_size(&self, n: DebugAddressRegisterNumber) -> HwBreakpointSize {
+        let size = self.bits.get_bits(HwBreakpointSize::bit_range(n));
+        HwBreakpointSize::from_bits(size).expect("condition should be always valid")
+    }
+
+    /// Sets the size field of a debug address register.
+    pub fn set_size(&mut self, n: DebugAddressRegisterNumber, size: HwBreakpointSize) {
+        self.bits
+            .set_bits(HwBreakpointSize::bit_range(n), size as u64);
+    }
+}
+
+/// Debug Control Register (DR7).
+///
+/// Configures debug conditions for debug exceptions.
+#[derive(Debug)]
+pub struct Dr7;
+
+#[cfg(feature = "instructions")]
+mod x86_64 {
+    use super::*;
+    use core::arch::asm;
+
+    impl DebugAddressRegister for Dr0 {
+        #[inline]
+        fn read() -> VirtAddr {
+            let addr;
+
+            unsafe {
+                asm!("mov {}, dr0", out(reg) addr, options(nostack, preserves_flags));
+            }
+
+            VirtAddr::new(addr)
+        }
+
+        #[inline]
+        fn write(addr: VirtAddr) {
+            unsafe {
+                asm!("mov dr0, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
+            }
+        }
+    }
+
+    impl DebugAddressRegister for Dr1 {
+        #[inline]
+        fn read() -> VirtAddr {
+            let addr;
+
+            unsafe {
+                asm!("mov {}, dr1", out(reg) addr, options(nostack, preserves_flags));
+            }
+
+            VirtAddr::new(addr)
+        }
+
+        #[inline]
+        fn write(addr: VirtAddr) {
+            unsafe {
+                asm!("mov dr1, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
+            }
+        }
+    }
+
+    impl DebugAddressRegister for Dr2 {
+        #[inline]
+        fn read() -> VirtAddr {
+            let addr;
+
+            unsafe {
+                asm!("mov {}, dr2", out(reg) addr, options(nostack, preserves_flags));
+            }
+
+            VirtAddr::new(addr)
+        }
+
+        #[inline]
+        fn write(addr: VirtAddr) {
+            unsafe {
+                asm!("mov dr2, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
+            }
+        }
+    }
+
+    impl DebugAddressRegister for Dr3 {
+        #[inline]
+        fn read() -> VirtAddr {
+            let addr;
+
+            unsafe {
+                asm!("mov {}, dr3", out(reg) addr, options(nostack, preserves_flags));
+            }
+
+            VirtAddr::new(addr)
+        }
+
+        #[inline]
+        fn write(addr: VirtAddr) {
+            unsafe {
+                asm!("mov dr3, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
+            }
+        }
+    }
+
+    impl Dr6 {
+        /// Read the current set of DR6 flags.
+        #[inline]
+        pub fn read() -> Dr6Flags {
+            Dr6Flags::from_bits_truncate(Self::read_raw())
+        }
+
+        /// Read the current raw DR6 value.
+        #[inline]
+        pub fn read_raw() -> u64 {
+            let value;
+
+            unsafe {
+                asm!("mov {}, dr6", out(reg) value, options(nostack, preserves_flags));
+            }
+
+            value
+        }
+    }
+
+    impl Dr7 {
+        /// Read the current set of DR7 flags.
+        #[inline]
+        pub fn read() -> Dr7Value {
+            Dr7Value::from_bits_truncate(Self::read_raw())
+        }
+
+        /// Read the current raw DR7 value.
+        #[inline]
+        pub fn read_raw() -> u64 {
+            let value;
+
+            unsafe {
+                asm!("mov {}, dr7", out(reg) value, options(nostack, preserves_flags));
+            }
+
+            value
+        }
+
+        /// Write DR7 value.
+        ///
+        /// Preserves the value of reserved fields.
+        #[inline]
+        pub fn write(value: Dr7Value) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !Dr7Value::valid_bits();
+            let new_value = reserved | value.bits();
+
+            Self::write_raw(new_value)
+        }
+
+        /// Write raw DR7 value.
+        #[inline]
+        pub fn write_raw(value: u64) {
+            unsafe {
+                asm!("mov dr7, {}", in(reg) value, options(nostack, preserves_flags));
+            }
+        }
+    }
+}
