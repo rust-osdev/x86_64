@@ -65,6 +65,11 @@ jobs:
       with:
         command: build
 
+    - name: "Run cargo doc"
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+
     - name: "Run cargo build for stable without instructions"
       uses: actions-rs/cargo@v1
       with:
