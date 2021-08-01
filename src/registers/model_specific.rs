@@ -1,6 +1,6 @@
 //! Functions to read and write model specific registers.
 
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{
     instructions::segmentation::{Segment64, FS, GS},
     registers::control::Cr4Flags,

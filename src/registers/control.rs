@@ -1,7 +1,7 @@
 //! Functions to read and write control registers.
 
 pub use super::model_specific::{Efer, EferFlags};
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{registers::rflags::RFlags, structures::paging::PageTableFlags};
 
 use bitflags::bitflags;

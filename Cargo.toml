@@ -42,9 +42,6 @@ inline_asm = []
 abi_x86_interrupt = []
 const_fn = []
 
-[package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
-
 [package.metadata.release]
 no-dev-version = true
 pre-release-replacements = [
