@@ -143,6 +143,9 @@ bitflags! {
         ///
         /// Also enables access to the PKRU register (via the `RDPKRU`/`WRPKRU`
         /// instructions) to set user-mode protection key access controls.
+        const PROTECTION_KEY_USER = 1 << 22;
+        /// Alias for [`PROTECTION_KEY_USER`](Cr4Flags::PROTECTION_KEY_USER)
+        #[deprecated(since = "0.14.5", note = "use `PROTECTION_KEY_USER` instead")]
         const PROTECTION_KEY = 1 << 22;
         /// Enables Control-flow Enforcement Technology (CET)
         ///
