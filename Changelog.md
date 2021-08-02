@@ -1,5 +1,36 @@
 # Unreleased
 
+# 0.14.4 – 2021-07-19
+
+- Add `instructions::tables::sgdt` ([#279](https://github.com/rust-osdev/x86_64/pull/279))
+- Improve control register bits ([#273](https://github.com/rust-osdev/x86_64/pull/273))
+  - Add `Cr0` bits: `EXTENSION_TYPE` (ET)
+  - Add `Cr4` bits:
+    - `KEY_LOCKER` (KL)
+    - `CONTROL_FLOW_ENFORCEMENT` (CET)
+    - `PROTECTION_KEY_SUPERVISOR` (PKS)
+  - Add `XCr0` bits: `BNDREG`, `BNDCSR`, `OPMASK`, `ZMM_HI256`, `HI16_ZMM`
+  - Add consistency checks for `XCr0` bits
+- Add `SelectorErrorCode` for parsing interrupt error codes from `#TS`, `#NP`, `#SS`, and `#GP` ([#274](https://github.com/rust-osdev/x86_64/pull/274))
+- Make `addr::{align_up,  align_down}` const ([#270](https://github.com/rust-osdev/x86_64/pull/270))
+- Make `structures::idt` available on stable Rust ([#271](https://github.com/rust-osdev/x86_64/pull/271))
+  - Use dummy types for the `HandlerFunc`s if the `"abi_x86_interrupt"` feature is disabled
+  - Add unsafe `set_handler_addr` that just takes a `VirtAddr`
+- Add common abstractions for x86 Segments ([#258](https://github.com/rust-osdev/x86_64/pull/258))
+  - Add `SS`, `CS`, `DS`, `ES`, `FS`, `GS` marker types
+  - Add `Segment` trait for reading/writing the segment register
+  - Add `Segment64` trait for reading/writing the segment base
+  - Add `GS::swap()`
+  - Deprecate the corresponding free functions:
+    - `cs`, `set_cs`
+    - `swap_gs`
+    - `load_{ss,ds,es,fs,gs}`
+    - `{wr,rd}{fs,gs}base`
+- Bug fixes:
+  - Corrected documentation typo ([#278](https://github.com/rust-osdev/x86_64/pull/278))
+  - Avoided off-by-one error in `GlobalDescriptorTable::from_raw_slice` when `"const_fn"` is not enabled ([#269](https://github.com/rust-osdev/x86_64/pull/269))
+  - Specify `sysv64` as the calling convention for the `"external_asm"` functions ([#267](https://github.com/rust-osdev/x86_64/pull/267))
+
 # 0.14.3 – 2021-05-14
 
 - Make the following types aliases of the new `PortGeneric` type ([#248](https://github.com/rust-osdev/x86_64/pull/248)):
