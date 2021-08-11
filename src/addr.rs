@@ -107,6 +107,20 @@ impl VirtAddr {
         self.0
     }
 
+    /// Preforms a checked add between two virtual addresses
+    ///
+    /// Panics if an integer overflow occurs
+    #[inline]
+    pub fn checked_add<U>(self, addr: U) -> VirtAddr
+    where
+        U: Into<u64>,
+    {
+        VirtAddr::new(
+            self.as_u64()
+                .checked_add(addr.into())
+                .expect("Integer overflow"),
+        )
+    }
     /// Creates a virtual address from the given pointer
     // cfg(target_pointer_width = "32") is only here for backwards
     // compatibility: Earlier versions of this crate did not have any `cfg()`
