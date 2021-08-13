@@ -132,6 +132,57 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     }
 }
 
+#[cfg(feature = "step_trait")]
+impl<S: PageSize> core::iter::Step for PhysFrame<S> {
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        if *start <= *end {
+            Some((*end - *start) as usize)
+        } else {
+            None
+        }
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        use core::convert::TryFrom;
+
+        match u64::try_from(count) {
+            Ok(n) => match start.start_address().as_u64().overflowing_add(n * S::SIZE) {
+                (_, true) => None,
+                (start_addr, false) => Self::from_start_address(PhysAddr::new(start_addr)).ok(),
+            },
+            Err(_) => None, // if n is out of range, `unsigned_start + n`
+        }
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        use core::convert::TryFrom;
+
+        match u64::try_from(count) {
+            Ok(n) => match start.start_address().as_u64().overflowing_sub(n * S::SIZE) {
+                (_, true) => None,
+                (start_addr, false) => Self::from_start_address(PhysAddr::new(start_addr)).ok(),
+            },
+            Err(_) => None, // if n is out of range, `unsigned_start + n`
+        }
+    }
+
+    fn forward(start: Self, count: usize) -> Self {
+        core::iter::Step::forward_checked(start, count).expect("overflow in `Step::forward`")
+    }
+
+    unsafe fn forward_unchecked(start: Self, count: usize) -> Self {
+        core::iter::Step::forward(start, count)
+    }
+
+    fn backward(start: Self, count: usize) -> Self {
+        core::iter::Step::backward_checked(start, count).expect("overflow in `Step::backward`")
+    }
+
+    unsafe fn backward_unchecked(start: Self, count: usize) -> Self {
+        core::iter::Step::backward(start, count)
+    }
+}
+
 /// An range of physical memory frames, exclusive the upper bound.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
