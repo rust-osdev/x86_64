@@ -1,3 +1,5 @@
+//! Additional (primarily arithmetic) operators for working with memory.
+
 /// A checked equivalent to the `+` operator. Returning an `Option` signifying
 /// if the operation result is within bounds.
 ///
@@ -30,8 +32,10 @@
 ///            None);
 /// ```
 pub trait CheckedAdd<Rhs = Self> {
+    /// The resulting optional type after applying the `checked_add` operation.
     type Output;
 
+    /// Performs the `checked_add` operation.
     fn checked_add(self, rhs: Rhs) -> Option<Self::Output>;
 }
 
@@ -67,7 +71,9 @@ pub trait CheckedAdd<Rhs = Self> {
 ///            None);
 /// ```
 pub trait CheckedSub<Rhs = Self> {
+    /// The resulting optional type after applying the `checked_sub` operation.
     type Output;
 
+    /// Performs the `checked_sub` operation.
     fn checked_sub(self, rhs: Rhs) -> Option<Self::Output>;
 }
