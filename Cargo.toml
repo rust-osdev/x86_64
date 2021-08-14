@@ -37,10 +37,11 @@ cc = { version = "1.0.37", optional = true }
 default = [ "nightly", "instructions" ]
 instructions = []
 external_asm = [ "cc" ]
-nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
+nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt", "doc_cfg" ]
 inline_asm = []
 abi_x86_interrupt = []
 const_fn = []
+doc_cfg = []
 
 [package.metadata.release]
 no-dev-version = true
