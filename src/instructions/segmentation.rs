@@ -1,6 +1,6 @@
 //! Provides functions to read and write segment registers.
 
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{
     registers::control::Cr4Flags,
     structures::gdt::{Descriptor, GlobalDescriptorTable},

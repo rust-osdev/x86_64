@@ -153,7 +153,10 @@ pub fn int3() {
 /// immediate. This macro will be replaced by a generic function when support for
 /// const generics is implemented in Rust.
 #[cfg(feature = "inline_asm")]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "nightly", feature = "inline_asm"))))]
+#[cfg_attr(
+    feature = "doc_cfg",
+    doc(cfg(any(feature = "nightly", feature = "inline_asm")))
+)]
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
