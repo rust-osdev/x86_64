@@ -584,8 +584,16 @@ impl Sub<PhysAddr> for PhysAddr {
     }
 }
 
+/// Checks whether the address is canonical.
+
+/// Returns an `Option<u64>` containing the queried address representing if
+/// the address is canonical or not.
+#[inline]
 const fn is_canonical(addr: u64) -> Option<u64> {
-    if addr <= 0x00007FFFFFFFFFFF || addr >= 0xFFFF800000000000 {
+    let msb = (addr & 0xffff800000000000) >> 47;
+
+    // The most-significant 17 bits must all be one or all be 0.
+    if msb == 0x0 || msb == 0x1ffff {
         Some(addr)
     } else {
         None
