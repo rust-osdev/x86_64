@@ -135,37 +135,17 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 #[cfg(feature = "step_trait")]
 impl<S: PageSize> core::iter::Step for PhysFrame<S> {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        if *start <= *end {
-            Some((*end - *start) as usize)
-        } else {
-            None
-        }
+        PhysAddr::steps_between(&start.start_address, &end.start_address)
     }
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        use core::convert::TryFrom;
-
-        match u64::try_from(count) {
-            Ok(n) => start
-                .start_address()
-                .as_u64()
-                .checked_add(n * S::SIZE)
-                .and_then(|start_addr| Self::from_start_address(PhysAddr::new(start_addr)).ok()),
-            Err(_) => None, // if n is out of range, `unsigned_start + n`
-        }
+        PhysAddr::forward_checked(start.start_address, count)
+            .and_then(|start_addr| Self::from_start_address(start_addr).ok())
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
-        use core::convert::TryFrom;
-
-        match u64::try_from(count) {
-            Ok(n) => start
-                .start_address()
-                .as_u64()
-                .checked_sub(n * S::SIZE)
-                .and_then(|start_addr| Self::from_start_address(PhysAddr::new(start_addr)).ok()),
-            Err(_) => None, // if n is out of range, `unsigned_start + n`
-        }
+        PhysAddr::backward_checked(start.start_address, count)
+            .and_then(|start_addr| Self::from_start_address(start_addr).ok())
     }
 }
 
