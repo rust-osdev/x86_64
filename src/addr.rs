@@ -269,7 +269,10 @@ impl CheckedAdd<u64> for VirtAddr {
     type Output = Self;
 
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
-        self.0.checked_add(rhs).map(Self::new)
+        self.0
+            .checked_add(rhs)
+            .and_then(is_canonical)
+            .map(Self::new)
     }
 }
 
@@ -318,7 +321,10 @@ impl CheckedSub<u64> for VirtAddr {
     type Output = Self;
 
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
-        self.0.checked_sub(rhs).map(Self::new)
+        self.0
+            .checked_sub(rhs)
+            .and_then(is_canonical)
+            .map(Self::new)
     }
 }
 
@@ -575,6 +581,14 @@ impl Sub<PhysAddr> for PhysAddr {
     #[inline]
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
+    }
+}
+
+const fn is_canonical(addr: u64) -> Option<u64> {
+    if addr <= 0x00007FFFFFFFFFFF || addr >= 0xFFFF800000000000 {
+        Some(addr)
+    } else {
+        None
     }
 }
 
