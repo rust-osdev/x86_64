@@ -657,4 +657,38 @@ mod tests {
         assert_eq!(align_up(0, 2), 0);
         assert_eq!(align_up(0, 0x8000_0000_0000_0000), 0);
     }
+
+    #[test]
+    pub fn checked_operations_only_succeed_on_canonical_addresses() {
+        let upper_space_upper_bound = 0xffff_ffff_ffff_ffffu64;
+        let upper_space_lower_bound = 0xffff_8000_0000_0000u64;
+        let lower_space_upper_bound = 0x7fff_ffff_ffffu64;
+        let lower_space_lower_bound = 0x0u64;
+
+        assert_eq!(
+            None,
+            VirtAddr::new(upper_space_upper_bound).checked_add(1u64)
+        );
+        assert_eq!(
+            Some(VirtAddr::new(upper_space_lower_bound + 1u64)),
+            VirtAddr::new(upper_space_lower_bound).checked_add(1u64)
+        );
+        assert_eq!(
+            None,
+            VirtAddr::new(upper_space_lower_bound).checked_sub(1u64)
+        );
+
+        assert_eq!(
+            Some(VirtAddr::new(lower_space_upper_bound - 1)),
+            VirtAddr::new(lower_space_upper_bound).checked_sub(1u64)
+        );
+        assert_eq!(
+            Some(VirtAddr::new(1)),
+            VirtAddr::new(lower_space_lower_bound).checked_add(0x1u64)
+        );
+        assert_eq!(
+            None,
+            VirtAddr::new(lower_space_lower_bound).checked_sub(1u64)
+        );
+    }
 }
