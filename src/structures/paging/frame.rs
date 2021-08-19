@@ -167,22 +167,6 @@ impl<S: PageSize> core::iter::Step for PhysFrame<S> {
             Err(_) => None, // if n is out of range, `unsigned_start + n`
         }
     }
-
-    fn forward(start: Self, count: usize) -> Self {
-        core::iter::Step::forward_checked(start, count).expect("overflow in `Step::forward`")
-    }
-
-    unsafe fn forward_unchecked(start: Self, count: usize) -> Self {
-        core::iter::Step::forward(start, count)
-    }
-
-    fn backward(start: Self, count: usize) -> Self {
-        core::iter::Step::backward_checked(start, count).expect("overflow in `Step::backward`")
-    }
-
-    unsafe fn backward_unchecked(start: Self, count: usize) -> Self {
-        core::iter::Step::backward(start, count)
-    }
 }
 
 /// An range of physical memory frames, exclusive the upper bound.
