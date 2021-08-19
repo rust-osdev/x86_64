@@ -63,6 +63,7 @@ pub(crate) mod asm;
 
 pub mod addr;
 pub mod instructions;
+pub mod ops;
 pub mod registers;
 pub mod structures;
 

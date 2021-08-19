@@ -19,6 +19,5 @@ pub use self::page_table::{PageOffset, PageTable, PageTableFlags, PageTableIndex
 pub mod frame;
 mod frame_alloc;
 pub mod mapper;
-pub mod ops;
 pub mod page;
 pub mod page_table;

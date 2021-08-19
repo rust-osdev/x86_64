@@ -1,5 +1,6 @@
 //! Physical and virtual addresses manipulation
 
+use crate::ops::{CheckedAdd, CheckedSub};
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -590,7 +591,7 @@ impl Sub<PhysAddr> for PhysAddr {
 /// the address is canonical or not.
 #[inline]
 const fn is_canonical(addr: u64) -> Option<u64> {
-    let msb = (addr & 0xffff800000000000) >> 47;
+    let msb = (addr >> 47) & 0x1ffff;
 
     // The most-significant 17 bits must all be one or all be 0.
     if msb == 0x0 || msb == 0x1ffff {

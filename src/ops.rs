@@ -11,7 +11,7 @@
 /// ## Adding integers
 ///
 /// ```
-/// use x86_64::structures::paging::ops::CheckedAdd;
+/// use x86_64::ops::CheckedAdd;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct Addr(u64);
@@ -50,7 +50,7 @@ pub trait CheckedAdd<Rhs = Self> {
 /// ## Subtracting integers
 ///
 /// ```
-/// use x86_64::structures::paging::ops::CheckedSub;
+/// use x86_64::ops::CheckedSub;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct Addr(u64);
