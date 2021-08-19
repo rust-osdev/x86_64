@@ -265,6 +265,14 @@ impl AddAssign<u64> for VirtAddr {
     }
 }
 
+impl CheckedAdd<u64> for VirtAddr {
+    type Output = Self;
+
+    fn checked_add(self, rhs: u64) -> Option<Self::Output> {
+        self.0.checked_add(rhs).map(Self::new)
+    }
+}
+
 #[cfg(target_pointer_width = "64")]
 impl Add<usize> for VirtAddr {
     type Output = Self;
@@ -282,6 +290,15 @@ impl AddAssign<usize> for VirtAddr {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
+impl CheckedAdd<usize> for VirtAddr {
+    type Output = Self;
+
+    fn checked_add(self, rhs: usize) -> Option<Self::Output> {
+        self.checked_add(rhs as u64)
+    }
+}
+
 impl Sub<u64> for VirtAddr {
     type Output = Self;
     #[inline]
@@ -294,6 +311,14 @@ impl SubAssign<u64> for VirtAddr {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
+    }
+}
+
+impl CheckedSub<u64> for VirtAddr {
+    type Output = Self;
+
+    fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
+        self.0.checked_sub(rhs).map(Self::new)
     }
 }
 
@@ -314,11 +339,28 @@ impl SubAssign<usize> for VirtAddr {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
+impl CheckedSub<usize> for VirtAddr {
+    type Output = Self;
+
+    fn checked_sub(self, rhs: usize) -> Option<Self::Output> {
+        self.checked_sub(rhs as u64)
+    }
+}
+
 impl Sub<VirtAddr> for VirtAddr {
     type Output = u64;
     #[inline]
     fn sub(self, rhs: VirtAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
+    }
+}
+
+impl CheckedSub<VirtAddr> for VirtAddr {
+    type Output = u64;
+
+    fn checked_sub(self, rhs: VirtAddr) -> Option<Self::Output> {
+        self.0.checked_sub(rhs.0)
     }
 }
 
