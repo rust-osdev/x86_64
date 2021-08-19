@@ -529,6 +529,25 @@ impl Sub<PhysAddr> for PhysAddr {
     }
 }
 
+#[cfg(feature = "step_trait")]
+impl core::iter::Step for PhysAddr {
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        if *start <= *end {
+            Some((*end - *start) as usize)
+        } else {
+            None
+        }
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        start.as_u64().checked_add(count as u64).map(PhysAddr::new)
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        start.as_u64().checked_sub(count as u64).map(PhysAddr::new)
+    }
+}
+
 /// Align address downwards.
 ///
 /// Returns the greatest `x` with alignment `align` so that `x <= addr`.
