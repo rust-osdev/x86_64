@@ -1,7 +1,6 @@
 //! Abstractions for default-sized and huge physical memory frames.
 
 use super::page::AddressNotAligned;
-use crate::structures::paging::ops::{CheckedAdd, CheckedSub};
 use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
 use core::fmt;
@@ -132,28 +131,6 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     #[inline]
     fn sub(self, rhs: PhysFrame<S>) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
-    }
-}
-
-impl<S: PageSize> CheckedAdd<PhysFrame<S>> for PhysFrame<S> {
-    type Output = u64;
-    #[inline]
-    fn checked_add(self, rhs: PhysFrame<S>) -> Option<Self::Output> {
-        self.start_address
-            .as_u64()
-            .checked_add(rhs.start_address.as_u64())
-            .map(|result| result / S::SIZE)
-    }
-}
-
-impl<S: PageSize> CheckedSub<PhysFrame<S>> for PhysFrame<S> {
-    type Output = u64;
-    #[inline]
-    fn checked_sub(self, rhs: PhysFrame<S>) -> Option<Self::Output> {
-        self.start_address
-            .as_u64()
-            .checked_sub(rhs.start_address.as_u64())
-            .map(|result| result / S::SIZE)
     }
 }
 
