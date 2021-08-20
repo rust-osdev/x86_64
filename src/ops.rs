@@ -1,4 +1,4 @@
-//! Additional (primarily arithmetic) operators for working with memory.
+//! Additional arithmetic operators for working with addresses.
 
 /// A checked equivalent to the `+` operator. Returning an `Option` signifying
 /// if the operation result is within bounds.
@@ -6,9 +6,7 @@
 /// Similarly to `std::ops::Add` note that `Rhs` is `Self` by default, but
 /// this is not mandatory.
 ///
-/// # Examples
-///
-/// ## Adding integers
+/// # Example
 ///
 /// ```
 /// use x86_64::ops::CheckedAdd;
@@ -45,9 +43,7 @@ pub trait CheckedAdd<Rhs = Self> {
 /// Similarly to `std::ops::Sub` note that `Rhs` is `Self` by default, but
 /// this is not mandatory.
 ///
-/// # Examples
-///
-/// ## Subtracting integers
+/// # Example
 ///
 /// ```
 /// use x86_64::ops::CheckedSub;
