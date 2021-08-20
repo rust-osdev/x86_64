@@ -270,10 +270,7 @@ impl CheckedAdd<u64> for VirtAddr {
     type Output = Self;
 
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
-        self.0
-            .checked_add(rhs)
-            .and_then(is_canonical)
-            .map(Self::new)
+        self.0.checked_add(rhs).and_then(from_canonical)
     }
 }
 
@@ -322,10 +319,7 @@ impl CheckedSub<u64> for VirtAddr {
     type Output = Self;
 
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
-        self.0
-            .checked_sub(rhs)
-            .and_then(is_canonical)
-            .map(Self::new)
+        self.0.checked_sub(rhs).and_then(from_canonical)
     }
 }
 
@@ -587,15 +581,13 @@ impl Sub<PhysAddr> for PhysAddr {
 
 /// Checks whether the address is canonical.
 
-/// Returns an `Option<u64>` containing the queried address representing if
-/// the address is canonical or not.
+/// Returns an `Option<VirtAddr>` if the passed u64 falls within canonical
+/// address space.
 #[inline]
-const fn is_canonical(addr: u64) -> Option<u64> {
-    let msb = (addr >> 47) & 0x1ffff;
-
-    // The most-significant 17 bits must all be one or all be 0.
-    if msb == 0x0 || msb == 0x1ffff {
-        Some(addr)
+const fn from_canonical(addr: u64) -> Option<VirtAddr> {
+    let trunc = VirtAddr::new_truncate(addr);
+    if trunc.as_u64() == addr {
+        Some(trunc)
     } else {
         None
     }
