@@ -1,10 +1,13 @@
 //! Additional arithmetic operators for working with addresses.
 
-/// A checked equivalent to the `+` operator. Returning an `Option` signifying
-/// if the operation result is within bounds.
+/// A checked equivalent to the `+` operator that returns `None` if the
+/// operation would result in a panic or a wrapping overflow. Similar to
+/// [`std::ops::Add`] an `Output` type _must_ be specified and a `Rhs` type
+/// _may_ be specified (defaults to `Self`).
 ///
-/// Similarly to `std::ops::Add` note that `Rhs` is `Self` by default, but
-/// this is not mandatory.
+/// We define our own trait rather than use
+/// [`num::CheckedAdd`](https://docs.rs/num/latest/num/trait.CheckedAdd.html)
+/// due to num's implementation requiring that `Rhs` and `Output` both be `Self`.
 ///
 /// # Example
 ///
@@ -37,11 +40,14 @@ pub trait CheckedAdd<Rhs = Self> {
     fn checked_add(self, rhs: Rhs) -> Option<Self::Output>;
 }
 
-/// A checked equivalent to the `-` operator. Returning an `Option` signifying
-/// if the operation result is within bounds.
+/// A checked equivalent to the `-` operator that returns `None` if the
+/// operation would result in a panic or a wrapping underflow. Similar to
+/// [`std::ops::Sub`] an `Output` type _must_ be specified and a `Rhs` type
+/// _may_ be specified (defaults to `Self`).
 ///
-/// Similarly to `std::ops::Sub` note that `Rhs` is `Self` by default, but
-/// this is not mandatory.
+/// We define our own trait rather than use
+/// [`num::CheckedSub`](https://docs.rs/num/latest/num/trait.CheckedSub.html)
+/// due to num's implementation requiring that `Rhs` and `Output` both be `Self`.
 ///
 /// # Example
 ///
