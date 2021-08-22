@@ -1,5 +1,6 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::ops::{CheckedAdd, CheckedSub};
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
@@ -251,6 +252,20 @@ impl<S: PageSize> AddAssign<u64> for Page<S> {
     }
 }
 
+impl<S: PageSize> CheckedAdd<u64> for Page<S> {
+    type Output = Self;
+    #[inline]
+    fn checked_add(self, rhs: u64) -> Option<Self::Output> {
+        let page_aligned_rhs = rhs
+            .checked_mul(S::SIZE)
+            .and_then(|addr| VirtAddr::try_new(addr).ok())?;
+
+        self.start_address()
+            .checked_add(page_aligned_rhs.as_u64())
+            .and_then(|addr| Page::from_start_address(addr).ok())
+    }
+}
+
 impl<S: PageSize> Sub<u64> for Page<S> {
     type Output = Self;
     #[inline]
@@ -266,11 +281,37 @@ impl<S: PageSize> SubAssign<u64> for Page<S> {
     }
 }
 
+impl<S: PageSize> CheckedSub<u64> for Page<S> {
+    type Output = Self;
+    #[inline]
+    fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
+        let page_aligned_rhs = rhs
+            .checked_mul(S::SIZE)
+            .and_then(|addr| VirtAddr::try_new(addr).ok())?;
+
+        self.start_address()
+            .checked_sub(page_aligned_rhs.as_u64())
+            .and_then(|addr| Page::from_start_address(addr).ok())
+    }
+}
+
 impl<S: PageSize> Sub<Self> for Page<S> {
     type Output = u64;
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
+    }
+}
+
+impl<S: PageSize> CheckedSub<Self> for Page<S> {
+    type Output = u64;
+    #[inline]
+    fn checked_sub(self, rhs: Self) -> Option<Self::Output> {
+        self.start_address()
+            .checked_sub(rhs.start_address())
+            .map(VirtAddr::new)
+            .and_then(|addr| Page::<S>::from_start_address(addr).ok())
+            .map(|page| page.start_address().as_u64())
     }
 }
 
