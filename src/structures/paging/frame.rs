@@ -17,7 +17,7 @@ pub struct PhysFrame<S: PageSize = Size4KiB> {
 }
 
 impl<S: PageSize> PhysFrame<S> {
-    /// Returns the frame that starts at the given virtual address.
+    /// Returns the frame that starts at the given physical address.
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
     #[inline]
@@ -31,7 +31,7 @@ impl<S: PageSize> PhysFrame<S> {
     }
 
     const_fn! {
-        /// Returns the frame that starts at the given virtual address.
+        /// Returns the frame that starts at the given physical address.
         ///
         /// ## Safety
         ///
