@@ -256,12 +256,12 @@ impl<S: PageSize> CheckedAdd<u64> for Page<S> {
     type Output = Self;
     #[inline]
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
-        let page_aligned_rhs = rhs
+        let virt_addr_rhs = rhs
             .checked_mul(S::SIZE)
             .and_then(|addr| VirtAddr::try_new(addr).ok())?;
 
         self.start_address()
-            .checked_add(page_aligned_rhs.as_u64())
+            .checked_add(virt_addr_rhs.as_u64())
             .and_then(|addr| Page::from_start_address(addr).ok())
     }
 }
@@ -285,12 +285,12 @@ impl<S: PageSize> CheckedSub<u64> for Page<S> {
     type Output = Self;
     #[inline]
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
-        let page_aligned_rhs = rhs
+        let virt_addr_rhs = rhs
             .checked_mul(S::SIZE)
             .and_then(|addr| VirtAddr::try_new(addr).ok())?;
 
         self.start_address()
-            .checked_sub(page_aligned_rhs.as_u64())
+            .checked_sub(virt_addr_rhs.as_u64())
             .and_then(|addr| Page::from_start_address(addr).ok())
     }
 }
