@@ -311,7 +311,7 @@ impl<S: PageSize> CheckedSub<Self> for Page<S> {
             .checked_sub(rhs.start_address())
             .and_then(|addr| VirtAddr::try_new(addr).ok())
             .and_then(|addr| Page::<S>::from_start_address(addr).ok())
-            .map(|page| page.start_address().as_u64())
+            .map(|page| page.start_address().as_u64() / S::SIZE)
     }
 }
 

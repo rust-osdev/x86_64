@@ -171,7 +171,7 @@ impl<S: PageSize> CheckedSub<PhysFrame<S>> for PhysFrame<S> {
             .checked_sub(rhs.start_address())
             .and_then(|addr| PhysAddr::try_new(addr).ok())
             .and_then(|addr| PhysFrame::<S>::from_start_address(addr).ok())
-            .map(|phys_frame| phys_frame.start_address().as_u64())
+            .map(|phys_frame| phys_frame.start_address().as_u64() / S::SIZE)
     }
 }
 
