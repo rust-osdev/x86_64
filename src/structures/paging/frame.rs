@@ -114,7 +114,7 @@ impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
 
 impl<S: PageSize> CheckedAdd<u64> for PhysFrame<S> {
     type Output = Self;
-
+    #[inline]
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
         let frame_aligned_rhs = rhs.checked_mul(S::SIZE).map(PhysAddr::new)?;
         self.start_address()
@@ -140,11 +140,12 @@ impl<S: PageSize> SubAssign<u64> for PhysFrame<S> {
 
 impl<S: PageSize> CheckedSub<u64> for PhysFrame<S> {
     type Output = Self;
-
+    #[inline]
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
         let frame_aligned_rhs = rhs.checked_mul(S::SIZE).map(PhysAddr::new)?;
         self.start_address()
             .checked_sub(frame_aligned_rhs)
+            .map(PhysAddr::new)
             .and_then(|addr| PhysFrame::from_start_address(addr).ok())
     }
 }
@@ -158,12 +159,14 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 }
 
 impl<S: PageSize> CheckedSub<PhysFrame<S>> for PhysFrame<S> {
-    type Output = Self;
-
+    type Output = u64;
+    #[inline]
     fn checked_sub(self, rhs: PhysFrame<S>) -> Option<Self::Output> {
         self.start_address()
             .checked_sub(rhs.start_address())
-            .and_then(|addr| PhysFrame::from_start_address(addr).ok())
+            .map(PhysAddr::new)
+            .and_then(|addr| PhysFrame::<S>::from_start_address(addr).ok())
+            .map(|phys_frame| phys_frame.start_address().as_u64())
     }
 }
 

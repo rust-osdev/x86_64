@@ -582,10 +582,10 @@ impl Sub<PhysAddr> for PhysAddr {
 }
 
 impl CheckedSub<PhysAddr> for PhysAddr {
-    type Output = Self;
+    type Output = u64;
     #[inline]
     fn checked_sub(self, rhs: Self) -> Option<Self::Output> {
-        self.checked_sub(rhs.0)
+        self.as_u64().checked_sub(rhs.as_u64())
     }
 }
 
