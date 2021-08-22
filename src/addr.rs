@@ -581,14 +581,6 @@ impl Sub<PhysAddr> for PhysAddr {
     }
 }
 
-impl CheckedAdd<PhysAddr> for PhysAddr {
-    type Output = Self;
-    #[inline]
-    fn checked_add(self, rhs: Self) -> Option<Self::Output> {
-        self.checked_add(rhs.0)
-    }
-}
-
 impl CheckedSub<PhysAddr> for PhysAddr {
     type Output = Self;
     #[inline]
