@@ -268,7 +268,7 @@ impl AddAssign<u64> for VirtAddr {
 
 impl CheckedAdd<u64> for VirtAddr {
     type Output = Self;
-
+    #[inline]
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
         self.0.checked_add(rhs).and_then(from_canonical)
     }
@@ -308,7 +308,7 @@ impl SubAssign<u64> for VirtAddr {
 
 impl CheckedSub<u64> for VirtAddr {
     type Output = Self;
-
+    #[inline]
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
         self.0.checked_sub(rhs).and_then(from_canonical)
     }
@@ -341,7 +341,7 @@ impl Sub<VirtAddr> for VirtAddr {
 
 impl CheckedSub<VirtAddr> for VirtAddr {
     type Output = u64;
-
+    #[inline]
     fn checked_sub(self, rhs: VirtAddr) -> Option<Self::Output> {
         self.0.checked_sub(rhs.0)
     }
@@ -504,6 +504,16 @@ impl AddAssign<u64> for PhysAddr {
     }
 }
 
+impl CheckedAdd<u64> for PhysAddr {
+    type Output = Self;
+    #[inline]
+    fn checked_add(self, rhs: u64) -> Option<Self::Output> {
+        self.0
+            .checked_add(rhs)
+            .and_then(|addr| Self::try_new(addr).ok())
+    }
+}
+
 #[cfg(target_pointer_width = "64")]
 impl Add<usize> for PhysAddr {
     type Output = Self;
@@ -536,6 +546,16 @@ impl SubAssign<u64> for PhysAddr {
     }
 }
 
+impl CheckedSub<u64> for PhysAddr {
+    type Output = Self;
+    #[inline]
+    fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
+        self.0
+            .checked_sub(rhs)
+            .and_then(|addr| Self::try_new(addr).ok())
+    }
+}
+
 #[cfg(target_pointer_width = "64")]
 impl Sub<usize> for PhysAddr {
     type Output = Self;
@@ -558,6 +578,22 @@ impl Sub<PhysAddr> for PhysAddr {
     #[inline]
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
+    }
+}
+
+impl CheckedAdd<PhysAddr> for PhysAddr {
+    type Output = Self;
+    #[inline]
+    fn checked_add(self, rhs: Self) -> Option<Self::Output> {
+        self.checked_add(rhs.0)
+    }
+}
+
+impl CheckedSub<PhysAddr> for PhysAddr {
+    type Output = Self;
+    #[inline]
+    fn checked_sub(self, rhs: Self) -> Option<Self::Output> {
+        self.checked_sub(rhs.0)
     }
 }
 
