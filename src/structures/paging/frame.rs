@@ -144,8 +144,7 @@ impl<S: PageSize> CheckedSub<u64> for PhysFrame<S> {
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
         let frame_aligned_rhs = rhs.checked_mul(S::SIZE).map(PhysAddr::new)?;
         self.start_address()
-            .checked_sub(frame_aligned_rhs)
-            .map(PhysAddr::new)
+            .checked_sub(frame_aligned_rhs.as_u64())
             .and_then(|addr| PhysFrame::from_start_address(addr).ok())
     }
 }
