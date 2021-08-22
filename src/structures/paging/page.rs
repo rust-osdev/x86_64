@@ -309,7 +309,7 @@ impl<S: PageSize> CheckedSub<Self> for Page<S> {
     fn checked_sub(self, rhs: Self) -> Option<Self::Output> {
         self.start_address()
             .checked_sub(rhs.start_address())
-            .map(VirtAddr::new)
+            .and_then(|addr| VirtAddr::try_new(addr).ok())
             .and_then(|addr| Page::<S>::from_start_address(addr).ok())
             .map(|page| page.start_address().as_u64())
     }
