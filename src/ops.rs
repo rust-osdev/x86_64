@@ -33,10 +33,10 @@
 ///            None);
 /// ```
 pub trait CheckedAdd<Rhs = Self> {
-    /// The resulting optional type after applying the `checked_add` operation.
+    /// The resulting type returned by the `checked_add` operation.
     type Output;
 
-    /// Performs the `checked_add` operation.
+    /// Adds two numbers, checking for overflow. If overflow happens, None is returned.
     fn checked_add(self, rhs: Rhs) -> Option<Self::Output>;
 }
 
@@ -73,9 +73,9 @@ pub trait CheckedAdd<Rhs = Self> {
 ///            None);
 /// ```
 pub trait CheckedSub<Rhs = Self> {
-    /// The resulting optional type after applying the `checked_sub` operation.
+    /// The resulting type returned by the `checked_sub` operation.
     type Output;
 
-    /// Performs the `checked_sub` operation.
+    /// Subtracts two numbers, checking for underflow. If underflow happens, None is returned.
     fn checked_sub(self, rhs: Rhs) -> Option<Self::Output>;
 }
