@@ -114,6 +114,30 @@ impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
 
 impl<S: PageSize> CheckedAdd<u64> for PhysFrame<S> {
     type Output = Self;
+
+    /// Adds a number of frames to the left-hand side, checking for overflow.
+    /// A new `PhysFrame` is returned represented by the frame with a start
+    /// address equal to the sum of the left-hand side frame's start address
+    /// and the `rhs` * `PageSize`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::ops::CheckedAdd;
+    /// use x86_64::addr::PhysAddr;
+    /// use x86_64::structures::paging::{
+    ///     frame::PhysFrame,
+    ///     page::{PageSize, Size4KiB}
+    /// };
+    ///
+    /// let start_addr_a = 0x0;
+    /// let phys_frame_a: PhysFrame = PhysFrame::from_start_address(PhysAddr::new(start_addr_a)).unwrap();
+    /// let start_addr_b = PhysAddr::new(Size4KiB::SIZE);
+    /// let phys_frame_b: PhysFrame = PhysFrame::from_start_address(start_addr_b).unwrap();
+    ///
+    /// assert_eq!(Some(phys_frame_b), phys_frame_a.checked_add(1u64));
+    /// assert_eq!(None, phys_frame_a.checked_add(u64::MAX));
+    /// ```
     #[inline]
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
         let phys_addr_rhs = rhs
@@ -143,6 +167,30 @@ impl<S: PageSize> SubAssign<u64> for PhysFrame<S> {
 
 impl<S: PageSize> CheckedSub<u64> for PhysFrame<S> {
     type Output = Self;
+
+    /// Subtracts a number of frames from the left-hand side, checking for
+    /// underflow. A new frame is returned represented by the frame with a
+    /// start address equal to the difference of the left-hand side frame's and
+    /// the `rhs` * `PageSize`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::ops::CheckedSub;
+    /// use x86_64::addr::PhysAddr;
+    /// use x86_64::structures::paging::{
+    ///     frame::PhysFrame,
+    ///     page::{PageSize, Size4KiB}
+    /// };
+    ///
+    /// let start_addr_a = 0x0;
+    /// let phys_frame_a: PhysFrame = PhysFrame::from_start_address(PhysAddr::new(start_addr_a)).unwrap();
+    /// let start_addr_b = PhysAddr::new(start_addr_a + Size4KiB::SIZE);
+    /// let phys_frame_b: PhysFrame = PhysFrame::from_start_address(start_addr_b).unwrap();
+    ///
+    /// assert_eq!(Some(phys_frame_a), phys_frame_b.checked_sub(1u64));
+    /// assert_eq!(None, phys_frame_a.checked_sub(1u64));
+    /// ```
     #[inline]
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
         let phys_addr_rhs = rhs
@@ -165,6 +213,30 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 
 impl<S: PageSize> CheckedSub<PhysFrame<S>> for PhysFrame<S> {
     type Output = u64;
+
+    /// Subtracts the first address of two frames, checking for underflow. If
+    /// underflow occurs, None is returned. Otherwise, the difference in frames
+    /// is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::ops::CheckedSub;
+    /// use x86_64::addr::PhysAddr;
+    /// use x86_64::structures::paging::{
+    ///     frame::PhysFrame,
+    ///     page::{PageSize, Size4KiB}
+    /// };
+    ///
+    /// let start_addr_a = PhysAddr::zero();
+    /// let phys_frame_a: PhysFrame  = PhysFrame::from_start_address(start_addr_a).unwrap();
+    /// let start_addr_b = PhysAddr::new(0x0 + Size4KiB::SIZE);
+    /// let phys_frame_b: PhysFrame = PhysFrame::from_start_address(start_addr_b).unwrap();
+    ///
+    ///
+    /// assert_eq!(Some(1), phys_frame_b.checked_sub(phys_frame_a));
+    /// assert_eq!(None, phys_frame_a.checked_sub(phys_frame_b));
+    /// ```
     #[inline]
     fn checked_sub(self, rhs: PhysFrame<S>) -> Option<Self::Output> {
         self.start_address()

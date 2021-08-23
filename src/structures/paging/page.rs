@@ -254,6 +254,29 @@ impl<S: PageSize> AddAssign<u64> for Page<S> {
 
 impl<S: PageSize> CheckedAdd<u64> for Page<S> {
     type Output = Self;
+
+    /// Adds a number of pages to the left-hand side, checking for overflow.
+    /// A new `Page` is returned represented by the `Page` with a start address
+    /// equal to the sum of the left-hand side page's start address and the
+    /// `rhs` * `PageSize`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::ops::CheckedAdd;
+    /// use x86_64::addr::VirtAddr;
+    /// use x86_64::structures::paging::{
+    ///     page::{Page, PageSize, Size4KiB}
+    /// };
+    ///
+    /// let start_addr_a = VirtAddr::zero();
+    /// let page_a: Page = Page::containing_address(start_addr_a);
+    /// let start_addr_b = VirtAddr::new(0x0 + Size4KiB::SIZE);
+    /// let page_b: Page = Page::containing_address(start_addr_b);
+    ///
+    /// assert_eq!(Some(page_b), page_a.checked_add(1u64));
+    /// assert_eq!(None, page_a.checked_add(u64::MAX));
+    /// ```
     #[inline]
     fn checked_add(self, rhs: u64) -> Option<Self::Output> {
         let virt_addr_rhs = rhs
@@ -283,6 +306,29 @@ impl<S: PageSize> SubAssign<u64> for Page<S> {
 
 impl<S: PageSize> CheckedSub<u64> for Page<S> {
     type Output = Self;
+
+    /// Subtracts a number of pages from the left-hand side, checking for underflow.
+    /// A new `Page` is returned represented by the `Page` with a start address
+    /// equal to the difference of the left-hand side page's start address and the
+    /// `rhs` * `PageSize`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::ops::CheckedSub;
+    /// use x86_64::addr::VirtAddr;
+    /// use x86_64::structures::paging::{
+    ///     page::{Page, PageSize, Size4KiB}
+    /// };
+    ///
+    /// let start_addr_a = VirtAddr::zero();
+    /// let page_a: Page = Page::containing_address(start_addr_a);
+    /// let start_addr_b = VirtAddr::new(0x0 + Size4KiB::SIZE);
+    /// let page_b: Page = Page::containing_address(start_addr_b);
+    ///
+    /// assert_eq!(Some(page_a), page_b.checked_sub(1u64));
+    /// assert_eq!(None, page_a.checked_sub(1u64));
+    /// ```
     #[inline]
     fn checked_sub(self, rhs: u64) -> Option<Self::Output> {
         let virt_addr_rhs = rhs
@@ -305,6 +351,27 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 
 impl<S: PageSize> CheckedSub<Self> for Page<S> {
     type Output = u64;
+
+    /// Subtracts the first address of two pages, checking for underflow. If
+    /// underflow occurs, None is returned. Otherwise, the difference in pages
+    /// is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::ops::CheckedSub;
+    /// use x86_64::addr::VirtAddr;
+    /// use x86_64::structures::paging::{Page, PageSize, Size4KiB};
+    ///
+    /// let start_addr_a = VirtAddr::zero();
+    /// let page_a: Page = Page::containing_address(start_addr_a);
+    /// let start_addr_b = VirtAddr::new(0x0 + Size4KiB::SIZE);
+    /// let page_b: Page = Page::containing_address(start_addr_b);
+    ///
+    ///
+    /// assert_eq!(Some(1), page_b.checked_sub(page_a));
+    /// assert_eq!(None, page_a.checked_sub(page_b));
+    /// ```
     #[inline]
     fn checked_sub(self, rhs: Self) -> Option<Self::Output> {
         self.start_address()
