@@ -173,8 +173,8 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [load_ss](crate::instructions::segmentation::load_ss),
-    /// [set_cs](crate::instructions::segmentation::set_cs).
+    /// [SS::set_reg](crate::instructions::segmentation::SS::set_reg),
+    /// [CSS::set_reg](crate::instructions::segmentation::CSS::set_reg).
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
@@ -185,8 +185,8 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [load_ss](crate::instructions::segmentation::load_ss),
-    /// [set_cs](crate::instructions::segmentation::set_cs).
+    /// [SS::set_reg](crate::instructions::segmentation::SS::set_reg),
+    /// [CSS::set_reg](crate::instructions::segmentation::CSS::set_reg).
     ///
     /// # Safety
     ///
