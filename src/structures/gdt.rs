@@ -174,7 +174,7 @@ impl GlobalDescriptorTable {
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
     /// [SS::set_reg](crate::instructions::segmentation::SS::set_reg),
-    /// [CSS::set_reg](crate::instructions::segmentation::CSS::set_reg).
+    /// [CS::set_reg](crate::instructions::segmentation::CS::set_reg).
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
@@ -186,7 +186,7 @@ impl GlobalDescriptorTable {
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
     /// [SS::set_reg](crate::instructions::segmentation::SS::set_reg),
-    /// [CSS::set_reg](crate::instructions::segmentation::CSS::set_reg).
+    /// [CS::set_reg](crate::instructions::segmentation::CS::set_reg).
     ///
     /// # Safety
     ///
