@@ -773,8 +773,6 @@ impl EntryOptions {
 
     /// Set the required privilege level (DPL) for invoking the handler. The DPL can be 0, 1, 2,
     /// or 3, the default is 0. If CPL < DPL, a general protection fault occurs.
-    ///
-    /// This function panics for a DPL > 3.
     #[inline]
     pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {
         self.0.set_bits(13..15, dpl as u16);
