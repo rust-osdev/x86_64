@@ -1,5 +1,7 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+#[cfg(doc)]
+use crate::instructions::segmentation::{Segment, CS, SS};
 use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
 use bit_field::BitField;
@@ -173,8 +175,7 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [SS::set_reg](crate::instructions::segmentation::SS::set_reg),
-    /// [CSS::set_reg](crate::instructions::segmentation::CSS::set_reg).
+    /// [`SS::set_reg()`] and [`CS::set_reg()`].
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static self) {
@@ -185,8 +186,7 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [SS::set_reg](crate::instructions::segmentation::SS::set_reg),
-    /// [CSS::set_reg](crate::instructions::segmentation::CSS::set_reg).
+    /// [`SS::set_reg()`] and [`CS::set_reg()`].
     ///
     /// # Safety
     ///
