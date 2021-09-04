@@ -131,7 +131,8 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size1GiB>, (UnmapError, MapperFlushRange<Size1GiB>)>
     where
-        D: FrameDeallocator<Size1GiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size1GiB> + ?Sized,
     {
         unsafe { self.inner.unmap_range(pages, deallocator) }
     }
@@ -251,7 +252,8 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size2MiB>, (UnmapError, MapperFlushRange<Size2MiB>)>
     where
-        D: FrameDeallocator<Size2MiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size2MiB> + ?Sized,
     {
         unsafe { self.inner.unmap_range(pages, deallocator) }
     }
@@ -371,7 +373,8 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size4KiB>, (UnmapError, MapperFlushRange<Size4KiB>)>
     where
-        D: FrameDeallocator<Size4KiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size4KiB> + ?Sized,
     {
         unsafe { self.inner.unmap_range(pages, deallocator) }
     }

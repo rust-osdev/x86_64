@@ -470,7 +470,8 @@ pub trait Mapper<S: PageSize> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<S>, (UnmapError, MapperFlushRange<S>)>
     where
-        D: FrameDeallocator<S>,
+        Self: Sized,
+        D: FrameDeallocator<S> + ?Sized,
     {
         pages
             .clone()

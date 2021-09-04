@@ -824,7 +824,8 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size1GiB>, (UnmapError, MapperFlushRange<Size1GiB>)>
     where
-        D: FrameDeallocator<Size1GiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size1GiB> + ?Sized,
     {
         self.modify_range_1gib(
             pages,
@@ -1046,7 +1047,8 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size2MiB>, (UnmapError, MapperFlushRange<Size2MiB>)>
     where
-        D: FrameDeallocator<Size2MiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size2MiB> + ?Sized,
     {
         self.modify_range_2mib(
             pages,
@@ -1297,7 +1299,8 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size4KiB>, (UnmapError, MapperFlushRange<Size4KiB>)>
     where
-        D: FrameDeallocator<Size4KiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size4KiB> + ?Sized,
     {
         self.modify_range_4kib(
             pages,

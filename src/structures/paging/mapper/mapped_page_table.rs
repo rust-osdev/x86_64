@@ -651,7 +651,8 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size1GiB>, (UnmapError, MapperFlushRange<Size1GiB>)>
     where
-        D: FrameDeallocator<Size1GiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size1GiB> + ?Sized,
     {
         self.modify_range_1gib(
             pages,
@@ -856,7 +857,8 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size2MiB>, (UnmapError, MapperFlushRange<Size2MiB>)>
     where
-        D: FrameDeallocator<Size2MiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size2MiB> + ?Sized,
     {
         self.modify_range_2mib(
             pages,
@@ -1074,7 +1076,8 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         deallocator: &mut D,
     ) -> Result<MapperFlushRange<Size4KiB>, (UnmapError, MapperFlushRange<Size4KiB>)>
     where
-        D: FrameDeallocator<Size4KiB>,
+        Self: Sized,
+        D: FrameDeallocator<Size4KiB> + ?Sized,
     {
         self.modify_range_4kib(
             pages,
