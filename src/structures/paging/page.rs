@@ -1,5 +1,6 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
 use core::fmt;
@@ -137,8 +138,8 @@ impl<S: PageSize> Page<S> {
         ///
         /// Panics if level is not between 1 and 4
         #[inline]
-        pub fn p_index(self, level: u8) -> PageTableIndex {
-            self.start_address().p_index(level)
+        pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+            self.start_address().page_table_index(level)
         }
     }
 

@@ -3,6 +3,7 @@
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
+use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
 
@@ -200,17 +201,9 @@ impl VirtAddr {
     }
 
     /// Returns the 9-bit level page table index.
-    ///
-    /// ## Panics
-    ///
-    /// Panics if level is not between 1 and 4
     #[inline]
-    pub const fn p_index(self, level: u8) -> PageTableIndex {
-        #[cfg(feature = "const_fn")]
-        assert!(1 <= level && level <= 4, "level has to be between 1 and 4");
-        #[cfg(not(feature = "const_fn"))]
-        [(); 1][!(1 <= level && level <= 4) as usize];
-        PageTableIndex::new_truncate((self.0 >> 12 >> ((level - 1) * 9)) as u16)
+    pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+        PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
     }
 }
 

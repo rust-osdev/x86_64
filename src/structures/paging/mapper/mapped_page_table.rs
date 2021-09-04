@@ -3,7 +3,7 @@ use crate::structures::paging::{
     frame_alloc::{FrameAllocator, FrameDeallocator},
     mapper::*,
     page::{AddressNotAligned, Page, PageRangeInclusive, Size1GiB, Size2MiB, Size4KiB},
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
+    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags, PageTableLevel},
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
@@ -192,7 +192,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         unsafe fn clean_up<P: PageTableFrameMapping>(
             page_table: &mut PageTable,
             page_table_walker: &PageTableWalker<P>,
-            level: u8,
+            level: PageTableLevel,
             range: PageRangeInclusive,
             frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
         ) -> bool {
@@ -203,33 +203,35 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             let table_addr = range
                 .start
                 .start_address()
-                .align_down(1u64 << (level * 9 + 12));
+                .align_down(level.table_address_space_alignment());
 
-            let start = range.start.p_index(level);
-            let end = range.end.p_index(level);
+            let start = range.start.page_table_index(level);
+            let end = range.end.page_table_index(level);
 
             let mut is_empty = true;
 
-            let offset_per_entry = 1u64 << (((level - 1) * 9) + 12);
+            let offset_per_entry = level.entry_address_space_alignment_alignment();
             for (i, entry) in page_table.iter_mut().enumerate() {
-                if usize::from(start) < i && i <= usize::from(end) && level != 1 {
-                    if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
-                        let start = table_addr + (offset_per_entry * (i as u64));
-                        let end = start + offset_per_entry;
-                        let start = Page::<Size4KiB>::containing_address(start);
-                        let start = start.max(range.start);
-                        let end = Page::<Size4KiB>::containing_address(end) - 1;
-                        let end = end.min(range.end);
-                        if clean_up(
-                            page_table,
-                            page_table_walker,
-                            level - 1,
-                            Page::range_inclusive(start, end),
-                            frame_deallocator,
-                        ) {
-                            let frame = entry.frame().unwrap();
-                            entry.set_unused();
-                            frame_deallocator.deallocate_frame(frame);
+                if let Some(next_level) = level.next_lower_level() {
+                    if usize::from(start) < i && i <= usize::from(end) {
+                        if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
+                            let start = table_addr + (offset_per_entry * (i as u64));
+                            let end = start + offset_per_entry;
+                            let start = Page::<Size4KiB>::containing_address(start);
+                            let start = start.max(range.start);
+                            let end = Page::<Size4KiB>::containing_address(end) - 1;
+                            let end = end.min(range.end);
+                            if clean_up(
+                                page_table,
+                                page_table_walker,
+                                next_level,
+                                Page::range_inclusive(start, end),
+                                frame_deallocator,
+                            ) {
+                                let frame = entry.frame().unwrap();
+                                entry.set_unused();
+                                frame_deallocator.deallocate_frame(frame);
+                            }
                         }
                     }
                 }
@@ -245,7 +247,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         clean_up(
             self.level_4_table,
             &self.page_table_walker,
-            4,
+            PageTableLevel::Four,
             range,
             frame_deallocator,
         );
