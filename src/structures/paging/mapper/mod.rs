@@ -700,13 +700,20 @@ impl<S: PageSize> MapperFlushRange<S> {
         })
     }
 
-    /// Flush the page from the TLB to ensure that the newest mapping is used.
+    /// Flush the pages from the TLB to ensure that the newest mapping is used.
     #[cfg(feature = "instructions")]
     #[inline]
-    pub fn flush(self) {
+    pub fn flush_range(self) {
         for page in self.0 {
             crate::instructions::tlb::flush(page.start_address())
         }
+    }
+
+    /// Flush all pages from the TLB to ensure that the newest mapping is used.
+    #[cfg(feature = "instructions")]
+    #[inline]
+    pub fn flush_all(self) {
+        crate::instructions::tlb::flush_all()
     }
 
     /// Don't flush the TLB and silence the “must be used” warning.
