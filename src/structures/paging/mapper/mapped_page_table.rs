@@ -626,7 +626,7 @@ impl<'a, P: PageTableFrameMapping> CleanUp for MappedPageTable<'a, P> {
             let end = range.end.page_table_index(level);
 
             if let Some(next_level) = level.next_lower_level() {
-                let offset_per_entry = level.entry_address_space_alignment_alignment();
+                let offset_per_entry = level.entry_address_space_alignment();
                 for (i, entry) in page_table
                     .iter_mut()
                     .enumerate()

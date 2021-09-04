@@ -395,7 +395,7 @@ impl PageTableLevel {
     }
 
     /// Returns the alignment for the address space described by an entry in a table of this level.
-    pub const fn entry_address_space_alignment_alignment(self) -> u64 {
+    pub const fn entry_address_space_alignment(self) -> u64 {
         1u64 << (((self as u8 - 1) * 9) + 12)
     }
 }
