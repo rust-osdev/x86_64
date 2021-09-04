@@ -44,15 +44,18 @@ impl<'a> OffsetPageTable<'a> {
     }
 
     /// Remove all empty P1-P3 tables
+    ///
+    /// ## Safety
+    ///
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
     #[inline]
-    pub fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        unsafe {
-            // SAFETY: page tables are only used exactly once
-            self.inner.clean_up(frame_deallocator)
-        }
+        self.inner.clean_up(frame_deallocator)
     }
 
     /// Remove all empty P1-P3 tables in a certain range
@@ -70,15 +73,21 @@ impl<'a> OffsetPageTable<'a> {
     /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }
     /// ```
+    ///
+    /// ## Safety
+    ///
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
     #[inline]
-    pub fn clean_up_addr_range<D>(&mut self, range: PageRangeInclusive, frame_deallocator: &mut D)
-    where
+    pub unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
         D: FrameDeallocator<Size4KiB>,
     {
-        unsafe {
-            // SAFETY: page tables are only used exactly once
-            self.inner.clean_up_addr_range(range, frame_deallocator)
-        }
+        self.inner.clean_up_addr_range(range, frame_deallocator)
     }
 }
 
