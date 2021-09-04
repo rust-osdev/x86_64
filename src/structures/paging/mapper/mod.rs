@@ -7,8 +7,10 @@ pub use self::offset_page_table::OffsetPageTable;
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use crate::structures::paging::{
-    frame_alloc::FrameAllocator, page_table::PageTableFlags, Page, PageSize, PhysFrame, Size1GiB,
-    Size2MiB, Size4KiB,
+    frame_alloc::{FrameAllocator, FrameDeallocator},
+    page::PageRangeInclusive,
+    page_table::PageTableFlags,
+    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 
@@ -474,3 +476,45 @@ pub enum TranslateError {
 }
 
 static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;
+
+/// Provides methods for cleaning up unused entries.
+pub trait CleanUp {
+    /// Remove all empty P1-P3 tables
+    ///
+    /// ## Safety
+    ///
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
+    unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>;
+
+    /// Remove all empty P1-P3 tables in a certain range
+    /// ```
+    /// # use core::ops::RangeInclusive;
+    /// # use x86_64::{VirtAddr, structures::paging::{
+    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::{RecursivePageTable, CleanUp}, page::{Page, PageRangeInclusive},
+    /// # }};
+    /// # unsafe fn test(page_table: &mut RecursivePageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// // clean up all page tables in the lower half of the address space
+    /// let lower_half = Page::range_inclusive(
+    ///     Page::containing_address(VirtAddr::new(0)),
+    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    /// );
+    /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
+    /// # }
+    /// ```
+    ///
+    /// ## Safety
+    ///
+    /// The caller has to guarantee that it's safe to free page table frames:
+    /// All page table frames must only be used once and only in this page table
+    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
+    unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
+        D: FrameDeallocator<Size4KiB>;
+}

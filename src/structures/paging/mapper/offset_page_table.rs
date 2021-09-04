@@ -42,53 +42,6 @@ impl<'a> OffsetPageTable<'a> {
     pub fn level_4_table(&mut self) -> &mut PageTable {
         self.inner.level_4_table()
     }
-
-    /// Remove all empty P1-P3 tables
-    ///
-    /// ## Safety
-    ///
-    /// The caller has to guarantee that it's safe to free page table frames:
-    /// All page table frames must only be used once and only in this page table
-    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
-    #[inline]
-    pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
-    where
-        D: FrameDeallocator<Size4KiB>,
-    {
-        self.inner.clean_up(frame_deallocator)
-    }
-
-    /// Remove all empty P1-P3 tables in a certain range
-    /// ```
-    /// # use core::ops::RangeInclusive;
-    /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::OffsetPageTable, page::{Page, PageRangeInclusive},
-    /// # }};
-    /// # unsafe fn test(page_table: &mut OffsetPageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
-    /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = Page::range_inclusive(
-    ///     Page::containing_address(VirtAddr::new(0)),
-    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
-    /// );
-    /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
-    /// # }
-    /// ```
-    ///
-    /// ## Safety
-    ///
-    /// The caller has to guarantee that it's safe to free page table frames:
-    /// All page table frames must only be used once and only in this page table
-    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
-    #[inline]
-    pub unsafe fn clean_up_addr_range<D>(
-        &mut self,
-        range: PageRangeInclusive,
-        frame_deallocator: &mut D,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-    {
-        self.inner.clean_up_addr_range(range, frame_deallocator)
-    }
 }
 
 #[derive(Debug)]
@@ -310,5 +263,26 @@ impl<'a> Translate for OffsetPageTable<'a> {
     #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
+    }
+}
+
+impl<'a> CleanUp for OffsetPageTable<'a> {
+    #[inline]
+    unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.clean_up(frame_deallocator)
+    }
+
+    #[inline]
+    unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.clean_up_addr_range(range, frame_deallocator)
     }
 }

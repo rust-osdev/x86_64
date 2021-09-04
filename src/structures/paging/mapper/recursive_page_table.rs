@@ -286,123 +286,6 @@ impl<'a> RecursivePageTable<'a> {
 
         Ok(MapperFlush::new(page))
     }
-
-    /// Remove all empty P1-P3 tables
-    ///
-    /// ## Safety
-    ///
-    /// The caller has to guarantee that it's safe to free page table frames:
-    /// All page table frames must only be used once and only in this page table
-    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
-    #[inline]
-    pub unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
-    where
-        D: FrameDeallocator<Size4KiB>,
-    {
-        self.clean_up_addr_range(
-            PageRangeInclusive {
-                start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
-                end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
-            },
-            frame_deallocator,
-        )
-    }
-
-    /// Remove all empty P1-P3 tables in a certain range
-    /// ```
-    /// # use core::ops::RangeInclusive;
-    /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::RecursivePageTable, page::{Page, PageRangeInclusive},
-    /// # }};
-    /// # unsafe fn test(page_table: &mut RecursivePageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
-    /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = Page::range_inclusive(
-    ///     Page::containing_address(VirtAddr::new(0)),
-    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
-    /// );
-    /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
-    /// # }
-    /// ```
-    ///
-    /// ## Safety
-    ///
-    /// The caller has to guarantee that it's safe to free page table frames:
-    /// All page table frames must only be used once and only in this page table
-    /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
-    pub unsafe fn clean_up_addr_range<D>(
-        &mut self,
-        range: PageRangeInclusive,
-        frame_deallocator: &mut D,
-    ) where
-        D: FrameDeallocator<Size4KiB>,
-    {
-        fn clean_up(
-            recursive_index: PageTableIndex,
-            page_table: &mut PageTable,
-            level: PageTableLevel,
-            range: PageRangeInclusive,
-            frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
-        ) -> bool {
-            if range.is_empty() {
-                return false;
-            }
-
-            let table_addr = range
-                .start
-                .start_address()
-                .align_down(level.table_address_space_alignment());
-
-            let start = range.start.page_table_index(level);
-            let end = range.end.page_table_index(level);
-
-            if let Some(next_level) = level.next_lower_level() {
-                let offset_per_entry = level.entry_address_space_alignment_alignment();
-                for (i, entry) in page_table
-                    .iter_mut()
-                    .enumerate()
-                    .take(usize::from(end) + 1)
-                    .skip(usize::from(start))
-                    .filter(|(i, _)| {
-                        !(level == PageTableLevel::Four && *i == recursive_index.into())
-                    })
-                {
-                    if let Ok(frame) = entry.frame() {
-                        let start = table_addr + (offset_per_entry * (i as u64));
-                        let end = start + (offset_per_entry - 1);
-                        let start = Page::<Size4KiB>::containing_address(start);
-                        let start = start.max(range.start);
-                        let end = Page::<Size4KiB>::containing_address(end);
-                        let end = end.min(range.end);
-                        let page_table =
-                            [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);
-                        let page_table = unsafe { &mut *page_table };
-                        if clean_up(
-                            recursive_index,
-                            page_table,
-                            next_level,
-                            Page::range_inclusive(start, end),
-                            frame_deallocator,
-                        ) {
-                            entry.set_unused();
-                            unsafe {
-                                frame_deallocator.deallocate_frame(frame);
-                            }
-                        }
-                    }
-                }
-            }
-
-            page_table.iter().all(PageTableEntry::is_unused)
-        }
-
-        clean_up(
-            self.recursive_index,
-            self.level_4_table(),
-            PageTableLevel::Four,
-            range,
-            frame_deallocator,
-        );
-    }
 }
 
 impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
@@ -943,6 +826,97 @@ impl<'a> Translate for RecursivePageTable<'a> {
             offset,
             flags,
         }
+    }
+}
+
+impl<'a> CleanUp for RecursivePageTable<'a> {
+    #[inline]
+    unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.clean_up_addr_range(
+            PageRangeInclusive {
+                start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
+                end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+            },
+            frame_deallocator,
+        )
+    }
+
+    unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        fn clean_up(
+            recursive_index: PageTableIndex,
+            page_table: &mut PageTable,
+            level: PageTableLevel,
+            range: PageRangeInclusive,
+            frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
+        ) -> bool {
+            if range.is_empty() {
+                return false;
+            }
+
+            let table_addr = range
+                .start
+                .start_address()
+                .align_down(level.table_address_space_alignment());
+
+            let start = range.start.page_table_index(level);
+            let end = range.end.page_table_index(level);
+
+            if let Some(next_level) = level.next_lower_level() {
+                let offset_per_entry = level.entry_address_space_alignment_alignment();
+                for (i, entry) in page_table
+                    .iter_mut()
+                    .enumerate()
+                    .take(usize::from(end) + 1)
+                    .skip(usize::from(start))
+                    .filter(|(i, _)| {
+                        !(level == PageTableLevel::Four && *i == recursive_index.into())
+                    })
+                {
+                    if let Ok(frame) = entry.frame() {
+                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let end = start + (offset_per_entry - 1);
+                        let start = Page::<Size4KiB>::containing_address(start);
+                        let start = start.max(range.start);
+                        let end = Page::<Size4KiB>::containing_address(end);
+                        let end = end.min(range.end);
+                        let page_table =
+                            [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);
+                        let page_table = unsafe { &mut *page_table };
+                        if clean_up(
+                            recursive_index,
+                            page_table,
+                            next_level,
+                            Page::range_inclusive(start, end),
+                            frame_deallocator,
+                        ) {
+                            entry.set_unused();
+                            unsafe {
+                                frame_deallocator.deallocate_frame(frame);
+                            }
+                        }
+                    }
+                }
+            }
+
+            page_table.iter().all(PageTableEntry::is_unused)
+        }
+
+        clean_up(
+            self.recursive_index,
+            self.level_4_table(),
+            PageTableLevel::Four,
+            range,
+            frame_deallocator,
+        );
     }
 }
 
