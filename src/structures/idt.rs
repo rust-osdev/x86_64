@@ -1010,6 +1010,85 @@ pub enum DescriptorTable {
     Ldt,
 }
 
+/// This structure defines the CPU-internal exception vector numbers.
+///
+/// The values are defined by the following manual sections:
+///   * AMD Volume 2: 8.2
+///   * Intel Volume 3A: 6.3.1
+#[repr(u8)]
+#[non_exhaustive]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum ExceptionVector {
+    /// Error during Division
+    Division = 0x00,
+
+    /// Debug
+    Debug = 0x01,
+
+    /// Non-Maskable Interrupt
+    NonMaskableInterrupt = 0x02,
+
+    /// Breakpoint
+    Breakpoint = 0x03,
+
+    /// Overflow
+    Overflow = 0x04,
+
+    /// Bound Range Exceeded
+    BoundRange = 0x05,
+
+    /// Invalid Opcode
+    InvalidOpcode = 0x06,
+
+    /// Device Not Available
+    DeviceNotAvailable = 0x07,
+
+    /// Double Fault
+    Double = 0x08,
+
+    /// Invalid TSS
+    InvalidTss = 0x0A,
+
+    /// Segment Not Present
+    SegmentNotPresent = 0x0B,
+
+    /// Stack Fault
+    Stack = 0x0C,
+
+    /// General Protection Fault
+    GeneralProtection = 0x0D,
+
+    /// Page Fault
+    Page = 0x0E,
+
+    /// x87 Floating-Point Exception
+    X87FloatingPoint = 0x10,
+
+    /// Alignment Check
+    AlignmentCheck = 0x11,
+
+    /// Machine Check
+    MachineCheck = 0x12,
+
+    /// SIMD Floating-Point Exception
+    SimdFloatingPoint = 0x13,
+
+    /// Virtualization Exception (Intel-only)
+    Virtualization = 0x14,
+
+    /// Control Protection Exception
+    ControlProtection = 0x15,
+
+    /// Hypervisor Injection (AMD-only)
+    HypervisorInjection = 0x1C,
+
+    /// VMM Communication (AMD-only)
+    VmmCommunication = 0x1D,
+
+    /// Security Exception
+    Security = 0x1E,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
