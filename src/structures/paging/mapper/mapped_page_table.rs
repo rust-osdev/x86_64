@@ -361,7 +361,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn map_range_2mib<F, A>(
+    fn map_to_range_2mib<F, A>(
         &mut self,
         pages: PageRange<Size2MiB>,
         frames: F,
@@ -788,7 +788,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
         assert_eq!(pages.count(), frames.count());
-        self.map_range_2mib(
+        self.map_to_range_2mib(
             pages,
             |page, _| {
                 let offset = page - pages.start;
@@ -812,7 +812,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         Self: Sized,
         A: FrameAllocator<Size4KiB> + FrameAllocator<Size2MiB> + ?Sized,
     {
-        self.map_range_2mib(
+        self.map_to_range_2mib(
             pages,
             |_, allocator| allocator.allocate_frame(),
             flags,

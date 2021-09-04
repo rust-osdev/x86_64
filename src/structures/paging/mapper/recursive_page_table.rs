@@ -514,7 +514,7 @@ impl<'a> RecursivePageTable<'a> {
     }
 
     #[inline]
-    fn map_range_2mib<F, A>(
+    fn map_to_range_2mib<F, A>(
         &mut self,
         pages: PageRange<Size2MiB>,
         frames: F,
@@ -971,7 +971,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
         assert_eq!(pages.count(), frames.count());
-        self.map_range_2mib(
+        self.map_to_range_2mib(
             pages,
             |page, _| {
                 let offset = page - pages.start;
@@ -995,7 +995,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Self: Sized,
         A: FrameAllocator<Size4KiB> + FrameAllocator<Size2MiB> + ?Sized,
     {
-        self.map_range_2mib(
+        self.map_to_range_2mib(
             pages,
             |_, allocator| allocator.allocate_frame(),
             flags,
