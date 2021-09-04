@@ -1,5 +1,12 @@
 # Unreleased
 
+- Rename some XCr0 and CR4 flags (#[275](https://github.com/rust-osdev/x86_64/pull/275))
+- Expose `MapperFlush::new` and `MapperFlushAll::new` constructor functions ([#296](https://github.com/rust-osdev/x86_64/pull/296))
+- Use `#[cfg(doc)]` instead of docs.rs-specific cfg flag (#[287](https://github.com/rust-osdev/x86_64/pull/287))
+- Some documentation updates:
+  - Update segment register references in `GDT::load*` method to non-deprecated methods ([#301](https://github.com/rust-osdev/x86_64/pull/301))
+  - Remove a panic note ([#300](https://github.com/rust-osdev/x86_64/pull/300))
+
 # 0.14.4 – 2021-07-19
 
 - Add `instructions::tables::sgdt` ([#279](https://github.com/rust-osdev/x86_64/pull/279))
