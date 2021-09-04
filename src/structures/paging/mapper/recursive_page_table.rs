@@ -355,46 +355,41 @@ impl<'a> RecursivePageTable<'a> {
             let start = range.start.page_table_index(level);
             let end = range.end.page_table_index(level);
 
-            let mut is_empty = true;
-
-            let offset_per_entry = level.entry_address_space_alignment_alignment();
-            for (i, entry) in page_table.iter_mut().enumerate() {
-                if let Some(next_level) = level.next_lower_level() {
-                    if usize::from(start) < i && i <= usize::from(end) {
-                        if let Ok(frame) = entry.frame() {
-                            let start = table_addr + (offset_per_entry * (i as u64));
-                            let end = start + offset_per_entry;
-                            let start = Page::<Size4KiB>::containing_address(start);
-                            let start = start.max(range.start);
-                            let end = Page::<Size4KiB>::containing_address(end) - 1;
-                            let end = end.min(range.end);
-                            let page_table = [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](
-                                start,
-                                recursive_index,
-                            );
-                            let page_table = unsafe { &mut *page_table };
-                            if clean_up(
-                                recursive_index,
-                                page_table,
-                                next_level,
-                                Page::range_inclusive(start, end),
-                                frame_deallocator,
-                            ) {
-                                entry.set_unused();
-                                unsafe {
-                                    frame_deallocator.deallocate_frame(frame);
-                                }
+            if let Some(next_level) = level.next_lower_level() {
+                let offset_per_entry = level.entry_address_space_alignment_alignment();
+                for (i, entry) in page_table
+                    .iter_mut()
+                    .enumerate()
+                    .take(usize::from(end) + 1)
+                    .skip(usize::from(start))
+                {
+                    if let Ok(frame) = entry.frame() {
+                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let end = start + offset_per_entry;
+                        let start = Page::<Size4KiB>::containing_address(start);
+                        let start = start.max(range.start);
+                        let end = Page::<Size4KiB>::containing_address(end) - 1;
+                        let end = end.min(range.end);
+                        let page_table =
+                            [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);
+                        let page_table = unsafe { &mut *page_table };
+                        if clean_up(
+                            recursive_index,
+                            page_table,
+                            next_level,
+                            Page::range_inclusive(start, end),
+                            frame_deallocator,
+                        ) {
+                            entry.set_unused();
+                            unsafe {
+                                frame_deallocator.deallocate_frame(frame);
                             }
                         }
                     }
                 }
-
-                if !entry.is_unused() {
-                    is_empty = false;
-                }
             }
 
-            is_empty
+            page_table.iter().all(PageTableEntry::is_unused)
         }
 
         clean_up(

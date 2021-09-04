@@ -208,40 +208,37 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             let start = range.start.page_table_index(level);
             let end = range.end.page_table_index(level);
 
-            let mut is_empty = true;
-
-            let offset_per_entry = level.entry_address_space_alignment_alignment();
-            for (i, entry) in page_table.iter_mut().enumerate() {
-                if let Some(next_level) = level.next_lower_level() {
-                    if usize::from(start) < i && i <= usize::from(end) {
-                        if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
-                            let start = table_addr + (offset_per_entry * (i as u64));
-                            let end = start + offset_per_entry;
-                            let start = Page::<Size4KiB>::containing_address(start);
-                            let start = start.max(range.start);
-                            let end = Page::<Size4KiB>::containing_address(end) - 1;
-                            let end = end.min(range.end);
-                            if clean_up(
-                                page_table,
-                                page_table_walker,
-                                next_level,
-                                Page::range_inclusive(start, end),
-                                frame_deallocator,
-                            ) {
-                                let frame = entry.frame().unwrap();
-                                entry.set_unused();
-                                frame_deallocator.deallocate_frame(frame);
-                            }
+            if let Some(next_level) = level.next_lower_level() {
+                let offset_per_entry = level.entry_address_space_alignment_alignment();
+                for (i, entry) in page_table
+                    .iter_mut()
+                    .enumerate()
+                    .take(usize::from(end) + 1)
+                    .skip(usize::from(start))
+                {
+                    if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
+                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let end = start + offset_per_entry;
+                        let start = Page::<Size4KiB>::containing_address(start);
+                        let start = start.max(range.start);
+                        let end = Page::<Size4KiB>::containing_address(end) - 1;
+                        let end = end.min(range.end);
+                        if clean_up(
+                            page_table,
+                            page_table_walker,
+                            next_level,
+                            Page::range_inclusive(start, end),
+                            frame_deallocator,
+                        ) {
+                            let frame = entry.frame().unwrap();
+                            entry.set_unused();
+                            frame_deallocator.deallocate_frame(frame);
                         }
                     }
                 }
-
-                if !entry.is_unused() {
-                    is_empty = false;
-                }
             }
 
-            is_empty
+            page_table.iter().all(PageTableEntry::is_unused)
         }
 
         clean_up(
