@@ -4,8 +4,6 @@ use crate::VirtAddr;
 
 pub mod gdt;
 
-// idt needs `feature(abi_x86_interrupt)`, which is not available on stable rust
-#[cfg(feature = "abi_x86_interrupt")]
 pub mod idt;
 
 pub mod paging;

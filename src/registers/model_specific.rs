@@ -1,5 +1,11 @@
 //! Functions to read and write model specific registers.
 
+#[cfg(doc)]
+use crate::{
+    instructions::segmentation::{Segment64, FS, GS},
+    registers::control::Cr4Flags,
+};
+
 use bitflags::bitflags;
 
 /// A model specific register.
@@ -18,15 +24,19 @@ impl Msr {
 #[derive(Debug)]
 pub struct Efer;
 
-/// FS.Base Model Specific Register.
+/// [FS].Base Model Specific Register.
 #[derive(Debug)]
 pub struct FsBase;
 
-/// GS.Base Model Specific Register.
+/// [GS].Base Model Specific Register.
+///
+/// [`GS::swap`] swaps this register with [`KernelGsBase`].
 #[derive(Debug)]
 pub struct GsBase;
 
 /// KernelGsBase Model Specific Register.
+///
+/// [`GS::swap`] swaps this register with [`GsBase`].
 #[derive(Debug)]
 pub struct KernelGsBase;
 
@@ -223,12 +233,18 @@ mod x86_64 {
 
     impl FsBase {
         /// Read the current FsBase register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`FS::read_base`] can be used instead.
         #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the FS.Base register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`FS::write_base`] can be used instead.
         #[inline]
         pub fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
@@ -238,12 +254,18 @@ mod x86_64 {
 
     impl GsBase {
         /// Read the current GsBase register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`GS::read_base`] can be used instead.
         #[inline]
         pub fn read() -> VirtAddr {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the GS.Base register.
+        ///
+        /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
+        /// [`GS::write_base`] can be used instead.
         #[inline]
         pub fn write(address: VirtAddr) {
             let mut msr = Self::MSR;

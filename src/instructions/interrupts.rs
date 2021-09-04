@@ -156,7 +156,13 @@ pub fn int3() {
 /// It can also cause memory/register corruption depending on the interrupt
 /// implementation (if it expects values/pointers to be passed in registers).
 #[cfg(feature = "inline_asm")]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "nightly", feature = "inline_asm"))))]
-pub unsafe fn software_interrupt<const NUM: u8>() {
-    asm!("int {num}", num = const NUM, options(nomem, nostack));
+#[cfg_attr(
+    feature = "doc_cfg",
+    doc(cfg(any(feature = "nightly", feature = "inline_asm")))
+)]
+#[macro_export]
+macro_rules! software_interrupt {
+    ($x:expr) => {{
+        asm!("int {id}", id = const $x, options(nomem, nostack));
+    }};
 }

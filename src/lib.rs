@@ -8,7 +8,7 @@
 #![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))] // PageSize marker trait
 #![cfg_attr(feature = "inline_asm", feature(asm))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 
@@ -42,6 +42,19 @@ macro_rules! const_fn {
         $(#[$attr])*
         #[cfg(not(feature = "const_fn"))]
         $sv unsafe fn $($fn)*
+    };
+}
+
+// Helper method for assert! in const fn. Uses out of bounds indexing if an
+// assertion fails and the "const_fn" feature is not enabled.
+#[cfg(feature = "const_fn")]
+macro_rules! const_assert {
+    ($cond:expr, $($arg:tt)+) => { assert!($cond, $($arg)*) };
+}
+#[cfg(not(feature = "const_fn"))]
+macro_rules! const_assert {
+    ($cond:expr, $($arg:tt)+) => {
+        [(); 1][!($cond as bool) as usize]
     };
 }
 

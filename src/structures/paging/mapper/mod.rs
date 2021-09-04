@@ -383,8 +383,11 @@ pub struct MapperFlush<S: PageSize>(Page<S>);
 
 impl<S: PageSize> MapperFlush<S> {
     /// Create a new flush promise
+    ///
+    /// Note that this method is intended for implementing the [`Mapper`] trait and no other uses
+    /// are expected.
     #[inline]
-    fn new(page: Page<S>) -> Self {
+    pub fn new(page: Page<S>) -> Self {
         MapperFlush(page)
     }
 
@@ -405,14 +408,17 @@ impl<S: PageSize> MapperFlush<S> {
 /// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
 /// to be flushed from the TLB before it's accessed. This type is returned from a function that
 /// made the change to ensure that the TLB flush is not forgotten.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 #[must_use = "Page Table changes must be flushed or ignored."]
 pub struct MapperFlushAll(());
 
 impl MapperFlushAll {
     /// Create a new flush promise
+    ///
+    /// Note that this method is intended for implementing the [`Mapper`] trait and no other uses
+    /// are expected.
     #[inline]
-    fn new() -> Self {
+    pub fn new() -> Self {
         MapperFlushAll(())
     }
 
