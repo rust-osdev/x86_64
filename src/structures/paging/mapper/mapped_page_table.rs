@@ -218,10 +218,10 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
                 {
                     if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
                         let start = table_addr + (offset_per_entry * (i as u64));
-                        let end = start + offset_per_entry;
+                        let end = start + (offset_per_entry - 1);
                         let start = Page::<Size4KiB>::containing_address(start);
                         let start = start.max(range.start);
-                        let end = Page::<Size4KiB>::containing_address(end) - 1;
+                        let end = Page::<Size4KiB>::containing_address(end);
                         let end = end.min(range.end);
                         if clean_up(
                             page_table,
