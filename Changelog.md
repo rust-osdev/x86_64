@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.5 – 2021-09-04
+
 - Rename some XCr0 and CR4 flags (#[275](https://github.com/rust-osdev/x86_64/pull/275))
 - Expose `MapperFlush::new` and `MapperFlushAll::new` constructor functions ([#296](https://github.com/rust-osdev/x86_64/pull/296))
 - Use `#[cfg(doc)]` instead of docs.rs-specific cfg flag (#[287](https://github.com/rust-osdev/x86_64/pull/287))
