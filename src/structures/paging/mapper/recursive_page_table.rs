@@ -362,6 +362,9 @@ impl<'a> RecursivePageTable<'a> {
                     .enumerate()
                     .take(usize::from(end) + 1)
                     .skip(usize::from(start))
+                    .filter(|(i, _)| {
+                        !(level == PageTableLevel::Four && *i == recursive_index.into())
+                    })
                 {
                     if let Ok(frame) = entry.frame() {
                         let start = table_addr + (offset_per_entry * (i as u64));
