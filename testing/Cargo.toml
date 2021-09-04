@@ -5,7 +5,7 @@ authors = ["Philipp Oppermann <dev@phil-opp.com>"]
 edition = "2018"
 
 [[test]]
-name = "interrupt_handling"
+name = "breakpoint_exception"
 harness = false
 
 [[test]]
