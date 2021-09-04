@@ -890,6 +890,10 @@ impl fmt::Debug for InterruptStackFrameValue {
 
 bitflags! {
     /// Describes an page fault error code.
+    ///
+    /// This structure is defined by the following manual sections:
+    ///   * AMD Volume 2: 8.4.2
+    ///   * Intel Volume 3A: 4.7
     #[repr(transparent)]
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
@@ -913,6 +917,21 @@ bitflags! {
         /// If this flag is set, it indicates that the access that caused the page fault was an
         /// instruction fetch.
         const INSTRUCTION_FETCH = 1 << 4;
+
+        /// If this flag is set, it indicates that the page fault was caused by a protection key.
+        const PROTECTION_KEY = 1 << 5;
+
+        /// If this flag is set, it indicates that the page fault was caused by a shadow stack
+        /// access.
+        const SHADOW_STACK = 1 << 6;
+
+        /// If this flag is set, it indicates that the page fault was caused by SGX access-control
+        /// requirements (Intel-only).
+        const SGX = 1 << 15;
+
+        /// If this flag is set, it indicates that the page fault is a result of the processor
+        /// encountering an RMP violation (AMD-only).
+        const RMP = 1 << 31;
     }
 }
 
