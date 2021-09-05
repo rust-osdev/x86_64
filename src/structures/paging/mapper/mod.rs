@@ -475,7 +475,7 @@ pub trait Mapper<S: PageSize> {
     ///
     /// ## Safety
     /// The caller has to guarantee that it's safe to deallocate frames:
-    /// All unmapped frames must only be only in this page table.
+    /// All unmapped frames must only be in this page table.
     unsafe fn unmap_range<D>(
         &mut self,
         pages: PageRange<S>,
