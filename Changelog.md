@@ -2,12 +2,15 @@
 
 # 0.14.5 – 2021-09-04
 
+- Add `ExceptionVector` enum and additional flags to `PageFaultErrorCode` ([#303](https://github.com/rust-osdev/x86_64/pull/303))
+- Add `clean_up` and `clean_up_with_filter` methods to deallocate unused page tables ([#264](https://github.com/rust-osdev/x86_64/pull/264))
 - Rename some XCr0 and CR4 flags (#[275](https://github.com/rust-osdev/x86_64/pull/275))
 - Expose `MapperFlush::new` and `MapperFlushAll::new` constructor functions ([#296](https://github.com/rust-osdev/x86_64/pull/296))
 - Use `#[cfg(doc)]` instead of docs.rs-specific cfg flag (#[287](https://github.com/rust-osdev/x86_64/pull/287))
 - Some documentation updates:
   - Update segment register references in `GDT::load*` method to non-deprecated methods ([#301](https://github.com/rust-osdev/x86_64/pull/301))
   - Remove a panic note ([#300](https://github.com/rust-osdev/x86_64/pull/300))
+- Update `bit_field` dependency ([#306](https://github.com/rust-osdev/x86_64/pull/306))
 
 # 0.14.4 – 2021-07-19
 
