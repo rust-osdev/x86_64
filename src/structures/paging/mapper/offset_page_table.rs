@@ -1,7 +1,8 @@
 #![cfg(target_pointer_width = "64")]
 
 use crate::structures::paging::{
-    frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
+    frame::PhysFrame, mapper::*, page::PageRangeInclusive, page_table::PageTable, FrameDeallocator,
+    Page, PageTableFlags,
 };
 
 /// A Mapper implementation that requires that the complete physically memory is mapped at some
@@ -262,5 +263,26 @@ impl<'a> Translate for OffsetPageTable<'a> {
     #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
+    }
+}
+
+impl<'a> CleanUp for OffsetPageTable<'a> {
+    #[inline]
+    unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.clean_up(frame_deallocator)
+    }
+
+    #[inline]
+    unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        self.inner.clean_up_addr_range(range, frame_deallocator)
     }
 }

@@ -364,3 +364,38 @@ impl From<PageOffset> for usize {
         usize::from(offset.0)
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+/// A value between 1 and 4.
+pub enum PageTableLevel {
+    /// Represents the level for a page table.
+    One = 1,
+    /// Represents the level for a page directory.
+    Two,
+    /// Represents the level for a page-directory pointer.
+    Three,
+    /// Represents the level for a page-map level-4.
+    Four,
+}
+
+impl PageTableLevel {
+    /// Returns the next lower level or `None` for level 1
+    pub const fn next_lower_level(self) -> Option<Self> {
+        match self {
+            PageTableLevel::Four => Some(PageTableLevel::Three),
+            PageTableLevel::Three => Some(PageTableLevel::Two),
+            PageTableLevel::Two => Some(PageTableLevel::One),
+            PageTableLevel::One => None,
+        }
+    }
+
+    /// Returns the alignment for the address space described by a table of this level.
+    pub const fn table_address_space_alignment(self) -> u64 {
+        1u64 << (self as u8 * 9 + 12)
+    }
+
+    /// Returns the alignment for the address space described by an entry in a table of this level.
+    pub const fn entry_address_space_alignment(self) -> u64 {
+        1u64 << (((self as u8 - 1) * 9) + 12)
+    }
+}
