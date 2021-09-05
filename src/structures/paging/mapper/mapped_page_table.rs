@@ -598,7 +598,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn map_range_with_table_flags<A>(
+    unsafe fn map_range_with_table_flags<A>(
         &mut self,
         pages: PageRange<Size1GiB>,
         flags: PageTableFlags,
@@ -801,7 +801,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn map_range_with_table_flags<A>(
+    unsafe fn map_range_with_table_flags<A>(
         &mut self,
         pages: PageRange<Size2MiB>,
         flags: PageTableFlags,
@@ -1024,7 +1024,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     }
 
     #[inline]
-    fn map_range_with_table_flags<A>(
+    unsafe fn map_range_with_table_flags<A>(
         &mut self,
         pages: PageRange<Size4KiB>,
         flags: PageTableFlags,

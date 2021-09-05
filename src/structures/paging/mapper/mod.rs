@@ -380,10 +380,15 @@ pub trait Mapper<S: PageSize> {
 
     /// Maps frames from the allocator to the given range of virtual pages.
     ///
+    /// ## Safety
+    ///
+    /// This function invokes [`Mapper::map_to_with_table_flags`] internally, so
+    /// all safety requirements of it also apply for this function.
+    ///
     /// ## Errors
     ///
     /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the frames that were successfully mapped.
-    fn map_range_with_table_flags<A>(
+    unsafe fn map_range_with_table_flags<A>(
         &mut self,
         mut pages: PageRange<S>,
         flags: PageTableFlags,
@@ -427,11 +432,16 @@ pub trait Mapper<S: PageSize> {
 
     /// Maps frames from the allocator to the given range of virtual pages.
     ///
+    /// ## Safety
+    ///
+    /// This function invokes [`Mapper::map_to_with_table_flags`] internally, so
+    /// all safety requirements of it also apply for this function.
+    ///
     /// ## Errors
     ///
     /// If an error occurs half-way through a [`MapperFlushRange<S>`] is returned that contains the frames that were successfully mapped.
     #[inline]
-    fn map_range<A>(
+    unsafe fn map_range<A>(
         &mut self,
         pages: PageRange<S>,
         flags: PageTableFlags,
@@ -446,7 +456,9 @@ pub trait Mapper<S: PageSize> {
                 | PageTableFlags::WRITABLE
                 | PageTableFlags::USER_ACCESSIBLE);
 
-        self.map_range_with_table_flags(pages, flags, parent_table_flags, frame_allocator)
+        unsafe {
+            self.map_range_with_table_flags(pages, flags, parent_table_flags, frame_allocator)
+        }
     }
 
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
