@@ -1,10 +1,11 @@
+#[cfg(feature = "experimental")]
+use crate::structures::paging::PageTableIndex;
 use crate::structures::paging::{
     frame::PhysFrame,
     frame_alloc::{FrameAllocator, FrameDeallocator},
     mapper::*,
     page::{AddressNotAligned, Page, PageRangeInclusive, Size1GiB, Size2MiB, Size4KiB},
     page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags, PageTableLevel},
-    PageTableIndex,
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
@@ -142,6 +143,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn next_table_fn_create_next_table<'b, A>(
         (flags, allocator): &mut (PageTableFlags, &mut A),
@@ -156,6 +158,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             .map_err(Into::into)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn next_table_fn_next_table_mut<'b, T>(
         _: &mut T,
@@ -165,6 +168,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         walker.next_table_mut(entry)
     }
 
+    #[cfg(feature = "experimental")]
     fn modify_range_1gib<ModifyFn, ModifyInfo, Err, NextTableFn, NextTableFnErr>(
         &mut self,
         pages: PageRange<Size1GiB>,
@@ -230,6 +234,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn map_to_range_1gib<F, A>(
         &mut self,
@@ -258,6 +263,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     fn modify_range_2mib<ModifyFn, ModifyInfo, Err, NextTableFn, NextTableFnErr>(
         &mut self,
         pages: PageRange<Size2MiB>,
@@ -360,6 +366,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn map_to_range_2mib<F, A>(
         &mut self,
@@ -388,6 +395,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     fn modify_range_4kib<ModifyFn, ModifyInfo, Err, NextTableFn, NextTableFnErr>(
         &mut self,
         pages: PageRange<Size4KiB>,
@@ -526,6 +534,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn map_to_range_4kib<F, A>(
         &mut self,
@@ -571,6 +580,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -597,6 +607,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -644,6 +655,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         Ok((frame, MapperFlush::new(page)))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -689,6 +701,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn update_flags_range(
         &mut self,
@@ -774,6 +787,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -800,6 +814,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -850,6 +865,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         Ok((frame, MapperFlush::new(page)))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -899,6 +915,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn update_flags_range(
         &mut self,
@@ -997,6 +1014,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -1023,6 +1041,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -1069,6 +1088,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         Ok((frame, MapperFlush::new(page)))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -1123,6 +1143,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn update_flags_range(
         &mut self,

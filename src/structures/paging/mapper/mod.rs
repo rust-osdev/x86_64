@@ -8,10 +8,11 @@ pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use core::convert::Infallible;
 
+#[cfg(feature = "experimental")]
+use crate::structures::paging::{frame::PhysFrameRange, page::PageRange};
 use crate::structures::paging::{
-    frame::PhysFrameRange,
     frame_alloc::{FrameAllocator, FrameDeallocator},
-    page::{PageRange, PageRangeInclusive},
+    page::PageRangeInclusive,
     page_table::PageTableFlags,
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
@@ -200,6 +201,7 @@ pub trait Mapper<S: PageSize> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     /// Maps the given range of frames to the range of virtual pages.
     ///
     /// ## Safety
@@ -324,6 +326,7 @@ pub trait Mapper<S: PageSize> {
         Self: Sized,
         A: FrameAllocator<Size4KiB> + ?Sized;
 
+    #[cfg(feature = "experimental")]
     /// Maps the given range of frames to the range of virtual pages.
     ///
     /// ## Safety
@@ -378,6 +381,7 @@ pub trait Mapper<S: PageSize> {
             .map(|_| MapperFlushRange::new(pages))
     }
 
+    #[cfg(feature = "experimental")]
     /// Maps frames from the allocator to the given range of virtual pages.
     ///
     /// ## Safety
@@ -430,6 +434,7 @@ pub trait Mapper<S: PageSize> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     /// Maps frames from the allocator to the given range of virtual pages.
     ///
     /// ## Safety
@@ -466,6 +471,7 @@ pub trait Mapper<S: PageSize> {
     /// Note that no page tables or pages are deallocated.
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
+    #[cfg(feature = "experimental")]
     /// Removes a range of mapping from the page table and deallocate the frames that used to be mapped.
     ///
     /// Note that no page tables or pages are deallocated.
@@ -521,6 +527,7 @@ pub trait Mapper<S: PageSize> {
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
+    #[cfg(feature = "experimental")]
     /// Updates the flags of a range of existing mappings.
     ///
     /// ## Safety
@@ -630,6 +637,7 @@ pub trait Mapper<S: PageSize> {
         unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
 
+    #[cfg(feature = "experimental")]
     /// Maps the given range of frames to the range of virtual pages with the same address.
     ///
     /// ## Safety
@@ -687,6 +695,7 @@ impl<S: PageSize> MapperFlush<S> {
     pub fn ignore(self) {}
 }
 
+#[cfg(feature = "experimental")]
 /// This type represents a range of pages whose mappings have changed in the page table.
 ///
 /// The old mappings might be still cached in the translation lookaside buffer (TLB), so they need
@@ -696,6 +705,7 @@ impl<S: PageSize> MapperFlush<S> {
 #[must_use = "Page Table changes must be flushed or ignored."]
 pub struct MapperFlushRange<S: PageSize>(PageRange<S>);
 
+#[cfg(feature = "experimental")]
 impl<S: PageSize> MapperFlushRange<S> {
     /// Create a new flush promise
     #[inline]

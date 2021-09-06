@@ -1,6 +1,8 @@
 //! Access the page tables through a recursively mapped level 4 table.
 
-use core::{convert::Infallible, fmt};
+#[cfg(feature = "experimental")]
+use core::convert::Infallible;
+use core::fmt;
 
 use super::*;
 use crate::registers::control::Cr3;
@@ -287,6 +289,7 @@ impl<'a> RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     unsafe fn next_table_fn_create_next_table<'b, A, S>(
         (insert_flags, allocator): &mut (PageTableFlags, &mut A),
         entry: &'b mut PageTableEntry,
@@ -299,6 +302,7 @@ impl<'a> RecursivePageTable<'a> {
         unsafe { Self::create_next_table(entry, page, *insert_flags, *allocator) }
     }
 
+    #[cfg(feature = "experimental")]
     unsafe fn next_table_fn_next_table_mut<'b, I>(
         _: &mut I,
         _: &'b mut PageTableEntry,
@@ -307,6 +311,7 @@ impl<'a> RecursivePageTable<'a> {
         Ok(unsafe { &mut *page.start_address().as_mut_ptr() })
     }
 
+    #[cfg(feature = "experimental")]
     fn modify_range_1gib<ModifyFn, ModifyInfo, Err, NextTableFnErr>(
         &mut self,
         pages: PageRange<Size1GiB>,
@@ -372,6 +377,7 @@ impl<'a> RecursivePageTable<'a> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn map_to_range_1gib<F, A>(
         &mut self,
@@ -400,6 +406,7 @@ impl<'a> RecursivePageTable<'a> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     fn modify_range_2mib<ModifyFn, ModifyInfo, Err, NextTableFnErr>(
         &mut self,
         pages: PageRange<Size2MiB>,
@@ -513,6 +520,7 @@ impl<'a> RecursivePageTable<'a> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn map_to_range_2mib<F, A>(
         &mut self,
@@ -541,6 +549,7 @@ impl<'a> RecursivePageTable<'a> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     fn modify_range_4kib<ModifyFn, ModifyInfo, Err, NextTableFnErr>(
         &mut self,
         pages: PageRange<Size4KiB>,
@@ -695,6 +704,7 @@ impl<'a> RecursivePageTable<'a> {
             })
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     fn map_to_range_4kib<F, A>(
         &mut self,
@@ -740,6 +750,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -766,6 +777,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -817,6 +829,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -868,6 +881,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn update_flags_range(
         &mut self,
@@ -957,6 +971,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -983,6 +998,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -1040,6 +1056,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -1098,6 +1115,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn update_flags_range(
         &mut self,
@@ -1209,6 +1227,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -1235,6 +1254,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         )
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -1292,6 +1312,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -1357,6 +1378,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok(MapperFlush::new(page))
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn update_flags_range(
         &mut self,

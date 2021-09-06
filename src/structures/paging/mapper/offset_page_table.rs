@@ -77,6 +77,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -101,6 +102,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -126,6 +128,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -200,6 +203,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -224,6 +228,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -249,6 +254,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
@@ -323,6 +329,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_to_range_with_table_flags<A>(
         &mut self,
@@ -347,6 +354,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn map_range_with_table_flags<A>(
         &mut self,
@@ -372,6 +380,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         self.inner.unmap(page)
     }
 
+    #[cfg(feature = "experimental")]
     #[inline]
     unsafe fn unmap_range<D>(
         &mut self,
