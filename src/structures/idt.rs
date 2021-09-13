@@ -891,6 +891,10 @@ impl fmt::Debug for InterruptStackFrameValue {
 
 bitflags! {
     /// Describes an page fault error code.
+    ///
+    /// This structure is defined by the following manual sections:
+    ///   * AMD Volume 2: 8.4.2
+    ///   * Intel Volume 3A: 4.7
     #[repr(transparent)]
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
@@ -914,6 +918,21 @@ bitflags! {
         /// If this flag is set, it indicates that the access that caused the page fault was an
         /// instruction fetch.
         const INSTRUCTION_FETCH = 1 << 4;
+
+        /// If this flag is set, it indicates that the page fault was caused by a protection key.
+        const PROTECTION_KEY = 1 << 5;
+
+        /// If this flag is set, it indicates that the page fault was caused by a shadow stack
+        /// access.
+        const SHADOW_STACK = 1 << 6;
+
+        /// If this flag is set, it indicates that the page fault was caused by SGX access-control
+        /// requirements (Intel-only).
+        const SGX = 1 << 15;
+
+        /// If this flag is set, it indicates that the page fault is a result of the processor
+        /// encountering an RMP violation (AMD-only).
+        const RMP = 1 << 31;
     }
 }
 
@@ -990,6 +1009,85 @@ pub enum DescriptorTable {
     Idt,
     /// Logical Descriptor Table.
     Ldt,
+}
+
+/// This structure defines the CPU-internal exception vector numbers.
+///
+/// The values are defined by the following manual sections:
+///   * AMD Volume 2: 8.2
+///   * Intel Volume 3A: 6.3.1
+#[repr(u8)]
+#[non_exhaustive]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum ExceptionVector {
+    /// Error during Division
+    Division = 0x00,
+
+    /// Debug
+    Debug = 0x01,
+
+    /// Non-Maskable Interrupt
+    NonMaskableInterrupt = 0x02,
+
+    /// Breakpoint
+    Breakpoint = 0x03,
+
+    /// Overflow
+    Overflow = 0x04,
+
+    /// Bound Range Exceeded
+    BoundRange = 0x05,
+
+    /// Invalid Opcode
+    InvalidOpcode = 0x06,
+
+    /// Device Not Available
+    DeviceNotAvailable = 0x07,
+
+    /// Double Fault
+    Double = 0x08,
+
+    /// Invalid TSS
+    InvalidTss = 0x0A,
+
+    /// Segment Not Present
+    SegmentNotPresent = 0x0B,
+
+    /// Stack Fault
+    Stack = 0x0C,
+
+    /// General Protection Fault
+    GeneralProtection = 0x0D,
+
+    /// Page Fault
+    Page = 0x0E,
+
+    /// x87 Floating-Point Exception
+    X87FloatingPoint = 0x10,
+
+    /// Alignment Check
+    AlignmentCheck = 0x11,
+
+    /// Machine Check
+    MachineCheck = 0x12,
+
+    /// SIMD Floating-Point Exception
+    SimdFloatingPoint = 0x13,
+
+    /// Virtualization Exception (Intel-only)
+    Virtualization = 0x14,
+
+    /// Control Protection Exception
+    ControlProtection = 0x15,
+
+    /// Hypervisor Injection (AMD-only)
+    HypervisorInjection = 0x1C,
+
+    /// VMM Communication (AMD-only)
+    VmmCommunication = 0x1D,
+
+    /// Security Exception
+    Security = 0x1E,
 }
 
 #[cfg(test)]
