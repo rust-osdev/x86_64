@@ -1,4 +1,4 @@
-#![cfg(feature = "instructions")]
+#![cfg(any(doc, feature = "instructions"))]
 
 //! Special x86_64 instructions.
 
