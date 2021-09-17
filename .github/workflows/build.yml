@@ -77,6 +77,12 @@ jobs:
         args: --no-default-features --features external_asm,instructions
       if: runner.os != 'Windows'
 
+    - name: "Run cargo doc without default features"
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --no-default-features
+
     - name: "Run cargo build for stable without instructions"
       uses: actions-rs/cargo@v1
       with:
