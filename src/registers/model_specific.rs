@@ -1,12 +1,9 @@
 //! Functions to read and write model specific registers.
 
-#[cfg(doc)]
-use crate::{
-    instructions::segmentation::{Segment64, FS, GS},
-    registers::control::Cr4Flags,
-};
-
 use bitflags::bitflags;
+// imports for intra doc links
+#[cfg(doc)]
+use crate::registers::segmentation::{FS, GS};
 
 /// A model specific register.
 #[derive(Debug)]
@@ -30,13 +27,19 @@ pub struct FsBase;
 
 /// [GS].Base Model Specific Register.
 ///
-/// [`GS::swap`] swaps this register with [`KernelGsBase`].
+#[cfg_attr(
+    feature = "instructions",
+    doc = "[`GS::swap`] swaps this register with [`KernelGsBase`]."
+)]
 #[derive(Debug)]
 pub struct GsBase;
 
 /// KernelGsBase Model Specific Register.
 ///
-/// [`GS::swap`] swaps this register with [`GsBase`].
+#[cfg_attr(
+    feature = "instructions",
+    doc = "[`GS::swap`] swaps this register with [`GsBase`]."
+)]
 #[derive(Debug)]
 pub struct KernelGsBase;
 
@@ -118,6 +121,12 @@ mod x86_64 {
     use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
+    // imports for intra doc links
+    #[cfg(doc)]
+    use crate::registers::{
+        control::Cr4Flags,
+        segmentation::{Segment, Segment64, CS, SS},
+    };
 
     impl Msr {
         /// Read 64 bits msr register.

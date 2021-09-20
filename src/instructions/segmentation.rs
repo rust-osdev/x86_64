@@ -1,63 +1,11 @@
 //! Provides functions to read and write segment registers.
 
-#[cfg(doc)]
-use crate::{
-    registers::control::Cr4Flags,
-    structures::gdt::{Descriptor, GlobalDescriptorTable},
-};
+pub use crate::registers::segmentation::{Segment, Segment64, CS, DS, ES, FS, GS, SS};
 use crate::{
     registers::model_specific::{FsBase, GsBase, Msr},
     structures::gdt::SegmentSelector,
     VirtAddr,
 };
-
-/// An x86 segment
-///
-/// Segment registers on x86 are 16-bit [`SegmentSelector`]s, which index into
-/// the [`GlobalDescriptorTable`]. The corresponding GDT entry is used to
-/// configure the segment itself. Note that most segmentation functionality is
-/// disabled in 64-bit mode. See the individual segments for more information.
-pub trait Segment {
-    /// Returns the current value of the segment register.
-    fn get_reg() -> SegmentSelector;
-    /// Reload the segment register. Depending on the segment, this may also
-    /// reconfigure the corresponding segment.
-    ///
-    /// ## Safety
-    ///
-    /// This function is unsafe because the caller must ensure that `sel`
-    /// is a valid segment descriptor, and that reconfiguring the segment will
-    /// not cause undefined behavior.
-    unsafe fn set_reg(sel: SegmentSelector);
-}
-
-/// An x86 segment which is actually used in 64-bit mode
-///
-/// While most segments are unused in 64-bit mode, the FS and GS segments are
-/// still partially used. Only the 64-bit segment base address is used, and this
-/// address can be set via the GDT, or by using the `FSGSBASE` instructions.
-pub trait Segment64: Segment {
-    /// MSR containing the segment base. This MSR can be used to set the base
-    /// when [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is **not** set.
-    const BASE: Msr;
-    /// Reads the segment base address
-    ///
-    /// ## Exceptions
-    ///
-    /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set, this instruction will throw a `#UD`.
-    fn read_base() -> VirtAddr;
-    /// Writes the segment base address
-    ///
-    /// ## Exceptions
-    ///
-    /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is not set, this instruction will throw a `#UD`.
-    ///
-    /// ## Safety
-    ///
-    /// The caller must ensure that this write operation has no unsafe side
-    /// effects, as the segment base address might be in use.
-    unsafe fn write_base(base: VirtAddr);
-}
 
 macro_rules! get_reg_impl {
     ($name:literal, $asm_get:ident) => {
@@ -120,14 +68,6 @@ macro_rules! segment64_impl {
     };
 }
 
-/// Code Segment
-///
-/// The segment base and limit are unused in 64-bit mode. Only the L (long), D
-/// (default operation size), and DPL (descriptor privilege-level) fields of the
-/// descriptor are recognized. So changing the segment register can be used to
-/// change privilege level or enable/disable long mode.
-#[derive(Debug)]
-pub struct CS;
 impl Segment for CS {
     get_reg_impl!("cs", x86_64_asm_get_cs);
 
@@ -157,50 +97,11 @@ impl Segment for CS {
     }
 }
 
-/// Stack Segment
-///
-/// Entirely unused in 64-bit mode; setting the segment register does nothing.
-/// However, in ring 3, the SS register still has to point to a valid
-/// [`Descriptor`] (it cannot be zero). This means a user-mode read/write
-/// segment descriptor must be present in the GDT.
-///
-/// This register is also set by the `syscall`/`sysret` and
-/// `sysenter`/`sysexit` instructions (even on 64-bit transitions). This is to
-/// maintain symmetry with 32-bit transitions where setting SS actually will
-/// actually have an effect.
-#[derive(Debug)]
-pub struct SS;
 segment_impl!(SS, "ss", x86_64_asm_get_ss, x86_64_asm_load_ss);
-
-/// Data Segment
-///
-/// Entirely unused in 64-bit mode; setting the segment register does nothing.
-#[derive(Debug)]
-pub struct DS;
 segment_impl!(DS, "ds", x86_64_asm_get_ds, x86_64_asm_load_ds);
-
-/// ES Segment
-///
-/// Entirely unused in 64-bit mode; setting the segment register does nothing.
-#[derive(Debug)]
-pub struct ES;
 segment_impl!(ES, "es", x86_64_asm_get_es, x86_64_asm_load_es);
-
-/// FS Segment
-///
-/// Only base is used in 64-bit mode, see [`Segment64`]. This is often used in
-/// user-mode for Thread-Local Storage (TLS).
-#[derive(Debug)]
-pub struct FS;
 segment_impl!(FS, "fs", x86_64_asm_get_fs, x86_64_asm_load_fs);
 segment64_impl!(FS, "fs", FsBase, x86_64_asm_rdfsbase, x86_64_asm_wrfsbase);
-
-/// GS Segment
-///
-/// Only base is used in 64-bit mode, see [`Segment64`]. In kernel-mode, the GS
-/// base often points to a per-cpu kernel data structure.
-#[derive(Debug)]
-pub struct GS;
 segment_impl!(GS, "gs", x86_64_asm_get_gs, x86_64_asm_load_gs);
 segment64_impl!(GS, "gs", GsBase, x86_64_asm_rdgsbase, x86_64_asm_wrgsbase);
 

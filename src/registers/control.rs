@@ -1,9 +1,6 @@
 //! Functions to read and write control registers.
 
 pub use super::model_specific::{Efer, EferFlags};
-#[cfg(doc)]
-use crate::{registers::rflags::RFlags, structures::paging::PageTableFlags};
-
 use bitflags::bitflags;
 
 /// Various control flags modifying the basic operation of the CPU.
