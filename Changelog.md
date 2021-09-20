@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.6 – 2021-09-20
+
 - New `registers::segmentation` module ([#309](https://github.com/rust-osdev/x86_64/pull/309)), containing:
   - `instructions::segmentation::{Segment, Segment64, CS, DS, ES, FS, GS, SS}`
   - `structures::gdt::SegmentSelector`
