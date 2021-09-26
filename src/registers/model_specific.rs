@@ -43,6 +43,10 @@ pub struct GsBase;
 #[derive(Debug)]
 pub struct KernelGsBase;
 
+/// System Configuration Register.
+#[derive(Debug)]
+pub struct Syscfg;
+
 /// Syscall Register: STAR
 #[derive(Debug)]
 pub struct Star;
@@ -51,9 +55,18 @@ pub struct Star;
 #[derive(Debug)]
 pub struct LStar;
 
+/// Syscall Register: CSTAR
+#[derive(Debug)]
+pub struct CStar;
+
 /// Syscall Register: SFMASK
 #[derive(Debug)]
 pub struct SFMask;
+
+impl Syscfg {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0xC001_0010);
+}
 
 impl Efer {
     /// The underlying model specific register.
@@ -85,9 +98,36 @@ impl LStar {
     pub const MSR: Msr = Msr(0xC000_0082);
 }
 
+impl CStar {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0xC000_0083);
+}
+
 impl SFMask {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0084);
+}
+
+bitflags! {
+    /// Flags of the System Configuration Register.
+    pub struct SyscfgFlags: u32 {
+        /// MtrrFixDramEn
+        const MFDE = 1 << 18;
+        /// MtrrFixDramModEn
+        const MFDM = 1 << 19;
+        /// MtrrVarDramEn
+        const MVDM = 1 << 20;
+        /// MtrrTom2En
+        const TOM2 = 1 << 21;
+        /// Tom2ForceMemTypeWB
+        const FWB = 1 << 22;
+        /// MemEncryptionModeEn
+        const MEME = 1 << 23;
+        /// SecureNestPagingEn
+        const SNPE = 1 << 24;
+        /// VMPLEn
+        const VMPLE = 1 << 25;
+    }
 }
 
 bitflags! {
@@ -174,6 +214,69 @@ mod x86_64 {
 
             #[cfg(not(feature = "inline_asm"))]
             crate::asm::x86_64_asm_wrmsr(self.0, low, high);
+        }
+    }
+
+    impl Syscfg {
+        /// Read the current Syscfg flags.
+        #[inline]
+        pub fn read() -> SyscfgFlags {
+            SyscfgFlags::from_bits_truncate(Self::read_raw())
+        }
+
+        /// Read the current raw Syscfg flags.
+        #[inline]
+        pub fn read_raw() -> u32 {
+            unsafe { Self::MSR.read() as u32 }
+        }
+
+        /// Write the Syscfg flags, preserving reserved values.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to break memory
+        /// safety with wrong flags, e.g. by disabling long mode.
+        #[inline]
+        pub unsafe fn write(flags: SyscfgFlags) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !(SyscfgFlags::all().bits());
+            let new_value = reserved | flags.bits();
+
+            Self::write_raw(new_value);
+        }
+
+        /// Write the Syscfg flags.
+        ///
+        /// Does not preserve any bits, including reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to
+        /// break memory safety with wrong flags
+        #[inline]
+        pub unsafe fn write_raw(flags: u32) {
+            let mut msr = Self::MSR;
+            msr.write(flags as u64);
+        }
+
+        /// Update Syscfg flags.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to break memory
+        /// safety with wrong flags, e.g. by disabling long mode.
+        #[inline]
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut SyscfgFlags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            Self::write(flags);
         }
     }
 
@@ -409,6 +512,23 @@ mod x86_64 {
 
         /// Write a given virtual address to the LStar register.
         /// This holds the target RIP of a syscall.
+        #[inline]
+        pub fn write(address: VirtAddr) {
+            let mut msr = Self::MSR;
+            unsafe { msr.write(address.as_u64()) };
+        }
+    }
+
+    impl CStar {
+        /// Read the current CStar register.
+        /// This holds the target RIP of a syscall in compatibily mode.
+        #[inline]
+        pub fn read() -> VirtAddr {
+            VirtAddr::new(unsafe { Self::MSR.read() })
+        }
+
+        /// Write a given virtual address to the CStar register.
+        /// This holds the target RIP of a syscall in compatibily mode.
         #[inline]
         pub fn write(address: VirtAddr) {
             let mut msr = Self::MSR;

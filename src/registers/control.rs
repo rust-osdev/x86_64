@@ -5,6 +5,10 @@ use bitflags::bitflags;
 
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
+pub struct Cr8;
+
+/// Various control flags modifying the basic operation of the CPU.
+#[derive(Debug)]
 pub struct Cr0;
 
 bitflags! {
@@ -161,6 +165,46 @@ bitflags! {
 mod x86_64 {
     use super::*;
     use crate::{instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr, VirtAddr};
+
+    impl Cr8 {
+        /// Returns the task priority
+        #[inline]
+        pub fn read() -> u8 {
+            Self::read_raw() as u8
+        }
+
+        /// Read the current raw CR8 value.
+        #[inline]
+        pub fn read_raw() -> u64 {
+            let value: u64;
+
+            #[cfg(feature = "inline_asm")]
+            unsafe {
+                asm!("mov {}, cr8", out(reg) value, options(nomem, nostack, preserves_flags));
+            }
+
+            value
+        }
+
+        /// Write raw CR8 flags.
+        ///
+        /// Does _not_ preserve any values, including reserved fields.
+        ///
+        #[inline]
+        pub unsafe fn write_raw(value: u64) {
+            #[cfg(feature = "inline_asm")]
+            asm!("mov cr8, {}", in(reg) value, options(nostack, preserves_flags));
+        }
+
+        /// Write CR8 flags.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        #[inline]
+        pub unsafe fn write(value: u8) {
+            Self::write_raw(value as u64);
+        }
+    }
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
