@@ -4,9 +4,9 @@ use crate::addr::PhysAddr;
 use crate::registers::model_specific::Msr;
 use crate::structures::paging::frame::PhysFrame;
 use crate::structures::paging::frame::PhysFrameRange;
-use core::convert::TryInto;
-use core::convert::TryFrom;
 use bitflags::bitflags;
+use core::convert::TryFrom;
+use core::convert::TryInto;
 
 /// Read only register describing the level of MTRR support
 #[derive(Debug)]
@@ -76,7 +76,7 @@ impl TryFrom<u8> for MTRRtype {
             0x4 => Ok(MTRRtype::Writethrough),
             0x5 => Ok(MTRRtype::WriteProtect),
             0x6 => Ok(MTRRtype::WriteBack),
-            _ => Err(value)
+            _ => Err(value),
         }
     }
 }
@@ -90,7 +90,7 @@ impl TryFrom<u64> for MTRRtype {
             0x4 => Ok(MTRRtype::Writethrough),
             0x5 => Ok(MTRRtype::WriteProtect),
             0x6 => Ok(MTRRtype::WriteBack),
-            _ => Err(value)
+            _ => Err(value),
         }
     }
 }
@@ -132,7 +132,7 @@ bitflags! {
         /// Indicates that the MTRR pair is valid (enalbed) when set to 1
         const VALID = 1 << 11;
         /// The mask value used to specify the memory range
-        const PHYS_MASK = 0xffffffffff << 12;
+        const PHYS_MASK = 0xffff_ffff_ff << 12;
     }
 }
 
@@ -140,7 +140,7 @@ bitflags! {
     /// Flags for the MTRRphysBase[n] registers
     pub struct MTRRphysBaseFlags: u64 {
         /// The memory range base-address in physical-address space
-        const PHYS_BASE = 0xffffffffff << 12;
+        const PHYS_BASE = 0xffff_ffff_ff << 12;
         /// The memory type used to characterize the memory range
         const TYPE = 0xff;
     }
@@ -1346,7 +1346,6 @@ mod x86_64 {
             let mut msr = Self::MSR;
             msr.write(flags);
         }
-
 
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
