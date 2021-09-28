@@ -4,6 +4,8 @@ use crate::addr::PhysAddr;
 use crate::registers::model_specific::Msr;
 use crate::structures::paging::frame::PhysFrame;
 use crate::structures::paging::frame::PhysFrameRange;
+use core::convert::TryInto;
+use core::convert::TryFrom;
 use bitflags::bitflags;
 
 /// Read only register describing the level of MTRR support
@@ -45,23 +47,57 @@ pub type FixMemRangeReg = (
     FixMemRange,
 );
 
-bitflags! {
-    /// Memory types
-    pub struct MTRRtype: u64 {
-        /// All accesses are uncacheable. Write combining is not allowed. Speculative accesses are not allowed.
-        const UNCACHEABLE = 0x0;
-        /// All accesses are uncacheable. Write combining is allowed. Speculative reads are allowed.
-        const WRITE_COMBINING = 0x1;
-        /// Reads allocate cache lines on a cache miss.
-        /// Cache lines are not allocated on a write miss. Write hits update the cache and main memory.
-        const WRITETHROUGH = 0x4;
-        /// Reads allocate cache lines on a cache miss.
-        /// All writes update main memory. Cache lines are not allocated on a write miss. Write hits invalidate the cache and update main memory.
-        const WRITE_PROTECT = 0x5;
-        /// Reads allocate cache lines on a cache miss,
-        /// and can allocate to either the shared, exclusive, or modified state.
-        /// Write allocate to the modified state on a cache miss.
-        const WRITE_BACK = 0x6;
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
+/// Memory types
+pub enum MTRRtype {
+    /// All accesses are uncacheable. Write combining is not allowed. Speculative accesses are not allowed.
+    Uncachable = 0x0,
+    /// All accesses are uncacheable. Write combining is allowed. Speculative reads are allowed.
+    WriteCombining = 0x1,
+    /// Reads allocate cache lines on a cache miss.
+    /// Cache lines are not allocated on a write miss. Write hits update the cache and main memory.
+    Writethrough = 0x4,
+    /// Reads allocate cache lines on a cache miss.
+    /// All writes update main memory. Cache lines are not allocated on a write miss. Write hits invalidate the cache and update main memory.
+    WriteProtect = 0x5,
+    /// Reads allocate cache lines on a cache miss,
+    /// and can allocate to either the shared, exclusive, or modified state.
+    /// Write allocate to the modified state on a cache miss.
+    WriteBack = 0x6,
+}
+
+impl TryFrom<u8> for MTRRtype {
+    type Error = u8;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0x0 => Ok(MTRRtype::Uncachable),
+            0x1 => Ok(MTRRtype::WriteCombining),
+            0x4 => Ok(MTRRtype::Writethrough),
+            0x5 => Ok(MTRRtype::WriteProtect),
+            0x6 => Ok(MTRRtype::WriteBack),
+            _ => Err(value)
+        }
+    }
+}
+
+impl TryFrom<u64> for MTRRtype {
+    type Error = u64;
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
+        match value {
+            0x0 => Ok(MTRRtype::Uncachable),
+            0x1 => Ok(MTRRtype::WriteCombining),
+            0x4 => Ok(MTRRtype::Writethrough),
+            0x5 => Ok(MTRRtype::WriteProtect),
+            0x6 => Ok(MTRRtype::WriteBack),
+            _ => Err(value)
+        }
+    }
+}
+
+impl Into<u8> for MTRRtype {
+    fn into(self) -> u8 {
+        self as u8
     }
 }
 
@@ -350,6 +386,7 @@ impl MTRRfix4KF8000 {
 
 #[cfg(feature = "instructions")]
 mod x86_64 {
+
     use super::*;
     impl MTRRcap {
         /// Read the current raw MTRRcap flags.
@@ -1185,41 +1222,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0x00000, 0x0FFFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0x00000, 0x0FFFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0x10000,
                 0x1FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0x20000,
                 0x2FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0x30000,
                 0x3FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0x40000,
                 0x4FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0x50000,
                 0x5FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0x60000,
                 0x6FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0x70000,
                 0x7FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1249,41 +1286,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0x80000, 0x83FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0x80000, 0x83FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0x84000,
                 0x87FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0x88000,
                 0x8BFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0x8C000,
                 0x8FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0x90000,
                 0x93FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0x94000,
                 0x97FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0x98000,
                 0x9BFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0x9C000,
                 0x9FFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1310,44 +1347,45 @@ mod x86_64 {
             msr.write(flags);
         }
 
+
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xA0000, 0xA3FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xA0000, 0xA3FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xA4000,
                 0xA7FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xA8000,
                 0xABFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xAC000,
                 0xAFFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xB0000,
                 0xB3FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xB4000,
                 0xB7FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xB8000,
                 0xBBFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xBC000,
                 0xBFFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1377,41 +1415,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xC0000, 0xC0FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xC0000, 0xC0FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xC1000,
                 0xC1FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xC2000,
                 0xC2FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xC3000,
                 0xC3FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xC4000,
                 0xC4FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xC5000,
                 0xC5FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xC6000,
                 0xCFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xC7000,
                 0xC7FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1441,41 +1479,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xC8000, 0xC8FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xC8000, 0xC8FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xC9000,
                 0xC9FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xCA000,
                 0xCAFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xCB000,
                 0xCBFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xCC000,
                 0xCCFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xCD000,
                 0xCDFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xCE000,
                 0xCEFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xCF000,
                 0xCFFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1505,41 +1543,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xD0000, 0xD0FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xD0000, 0xD0FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xD1000,
                 0xD1FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xD2000,
                 0xD2FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xD3000,
                 0xD3FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xD4000,
                 0xD4FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xD5000,
                 0xD5FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xD6000,
                 0xD6FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xD7000,
                 0xD7FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1569,41 +1607,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xD8000, 0xD8FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xD8000, 0xD8FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xD9000,
                 0xD9FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xDA000,
                 0xDAFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xDB000,
                 0xDBFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xDC000,
                 0xDCFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xDD000,
                 0xDDFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xDE000,
                 0xDEFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xDF000,
                 0xDFFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1633,41 +1671,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xE0000, 0xE0FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xE0000, 0xE0FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xE1000,
                 0xE1FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xE2000,
                 0xE2FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xE3000,
                 0xE3FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xE4000,
                 0xE4FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xE5000,
                 0xE5FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xE6000,
                 0xE6FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xE7000,
                 0xE7FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1697,41 +1735,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xE8000, 0xE8FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xE8000, 0xE8FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xE9000,
                 0xE9FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xEA000,
                 0xEAFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xEA000,
                 0xEAFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xEB000,
                 0xEBFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xEC000,
                 0xECFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xED000,
                 0xEDFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xEE000,
                 0xEEFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1761,41 +1799,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xF0000, 0xF0FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xF0000, 0xF0FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xF1000,
                 0xF1FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xF2000,
                 0xF2FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xF3000,
                 0xF3FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xF4000,
                 0xF4FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xF5000,
                 0xF5FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xF6000,
                 0xF6FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xF7000,
                 0xF7FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
@@ -1825,41 +1863,41 @@ mod x86_64 {
         /// Reads the memory type for the first 512 Kb
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
-            let one = FixMemRange::new(0xF8000, 0xF8FFF, MTRRtype::from_bits_truncate(r & 0xff));
+            let one = FixMemRange::new(0xF8000, 0xF8FFF, (r & 0xff).try_into().unwrap());
             let two = FixMemRange::new(
                 0xF9000,
                 0xF9FFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 8)),
+                ((r & (0xff << 8)) >> 8).try_into().unwrap(),
             );
             let three = FixMemRange::new(
                 0xFA000,
                 0xFAFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 16)),
+                ((r & (0xff << 16)) >> 16).try_into().unwrap(),
             );
             let four = FixMemRange::new(
                 0xFB000,
                 0xFBFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 24)),
+                ((r & (0xff << 24)) >> 24).try_into().unwrap(),
             );
             let five = FixMemRange::new(
                 0xFC000,
                 0xFCFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 32)),
+                ((r & (0xff << 32)) >> 32).try_into().unwrap(),
             );
             let six = FixMemRange::new(
                 0xFD000,
                 0xFDFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 40)),
+                ((r & (0xff << 40)) >> 40).try_into().unwrap(),
             );
             let seven = FixMemRange::new(
                 0xFE000,
                 0xFEFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 48)),
+                ((r & (0xff << 48)) >> 48).try_into().unwrap(),
             );
             let eight = FixMemRange::new(
                 0xFF000,
                 0xFFFFF,
-                MTRRtype::from_bits_truncate(r & (0xff << 56)),
+                ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
             (one, two, three, four, five, six, seven, eight)
         }
