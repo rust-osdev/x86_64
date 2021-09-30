@@ -16,8 +16,10 @@ pub struct MTRRcap;
 /// Fixed range MTRR address with memory type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FixMemRange {
-    range: PhysFrameRange,
-    memory_type: MTRRtype,
+    /// Address range being mem typed
+    pub range: PhysFrameRange,
+    /// Memory type
+    pub memory_type: MTRRtype,
 }
 
 impl FixMemRange {
@@ -36,16 +38,7 @@ impl FixMemRange {
 }
 
 /// Return type for reading a fixed memory range MTRR
-pub type FixMemRangeReg = (
-    FixMemRange,
-    FixMemRange,
-    FixMemRange,
-    FixMemRange,
-    FixMemRange,
-    FixMemRange,
-    FixMemRange,
-    FixMemRange,
-);
+pub type FixMemRangeReg = [FixMemRange; 8];
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
@@ -1258,7 +1251,7 @@ mod x86_64 {
                 0x7FFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1322,7 +1315,7 @@ mod x86_64 {
                 0x9FFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1386,7 +1379,7 @@ mod x86_64 {
                 0xBFFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1450,7 +1443,7 @@ mod x86_64 {
                 0xC7FFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1514,7 +1507,7 @@ mod x86_64 {
                 0xCFFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1578,7 +1571,7 @@ mod x86_64 {
                 0xD7FFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1642,7 +1635,7 @@ mod x86_64 {
                 0xDFFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1706,7 +1699,7 @@ mod x86_64 {
                 0xE7FFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1770,7 +1763,7 @@ mod x86_64 {
                 0xEEFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1834,7 +1827,7 @@ mod x86_64 {
                 0xF7FFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 
@@ -1898,7 +1891,7 @@ mod x86_64 {
                 0xFFFFF,
                 ((r & (0xff << 56)) >> 56).try_into().unwrap(),
             );
-            (one, two, three, four, five, six, seven, eight)
+            [one, two, three, four, five, six, seven, eight]
         }
     }
 }
