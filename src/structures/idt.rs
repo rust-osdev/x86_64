@@ -851,7 +851,7 @@ impl fmt::Debug for InterruptStackFrame {
 }
 
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct InterruptStackFrameValue {
     /// This value points to the instruction that should be executed when the interrupt
@@ -1114,5 +1114,24 @@ mod test {
             reserved: 0,
             phantom: PhantomData,
         })
+    }
+
+    #[test]
+    fn isr_frame_manipulation() {
+        let mut frame = InterruptStackFrame {
+            value: InterruptStackFrameValue {
+                instruction_pointer: VirtAddr::new(0x1000),
+                code_segment: 0,
+                cpu_flags: 0,
+                stack_pointer: VirtAddr::new(0x2000),
+                stack_segment: 0,
+            },
+        };
+
+        unsafe {
+            frame
+                .as_mut()
+                .update(|f| f.instruction_pointer = f.instruction_pointer + 2u64);
+        }
     }
 }
