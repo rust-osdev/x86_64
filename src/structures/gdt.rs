@@ -44,7 +44,7 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// // Add entry for TSS, call gdt.load() then update segment registers
 /// ```
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct GlobalDescriptorTable {
     table: [u64; 8],
     next_free: usize,
