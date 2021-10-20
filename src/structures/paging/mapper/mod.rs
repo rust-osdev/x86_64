@@ -18,6 +18,8 @@ use crate::structures::paging::{
 };
 use crate::{PhysAddr, VirtAddr};
 
+use super::page_table::FrameError;
+
 mod mapped_page_table;
 mod offset_page_table;
 #[cfg(feature = "instructions")]
@@ -804,6 +806,15 @@ pub enum UnmapError {
     InvalidFrameAddress(PhysAddr),
 }
 
+impl From<FrameError> for UnmapError {
+    fn from(e: FrameError) -> Self {
+        match e {
+            FrameError::FrameNotPresent => Self::PageNotMapped,
+            FrameError::HugeFrame => Self::ParentEntryHugePage,
+        }
+    }
+}
+
 impl From<Infallible> for UnmapError {
     fn from(i: Infallible) -> Self {
         match i {}
@@ -818,6 +829,15 @@ pub enum FlagUpdateError {
     /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
     /// given page is part of a huge page and can't be freed individually.
     ParentEntryHugePage,
+}
+
+impl From<FrameError> for FlagUpdateError {
+    fn from(e: FrameError) -> Self {
+        match e {
+            FrameError::FrameNotPresent => Self::PageNotMapped,
+            FrameError::HugeFrame => Self::ParentEntryHugePage,
+        }
+    }
 }
 
 impl From<Infallible> for FlagUpdateError {

@@ -305,9 +305,10 @@ impl<'a> RecursivePageTable<'a> {
     #[cfg(feature = "experimental")]
     unsafe fn next_table_fn_next_table_mut<'b, I>(
         _: &mut I,
-        _: &'b mut PageTableEntry,
+        e: &'b mut PageTableEntry,
         page: Page,
-    ) -> Result<&'b mut PageTable, Infallible> {
+    ) -> Result<&'b mut PageTable, FrameError> {
+        e.frame()?;
         Ok(unsafe { &mut *page.start_address().as_mut_ptr() })
     }
 
