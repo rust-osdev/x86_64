@@ -1,7 +1,5 @@
 //! Access the page tables through a recursively mapped level 4 table.
 
-#[cfg(feature = "experimental")]
-use core::convert::Infallible;
 use core::fmt;
 
 use super::*;
