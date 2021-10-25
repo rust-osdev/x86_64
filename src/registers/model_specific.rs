@@ -118,6 +118,7 @@ mod x86_64 {
     use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
+    use core::fmt;
 
     impl Msr {
         /// Read 64 bits msr register.
@@ -367,26 +368,49 @@ mod x86_64 {
             ss_sysret: SegmentSelector,
             cs_syscall: SegmentSelector,
             ss_syscall: SegmentSelector,
-        ) -> Result<(), &'static str> {
+        ) -> Result<(), InvalidStarSegmentSelectors> {
             if cs_sysret.0 - 16 != ss_sysret.0 - 8 {
-                return Err("Sysret CS and SS is not offset by 8.");
+                return Err(InvalidStarSegmentSelectors::SysretOffset);
             }
 
             if cs_syscall.0 != ss_syscall.0 - 8 {
-                return Err("Syscall CS and SS is not offset by 8.");
+                return Err(InvalidStarSegmentSelectors::SyscallOffset);
             }
 
             if ss_sysret.rpl() != PrivilegeLevel::Ring3 {
-                return Err("Sysret's segment must be a Ring3 segment.");
+                return Err(InvalidStarSegmentSelectors::SysretPrivilegeLevel);
             }
 
             if ss_syscall.rpl() != PrivilegeLevel::Ring0 {
-                return Err("Syscall's segment must be a Ring0 segment.");
+                return Err(InvalidStarSegmentSelectors::SyscallPrivilegeLevel);
             }
 
             unsafe { Self::write_raw(ss_sysret.0 - 8, cs_syscall.0) };
 
             Ok(())
+        }
+    }
+
+    #[derive(Debug)]
+    pub enum InvalidStarSegmentSelectors {
+        SysretOffset,
+        SyscallOffset,
+        SysretPrivilegeLevel,
+        SyscallPrivilegeLevel,
+    }
+
+    impl fmt::Display for InvalidStarSegmentSelectors {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::SysretOffset => write!(f, "Sysret CS and SS is not offset by 8."),
+                Self::SyscallOffset => write!(f, "Syscall CS and SS is not offset by 8."),
+                Self::SysretPrivilegeLevel => {
+                    write!(f, "Sysret's segment must be a Ring3 segment.")
+                }
+                Self::SyscallPrivilegeLevel => {
+                    write!(f, "Syscall's segment must be a Ring0 segment.")
+                }
+            }
         }
     }
 
