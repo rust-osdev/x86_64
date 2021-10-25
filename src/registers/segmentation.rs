@@ -62,7 +62,7 @@ pub trait Segment64: Segment {
 /// with some additional flags).
 ///
 /// See Intel 3a, Section 3.4.2 "Segment Selectors"
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct SegmentSelector(pub u16);
 

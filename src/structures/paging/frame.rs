@@ -8,7 +8,7 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A physical memory frame.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
     pub(crate) start_address: PhysAddr, // TODO: remove when start_address() is const
@@ -133,7 +133,7 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 }
 
 /// An range of physical memory frames, exclusive the upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct PhysFrameRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
@@ -175,7 +175,7 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
 }
 
 /// An range of physical memory frames, inclusive the upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.

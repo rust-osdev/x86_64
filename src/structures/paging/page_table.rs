@@ -268,7 +268,7 @@ impl fmt::Debug for PageTable {
 /// Can be used to select one of the 512 entries of a page table.
 ///
 /// Guaranteed to only ever contain 0..512.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PageTableIndex(u16);
 
 impl PageTableIndex {
@@ -319,7 +319,7 @@ impl From<PageTableIndex> for usize {
 /// This type is returned by the `VirtAddr::page_offset` method.
 ///
 /// Guaranteed to only ever contain 0..4096.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PageOffset(u16);
 
 impl PageOffset {

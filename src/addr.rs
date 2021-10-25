@@ -17,7 +17,7 @@ use bit_field::BitField;
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
 /// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterium
 /// are called “canonical”. This type guarantees that it always represents a canonical address.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct VirtAddr(u64);
 
@@ -30,7 +30,7 @@ pub struct VirtAddr(u64);
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
 /// to be zero. This type guarantees that it always represents a valid physical address.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct PhysAddr(u64);
 
