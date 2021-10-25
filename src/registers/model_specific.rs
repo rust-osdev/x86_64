@@ -402,8 +402,8 @@ mod x86_64 {
     impl fmt::Display for InvalidStarSegmentSelectors {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::SysretOffset => write!(f, "Sysret CS and SS is not offset by 8."),
-                Self::SyscallOffset => write!(f, "Syscall CS and SS is not offset by 8."),
+                Self::SysretOffset => write!(f, "Sysret CS and SS are not offset by 8."),
+                Self::SyscallOffset => write!(f, "Syscall CS and SS are not offset by 8."),
                 Self::SysretPrivilegeLevel => {
                     write!(f, "Sysret's segment must be a Ring3 segment.")
                 }
