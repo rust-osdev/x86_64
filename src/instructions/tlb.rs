@@ -1,5 +1,7 @@
 //! Functions to flush the translation lookaside buffer (TLB).
 
+use core::fmt;
+
 use crate::VirtAddr;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
@@ -55,9 +57,9 @@ pub struct Pcid(u16);
 impl Pcid {
     /// Create a new PCID. Will result in a failure if the value of
     /// PCID is out of expected bounds.
-    pub const fn new(pcid: u16) -> Result<Pcid, &'static str> {
+    pub const fn new(pcid: u16) -> Result<Pcid, PcidTooBig> {
         if pcid >= 4096 {
-            Err("PCID should be < 4096.")
+            Err(PcidTooBig(pcid))
         } else {
             Ok(Pcid(pcid))
         }
@@ -66,6 +68,18 @@ impl Pcid {
     /// Get the value of the current PCID.
     pub const fn value(&self) -> u16 {
         self.0
+    }
+}
+
+/// A passed `u16` was not a valid PCID.
+///
+/// A PCID has to be <= 4096 for x86_64.
+#[derive(Debug)]
+pub struct PcidTooBig(u16);
+
+impl fmt::Display for PcidTooBig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "PCID should be < 4096, got {}", self.0)
     }
 }
 
