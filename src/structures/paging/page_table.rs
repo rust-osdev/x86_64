@@ -365,7 +365,7 @@ impl From<PageOffset> for usize {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// A value between 1 and 4.
 pub enum PageTableLevel {
     /// Represents the level for a page table.

@@ -67,7 +67,7 @@ pub mod registers;
 pub mod structures;
 
 /// Represents a protection ring level.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u8)]
 pub enum PrivilegeLevel {
     /// Privilege-level 0 (most privilege): This level is used by critical system-software
