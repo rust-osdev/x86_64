@@ -132,11 +132,7 @@ impl<S: PageSize> Page<S> {
     }
 
     const_fn! {
-        /// Returns the level 3 page table index of this page.
-        ///
-        /// ## Panics
-        ///
-        /// Panics if level is not between 1 and 4
+        /// Returns the table index of this page at the specified level.
         #[inline]
         pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
             self.start_address().page_table_index(level)
