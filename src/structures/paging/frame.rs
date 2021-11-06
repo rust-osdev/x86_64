@@ -24,7 +24,9 @@ impl<S: PageSize> PhysFrame<S> {
         if !address.is_aligned(S::SIZE) {
             return Err(AddressNotAligned);
         }
-        Ok(PhysFrame::containing_address(address))
+
+        // SAFETY: correct address alignment is checked above
+        Ok(unsafe { PhysFrame::from_start_address_unchecked(address) })
     }
 
     const_fn! {
