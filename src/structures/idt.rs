@@ -685,6 +685,9 @@ pub type DivergingHandlerFuncWithErrCode =
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFuncWithErrCode(());
 
+/// A general handler function for an interrupt or an exception with the interrupt/exceptions's index and an optional error code.
+pub type GeneralHandlerFunc = fn(InterruptStackFrame, index: u8, error_code: Option<u64>);
+
 impl<F> Entry<F> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
     #[inline]
@@ -1153,13 +1156,22 @@ macro_rules! set_general_handler {
         $crate::set_general_handler!($idt, $handler, $idx..=$idx);
     };
     ($idt:expr, $handler:ident, $range:expr) => {{
-        fn set_general_handler(
-            idt: &mut $crate::structures::idt::InterruptDescriptorTable,
-            range: impl core::ops::RangeBounds<usize>,
-        ) {
-            $crate::set_general_handler_recursive_bits!(idt, $handler, range);
+        /// This constant is used to avoid spamming the same compilation error ~200 times
+        /// when the handler's signature is wrong.
+        /// If we just passed `$handler` to `set_general_handler_recursive_bits`
+        /// an error would be reported for every interrupt handler that tried to call it.
+        /// With `GENERAL_HANDLER` the error is only reported once for this constant.
+        const GENERAL_HANDLER: $crate::structures::idt::GeneralHandlerFunc = $handler;
+
+        {
+            fn set_general_handler(
+                idt: &mut $crate::structures::idt::InterruptDescriptorTable,
+                range: impl ::core::ops::RangeBounds<usize>,
+            ) {
+                $crate::set_general_handler_recursive_bits!(idt, GENERAL_HANDLER, range);
+            }
+            set_general_handler($idt, $range);
         }
-        set_general_handler($idt, $range);
     }};
 }
 
