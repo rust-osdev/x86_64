@@ -1350,6 +1350,9 @@ mod test {
     }
 
     #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
+    // there seems to be a bug in LLVM that causes rustc to crash on windows when compiling this test:
+    // https://github.com/rust-osdev/x86_64/pull/285#issuecomment-962642984
+    #[cfg(not(windows))]
     #[test]
     fn default_handlers() {
         fn general_handler(
