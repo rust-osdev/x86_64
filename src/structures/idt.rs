@@ -1141,12 +1141,21 @@ pub enum ExceptionVector {
 /// }
 ///
 /// // set only one entry
+/// # // there seems to be a bug in LLVM that causes rustc to crash on windows when compiling this test:
+/// # // https://github.com/rust-osdev/x86_64/pull/285#issuecomment-962642984
+/// # #[cfg(not(windows))]
 /// set_general_handler!(&mut idt, my_general_handler, 14);
 ///
 /// // set a range of entries
+/// # // there seems to be a bug in LLVM that causes rustc to crash on windows when compiling this test:
+/// # // https://github.com/rust-osdev/x86_64/pull/285#issuecomment-962642984
+/// # #[cfg(not(windows))]
 /// set_general_handler!(&mut idt, my_general_handler, 32..64);
 ///
 /// // set all entries
+/// # // there seems to be a bug in LLVM that causes rustc to crash on windows when compiling this test:
+/// # // https://github.com/rust-osdev/x86_64/pull/285#issuecomment-962642984
+/// # #[cfg(not(windows))]
 /// set_general_handler!(&mut idt, my_general_handler);
 /// ```
 macro_rules! set_general_handler {
