@@ -1276,6 +1276,15 @@ macro_rules! set_general_handler_entry {
         }
         $idt.machine_check.set_handler_fn(handler);
     }};
+    ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 0, 1) => {
+        extern "x86-interrupt" fn handler(
+            frame: $crate::structures::idt::InterruptStackFrame,
+            error_code: u64,
+        ) {
+            $handler(frame, $idx.into(), Some(error_code));
+        }
+        $idt.vmm_communication_exception.set_handler_fn(handler);
+    };
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 1, 0) => {{
         extern "x86-interrupt" fn handler(
             frame: $crate::structures::idt::InterruptStackFrame,
@@ -1286,8 +1295,9 @@ macro_rules! set_general_handler_entry {
         $idt.security_exception.set_handler_fn(handler);
     }};
 
-    // reserved
+    // reserved_1
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 0, 1, 1, 1, 1) => {};
+    // reserved_2
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 0, 1) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 1, 0) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 1, 1) => {};
@@ -1296,8 +1306,7 @@ macro_rules! set_general_handler_entry {
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 0, 1, 0) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 0, 1, 1) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 0, 0) => {};
-    ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 0, 1) => {};
-    ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 1, 0) => {};
+    // reserved_3
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 1, 1) => {};
 
     // set entries with `HandlerFunc` signature
@@ -1377,7 +1386,7 @@ mod test {
         }
         set_general_handler!(&mut idt, general_handler);
         for i in 0..256 {
-            if i == 15 || i == 31 || (i >= 21 && i <= 29) {
+            if i == 15 || i == 31 || (i >= 21 && i <= 28) {
                 // reserved entries should not be set
                 assert!(!entry_present(&idt, i));
             } else {
