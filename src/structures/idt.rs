@@ -1378,7 +1378,7 @@ mod test {
         }
         set_general_handler!(&mut idt, general_handler, 32..64);
         for i in 1..256 {
-            if i == 0 || i == 14 || (i >= 32 && i < 64) {
+            if i == 0 || i == 14 || (32..64).contains(&i) {
                 assert!(entry_present(&idt, i), "{}", i);
             } else {
                 assert!(!entry_present(&idt, i));
@@ -1386,7 +1386,7 @@ mod test {
         }
         set_general_handler!(&mut idt, general_handler);
         for i in 0..256 {
-            if i == 15 || i == 31 || (i >= 21 && i <= 28) {
+            if i == 15 || i == 31 || (21..=28).contains(&i) {
                 // reserved entries should not be set
                 assert!(!entry_present(&idt, i));
             } else {
