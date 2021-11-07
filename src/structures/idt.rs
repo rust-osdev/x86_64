@@ -26,7 +26,10 @@ use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
-use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use core::ops::{
+    Bound, Deref, Index, IndexMut, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive,
+    RangeTo, RangeToInclusive,
+};
 use volatile::Volatile;
 
 use super::gdt::SegmentSelector;
@@ -557,6 +560,48 @@ impl IndexMut<u8> for InterruptDescriptorTable {
         }
     }
 }
+
+macro_rules! impl_index_for_idt {
+    ($ty:ty) => {
+        impl Index<$ty> for InterruptDescriptorTable {
+            type Output = [Entry<HandlerFunc>];
+
+            /// Returns the IDT entry with the specified index.
+            ///
+            /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
+            /// exception that pushes an error code (use the struct fields for accessing these entries).
+            #[inline]
+            fn index(&self, index: $ty) -> &Self::Output {
+                self.slice(index)
+            }
+        }
+
+        impl IndexMut<$ty> for InterruptDescriptorTable {
+            /// Returns a mutable reference to the IDT entry with the specified index.
+            ///
+            /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
+            #[inline]
+            fn index_mut(&mut self, index: $ty) -> &mut Self::Output {
+                self.slice_mut(index)
+            }
+        }
+    };
+}
+
+// this list was stolen from the list of implementors in https://doc.rust-lang.org/core/ops/trait.RangeBounds.html
+impl_index_for_idt!((Bound<&u8>, Bound<&u8>));
+impl_index_for_idt!((Bound<u8>, Bound<u8>));
+impl_index_for_idt!(Range<&u8>);
+impl_index_for_idt!(Range<u8>);
+impl_index_for_idt!(RangeFrom<&u8>);
+impl_index_for_idt!(RangeFrom<u8>);
+impl_index_for_idt!(RangeInclusive<&u8>);
+impl_index_for_idt!(RangeInclusive<u8>);
+impl_index_for_idt!(RangeTo<u8>);
+impl_index_for_idt!(RangeTo<&u8>);
+impl_index_for_idt!(RangeToInclusive<&u8>);
+impl_index_for_idt!(RangeToInclusive<u8>);
+impl_index_for_idt!(RangeFull);
 
 /// An Interrupt Descriptor Table entry.
 ///
