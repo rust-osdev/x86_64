@@ -1166,7 +1166,7 @@ macro_rules! set_general_handler {
         {
             fn set_general_handler(
                 idt: &mut $crate::structures::idt::InterruptDescriptorTable,
-                range: impl ::core::ops::RangeBounds<usize>,
+                range: impl ::core::ops::RangeBounds<u8>,
             ) {
                 $crate::set_general_handler_recursive_bits!(idt, GENERAL_HANDLER, range);
             }
@@ -1183,10 +1183,9 @@ macro_rules! set_general_handler_recursive_bits {
     // if we have 8 all bits, construct the index from the bits, check if the entry is in range and invoke the macro that sets the handler
     ($idt:expr, $handler:ident, $range:expr, $bit7:tt, $bit6:tt, $bit5:tt, $bit4:tt, $bit3:tt, $bit2:tt, $bit1:tt, $bit0:tt) => {{
         const IDX: u8 = $bit0 | ($bit1 << 1) | ($bit2 << 2) | ($bit3 << 3) | ($bit4 << 4) | ($bit5 << 5) | ($bit6 << 6) | ($bit7 << 7);
-        let idx = IDX as usize;
 
         #[allow(unreachable_code)]
-        if $range.contains(&idx) {
+        if $range.contains(&IDX) {
             $crate::set_general_handler_entry!($idt, $handler, IDX, $bit7, $bit6, $bit5, $bit4, $bit3, $bit2, $bit1, $bit0);
         }
     }};
