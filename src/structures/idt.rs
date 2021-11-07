@@ -1123,6 +1123,7 @@ pub enum ExceptionVector {
     Security = 0x1E,
 }
 
+#[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
 #[macro_export]
 /// Set a general handler in an [`InterruptDescriptorTable`].
 /// ```
@@ -1175,6 +1176,7 @@ macro_rules! set_general_handler {
     }};
 }
 
+#[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
 #[macro_export]
 #[doc(hidden)]
 /// We can't loop in macros, but we can use recursion.
@@ -1196,6 +1198,7 @@ macro_rules! set_general_handler_recursive_bits {
     };
 }
 
+#[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
 #[macro_export]
 #[doc(hidden)]
 macro_rules! set_general_handler_entry {
@@ -1337,6 +1340,7 @@ mod test {
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
     }
 
+    #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
     #[test]
     fn default_handlers() {
         fn general_handler(
