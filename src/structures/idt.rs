@@ -504,15 +504,14 @@ impl InterruptDescriptorTable {
     }
 }
 
-impl Index<usize> for InterruptDescriptorTable {
+impl Index<u8> for InterruptDescriptorTable {
     type Output = Entry<HandlerFunc>;
 
     /// Returns the IDT entry with the specified index.
     ///
-    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
-    /// exception that pushes an error code (use the struct fields for accessing these entries).
+    /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
     #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: u8) -> &Self::Output {
         match index {
             0 => &self.divide_error,
             1 => &self.debug,
@@ -526,24 +525,22 @@ impl Index<usize> for InterruptDescriptorTable {
             16 => &self.x87_floating_point,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
-            i @ 32..=255 => &self.interrupts[i - 32],
+            i @ 32..=255 => &self.interrupts[(i - 32) as usize],
             i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
-            i => panic!("no entry with index {}", i),
         }
     }
 }
 
-impl IndexMut<usize> for InterruptDescriptorTable {
+impl IndexMut<u8> for InterruptDescriptorTable {
     /// Returns a mutable reference to the IDT entry with the specified index.
     ///
-    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
-    /// exception that pushes an error code (use the struct fields for accessing these entries).
+    /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
     #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+    fn index_mut(&mut self, index: u8) -> &mut Self::Output {
         match index {
             0 => &mut self.divide_error,
             1 => &mut self.debug,
@@ -557,13 +554,12 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             16 => &mut self.x87_floating_point,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
-            i @ 32..=255 => &mut self.interrupts[i - 32],
+            i @ 32..=255 => &mut self.interrupts[(i - 32) as usize],
             i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
-            i => panic!("no entry with index {}", i),
         }
     }
 }
