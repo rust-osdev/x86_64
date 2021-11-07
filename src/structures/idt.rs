@@ -458,25 +458,21 @@ impl InterruptDescriptorTable {
         }
     }
 
-    /// Returns a normalized and ranged check slice range from a RangeBounds trait object
+    /// Returns a normalized and ranged check slice range from a RangeBounds trait object.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
-    fn condition_slice_bounds(&self, bounds: impl RangeBounds<usize>) -> (usize, usize) {
+    /// Panics if the entry is an exception.
+    fn condition_slice_bounds(&self, bounds: impl RangeBounds<u8>) -> (usize, usize) {
         let lower_idx = match bounds.start_bound() {
-            Included(start) => *start,
-            Excluded(start) => *start + 1,
+            Included(start) => (*start as usize),
+            Excluded(start) => (*start as usize) + 1,
             Unbounded => 0,
         };
         let upper_idx = match bounds.end_bound() {
-            Included(end) => *end + 1,
-            Excluded(end) => *end,
+            Included(end) => (*end as usize) + 1,
+            Excluded(end) => (*end as usize),
             Unbounded => 256,
         };
 
-        if lower_idx > 256 || upper_idx > 256 {
-            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
-        }
         if lower_idx < 32 {
             panic!("Cannot return slice from traps, faults, and exception handlers");
         }
@@ -485,20 +481,18 @@ impl InterruptDescriptorTable {
 
     /// Returns slice of IDT entries with the specified range.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
+    /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
+    pub fn slice(&self, bounds: impl RangeBounds<u8>) -> &[Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 
     /// Returns a mutable slice of IDT entries with the specified range.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
+    /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
+    pub fn slice_mut(&mut self, bounds: impl RangeBounds<u8>) -> &mut [Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
