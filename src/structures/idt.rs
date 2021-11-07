@@ -1321,12 +1321,13 @@ mod test {
             15 => &idt.reserved_1.options,
             17 => &idt.alignment_check.options,
             18 => &idt.machine_check.options,
-            i @ 21..=29 => &idt.reserved_2[i - 21].options,
+            i @ 21..=28 => &idt.reserved_2[i - 21].options,
+            29 => &idt.vmm_communication_exception.options,
             30 => &idt.security_exception.options,
             31 => &idt.reserved_3.options,
             other => &idt[other].options,
         };
-        options.bits.get_bit(15)
+        options.0.get_bit(15)
     }
 
     #[test]
