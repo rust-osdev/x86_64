@@ -26,7 +26,10 @@ use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
-use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use core::ops::{
+    Bound, Deref, Index, IndexMut, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive,
+    RangeTo, RangeToInclusive,
+};
 use volatile::Volatile;
 
 use super::gdt::SegmentSelector;
@@ -458,25 +461,21 @@ impl InterruptDescriptorTable {
         }
     }
 
-    /// Returns a normalized and ranged check slice range from a RangeBounds trait object
+    /// Returns a normalized and ranged check slice range from a RangeBounds trait object.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
-    fn condition_slice_bounds(&self, bounds: impl RangeBounds<usize>) -> (usize, usize) {
+    /// Panics if the entry is an exception.
+    fn condition_slice_bounds(&self, bounds: impl RangeBounds<u8>) -> (usize, usize) {
         let lower_idx = match bounds.start_bound() {
-            Included(start) => *start,
-            Excluded(start) => *start + 1,
+            Included(start) => usize::from(*start),
+            Excluded(start) => usize::from(*start) + 1,
             Unbounded => 0,
         };
         let upper_idx = match bounds.end_bound() {
-            Included(end) => *end + 1,
-            Excluded(end) => *end,
+            Included(end) => usize::from(*end) + 1,
+            Excluded(end) => usize::from(*end),
             Unbounded => 256,
         };
 
-        if lower_idx > 256 || upper_idx > 256 {
-            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
-        }
         if lower_idx < 32 {
             panic!("Cannot return slice from traps, faults, and exception handlers");
         }
@@ -485,34 +484,31 @@ impl InterruptDescriptorTable {
 
     /// Returns slice of IDT entries with the specified range.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
+    /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
+    pub fn slice(&self, bounds: impl RangeBounds<u8>) -> &[Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 
     /// Returns a mutable slice of IDT entries with the specified range.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
+    /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
+    pub fn slice_mut(&mut self, bounds: impl RangeBounds<u8>) -> &mut [Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 }
 
-impl Index<usize> for InterruptDescriptorTable {
+impl Index<u8> for InterruptDescriptorTable {
     type Output = Entry<HandlerFunc>;
 
     /// Returns the IDT entry with the specified index.
     ///
-    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
-    /// exception that pushes an error code (use the struct fields for accessing these entries).
+    /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
     #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: u8) -> &Self::Output {
         match index {
             0 => &self.divide_error,
             1 => &self.debug,
@@ -526,24 +522,22 @@ impl Index<usize> for InterruptDescriptorTable {
             16 => &self.x87_floating_point,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
-            i @ 32..=255 => &self.interrupts[i - 32],
+            i @ 32..=255 => &self.interrupts[usize::from(i - 32)],
             i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
-            i => panic!("no entry with index {}", i),
         }
     }
 }
 
-impl IndexMut<usize> for InterruptDescriptorTable {
+impl IndexMut<u8> for InterruptDescriptorTable {
     /// Returns a mutable reference to the IDT entry with the specified index.
     ///
-    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
-    /// exception that pushes an error code (use the struct fields for accessing these entries).
+    /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
     #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+    fn index_mut(&mut self, index: u8) -> &mut Self::Output {
         match index {
             0 => &mut self.divide_error,
             1 => &mut self.debug,
@@ -557,16 +551,57 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             16 => &mut self.x87_floating_point,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
-            i @ 32..=255 => &mut self.interrupts[i - 32],
+            i @ 32..=255 => &mut self.interrupts[usize::from(i - 32)],
             i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
-            i => panic!("no entry with index {}", i),
         }
     }
 }
+
+macro_rules! impl_index_for_idt {
+    ($ty:ty) => {
+        impl Index<$ty> for InterruptDescriptorTable {
+            type Output = [Entry<HandlerFunc>];
+
+            /// Returns the IDT entry with the specified index.
+            ///
+            /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
+            /// exception that pushes an error code (use the struct fields for accessing these entries).
+            #[inline]
+            fn index(&self, index: $ty) -> &Self::Output {
+                self.slice(index)
+            }
+        }
+
+        impl IndexMut<$ty> for InterruptDescriptorTable {
+            /// Returns a mutable reference to the IDT entry with the specified index.
+            ///
+            /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
+            #[inline]
+            fn index_mut(&mut self, index: $ty) -> &mut Self::Output {
+                self.slice_mut(index)
+            }
+        }
+    };
+}
+
+// this list was stolen from the list of implementors in https://doc.rust-lang.org/core/ops/trait.RangeBounds.html
+impl_index_for_idt!((Bound<&u8>, Bound<&u8>));
+impl_index_for_idt!((Bound<u8>, Bound<u8>));
+impl_index_for_idt!(Range<&u8>);
+impl_index_for_idt!(Range<u8>);
+impl_index_for_idt!(RangeFrom<&u8>);
+impl_index_for_idt!(RangeFrom<u8>);
+impl_index_for_idt!(RangeInclusive<&u8>);
+impl_index_for_idt!(RangeInclusive<u8>);
+impl_index_for_idt!(RangeTo<u8>);
+impl_index_for_idt!(RangeTo<&u8>);
+impl_index_for_idt!(RangeToInclusive<&u8>);
+impl_index_for_idt!(RangeToInclusive<u8>);
+impl_index_for_idt!(RangeFull);
 
 /// An Interrupt Descriptor Table entry.
 ///
