@@ -466,13 +466,13 @@ impl InterruptDescriptorTable {
     /// Panics if the entry is an exception.
     fn condition_slice_bounds(&self, bounds: impl RangeBounds<u8>) -> (usize, usize) {
         let lower_idx = match bounds.start_bound() {
-            Included(start) => (*start as usize),
-            Excluded(start) => (*start as usize) + 1,
+            Included(start) => usize::from(*start),
+            Excluded(start) => usize::from(*start) + 1,
             Unbounded => 0,
         };
         let upper_idx = match bounds.end_bound() {
-            Included(end) => (*end as usize) + 1,
-            Excluded(end) => (*end as usize),
+            Included(end) => usize::from(*end) + 1,
+            Excluded(end) => usize::from(*end),
             Unbounded => 256,
         };
 
@@ -522,7 +522,7 @@ impl Index<u8> for InterruptDescriptorTable {
             16 => &self.x87_floating_point,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
-            i @ 32..=255 => &self.interrupts[(i - 32) as usize],
+            i @ 32..=255 => &self.interrupts[usize::from(i - 32)],
             i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
@@ -551,7 +551,7 @@ impl IndexMut<u8> for InterruptDescriptorTable {
             16 => &mut self.x87_floating_point,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
-            i @ 32..=255 => &mut self.interrupts[(i - 32) as usize],
+            i @ 32..=255 => &mut self.interrupts[usize::from(i - 32)],
             i @ 15 | i @ 31 | i @ 21..=29 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
