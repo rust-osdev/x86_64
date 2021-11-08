@@ -7,6 +7,7 @@
 #![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))] // IDT new()
 #![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))] // PageSize marker trait
 #![cfg_attr(feature = "inline_asm", feature(asm))]
+#![cfg_attr(feature = "inline_asm", feature(asm_const))] // software_interrupt
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
