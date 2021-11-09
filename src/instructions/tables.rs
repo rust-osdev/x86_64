@@ -81,6 +81,9 @@ pub fn sidt() -> DescriptorTablePointer {
 
 /// Load the task state register using the `ltr` instruction.
 ///
+/// Loading the task state register changes the type of the entry
+/// in the GDT from `Available 64-bit TSS` to `Busy 64-bit TSS`.
+///
 /// ## Safety
 ///
 /// This function is unsafe because the caller must ensure that the given
@@ -89,7 +92,7 @@ pub fn sidt() -> DescriptorTablePointer {
 #[inline]
 pub unsafe fn load_tss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("ltr {0:x}", in(reg) sel.0, options(nomem, nostack, preserves_flags));
+    asm!("ltr {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_ltr(sel.0);
