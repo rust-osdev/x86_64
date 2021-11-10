@@ -5,7 +5,6 @@ use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
-use core::sync::atomic::{AtomicU64, Ordering};
 
 /// Specifies which element to load into a segment from
 /// descriptor tables (i.e., is a index to LDT or GDT table
@@ -90,32 +89,18 @@ impl fmt::Debug for SegmentSelector {
 /// // Add entry for TSS, call gdt.load() then update segment registers
 /// ```
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GlobalDescriptorTable {
-    table: [AtomicU64; 8],
+    table: [u64; 8],
     next_free: usize,
 }
 
 impl GlobalDescriptorTable {
-    #[inline]
-    const fn empty_table() -> [AtomicU64; 8] {
-        [
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-            AtomicU64::new(0),
-        ]
-    }
-
     /// Creates an empty GDT.
     #[inline]
     pub const fn new() -> GlobalDescriptorTable {
         GlobalDescriptorTable {
-            table: Self::empty_table(),
+            table: [0; 8],
             next_free: 1,
         }
     }
@@ -129,7 +114,7 @@ impl GlobalDescriptorTable {
     #[inline]
     pub const unsafe fn from_raw_slice(slice: &[u64]) -> GlobalDescriptorTable {
         let next_free = slice.len();
-        let mut table = Self::empty_table();
+        let mut table = [0; 8];
         let mut idx = 0;
 
         const_assert!(
@@ -138,7 +123,7 @@ impl GlobalDescriptorTable {
         );
 
         while idx != next_free {
-            table[idx] = AtomicU64::new(slice[idx]);
+            table[idx] = slice[idx];
             idx += 1;
         }
 
@@ -147,9 +132,9 @@ impl GlobalDescriptorTable {
 
     /// Get a reference to the internal table.
     ///
-    /// The resulting slice may contain system descriptors, which span two `AtomicU64`s.
+    /// The resulting slice may contain system descriptors, which span two `u64`s.
     #[inline]
-    pub fn as_raw_slice(&self) -> &[AtomicU64] {
+    pub fn as_raw_slice(&self) -> &[u64] {
         &self.table[..self.next_free]
     }
 
@@ -192,7 +177,7 @@ impl GlobalDescriptorTable {
     /// [set_cs](crate::instructions::segmentation::set_cs).
     #[cfg(feature = "instructions")]
     #[inline]
-    pub fn load(&'static self) {
+    pub fn load(&'static mut self) {
         // SAFETY: static lifetime ensures no modification after loading.
         unsafe { self.load_unsafe() };
     }
@@ -211,7 +196,7 @@ impl GlobalDescriptorTable {
     ///
     #[cfg(feature = "instructions")]
     #[inline]
-    pub unsafe fn load_unsafe(&self) {
+    pub unsafe fn load_unsafe(&mut self) {
         use crate::instructions::tables::lgdt;
         lgdt(&self.pointer());
     }
@@ -221,7 +206,7 @@ impl GlobalDescriptorTable {
         fn push(&mut self, value: u64) -> usize {
             if self.next_free < self.table.len() {
                 let index = self.next_free;
-                self.table[index] = AtomicU64::new(value);
+                self.table[index] = value;
                 self.next_free += 1;
                 index
             } else {
@@ -238,19 +223,6 @@ impl GlobalDescriptorTable {
         super::DescriptorTablePointer {
             base: crate::VirtAddr::new(self.table.as_ptr() as u64),
             limit: (self.next_free * size_of::<u64>() - 1) as u16,
-        }
-    }
-}
-
-impl Clone for GlobalDescriptorTable {
-    fn clone(&self) -> Self {
-        let mut table = Self::empty_table();
-        for (dest, src) in table.iter_mut().zip(self.table.iter()) {
-            *dest = AtomicU64::new(src.load(Ordering::Relaxed));
-        }
-        Self {
-            table,
-            next_free: self.next_free,
         }
     }
 }
