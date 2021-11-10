@@ -20,6 +20,7 @@
 //!
 //! These types are defined for the compatibility with the Nightly Rust build.
 
+use crate::registers::rflags::RFlags;
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
@@ -938,7 +939,7 @@ pub struct InterruptStackFrameValue {
     pub code_segment: SegmentSelector,
     _reserved1: [u8; 6],
     /// The flags register before the interrupt handler was invoked.
-    pub cpu_flags: u64,
+    pub cpu_flags: RFlags,
     /// The stack pointer at the time of the interrupt.
     pub stack_pointer: VirtAddr,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
@@ -948,17 +949,10 @@ pub struct InterruptStackFrameValue {
 
 impl fmt::Debug for InterruptStackFrameValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        struct Hex(u64);
-        impl fmt::Debug for Hex {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "{:#x}", self.0)
-            }
-        }
-
         let mut s = f.debug_struct("InterruptStackFrame");
         s.field("instruction_pointer", &self.instruction_pointer);
         s.field("code_segment", &self.code_segment);
-        s.field("cpu_flags", &Hex(self.cpu_flags));
+        s.field("cpu_flags", &self.cpu_flags);
         s.field("stack_pointer", &self.stack_pointer);
         s.field("stack_segment", &self.stack_segment);
         s.finish()
