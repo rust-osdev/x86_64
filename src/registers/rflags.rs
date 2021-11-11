@@ -6,7 +6,8 @@ pub use self::x86_64::*;
 use bitflags::bitflags;
 
 bitflags! {
-    /// The RFLAGS register.
+    /// The RFLAGS register. All bit patterns are valid representations for this type.
+    #[repr(transparent)]
     pub struct RFlags: u64 {
         /// Processor feature identification flag.
         ///
