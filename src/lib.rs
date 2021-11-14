@@ -118,17 +118,17 @@ impl PrivilegeLevel {
 
 /// A wrapper that can be used to safely create one mutable reference `&'static mut T` from a static variable.
 ///
-/// `Singleton` is safe because it ensures that it only ever gives out one reference.
+/// `SingleUseCell` is safe because it ensures that it only ever gives out one reference.
 ///
-/// ``Singleton<T>` is a safe alternative to `static mut` or a static `UnsafeCell<T>`.
+/// ``SingleUseCell<T>` is a safe alternative to `static mut` or a static `UnsafeCell<T>`.
 #[derive(Debug)]
-pub struct Singleton<T> {
+pub struct SingleUseCell<T> {
     used: AtomicBool,
     value: UnsafeCell<T>,
 }
 
-impl<T> Singleton<T> {
-    /// Construct a new singleton.
+impl<T> SingleUseCell<T> {
+    /// Construct a new SingleUseCell.
     pub const fn new(value: T) -> Self {
         Self {
             used: AtomicBool::new(false),
@@ -141,9 +141,9 @@ impl<T> Singleton<T> {
     /// called and fail on all following calls.
     ///
     /// ```
-    /// use x86_64::Singleton;
+    /// use x86_64::SingleUseCell;
     ///
-    /// static FOO: Singleton<i32> = Singleton::new(0);
+    /// static FOO: SingleUseCell<i32> = SingleUseCell::new(0);
     ///
     /// // Call `try_get_mut` for the first time and get a reference.
     /// let first: &'static mut i32 = FOO.try_get_mut().unwrap();
@@ -165,9 +165,9 @@ impl<T> Singleton<T> {
     }
 }
 
-// SAFETY: Sharing a `Singleton<T>` between threads is safe regardless of whether `T` is `Sync`
+// SAFETY: Sharing a `SingleUseCell<T>` between threads is safe regardless of whether `T` is `Sync`
 // because we only expose the inner value once to one thread.
-unsafe impl<T> Sync for Singleton<T> {}
+unsafe impl<T> Sync for SingleUseCell<T> {}
 
-// SAFETY: It's safe to send a `Singleton<T>` to another thread if it's safe to send `T`.
-unsafe impl<T: Send> Send for Singleton<T> {}
+// SAFETY: It's safe to send a `SingleUseCell<T>` to another thread if it's safe to send `T`.
+unsafe impl<T: Send> Send for SingleUseCell<T> {}
