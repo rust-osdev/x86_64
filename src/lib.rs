@@ -153,15 +153,14 @@ impl<T> Singleton<T> {
     /// assert_eq!(FOO.try_get_mut(), None);
     /// ```
     pub fn try_get_mut(&self) -> Option<&mut T> {
-        match self
-            .used
-            .compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed)
-        {
-            Ok(_) => Some(unsafe {
+        let already_used = self.used.swap(true, Ordering::AcqRel);
+        if already_used {
+            None
+        } else {
+            Some(unsafe {
                 // SAFETY: no reference has been given out yet and we won't give out another.
                 &mut *self.value.get()
-            }),
-            Err(_) => None,
+            })
         }
     }
 }
