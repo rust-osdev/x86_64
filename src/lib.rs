@@ -166,8 +166,9 @@ impl<T> SingleUseCell<T> {
 }
 
 // SAFETY: Sharing a `SingleUseCell<T>` between threads is safe regardless of whether `T` is `Sync`
-// because we only expose the inner value once to one thread.
-unsafe impl<T> Sync for SingleUseCell<T> {}
+// because we only expose the inner value once to one thread. The `T: Send` bound makes sure that
+// sending a unique reference to another thread is safe.
+unsafe impl<T: Send> Sync for SingleUseCell<T> {}
 
 // SAFETY: It's safe to send a `SingleUseCell<T>` to another thread if it's safe to send `T`.
 unsafe impl<T: Send> Send for SingleUseCell<T> {}
