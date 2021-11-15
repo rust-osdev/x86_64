@@ -177,7 +177,7 @@ impl GlobalDescriptorTable {
     /// [set_cs](crate::instructions::segmentation::set_cs).
     #[cfg(feature = "instructions")]
     #[inline]
-    pub fn load(&'static self) {
+    pub fn load(&'static mut self) {
         // SAFETY: static lifetime ensures no modification after loading.
         unsafe { self.load_unsafe() };
     }
@@ -196,7 +196,7 @@ impl GlobalDescriptorTable {
     ///
     #[cfg(feature = "instructions")]
     #[inline]
-    pub unsafe fn load_unsafe(&self) {
+    pub unsafe fn load_unsafe(&mut self) {
         use crate::instructions::tables::lgdt;
         lgdt(&self.pointer());
     }

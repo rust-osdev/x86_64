@@ -13,6 +13,9 @@
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+use core::cell::UnsafeCell;
+use core::sync::atomic::{AtomicBool, Ordering};
+
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
 /// Makes a function const only when `feature = "const_fn"` is enabled.
@@ -112,3 +115,60 @@ impl PrivilegeLevel {
         }
     }
 }
+
+/// A wrapper that can be used to safely create one mutable reference `&'static mut T` from a static variable.
+///
+/// `SingleUseCell` is safe because it ensures that it only ever gives out one reference.
+///
+/// ``SingleUseCell<T>` is a safe alternative to `static mut` or a static `UnsafeCell<T>`.
+#[derive(Debug)]
+pub struct SingleUseCell<T> {
+    used: AtomicBool,
+    value: UnsafeCell<T>,
+}
+
+impl<T> SingleUseCell<T> {
+    /// Construct a new SingleUseCell.
+    pub const fn new(value: T) -> Self {
+        Self {
+            used: AtomicBool::new(false),
+            value: UnsafeCell::new(value),
+        }
+    }
+
+    /// Try to acquire a mutable reference to the wrapped value.
+    /// This will only succeed the first time the function is
+    /// called and fail on all following calls.
+    ///
+    /// ```
+    /// use x86_64::SingleUseCell;
+    ///
+    /// static FOO: SingleUseCell<i32> = SingleUseCell::new(0);
+    ///
+    /// // Call `try_get_mut` for the first time and get a reference.
+    /// let first: &'static mut i32 = FOO.try_get_mut().unwrap();
+    /// assert_eq!(first, &0);
+    ///
+    /// // Calling `try_get_mut` again will return `None`.
+    /// assert_eq!(FOO.try_get_mut(), None);
+    /// ```
+    pub fn try_get_mut(&self) -> Option<&mut T> {
+        let already_used = self.used.swap(true, Ordering::AcqRel);
+        if already_used {
+            None
+        } else {
+            Some(unsafe {
+                // SAFETY: no reference has been given out yet and we won't give out another.
+                &mut *self.value.get()
+            })
+        }
+    }
+}
+
+// SAFETY: Sharing a `SingleUseCell<T>` between threads is safe regardless of whether `T` is `Sync`
+// because we only expose the inner value once to one thread. The `T: Send` bound makes sure that
+// sending a unique reference to another thread is safe.
+unsafe impl<T: Send> Sync for SingleUseCell<T> {}
+
+// SAFETY: It's safe to send a `SingleUseCell<T>` to another thread if it's safe to send `T`.
+unsafe impl<T: Send> Send for SingleUseCell<T> {}
