@@ -181,7 +181,7 @@ mod x86_64 {
         #[inline]
         pub fn read() -> Cr8Flags {
             let value = Self::read_raw();
-            Cr8Flags::from_bits_truncate(value.into())
+            Cr8Flags::from_bits_truncate(value)
         }
 
         /// Read the current raw CR8 value.
@@ -201,6 +201,9 @@ mod x86_64 {
         ///
         /// Does _not_ preserve any values, including reserved fields.
         ///
+        /// ## Safety
+        ///
+        /// Could mask important external interrupts
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
@@ -211,6 +214,9 @@ mod x86_64 {
         ///
         /// Preserves the value of reserved fields.
         ///
+        /// ## Safety
+        ///
+        /// Could mask important external interrupts
         #[inline]
         pub unsafe fn write(flags: Cr8Flags) {
             let old_value = Self::read_raw();
