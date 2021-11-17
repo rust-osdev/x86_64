@@ -29,10 +29,7 @@ impl FixMemRange {
         let end = PhysFrame::from_start_address(PhysAddr::new(end + 1)).unwrap();
         Self {
             memory_type,
-            range: PhysFrameRange {
-                start,
-                end,
-            },
+            range: PhysFrameRange { start, end },
         }
     }
 }
