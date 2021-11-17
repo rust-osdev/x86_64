@@ -3,9 +3,19 @@
 pub use super::model_specific::{Efer, EferFlags};
 use bitflags::bitflags;
 
-/// Various control flags modifying the basic operation of the CPU.
+/// System software can use the TPR register to temporarily block low-priority interrupts from
+/// interrupting a high-priority task. This is accomplished by loading TPR with a value corresponding to
+/// the highest-priority interrupt that is to be blocked.
 #[derive(Debug)]
 pub struct Cr8;
+
+bitflags! {
+    /// Configuration flags of the [`Cr8`] register.
+    pub struct Cr8Flags: u64 {
+        /// A value corresponding to the highest-priority interrupt that is to be blocked
+        const TASK_PRIORITY = 0xf;
+    }
+}
 
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
@@ -169,8 +179,9 @@ mod x86_64 {
     impl Cr8 {
         /// Returns the task priority
         #[inline]
-        pub fn read() -> u8 {
-            Self::read_raw() as u8
+        pub fn read() -> Cr8Flags {
+            let value = Self::read_raw();
+            Cr8Flags::from_bits_truncate(value.into())
         }
 
         /// Read the current raw CR8 value.
@@ -201,8 +212,12 @@ mod x86_64 {
         /// Preserves the value of reserved fields.
         ///
         #[inline]
-        pub unsafe fn write(value: u8) {
-            Self::write_raw(value as u64);
+        pub unsafe fn write(flags: Cr8Flags) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !(Cr8Flags::all().bits());
+            let new_value = reserved | flags.bits();
+
+            Self::write_raw(new_value);
         }
     }
 

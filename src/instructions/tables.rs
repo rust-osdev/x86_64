@@ -25,7 +25,7 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
     crate::asm::x86_64_asm_lgdt(gdt as *const _);
 }
 
-/// Load an LIDT.
+/// Load an IDT.
 ///
 /// Use the
 /// [`InterruptDescriptorTable`](crate::structures::idt::InterruptDescriptorTable) struct for a high-level
@@ -45,11 +45,11 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     crate::asm::x86_64_asm_lidt(idt as *const _);
 }
 
-/// Load an LIDT.
+/// Load an IDT.
 ///
 /// Use the
 /// [`InterruptDescriptorTable`](crate::structures::idt::InterruptDescriptorTable) struct for a high-level
-/// interface to loading an LIDT.
+/// interface to loading an IDT.
 ///
 /// ## Safety
 ///
@@ -96,7 +96,7 @@ pub fn sidt() -> DescriptorTablePointer {
     idt
 }
 
-/// Get the address of the current LIDT.
+/// Get the address of the current IDT.
 #[inline]
 pub fn sldt() -> DescriptorTablePointer {
     let mut sldt: DescriptorTablePointer = DescriptorTablePointer {
