@@ -1192,7 +1192,7 @@ mod x86_64 {
     }
 
     impl MTRRfix64K00000 {
-        /// Reads the MTRR fixed range memory types.
+        /// Read the raw register
         #[inline]
         pub fn read_raw() -> u64 {
             unsafe { Self::MSR.read() }
@@ -1212,7 +1212,9 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// Reads the MTRR fixed range memory types.
+        /// The 512 Kbytes of memory spanning addresses 00_0000h to 07_FFFFh are segmented into eight
+        /// 64-Kbyte ranges. A single MTRR is used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0x00000, 0x0FFFF, (r & 0xff).try_into().unwrap());
@@ -1256,7 +1258,7 @@ mod x86_64 {
     }
 
     impl MTRRfix16K80000 {
-        /// Reads the MTRR fixed range memory types.
+        /// Reads the raw register
         #[inline]
         pub fn read_raw() -> u64 {
             unsafe { Self::MSR.read() }
@@ -1276,7 +1278,9 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// Reads the MTRR fixed range memory types.
+        /// The 256 Kbytes of memory spanning addresses 08_0000h to 0B_FFFFh are segmented into 16 16-
+        /// Kbyte ranges. Two MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0x80000, 0x83FFF, (r & 0xff).try_into().unwrap());
@@ -1320,7 +1324,7 @@ mod x86_64 {
     }
 
     impl MTRRfix16KA0000 {
-        /// Reads the MTRR fixed range memory types.
+        /// Reads the raw register value
         #[inline]
         pub fn read_raw() -> u64 {
             unsafe { Self::MSR.read() }
@@ -1340,7 +1344,9 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// Reads the MTRR fixed range memory types.
+        /// The 256 Kbytes of memory spanning addresses 08_0000h to 0B_FFFFh are segmented into 16 16-
+        /// Kbyte ranges. Two MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xA0000, 0xA3FFF, (r & 0xff).try_into().unwrap());
@@ -1404,7 +1410,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xC0000, 0xC0FFF, (r & 0xff).try_into().unwrap());
@@ -1468,7 +1475,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xC8000, 0xC8FFF, (r & 0xff).try_into().unwrap());
@@ -1532,7 +1540,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xD0000, 0xD0FFF, (r & 0xff).try_into().unwrap());
@@ -1596,7 +1605,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xD8000, 0xD8FFF, (r & 0xff).try_into().unwrap());
@@ -1660,7 +1670,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xE0000, 0xE0FFF, (r & 0xff).try_into().unwrap());
@@ -1724,7 +1735,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xE8000, 0xE8FFF, (r & 0xff).try_into().unwrap());
@@ -1788,7 +1800,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xF0000, 0xF0FFF, (r & 0xff).try_into().unwrap());
@@ -1852,7 +1865,8 @@ mod x86_64 {
             msr.write(flags);
         }
 
-        /// Reads the memory type for the first 512 Kb
+        /// The 256 Kbytes of memory spanning addresses 0C_0000h to 0F_FFFFh are segmented into 64 4-
+        /// Kbyte ranges. Eight MTRRs are used to characterize this address space.
         pub fn read() -> FixMemRangeReg {
             let r = Self::read_raw();
             let one = FixMemRange::new(0xF8000, 0xF8FFF, (r & 0xff).try_into().unwrap());
