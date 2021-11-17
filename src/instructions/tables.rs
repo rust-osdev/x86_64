@@ -34,7 +34,7 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
 /// ## Safety
 ///
 /// This function is unsafe because the caller must ensure that the given
-/// `DescriptorTablePointer` points to a valid LIDT and that loading this
+/// `DescriptorTablePointer` points to a valid IDT and that loading this
 /// IDT is safe.
 #[inline]
 pub unsafe fn lidt(idt: &DescriptorTablePointer) {
@@ -43,23 +43,6 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
 
     #[cfg(not(feature = "inline_asm"))]
     crate::asm::x86_64_asm_lidt(idt as *const _);
-}
-
-/// Load an IDT.
-///
-/// Use the
-/// [`InterruptDescriptorTable`](crate::structures::idt::InterruptDescriptorTable) struct for a high-level
-/// interface to loading an IDT.
-///
-/// ## Safety
-///
-/// This function is unsafe because the caller must ensure that the given
-/// `DescriptorTablePointer` points to a valid LIDT and that loading this
-/// LIDT is safe.
-#[inline]
-pub unsafe fn lldt(lidt: &DescriptorTablePointer) {
-    #[cfg(feature = "inline_asm")]
-    asm!("lldt [{}]", in(reg) lidt, options(readonly, nostack, preserves_flags));
 }
 
 /// Get the address of the current GDT.
@@ -94,20 +77,6 @@ pub fn sidt() -> DescriptorTablePointer {
         crate::asm::x86_64_asm_sidt(&mut idt as *mut _);
     }
     idt
-}
-
-/// Get the address of the current IDT.
-#[inline]
-pub fn sldt() -> DescriptorTablePointer {
-    let mut sldt: DescriptorTablePointer = DescriptorTablePointer {
-        limit: 0,
-        base: VirtAddr::new(0),
-    };
-    unsafe {
-        #[cfg(feature = "inline_asm")]
-        asm!("sldt [{}]", in(reg) &mut sldt, options(nostack, preserves_flags));
-    }
-    sldt
 }
 
 /// Load the task state register using the `ltr` instruction.
