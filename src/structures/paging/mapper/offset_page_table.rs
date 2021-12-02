@@ -37,9 +37,14 @@ impl<'a> OffsetPageTable<'a> {
         }
     }
 
-    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
-    pub fn level_4_table(&mut self) -> &mut PageTable {
+    /// Returns an immutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&self) -> &PageTable {
         self.inner.level_4_table()
+    }
+
+    /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table_mut(&mut self) -> &mut PageTable {
+        self.inner.level_4_table_mut()
     }
 }
 

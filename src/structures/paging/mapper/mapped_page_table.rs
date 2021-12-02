@@ -37,9 +37,14 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         }
     }
 
+    /// Returns an immutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&self) -> &PageTable {
+        self.level_4_table
+    }
+
     /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
-    pub fn level_4_table(&mut self) -> &mut PageTable {
-        &mut self.level_4_table
+    pub fn level_4_table_mut(&mut self) -> &mut PageTable {
+        self.level_4_table
     }
 
     /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
