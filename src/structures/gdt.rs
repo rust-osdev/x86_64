@@ -72,7 +72,7 @@ impl GlobalDescriptorTable {
         let mut table = [0; 8];
         let mut idx = 0;
 
-        const_assert!(
+        assert!(
             next_free <= 8,
             "initializing a GDT from a slice requires it to be **at most** 8 elements."
         );
