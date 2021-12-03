@@ -241,9 +241,7 @@ impl<S: PageSize> CheckedSub<PhysFrame<S>> for PhysFrame<S> {
     fn checked_sub(self, rhs: PhysFrame<S>) -> Option<Self::Output> {
         self.start_address()
             .checked_sub(rhs.start_address())
-            .and_then(|addr| PhysAddr::try_new(addr).ok())
-            .and_then(|addr| PhysFrame::<S>::from_start_address(addr).ok())
-            .map(|phys_frame| phys_frame.start_address().as_u64() / S::SIZE)
+            .map(|offset| offset / S::SIZE)
     }
 }
 
