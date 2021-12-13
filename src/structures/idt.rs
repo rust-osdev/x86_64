@@ -472,7 +472,9 @@ impl InterruptDescriptorTable {
     #[inline]
     pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::lidt;
-        lidt(&self.pointer());
+        unsafe {
+            lidt(&self.pointer());
+        }
     }
 
     /// Creates the descriptor pointer for this table. This pointer can only be

@@ -10,6 +10,7 @@
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
+#![deny(unsafe_op_in_unsafe_fn)]
 
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 

@@ -192,7 +192,9 @@ pub trait Mapper<S: PageSize> {
                 | PageTableFlags::WRITABLE
                 | PageTableFlags::USER_ACCESSIBLE);
 
-        self.map_to_with_table_flags(page, frame, flags, parent_table_flags, frame_allocator)
+        unsafe {
+            self.map_to_with_table_flags(page, frame, flags, parent_table_flags, frame_allocator)
+        }
     }
 
     /// Creates a new mapping in the page table.
@@ -368,7 +370,7 @@ pub trait Mapper<S: PageSize> {
         Self: Mapper<S>,
     {
         let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
-        self.map_to(page, frame, flags, frame_allocator)
+        unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
 }
 

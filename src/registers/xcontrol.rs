@@ -123,7 +123,9 @@ mod x86_64 {
                 );
             }
 
-            Self::write_raw(new_value);
+            unsafe {
+                Self::write_raw(new_value);
+            }
         }
 
         /// Write raw XCR0 flags.
@@ -140,15 +142,19 @@ mod x86_64 {
             let high = (value >> 32) as u32;
 
             #[cfg(feature = "inline_asm")]
-            asm!(
-                "xsetbv",
-                in("ecx") 0,
-                in("rax") low, in("rdx") high,
-                options(nomem, nostack, preserves_flags),
-            );
+            unsafe {
+                asm!(
+                    "xsetbv",
+                    in("ecx") 0,
+                    in("rax") low, in("rdx") high,
+                    options(nomem, nostack, preserves_flags),
+                );
+            }
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_xsetbv(0, low, high);
+            unsafe {
+                crate::asm::x86_64_asm_xsetbv(0, low, high);
+            }
         }
     }
 }
