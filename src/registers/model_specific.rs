@@ -4,6 +4,8 @@ use bitflags::bitflags;
 // imports for intra doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{FS, GS};
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 
 /// A model specific register.
 #[derive(Debug)]

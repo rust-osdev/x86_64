@@ -2,6 +2,8 @@
 
 use crate::structures::gdt::SegmentSelector;
 use crate::VirtAddr;
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 
 pub use crate::structures::DescriptorTablePointer;
 

@@ -6,6 +6,8 @@ use crate::{
     structures::gdt::SegmentSelector,
     VirtAddr,
 };
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 
 macro_rules! get_reg_impl {
     ($name:literal, $asm_get:ident) => {

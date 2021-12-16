@@ -2,6 +2,8 @@
 
 pub use super::model_specific::{Efer, EferFlags};
 use bitflags::bitflags;
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]

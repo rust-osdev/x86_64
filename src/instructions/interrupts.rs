@@ -1,5 +1,8 @@
 //! Enabling and disabling interrupts
 
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
+
 /// Returns whether interrupts are enabled.
 #[inline]
 pub fn are_enabled() -> bool {

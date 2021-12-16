@@ -1,6 +1,8 @@
 //! Functions to flush the translation lookaside buffer (TLB).
 
 use crate::VirtAddr;
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
