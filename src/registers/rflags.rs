@@ -3,9 +3,6 @@
 #[cfg(feature = "instructions")]
 pub use self::x86_64::*;
 
-#[cfg(feature = "inline_asm")]
-use core::arch::asm;
-
 use bitflags::bitflags;
 
 bitflags! {
@@ -68,6 +65,8 @@ bitflags! {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
+    #[cfg(feature = "inline_asm")]
+    use core::arch::asm;
 
     /// Returns the current value of the RFLAGS register.
     ///

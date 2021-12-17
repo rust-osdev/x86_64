@@ -1,9 +1,6 @@
 //! Access to various extended system registers
 use bitflags::bitflags;
 
-#[cfg(feature = "inline_asm")]
-use core::arch::asm;
-
 /// Extended feature enable mask register
 #[derive(Debug)]
 pub struct XCr0;
@@ -57,6 +54,9 @@ bitflags! {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
+    #[cfg(feature = "inline_asm")]
+    use core::arch::asm;
+
     impl XCr0 {
         /// Read the current set of XCR0 flags.
         #[inline]

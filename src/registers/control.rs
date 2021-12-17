@@ -2,8 +2,6 @@
 
 pub use super::model_specific::{Efer, EferFlags};
 use bitflags::bitflags;
-#[cfg(feature = "inline_asm")]
-use core::arch::asm;
 
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
@@ -163,6 +161,8 @@ bitflags! {
 mod x86_64 {
     use super::*;
     use crate::{instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr, VirtAddr};
+    #[cfg(feature = "inline_asm")]
+    use core::arch::asm;
 
     impl Cr0 {
         /// Read the current set of CR0 flags.

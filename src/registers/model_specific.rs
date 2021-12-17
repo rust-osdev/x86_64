@@ -4,8 +4,6 @@ use bitflags::bitflags;
 // imports for intra doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{FS, GS};
-#[cfg(feature = "inline_asm")]
-use core::arch::asm;
 
 /// A model specific register.
 #[derive(Debug)]
@@ -129,6 +127,8 @@ mod x86_64 {
         control::Cr4Flags,
         segmentation::{Segment, Segment64, CS, SS},
     };
+    #[cfg(feature = "inline_asm")]
+    use core::arch::asm;
 
     impl Msr {
         /// Read 64 bits msr register.
