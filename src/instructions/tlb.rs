@@ -99,8 +99,12 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
     }
 
     #[cfg(feature = "inline_asm")]
-    asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
+    unsafe {
+        asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
+    }
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
+    unsafe {
+        crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
+    }
 }

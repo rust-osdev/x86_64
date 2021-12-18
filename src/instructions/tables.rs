@@ -21,10 +21,14 @@ pub use crate::structures::DescriptorTablePointer;
 #[inline]
 pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
     #[cfg(feature = "inline_asm")]
-    asm!("lgdt [{}]", in(reg) gdt, options(readonly, nostack, preserves_flags));
+    unsafe {
+        asm!("lgdt [{}]", in(reg) gdt, options(readonly, nostack, preserves_flags));
+    }
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_lgdt(gdt as *const _);
+    unsafe {
+        crate::asm::x86_64_asm_lgdt(gdt as *const _);
+    }
 }
 
 /// Load an IDT.
@@ -41,10 +45,14 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
 #[inline]
 pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     #[cfg(feature = "inline_asm")]
-    asm!("lidt [{}]", in(reg) idt, options(readonly, nostack, preserves_flags));
+    unsafe {
+        asm!("lidt [{}]", in(reg) idt, options(readonly, nostack, preserves_flags));
+    }
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_lidt(idt as *const _);
+    unsafe {
+        crate::asm::x86_64_asm_lidt(idt as *const _);
+    }
 }
 
 /// Get the address of the current GDT.
@@ -91,8 +99,12 @@ pub fn sidt() -> DescriptorTablePointer {
 #[inline]
 pub unsafe fn load_tss(sel: SegmentSelector) {
     #[cfg(feature = "inline_asm")]
-    asm!("ltr {0:x}", in(reg) sel.0, options(nomem, nostack, preserves_flags));
+    unsafe {
+        asm!("ltr {0:x}", in(reg) sel.0, options(nomem, nostack, preserves_flags));
+    }
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_ltr(sel.0);
+    unsafe {
+        crate::asm::x86_64_asm_ltr(sel.0);
+    }
 }

@@ -33,10 +33,14 @@ macro_rules! segment_impl {
 
             unsafe fn set_reg(sel: SegmentSelector) {
                 #[cfg(feature = "inline_asm")]
-                asm!(concat!("mov ", $name, ", {0:x}"), in(reg) sel.0, options(nostack, preserves_flags));
+                unsafe {
+                    asm!(concat!("mov ", $name, ", {0:x}"), in(reg) sel.0, options(nostack, preserves_flags));
+                }
 
                 #[cfg(not(feature = "inline_asm"))]
-                crate::asm::$asm_load(sel.0);
+                unsafe{
+                    crate::asm::$asm_load(sel.0);
+                }
             }
         }
     };
@@ -61,10 +65,14 @@ macro_rules! segment64_impl {
 
             unsafe fn write_base(base: VirtAddr) {
                 #[cfg(feature = "inline_asm")]
-                asm!(concat!("wr", $name, "base {}"), in(reg) base.as_u64(), options(nostack, preserves_flags));
+                unsafe{
+                    asm!(concat!("wr", $name, "base {}"), in(reg) base.as_u64(), options(nostack, preserves_flags));
+                }
 
                 #[cfg(not(feature = "inline_asm"))]
-                crate::asm::$asm_wr(base.as_u64());
+                unsafe{
+                    crate::asm::$asm_wr(base.as_u64());
+                }
             }
         }
     };
@@ -83,19 +91,23 @@ impl Segment for CS {
     /// for 64-bit far calls/jumps in long-mode, AMD does not.
     unsafe fn set_reg(sel: SegmentSelector) {
         #[cfg(feature = "inline_asm")]
-        asm!(
-            "push {sel}",
-            "lea {tmp}, [1f + rip]",
-            "push {tmp}",
-            "retfq",
-            "1:",
-            sel = in(reg) u64::from(sel.0),
-            tmp = lateout(reg) _,
-            options(preserves_flags),
-        );
+        unsafe {
+            asm!(
+                "push {sel}",
+                "lea {tmp}, [1f + rip]",
+                "push {tmp}",
+                "retfq",
+                "1:",
+                sel = in(reg) u64::from(sel.0),
+                tmp = lateout(reg) _,
+                options(preserves_flags),
+            );
+        }
 
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_set_cs(u64::from(sel.0));
+        unsafe {
+            crate::asm::x86_64_asm_set_cs(u64::from(sel.0));
+        }
     }
 }
 
@@ -116,10 +128,14 @@ impl GS {
     /// swap operation cannot lead to undefined behavior.
     pub unsafe fn swap() {
         #[cfg(feature = "inline_asm")]
-        asm!("swapgs", options(nostack, preserves_flags));
+        unsafe {
+            asm!("swapgs", options(nostack, preserves_flags));
+        }
 
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_swapgs();
+        unsafe {
+            crate::asm::x86_64_asm_swapgs();
+        }
     }
 }
 
@@ -128,49 +144,49 @@ impl GS {
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn set_cs(sel: SegmentSelector) {
-    CS::set_reg(sel)
+    unsafe { CS::set_reg(sel) }
 }
 /// Alias for [`SS::set_reg()`]
 #[deprecated(since = "0.14.4", note = "use `SS::set_reg()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn load_ss(sel: SegmentSelector) {
-    SS::set_reg(sel)
+    unsafe { SS::set_reg(sel) }
 }
 /// Alias for [`DS::set_reg()`]
 #[deprecated(since = "0.14.4", note = "use `DS::set_reg()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn load_ds(sel: SegmentSelector) {
-    DS::set_reg(sel)
+    unsafe { DS::set_reg(sel) }
 }
 /// Alias for [`ES::set_reg()`]
 #[deprecated(since = "0.14.4", note = "use `ES::set_reg()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn load_es(sel: SegmentSelector) {
-    ES::set_reg(sel)
+    unsafe { ES::set_reg(sel) }
 }
 /// Alias for [`FS::set_reg()`]
 #[deprecated(since = "0.14.4", note = "use `FS::set_reg()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn load_fs(sel: SegmentSelector) {
-    FS::set_reg(sel)
+    unsafe { FS::set_reg(sel) }
 }
 /// Alias for [`GS::set_reg()`]
 #[deprecated(since = "0.14.4", note = "use `GS::set_reg()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn load_gs(sel: SegmentSelector) {
-    GS::set_reg(sel)
+    unsafe { GS::set_reg(sel) }
 }
 /// Alias for [`GS::swap()`]
 #[deprecated(since = "0.14.4", note = "use `GS::swap()` instead")]
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn swap_gs() {
-    GS::swap()
+    unsafe { GS::swap() }
 }
 /// Alias for [`CS::get_reg()`]
 #[deprecated(since = "0.14.4", note = "use `CS::get_reg()` instead")]
@@ -186,7 +202,7 @@ pub fn cs() -> SegmentSelector {
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn wrfsbase(val: u64) {
-    FS::write_base(VirtAddr::new(val))
+    unsafe { FS::write_base(VirtAddr::new(val)) }
 }
 /// Alias for [`FS::read_base()`]
 #[deprecated(since = "0.14.4", note = "use `FS::read_base()` instead")]
@@ -202,7 +218,7 @@ pub unsafe fn rdfsbase() -> u64 {
 #[allow(clippy::missing_safety_doc)]
 #[inline]
 pub unsafe fn wrgsbase(val: u64) {
-    GS::write_base(VirtAddr::new(val))
+    unsafe { GS::write_base(VirtAddr::new(val)) }
 }
 /// Alias for [`GS::read_base()`]
 #[deprecated(since = "0.14.4", note = "use `GS::read_base()` instead")]

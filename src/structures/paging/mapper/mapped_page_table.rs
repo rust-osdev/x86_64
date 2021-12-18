@@ -33,7 +33,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {
         Self {
             level_4_table,
-            page_table_walker: PageTableWalker::new(page_table_frame_mapping),
+            page_table_walker: unsafe { PageTableWalker::new(page_table_frame_mapping) },
         }
     }
 
@@ -590,13 +590,15 @@ impl<'a, P: PageTableFrameMapping> CleanUp for MappedPageTable<'a, P> {
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        self.clean_up_addr_range(
-            PageRangeInclusive {
-                start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
-                end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
-            },
-            frame_deallocator,
-        )
+        unsafe {
+            self.clean_up_addr_range(
+                PageRangeInclusive {
+                    start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
+                    end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+                },
+                frame_deallocator,
+            )
+        }
     }
 
     unsafe fn clean_up_addr_range<D>(
@@ -640,16 +642,18 @@ impl<'a, P: PageTableFrameMapping> CleanUp for MappedPageTable<'a, P> {
                         let start = start.max(range.start);
                         let end = Page::<Size4KiB>::containing_address(end);
                         let end = end.min(range.end);
-                        if clean_up(
-                            page_table,
-                            page_table_walker,
-                            next_level,
-                            Page::range_inclusive(start, end),
-                            frame_deallocator,
-                        ) {
-                            let frame = entry.frame().unwrap();
-                            entry.set_unused();
-                            frame_deallocator.deallocate_frame(frame);
+                        unsafe {
+                            if clean_up(
+                                page_table,
+                                page_table_walker,
+                                next_level,
+                                Page::range_inclusive(start, end),
+                                frame_deallocator,
+                            ) {
+                                let frame = entry.frame().unwrap();
+                                entry.set_unused();
+                                frame_deallocator.deallocate_frame(frame);
+                            }
                         }
                     }
                 }
@@ -658,13 +662,15 @@ impl<'a, P: PageTableFrameMapping> CleanUp for MappedPageTable<'a, P> {
             page_table.iter().all(PageTableEntry::is_unused)
         }
 
-        clean_up(
-            self.level_4_table,
-            &self.page_table_walker,
-            PageTableLevel::Four,
-            range,
-            frame_deallocator,
-        );
+        unsafe {
+            clean_up(
+                self.level_4_table,
+                &self.page_table_walker,
+                PageTableLevel::Four,
+                range,
+                frame_deallocator,
+            );
+        }
     }
 }
 

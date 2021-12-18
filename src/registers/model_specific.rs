@@ -142,17 +142,21 @@ mod x86_64 {
             #[cfg(feature = "inline_asm")]
             {
                 let (high, low): (u32, u32);
-                asm!(
-                    "rdmsr",
-                    in("ecx") self.0,
-                    out("eax") low, out("edx") high,
-                    options(nomem, nostack, preserves_flags),
-                );
+                unsafe {
+                    asm!(
+                        "rdmsr",
+                        in("ecx") self.0,
+                        out("eax") low, out("edx") high,
+                        options(nomem, nostack, preserves_flags),
+                    );
+                }
                 ((high as u64) << 32) | (low as u64)
             }
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_rdmsr(self.0)
+            unsafe {
+                crate::asm::x86_64_asm_rdmsr(self.0)
+            }
         }
 
         /// Write 64 bits to msr register.
@@ -167,15 +171,19 @@ mod x86_64 {
             let high = (value >> 32) as u32;
 
             #[cfg(feature = "inline_asm")]
-            asm!(
-                "wrmsr",
-                in("ecx") self.0,
-                in("eax") low, in("edx") high,
-                options(nostack, preserves_flags),
-            );
+            unsafe {
+                asm!(
+                    "wrmsr",
+                    in("ecx") self.0,
+                    in("eax") low, in("edx") high,
+                    options(nostack, preserves_flags),
+                );
+            }
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_wrmsr(self.0, low, high);
+            unsafe {
+                crate::asm::x86_64_asm_wrmsr(self.0, low, high);
+            }
         }
     }
 
@@ -206,7 +214,9 @@ mod x86_64 {
             let reserved = old_value & !(EferFlags::all().bits());
             let new_value = reserved | flags.bits();
 
-            Self::write_raw(new_value);
+            unsafe {
+                Self::write_raw(new_value);
+            }
         }
 
         /// Write the EFER flags.
@@ -220,7 +230,9 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(flags: u64) {
             let mut msr = Self::MSR;
-            msr.write(flags);
+            unsafe {
+                msr.write(flags);
+            }
         }
 
         /// Update EFER flags.
@@ -238,7 +250,9 @@ mod x86_64 {
         {
             let mut flags = Self::read();
             f(&mut flags);
-            Self::write(flags);
+            unsafe {
+                Self::write(flags);
+            }
         }
     }
 
@@ -363,7 +377,9 @@ mod x86_64 {
             msr_value.set_bits(48..64, sysret.into());
             msr_value.set_bits(32..48, syscall.into());
             let mut msr = Self::MSR;
-            msr.write(msr_value);
+            unsafe {
+                msr.write(msr_value);
+            }
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.

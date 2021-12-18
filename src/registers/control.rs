@@ -202,7 +202,9 @@ mod x86_64 {
             let reserved = old_value & !(Cr0Flags::all().bits());
             let new_value = reserved | flags.bits();
 
-            Self::write_raw(new_value);
+            unsafe {
+                Self::write_raw(new_value);
+            }
         }
 
         /// Write raw CR0 flags.
@@ -216,10 +218,14 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            asm!("mov cr0, {}", in(reg) value, options(nostack, preserves_flags));
+            unsafe {
+                asm!("mov cr0, {}", in(reg) value, options(nostack, preserves_flags));
+            }
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_write_cr0(value);
+            unsafe {
+                crate::asm::x86_64_asm_write_cr0(value);
+            }
         }
 
         /// Updates CR0 flags.
@@ -237,7 +243,9 @@ mod x86_64 {
         {
             let mut flags = Self::read();
             f(&mut flags);
-            Self::write(flags);
+            unsafe {
+                Self::write(flags);
+            }
         }
     }
 
@@ -305,7 +313,9 @@ mod x86_64 {
         /// changing the page mapping.
         #[inline]
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
-            Cr3::write_raw(frame, flags.bits() as u16);
+            unsafe {
+                Cr3::write_raw(frame, flags.bits() as u16);
+            }
         }
 
         /// Write a new P4 table address into the CR3 register.
@@ -317,7 +327,9 @@ mod x86_64 {
         /// [`Cr4Flags::PCID`] must be set before calling this method.
         #[inline]
         pub unsafe fn write_pcid(frame: PhysFrame, pcid: Pcid) {
-            Cr3::write_raw(frame, pcid.value());
+            unsafe {
+                Cr3::write_raw(frame, pcid.value());
+            }
         }
 
         /// Write a new P4 table address into the CR3 register.
@@ -332,10 +344,14 @@ mod x86_64 {
             let value = addr.as_u64() | val as u64;
 
             #[cfg(feature = "inline_asm")]
-            asm!("mov cr3, {}", in(reg) value, options(nostack, preserves_flags));
+            unsafe {
+                asm!("mov cr3, {}", in(reg) value, options(nostack, preserves_flags));
+            }
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_write_cr3(value)
+            unsafe {
+                crate::asm::x86_64_asm_write_cr3(value)
+            }
         }
     }
 
@@ -378,7 +394,9 @@ mod x86_64 {
             let reserved = old_value & !(Cr4Flags::all().bits());
             let new_value = reserved | flags.bits();
 
-            Self::write_raw(new_value);
+            unsafe {
+                Self::write_raw(new_value);
+            }
         }
 
         /// Write raw CR4 flags.
@@ -393,10 +411,14 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(value: u64) {
             #[cfg(feature = "inline_asm")]
-            asm!("mov cr4, {}", in(reg) value, options(nostack, preserves_flags));
+            unsafe {
+                asm!("mov cr4, {}", in(reg) value, options(nostack, preserves_flags));
+            }
 
             #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_write_cr4(value);
+            unsafe {
+                crate::asm::x86_64_asm_write_cr4(value);
+            }
         }
 
         /// Updates CR4 flags.
@@ -415,7 +437,9 @@ mod x86_64 {
         {
             let mut flags = Self::read();
             f(&mut flags);
-            Self::write(flags);
+            unsafe {
+                Self::write(flags);
+            }
         }
     }
 }

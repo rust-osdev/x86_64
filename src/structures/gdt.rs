@@ -151,7 +151,9 @@ impl GlobalDescriptorTable {
     #[inline]
     pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::lgdt;
-        lgdt(&self.pointer());
+        unsafe {
+            lgdt(&self.pointer());
+        }
     }
 
     const_fn! {
