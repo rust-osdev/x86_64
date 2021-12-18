@@ -1,5 +1,18 @@
 # Unreleased
 
+# 0.14.7 – 2021-12-18
+
+- fix: build error on the latest nightly ([#329](https://github.com/rust-osdev/x86_64/pull/329))
+- add `set_general_handler` macro ([#285](https://github.com/rust-osdev/x86_64/pull/285))
+- Derive common traits for number, range and enum types ([#315](https://github.com/rust-osdev/x86_64/pull/315))
+- Add the VMM Communication Exception (`#VC`) to the `InterruptDescriptorTable` ([#313](https://github.com/rust-osdev/x86_64/pull/313))
+- fix: enable manipulation of `InterruptStackFrame` ([#312](https://github.com/rust-osdev/x86_64/pull/312))
+- fix docs for `page_table_index` ([#318](https://github.com/rust-osdev/x86_64/pull/318))
+- Remove redundant alignment check ([#314](https://github.com/rust-osdev/x86_64/pull/314))
+- fix(idt): fix panic messages for `index` and `#VC` ([#321](https://github.com/rust-osdev/x86_64/pull/321))
+- remove `const_assert!` in favor of std's `assert!` ([#326](https://github.com/rust-osdev/x86_64/pull/326))
+- Move bootloader integration test to separate CI job ([#330](https://github.com/rust-osdev/x86_64/pull/330))
+
 # 0.14.6 – 2021-09-20
 
 - New `registers::segmentation` module ([#309](https://github.com/rust-osdev/x86_64/pull/309)), containing:
