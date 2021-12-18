@@ -50,16 +50,6 @@ jobs:
         rustc -Vv
         cargo -Vv
 
-    - name: Cache binaries
-      id: cache-bin
-      uses: actions/cache@v1
-      with:
-        path: binaries
-        key: ${{ runner.OS }}-binaries
-    - name: Add binaries/bin to PATH
-      run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
-      shell: bash
-
     - name: "Run cargo build"
       uses: actions-rs/cargo@v1
       with:
@@ -130,6 +120,35 @@ jobs:
       run: |
         cargo build --target i686-unknown-linux-gnu --no-default-features --features nightly
         cargo build --target thumbv7em-none-eabihf --no-default-features --features nightly
+
+  bootloader-test:
+    name: "Bootloader Integration Test"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [
+          ubuntu-latest,
+          macos-latest,
+          windows-latest
+        ]
+
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 15
+
+    steps:
+    - name: "Checkout Repository"
+      uses: actions/checkout@v1
+
+    - name: Cache binaries
+      id: cache-bin
+      uses: actions/cache@v1
+      with:
+        path: binaries
+        key: ${{ runner.OS }}-binaries
+    - name: Add binaries/bin to PATH
+      run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
+      shell: bash
 
     - name: "Install Rustup Components"
       run: rustup component add rust-src llvm-tools-preview
