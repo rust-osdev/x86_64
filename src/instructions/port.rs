@@ -1,5 +1,7 @@
 //! Access to I/O ports
 
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 use core::fmt;
 use core::marker::PhantomData;
 
