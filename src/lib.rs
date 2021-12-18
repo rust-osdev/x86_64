@@ -2,7 +2,6 @@
 //! and access to various system registers.
 
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(feature = "const_fn", feature(const_panic))] // Better panic messages
 #![cfg_attr(feature = "const_fn", feature(const_mut_refs))] // GDT add_entry()
 #![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))] // IDT new()
 #![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))] // PageSize marker trait
