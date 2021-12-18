@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.14.7 – 2021-12-18
+
 - fix: build error on the latest nightly ([#329](https://github.com/rust-osdev/x86_64/pull/329))
 - add `set_general_handler` macro ([#285](https://github.com/rust-osdev/x86_64/pull/285))
 - Derive common traits for number, range and enum types ([#315](https://github.com/rust-osdev/x86_64/pull/315))
