@@ -253,6 +253,12 @@ mod x86_64 {
         /// Read the current page fault linear address from the CR2 register.
         #[inline]
         pub fn read() -> VirtAddr {
+            VirtAddr::new(Self::read_raw())
+        }
+
+        /// Read the current page fault linear address from the CR2 register.
+        #[inline]
+        pub fn read_raw() -> u64 {
             let value: u64;
 
             #[cfg(feature = "inline_asm")]
@@ -264,7 +270,7 @@ mod x86_64 {
                 value = crate::asm::x86_64_asm_read_cr2();
             }
 
-            VirtAddr::new(value)
+            value
         }
     }
 
