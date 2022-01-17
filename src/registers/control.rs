@@ -256,7 +256,7 @@ mod x86_64 {
             VirtAddr::new(Self::read_raw())
         }
 
-        /// Read the current page fault linear address from the CR2 register.
+        /// Read the current page fault linear address from the CR2 register as a raw `u64`.
         #[inline]
         pub fn read_raw() -> u64 {
             let value: u64;
