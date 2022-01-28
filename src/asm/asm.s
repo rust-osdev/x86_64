@@ -334,3 +334,19 @@ _x86_64_asm_xsetbv:
     movl  %esi, %eax    # Second param is the low 32-bits
     xsetbv              # Third param (high 32-bits) is already in %edx
     retq
+
+.global _x86_64_asm_write_mxcsr
+.p2align 4
+_x86_64_asm_write_mxcsr:
+    pushq %rdi
+    ldmxcsr (%rsp)
+    popq %rdi
+    retq
+
+.global _x86_64_asm_read_mxcsr
+.p2align 4
+_x86_64_asm_read_mxcsr:
+    pushq $0
+    stmxcsr (%rsp)
+    popq %rax
+    retq

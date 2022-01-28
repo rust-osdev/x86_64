@@ -299,4 +299,16 @@ extern "sysv64" {
         link_name = "_x86_64_asm_xsetbv"
     )]
     pub(crate) fn x86_64_asm_xsetbv(xcr: u32, low: u32, high: u32);
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_read_mxcsr"
+    )]
+    pub(crate) fn x86_64_asm_read_mxcsr() -> u32;
+
+    #[cfg_attr(
+        any(target_env = "gnu", target_env = "musl"),
+        link_name = "_x86_64_asm_write_mxcsr"
+    )]
+    pub(crate) fn x86_64_asm_write_mxcsr(val: u32);
 }
