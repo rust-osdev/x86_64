@@ -1,9 +1,9 @@
 use crate::structures::paging::{
     frame::PhysFrame,
-    frame_alloc::FrameAllocator,
+    frame_alloc::{FrameAllocator, FrameDeallocator},
     mapper::*,
-    page::{AddressNotAligned, Page, Size1GiB, Size2MiB, Size4KiB},
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
+    page::{AddressNotAligned, Page, PageRangeInclusive, Size1GiB, Size2MiB, Size4KiB},
+    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags, PageTableLevel},
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
@@ -33,7 +33,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {
         Self {
             level_4_table,
-            page_table_walker: PageTableWalker::new(page_table_frame_mapping),
+            page_table_walker: unsafe { PageTableWalker::new(page_table_frame_mapping) },
         }
     }
 
@@ -585,6 +585,96 @@ impl<'a, P: PageTableFrameMapping> Translate for MappedPageTable<'a, P> {
             frame: MappedFrame::Size4KiB(frame),
             offset,
             flags,
+        }
+    }
+}
+
+impl<'a, P: PageTableFrameMapping> CleanUp for MappedPageTable<'a, P> {
+    #[inline]
+    unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        unsafe {
+            self.clean_up_addr_range(
+                PageRangeInclusive {
+                    start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
+                    end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+                },
+                frame_deallocator,
+            )
+        }
+    }
+
+    unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        unsafe fn clean_up<P: PageTableFrameMapping>(
+            page_table: &mut PageTable,
+            page_table_walker: &PageTableWalker<P>,
+            level: PageTableLevel,
+            range: PageRangeInclusive,
+            frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
+        ) -> bool {
+            if range.is_empty() {
+                return false;
+            }
+
+            let table_addr = range
+                .start
+                .start_address()
+                .align_down(level.table_address_space_alignment());
+
+            let start = range.start.page_table_index(level);
+            let end = range.end.page_table_index(level);
+
+            if let Some(next_level) = level.next_lower_level() {
+                let offset_per_entry = level.entry_address_space_alignment();
+                for (i, entry) in page_table
+                    .iter_mut()
+                    .enumerate()
+                    .take(usize::from(end) + 1)
+                    .skip(usize::from(start))
+                {
+                    if let Ok(page_table) = page_table_walker.next_table_mut(entry) {
+                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let end = start + (offset_per_entry - 1);
+                        let start = Page::<Size4KiB>::containing_address(start);
+                        let start = start.max(range.start);
+                        let end = Page::<Size4KiB>::containing_address(end);
+                        let end = end.min(range.end);
+                        unsafe {
+                            if clean_up(
+                                page_table,
+                                page_table_walker,
+                                next_level,
+                                Page::range_inclusive(start, end),
+                                frame_deallocator,
+                            ) {
+                                let frame = entry.frame().unwrap();
+                                entry.set_unused();
+                                frame_deallocator.deallocate_frame(frame);
+                            }
+                        }
+                    }
+                }
+            }
+
+            page_table.iter().all(PageTableEntry::is_unused)
+        }
+
+        unsafe {
+            clean_up(
+                self.level_4_table,
+                &self.page_table_walker,
+                PageTableLevel::Four,
+                range,
+                frame_deallocator,
+            );
         }
     }
 }

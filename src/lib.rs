@@ -2,16 +2,16 @@
 //! and access to various system registers.
 
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(feature = "const_fn", feature(const_panic))] // Better panic messages
 #![cfg_attr(feature = "const_fn", feature(const_mut_refs))] // GDT add_entry()
 #![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))] // IDT new()
 #![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))] // PageSize marker trait
 #![cfg_attr(feature = "inline_asm", feature(asm))]
 #![cfg_attr(feature = "inline_asm", feature(asm_const))] // software_interrupt
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
+#![deny(unsafe_op_in_unsafe_fn)]
 
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicBool, Ordering};
@@ -49,19 +49,6 @@ macro_rules! const_fn {
     };
 }
 
-// Helper method for assert! in const fn. Uses out of bounds indexing if an
-// assertion fails and the "const_fn" feature is not enabled.
-#[cfg(feature = "const_fn")]
-macro_rules! const_assert {
-    ($cond:expr, $($arg:tt)+) => { assert!($cond, $($arg)*) };
-}
-#[cfg(not(feature = "const_fn"))]
-macro_rules! const_assert {
-    ($cond:expr, $($arg:tt)+) => {
-        [(); 1][!($cond as bool) as usize]
-    };
-}
-
 #[cfg(all(feature = "instructions", feature = "external_asm"))]
 pub(crate) mod asm;
 
@@ -71,7 +58,7 @@ pub mod registers;
 pub mod structures;
 
 /// Represents a protection ring level.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum PrivilegeLevel {
     /// Privilege-level 0 (most privilege): This level is used by critical system-software

@@ -3,6 +3,7 @@
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
+use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
 
@@ -16,7 +17,7 @@ use bit_field::BitField;
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
 /// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterium
 /// are called “canonical”. This type guarantees that it always represents a canonical address.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct VirtAddr(u64);
 
@@ -29,7 +30,7 @@ pub struct VirtAddr(u64);
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
 /// to be zero. This type guarantees that it always represents a valid physical address.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct PhysAddr(u64);
 
@@ -197,6 +198,12 @@ impl VirtAddr {
     #[inline]
     pub const fn p4_index(self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9) as u16)
+    }
+
+    /// Returns the 9-bit level page table index.
+    #[inline]
+    pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+        PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
     }
 }
 
@@ -537,7 +544,7 @@ impl Sub<PhysAddr> for PhysAddr {
 /// feature, the panic message will be "index out of bounds".
 #[inline]
 pub const fn align_down(addr: u64, align: u64) -> u64 {
-    const_assert!(align.is_power_of_two(), "`align` must be a power of two");
+    assert!(align.is_power_of_two(), "`align` must be a power of two");
     addr & !(align - 1)
 }
 
@@ -549,7 +556,7 @@ pub const fn align_down(addr: u64, align: u64) -> u64 {
 /// feature, the panic message will be "index out of bounds".
 #[inline]
 pub const fn align_up(addr: u64, align: u64) -> u64 {
-    const_assert!(align.is_power_of_two(), "`align` must be a power of two");
+    assert!(align.is_power_of_two(), "`align` must be a power of two");
     let align_mask = align - 1;
     if addr & align_mask == 0 {
         addr // already aligned

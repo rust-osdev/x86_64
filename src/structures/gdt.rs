@@ -1,58 +1,13 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+pub use crate::registers::segmentation::SegmentSelector;
 use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
-use core::fmt;
-
-/// Specifies which element to load into a segment from
-/// descriptor tables (i.e., is a index to LDT or GDT table
-/// with some additional flags).
-///
-/// See Intel 3a, Section 3.4.2 "Segment Selectors"
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(transparent)]
-pub struct SegmentSelector(pub u16);
-
-impl SegmentSelector {
-    /// Creates a new SegmentSelector
-    ///
-    /// # Arguments
-    ///  * `index`: index in GDT or LDT array (not the offset)
-    ///  * `rpl`: the requested privilege level
-    #[inline]
-    pub const fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
-        SegmentSelector(index << 3 | (rpl as u16))
-    }
-
-    /// Returns the GDT index.
-    #[inline]
-    pub fn index(self) -> u16 {
-        self.0 >> 3
-    }
-
-    /// Returns the requested privilege level.
-    #[inline]
-    pub fn rpl(self) -> PrivilegeLevel {
-        PrivilegeLevel::from_u16(self.0.get_bits(0..2))
-    }
-
-    /// Set the privilege level for this Segment selector.
-    #[inline]
-    pub fn set_rpl(&mut self, rpl: PrivilegeLevel) {
-        self.0.set_bits(0..2, rpl as u16);
-    }
-}
-
-impl fmt::Debug for SegmentSelector {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut s = f.debug_struct("SegmentSelector");
-        s.field("index", &self.index());
-        s.field("rpl", &self.rpl());
-        s.finish()
-    }
-}
+// imports for intra-doc links
+#[cfg(doc)]
+use crate::registers::segmentation::{Segment, CS, SS};
 
 /// A 64-bit mode global descriptor table (GDT).
 ///
@@ -117,7 +72,7 @@ impl GlobalDescriptorTable {
         let mut table = [0; 8];
         let mut idx = 0;
 
-        const_assert!(
+        assert!(
             next_free <= 8,
             "initializing a GDT from a slice requires it to be **at most** 8 elements."
         );
@@ -173,8 +128,7 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [load_ss](crate::instructions::segmentation::load_ss),
-    /// [set_cs](crate::instructions::segmentation::set_cs).
+    /// [`SS::set_reg()`] and [`CS::set_reg()`].
     #[cfg(feature = "instructions")]
     #[inline]
     pub fn load(&'static mut self) {
@@ -185,8 +139,7 @@ impl GlobalDescriptorTable {
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
-    /// [load_ss](crate::instructions::segmentation::load_ss),
-    /// [set_cs](crate::instructions::segmentation::set_cs).
+    /// [`SS::set_reg()`] and [`CS::set_reg()`].
     ///
     /// # Safety
     ///
@@ -198,7 +151,9 @@ impl GlobalDescriptorTable {
     #[inline]
     pub unsafe fn load_unsafe(&mut self) {
         use crate::instructions::tables::lgdt;
-        lgdt(&self.pointer());
+        unsafe {
+            lgdt(&self.pointer());
+        }
     }
 
     const_fn! {

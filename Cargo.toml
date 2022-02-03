@@ -22,11 +22,11 @@ license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.14.4"
+version = "0.14.7"
 edition = "2018"
 
 [dependencies]
-bit_field = "0.9.0"
+bit_field = "0.10.1"
 bitflags = "1.3.2"
 volatile = "0.4.4"
 
@@ -37,13 +37,11 @@ cc = { version = "1.0.37", optional = true }
 default = [ "nightly", "instructions" ]
 instructions = []
 external_asm = [ "cc" ]
-nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt" ]
+nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt", "doc_cfg" ]
 inline_asm = []
 abi_x86_interrupt = []
 const_fn = []
-
-[package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
+doc_cfg = []
 
 [package.metadata.release]
 no-dev-version = true

@@ -8,7 +8,7 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A physical memory frame.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
     pub(crate) start_address: PhysAddr, // TODO: remove when start_address() is const
@@ -24,7 +24,9 @@ impl<S: PageSize> PhysFrame<S> {
         if !address.is_aligned(S::SIZE) {
             return Err(AddressNotAligned);
         }
-        Ok(PhysFrame::containing_address(address))
+
+        // SAFETY: correct address alignment is checked above
+        Ok(unsafe { PhysFrame::from_start_address_unchecked(address) })
     }
 
     const_fn! {
@@ -133,7 +135,7 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 }
 
 /// An range of physical memory frames, exclusive the upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct PhysFrameRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
@@ -175,7 +177,7 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
 }
 
 /// An range of physical memory frames, inclusive the upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
