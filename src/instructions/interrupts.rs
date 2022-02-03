@@ -164,5 +164,7 @@ pub fn int3() {
     doc(cfg(any(feature = "nightly", feature = "inline_asm")))
 )]
 pub unsafe fn software_interrupt<const NUM: u8>() {
-    asm!("int {num}", num = const NUM, options(nomem, nostack));
+    unsafe {
+        asm!("int {num}", num = const NUM, options(nomem, nostack));
+    }
 }

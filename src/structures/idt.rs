@@ -762,7 +762,7 @@ impl<F> Entry<F> {
 
         self.options = EntryOptions::minimal();
         // SAFETY: The current CS is a valid, long-mode code segment.
-        self.options.set_code_selector(CS::get_reg());
+        unsafe { self.options.set_code_selector(CS::get_reg()) };
         self.options.set_present(true);
         &mut self.options
     }
