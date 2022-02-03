@@ -913,7 +913,7 @@ impl<'a> CleanUp for RecursivePageTable<'a> {
 
         clean_up(
             self.recursive_index,
-            self.level_4_table(),
+            self.level_4_table_mut(),
             PageTableLevel::Four,
             range,
             frame_deallocator,
