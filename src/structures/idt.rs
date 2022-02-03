@@ -1496,15 +1496,15 @@ mod test {
 
     #[test]
     fn isr_frame_manipulation() {
-        let mut frame = InterruptStackFrame {
-            value: InterruptStackFrameValue {
-                instruction_pointer: VirtAddr::new(0x1000),
-                code_segment: 0,
-                cpu_flags: 0,
-                stack_pointer: VirtAddr::new(0x2000),
-                stack_segment: 0,
-            },
-        };
+        let mut frame = InterruptStackFrame(InterruptStackFrameValue {
+            instruction_pointer: VirtAddr::new(0x1000),
+            code_segment: SegmentSelector(0),
+            cpu_flags: RFlags::empty(),
+            stack_pointer: VirtAddr::new(0x2000),
+            stack_segment: SegmentSelector(0),
+            _reserved1: Default::default(),
+            _reserved2: Default::default(),
+        });
 
         unsafe {
             frame
