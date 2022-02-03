@@ -1394,7 +1394,7 @@ macro_rules! set_general_handler_entry {
         extern "x86-interrupt" fn handler(frame: $crate::structures::idt::InterruptStackFrame) {
             $handler(frame, $idx.into(), None);
         }
-        $idt[$idx as usize].set_handler_fn(handler);
+        $idt[$idx].set_handler_fn(handler);
     }};
 }
 
@@ -1402,7 +1402,7 @@ macro_rules! set_general_handler_entry {
 mod test {
     use super::*;
 
-    fn entry_present(idt: &InterruptDescriptorTable, index: usize) -> bool {
+    fn entry_present(idt: &InterruptDescriptorTable, index: u8) -> bool {
         let options = match index {
             8 => &idt.double_fault.options,
             10 => &idt.invalid_tss.options,
@@ -1413,13 +1413,13 @@ mod test {
             15 => &idt.reserved_1.options,
             17 => &idt.alignment_check.options,
             18 => &idt.machine_check.options,
-            i @ 21..=28 => &idt.reserved_2[i - 21].options,
+            i @ 21..=28 => &idt.reserved_2[usize::from(i) - 21].options,
             29 => &idt.vmm_communication_exception.options,
             30 => &idt.security_exception.options,
             31 => &idt.reserved_3.options,
             other => &idt[other].options,
         };
-        options.0.get_bit(15)
+        options.bits.get_bit(15)
     }
 
     #[test]
@@ -1446,7 +1446,7 @@ mod test {
 
         let mut idt = InterruptDescriptorTable::new();
         set_general_handler!(&mut idt, general_handler, 0);
-        for i in 0..256 {
+        for i in 0..=255 {
             if i == 0 {
                 assert!(entry_present(&idt, i));
             } else {
@@ -1454,7 +1454,7 @@ mod test {
             }
         }
         set_general_handler!(&mut idt, general_handler, 14);
-        for i in 0..256 {
+        for i in 0..=255 {
             if i == 0 || i == 14 {
                 assert!(entry_present(&idt, i));
             } else {
@@ -1462,7 +1462,7 @@ mod test {
             }
         }
         set_general_handler!(&mut idt, general_handler, 32..64);
-        for i in 1..256 {
+        for i in 1..=255 {
             if i == 0 || i == 14 || (32..64).contains(&i) {
                 assert!(entry_present(&idt, i), "{}", i);
             } else {
@@ -1470,7 +1470,7 @@ mod test {
             }
         }
         set_general_handler!(&mut idt, general_handler);
-        for i in 0..256 {
+        for i in 0..=255 {
             if i == 15 || i == 31 || (21..=28).contains(&i) {
                 // reserved entries should not be set
                 assert!(!entry_present(&idt, i));
