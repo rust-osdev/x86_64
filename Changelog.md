@@ -1,5 +1,8 @@
 # Unreleased
 
+- Add `Cr2::read_raw` ([#334](https://github.com/rust-osdev/x86_64/pull/334))
+- Add support for `MXCSR` register ([#336](https://github.com/rust-osdev/x86_64/pull/336))
+
 # 0.14.7 – 2021-12-18
 
 - fix: build error on the latest nightly ([#329](https://github.com/rust-osdev/x86_64/pull/329))
