@@ -1,5 +1,6 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
 use core::fmt;
@@ -52,7 +53,7 @@ impl PageSize for Size1GiB {
 }
 
 /// A virtual memory page.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct Page<S: PageSize = Size4KiB> {
     start_address: VirtAddr,
@@ -127,6 +128,14 @@ impl<S: PageSize> Page<S> {
         #[inline]
         pub fn p3_index(self) -> PageTableIndex {
             self.start_address().p3_index()
+        }
+    }
+
+    const_fn! {
+        /// Returns the table index of this page at the specified level.
+        #[inline]
+        pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+            self.start_address().page_table_index(level)
         }
     }
 
@@ -266,7 +275,7 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 }
 
 /// A range of pages with exclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct PageRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
@@ -319,7 +328,7 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 }
 
 /// A range of pages with inclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.

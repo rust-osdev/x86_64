@@ -66,6 +66,8 @@ bitflags! {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
+    #[cfg(feature = "inline_asm")]
+    use core::arch::asm;
 
     /// Returns the current value of the RFLAGS register.
     ///
@@ -105,7 +107,9 @@ mod x86_64 {
         let reserved = old_value & !(RFlags::all().bits());
         let new_value = reserved | flags.bits();
 
-        write_raw(new_value);
+        unsafe {
+            write_raw(new_value);
+        }
     }
 
     /// Writes the RFLAGS register.
@@ -123,10 +127,14 @@ mod x86_64 {
         // HACK: we mark this function as preserves_flags to prevent Rust from restoring
         // saved flags after the "popf" below. See above note on safety.
         #[cfg(feature = "inline_asm")]
-        asm!("push {}; popfq", in(reg) val, options(nomem, preserves_flags));
+        unsafe {
+            asm!("push {}; popfq", in(reg) val, options(nomem, preserves_flags));
+        }
 
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_write_rflags(val);
+        unsafe {
+            crate::asm::x86_64_asm_write_rflags(val);
+        }
     }
 
     #[cfg(test)]

@@ -1,7 +1,8 @@
 #![cfg(target_pointer_width = "64")]
 
 use crate::structures::paging::{
-    frame::PhysFrame, mapper::*, page_table::PageTable, Page, PageTableFlags,
+    frame::PhysFrame, mapper::*, page::PageRangeInclusive, page_table::PageTable, FrameDeallocator,
+    Page, PageTableFlags,
 };
 
 /// A Mapper implementation that requires that the complete physically memory is mapped at some
@@ -33,7 +34,7 @@ impl<'a> OffsetPageTable<'a> {
             offset: phys_offset,
         };
         Self {
-            inner: MappedPageTable::new(level_4_table, phys_offset),
+            inner: unsafe { MappedPageTable::new(level_4_table, phys_offset) },
         }
     }
 
@@ -75,8 +76,10 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
-        self.inner
-            .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+        unsafe {
+            self.inner
+                .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+        }
     }
 
     #[inline]
@@ -93,7 +96,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
-        self.inner.update_flags(page, flags)
+        unsafe { self.inner.update_flags(page, flags) }
     }
 
     #[inline]
@@ -102,7 +105,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p4_entry(page, flags)
+        unsafe { self.inner.set_flags_p4_entry(page, flags) }
     }
 
     #[inline]
@@ -111,7 +114,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p3_entry(page, flags)
+        unsafe { self.inner.set_flags_p3_entry(page, flags) }
     }
 
     #[inline]
@@ -120,7 +123,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p2_entry(page, flags)
+        unsafe { self.inner.set_flags_p2_entry(page, flags) }
     }
 
     #[inline]
@@ -142,8 +145,10 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
-        self.inner
-            .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+        unsafe {
+            self.inner
+                .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+        }
     }
 
     #[inline]
@@ -160,7 +165,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
-        self.inner.update_flags(page, flags)
+        unsafe { self.inner.update_flags(page, flags) }
     }
 
     #[inline]
@@ -169,7 +174,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p4_entry(page, flags)
+        unsafe { self.inner.set_flags_p4_entry(page, flags) }
     }
 
     #[inline]
@@ -178,7 +183,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p3_entry(page, flags)
+        unsafe { self.inner.set_flags_p3_entry(page, flags) }
     }
 
     #[inline]
@@ -187,7 +192,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p2_entry(page, flags)
+        unsafe { self.inner.set_flags_p2_entry(page, flags) }
     }
 
     #[inline]
@@ -209,8 +214,10 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
-        self.inner
-            .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+        unsafe {
+            self.inner
+                .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+        }
     }
 
     #[inline]
@@ -227,7 +234,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
-        self.inner.update_flags(page, flags)
+        unsafe { self.inner.update_flags(page, flags) }
     }
 
     #[inline]
@@ -236,7 +243,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p4_entry(page, flags)
+        unsafe { self.inner.set_flags_p4_entry(page, flags) }
     }
 
     #[inline]
@@ -245,7 +252,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p3_entry(page, flags)
+        unsafe { self.inner.set_flags_p3_entry(page, flags) }
     }
 
     #[inline]
@@ -254,7 +261,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
-        self.inner.set_flags_p2_entry(page, flags)
+        unsafe { self.inner.set_flags_p2_entry(page, flags) }
     }
 
     #[inline]
@@ -267,5 +274,26 @@ impl<'a> Translate for OffsetPageTable<'a> {
     #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
+    }
+}
+
+impl<'a> CleanUp for OffsetPageTable<'a> {
+    #[inline]
+    unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
+    where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        unsafe { self.inner.clean_up(frame_deallocator) }
+    }
+
+    #[inline]
+    unsafe fn clean_up_addr_range<D>(
+        &mut self,
+        range: PageRangeInclusive,
+        frame_deallocator: &mut D,
+    ) where
+        D: FrameDeallocator<Size4KiB>,
+    {
+        unsafe { self.inner.clean_up_addr_range(range, frame_deallocator) }
     }
 }

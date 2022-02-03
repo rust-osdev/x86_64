@@ -1,5 +1,7 @@
 //! Access to I/O ports
 
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 use core::fmt;
 use core::marker::PhantomData;
 
@@ -11,11 +13,15 @@ impl PortRead for u8 {
         #[cfg(feature = "inline_asm")]
         {
             let value: u8;
-            asm!("in al, dx", out("al") value, in("dx") port, options(nomem, nostack, preserves_flags));
+            unsafe {
+                asm!("in al, dx", out("al") value, in("dx") port, options(nomem, nostack, preserves_flags));
+            }
             value
         }
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_read_from_port_u8(port)
+        unsafe {
+            crate::asm::x86_64_asm_read_from_port_u8(port)
+        }
     }
 }
 
@@ -25,11 +31,15 @@ impl PortRead for u16 {
         #[cfg(feature = "inline_asm")]
         {
             let value: u16;
-            asm!("in ax, dx", out("ax") value, in("dx") port, options(nomem, nostack, preserves_flags));
+            unsafe {
+                asm!("in ax, dx", out("ax") value, in("dx") port, options(nomem, nostack, preserves_flags));
+            }
             value
         }
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_read_from_port_u16(port)
+        unsafe {
+            crate::asm::x86_64_asm_read_from_port_u16(port)
+        }
     }
 }
 
@@ -39,11 +49,15 @@ impl PortRead for u32 {
         #[cfg(feature = "inline_asm")]
         {
             let value: u32;
-            asm!("in eax, dx", out("eax") value, in("dx") port, options(nomem, nostack, preserves_flags));
+            unsafe {
+                asm!("in eax, dx", out("eax") value, in("dx") port, options(nomem, nostack, preserves_flags));
+            }
             value
         }
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_read_from_port_u32(port)
+        unsafe {
+            crate::asm::x86_64_asm_read_from_port_u32(port)
+        }
     }
 }
 
@@ -51,10 +65,14 @@ impl PortWrite for u8 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
         #[cfg(feature = "inline_asm")]
-        asm!("out dx, al", in("dx") port, in("al") value, options(nomem, nostack, preserves_flags));
+        unsafe {
+            asm!("out dx, al", in("dx") port, in("al") value, options(nomem, nostack, preserves_flags));
+        }
 
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_write_to_port_u8(port, value);
+        unsafe {
+            crate::asm::x86_64_asm_write_to_port_u8(port, value);
+        }
     }
 }
 
@@ -62,10 +80,14 @@ impl PortWrite for u16 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
         #[cfg(feature = "inline_asm")]
-        asm!("out dx, ax", in("dx") port, in("ax") value, options(nomem, nostack, preserves_flags));
+        unsafe {
+            asm!("out dx, ax", in("dx") port, in("ax") value, options(nomem, nostack, preserves_flags));
+        }
 
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_write_to_port_u16(port, value);
+        unsafe {
+            crate::asm::x86_64_asm_write_to_port_u16(port, value);
+        }
     }
 }
 
@@ -73,10 +95,14 @@ impl PortWrite for u32 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
         #[cfg(feature = "inline_asm")]
-        asm!("out dx, eax", in("dx") port, in("eax") value, options(nomem, nostack, preserves_flags));
+        unsafe {
+            asm!("out dx, eax", in("dx") port, in("eax") value, options(nomem, nostack, preserves_flags));
+        }
 
         #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_write_to_port_u32(port, value);
+        unsafe {
+            crate::asm::x86_64_asm_write_to_port_u32(port, value);
+        }
     }
 }
 
@@ -162,7 +188,7 @@ impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     /// safety.
     #[inline]
     pub unsafe fn read(&mut self) -> T {
-        T::read_from_port(self.port)
+        unsafe { T::read_from_port(self.port) }
     }
 }
 
@@ -175,7 +201,7 @@ impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     /// safety.
     #[inline]
     pub unsafe fn write(&mut self, value: T) {
-        T::write_to_port(self.port, value)
+        unsafe { T::write_to_port(self.port, value) }
     }
 }
 

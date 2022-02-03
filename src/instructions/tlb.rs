@@ -3,6 +3,8 @@
 use core::fmt;
 
 use crate::VirtAddr;
+#[cfg(feature = "inline_asm")]
+use core::arch::asm;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
@@ -51,7 +53,7 @@ struct InvpcidDescriptor {
 
 /// Structure of a PCID. A PCID has to be <= 4096 for x86_64.
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Pcid(u16);
 
 impl Pcid {
@@ -86,6 +88,7 @@ impl fmt::Display for PcidTooBig {
 /// Invalidate the given address in the TLB using the `invpcid` instruction.
 ///
 /// ## Safety
+///
 /// This function is unsafe as it requires CPUID.(EAX=07H, ECX=0H):EBX.INVPCID to be 1.
 #[inline]
 pub unsafe fn flush_pcid(command: InvPicdCommand) {
@@ -110,8 +113,12 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
     }
 
     #[cfg(feature = "inline_asm")]
-    asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
+    unsafe {
+        asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
+    }
 
     #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
+    unsafe {
+        crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
+    }
 }
