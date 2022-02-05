@@ -41,7 +41,7 @@ pub struct PhysAddr(u64);
 /// overwritten possibly meaningful bits. This likely indicates a bug, for example an invalid
 /// address calculation.
 #[derive(Debug)]
-pub struct VirtAddrNotValid(u64);
+pub struct VirtAddrNotValid(pub u64);
 
 impl VirtAddr {
     /// Creates a new canonical virtual address.
@@ -326,7 +326,7 @@ impl Sub<VirtAddr> for VirtAddr {
 ///
 /// This means that bits 52 to 64 were not all null.
 #[derive(Debug)]
-pub struct PhysAddrNotValid(u64);
+pub struct PhysAddrNotValid(pub u64);
 
 impl PhysAddr {
     /// Creates a new physical address.
