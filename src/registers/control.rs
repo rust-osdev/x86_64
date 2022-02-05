@@ -254,6 +254,10 @@ mod x86_64 {
 
     impl Cr2 {
         /// Read the current page fault linear address from the CR2 register.
+        ///
+        /// # Errors
+        ///
+        /// This method returns a [`VirtAddrNotValid`] error if the CR2 register contains a non-canonical address. Call [`Cr2::read_raw`] to handle such cases.
         #[inline]
         pub fn read() -> Result<VirtAddr, VirtAddrNotValid> {
             VirtAddr::try_new(Self::read_raw())
