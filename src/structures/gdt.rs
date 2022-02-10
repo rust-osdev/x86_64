@@ -170,6 +170,45 @@ impl GlobalDescriptorTable {
         }
     }
 
+    /// Pops the last segment from the GDT.
+    ///
+    /// This is typically most useful when loading separate TSS's into several
+    /// APs using the same GDT. It is obviously advised, in such a case, to use
+    /// some form of locking to ensure safe GDT access.
+    pub const fn pop(&mut self) -> Option<Descriptor> {
+        if self.next_free > 1 {
+            // This check assumes the 0th entry is a null entry, and so a system segment will
+            // never be constructed from the 1st entry.
+            if (self.table[self.next_free - 1] & (1 << 44)) > 0 {
+                // System segment
+
+                let descriptor = Descriptor::SystemSegment(
+                    self.table[self.next_free],
+                    self.table[self.next_free - 1],
+                );
+
+                // Clear popped segments, and 'remove' it (decrement `next_free`).
+                self.table[self.next_free] = 0;
+                self.table[self.next_free - 1] = 0;
+                self.next_free -= 2;
+
+                Some(descriptor)
+            } else {
+                // Non-system segment
+
+                let descriptor = Descriptor::UserSegment(self.table[self.next_free]);
+
+                // Clear popped segments, and 'remove' it (decrement `next_free`).
+                self.table[self.next_free] = 0;
+                self.next_free -= 1; // 'remove' the user segment
+
+                Some(descriptor)
+            }
+        } else {
+            None
+        }
+    }
+
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
