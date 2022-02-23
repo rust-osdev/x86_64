@@ -62,36 +62,23 @@ impl Default for MxCsr {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
-    #[cfg(feature = "inline_asm")]
     use core::arch::asm;
 
     /// Read the value of MXCSR.
     #[inline]
     pub fn read() -> MxCsr {
-        #[cfg(feature = "inline_asm")]
-        {
-            let mut mxcsr: u32 = 0;
-            unsafe {
-                asm!("stmxcsr [{}]", in(reg) &mut mxcsr, options(nostack, preserves_flags));
-            }
-            MxCsr::from_bits_truncate(mxcsr)
-        }
-        #[cfg(not(feature = "inline_asm"))]
+        let mut mxcsr: u32 = 0;
         unsafe {
-            MxCsr::from_bits_truncate(crate::asm::x86_64_asm_read_mxcsr())
+            asm!("stmxcsr [{}]", in(reg) &mut mxcsr, options(nostack, preserves_flags));
         }
+        MxCsr::from_bits_truncate(mxcsr)
     }
 
     /// Write MXCSR.
     #[inline]
     pub fn write(mxcsr: MxCsr) {
-        #[cfg(feature = "inline_asm")]
         unsafe {
             asm!("ldmxcsr [{}]", in(reg) &mxcsr, options(nostack, readonly));
-        }
-        #[cfg(not(feature = "inline_asm"))]
-        unsafe {
-            crate::asm::x86_64_asm_write_mxcsr(mxcsr.bits());
         }
     }
 

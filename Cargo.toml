@@ -30,14 +30,11 @@ bit_field = "0.10.1"
 bitflags = "1.0.4"
 volatile = "0.4.4"
 
-[build-dependencies]
-cc = { version = "1.0.37", optional = true }
-
 [features]
 default = [ "nightly", "instructions" ]
 instructions = []
-external_asm = [ "cc" ]
-nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt", "doc_cfg" ]
+external_asm = []
+nightly = [ "const_fn", "abi_x86_interrupt", "doc_cfg" ]
 inline_asm = []
 abi_x86_interrupt = []
 const_fn = []
