@@ -11,5 +11,5 @@ pub mod xcontrol;
 #[allow(deprecated)]
 pub use crate::instructions::segmentation::{rdfsbase, rdgsbase, wrfsbase, wrgsbase};
 
-#[cfg(all(feature = "instructions", feature = "inline_asm"))]
+#[cfg(feature = "instructions")]
 pub use crate::instructions::read_rip;
