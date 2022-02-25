@@ -138,7 +138,6 @@ pub fn int3() {
 /// This currently needs to be a macro because the `int` argument needs to be an
 /// immediate. This macro will be replaced by a generic function when support for
 /// const generics is implemented in Rust.
-#[cfg_attr(feature = "doc_cfg", doc(cfg(any(feature = "nightly"))))]
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{
