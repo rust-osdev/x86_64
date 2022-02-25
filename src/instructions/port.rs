@@ -1,6 +1,5 @@
 //! Access to I/O ports
 
-#[cfg(feature = "inline_asm")]
 use core::arch::asm;
 use core::fmt;
 use core::marker::PhantomData;
@@ -10,68 +9,41 @@ pub use crate::structures::port::{PortRead, PortWrite};
 impl PortRead for u8 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u8 {
-        #[cfg(feature = "inline_asm")]
-        {
-            let value: u8;
-            unsafe {
-                asm!("in al, dx", out("al") value, in("dx") port, options(nomem, nostack, preserves_flags));
-            }
-            value
-        }
-        #[cfg(not(feature = "inline_asm"))]
+        let value: u8;
         unsafe {
-            crate::asm::x86_64_asm_read_from_port_u8(port)
+            asm!("in al, dx", out("al") value, in("dx") port, options(nomem, nostack, preserves_flags));
         }
+        value
     }
 }
 
 impl PortRead for u16 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u16 {
-        #[cfg(feature = "inline_asm")]
-        {
-            let value: u16;
-            unsafe {
-                asm!("in ax, dx", out("ax") value, in("dx") port, options(nomem, nostack, preserves_flags));
-            }
-            value
-        }
-        #[cfg(not(feature = "inline_asm"))]
+        let value: u16;
         unsafe {
-            crate::asm::x86_64_asm_read_from_port_u16(port)
+            asm!("in ax, dx", out("ax") value, in("dx") port, options(nomem, nostack, preserves_flags));
         }
+        value
     }
 }
 
 impl PortRead for u32 {
     #[inline]
     unsafe fn read_from_port(port: u16) -> u32 {
-        #[cfg(feature = "inline_asm")]
-        {
-            let value: u32;
-            unsafe {
-                asm!("in eax, dx", out("eax") value, in("dx") port, options(nomem, nostack, preserves_flags));
-            }
-            value
-        }
-        #[cfg(not(feature = "inline_asm"))]
+        let value: u32;
         unsafe {
-            crate::asm::x86_64_asm_read_from_port_u32(port)
+            asm!("in eax, dx", out("eax") value, in("dx") port, options(nomem, nostack, preserves_flags));
         }
+        value
     }
 }
 
 impl PortWrite for u8 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u8) {
-        #[cfg(feature = "inline_asm")]
         unsafe {
             asm!("out dx, al", in("dx") port, in("al") value, options(nomem, nostack, preserves_flags));
-        }
-
-        #[cfg(not(feature = "inline_asm"))]
-        unsafe {
-            crate::asm::x86_64_asm_write_to_port_u8(port, value);
         }
     }
 }
@@ -79,14 +51,8 @@ impl PortWrite for u8 {
 impl PortWrite for u16 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u16) {
-        #[cfg(feature = "inline_asm")]
         unsafe {
             asm!("out dx, ax", in("dx") port, in("ax") value, options(nomem, nostack, preserves_flags));
-        }
-
-        #[cfg(not(feature = "inline_asm"))]
-        unsafe {
-            crate::asm::x86_64_asm_write_to_port_u16(port, value);
         }
     }
 }
@@ -94,14 +60,8 @@ impl PortWrite for u16 {
 impl PortWrite for u32 {
     #[inline]
     unsafe fn write_to_port(port: u16, value: u32) {
-        #[cfg(feature = "inline_asm")]
         unsafe {
             asm!("out dx, eax", in("dx") port, in("eax") value, options(nomem, nostack, preserves_flags));
-        }
-
-        #[cfg(not(feature = "inline_asm"))]
-        unsafe {
-            crate::asm::x86_64_asm_write_to_port_u32(port, value);
         }
     }
 }

@@ -1,6 +1,5 @@
 //! Enabling and disabling interrupts
 
-#[cfg(feature = "inline_asm")]
 use core::arch::asm;
 
 /// Returns whether interrupts are enabled.
@@ -17,11 +16,7 @@ pub fn are_enabled() -> bool {
 #[inline]
 pub fn enable() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("sti", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_interrupt_enable();
     }
 }
 
@@ -31,11 +26,7 @@ pub fn enable() {
 #[inline]
 pub fn disable() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("cli", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_interrupt_disable();
     }
 }
 
@@ -130,11 +121,7 @@ where
 #[inline]
 pub fn enable_and_hlt() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("sti; hlt", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_interrupt_enable_and_hlt();
     }
 }
 
@@ -142,11 +129,7 @@ pub fn enable_and_hlt() {
 #[inline]
 pub fn int3() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("int3", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_int3();
     }
 }
 
@@ -155,11 +138,6 @@ pub fn int3() {
 /// This currently needs to be a macro because the `int` argument needs to be an
 /// immediate. This macro will be replaced by a generic function when support for
 /// const generics is implemented in Rust.
-#[cfg(feature = "inline_asm")]
-#[cfg_attr(
-    feature = "doc_cfg",
-    doc(cfg(any(feature = "nightly", feature = "inline_asm")))
-)]
 #[macro_export]
 macro_rules! software_interrupt {
     ($x:expr) => {{

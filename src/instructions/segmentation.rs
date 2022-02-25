@@ -6,20 +6,14 @@ use crate::{
     structures::gdt::SegmentSelector,
     VirtAddr,
 };
-#[cfg(feature = "inline_asm")]
 use core::arch::asm;
 
 macro_rules! get_reg_impl {
     ($name:literal, $asm_get:ident) => {
         fn get_reg() -> SegmentSelector {
             let segment: u16;
-            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!(concat!("mov {0:x}, ", $name), out(reg) segment, options(nomem, nostack, preserves_flags));
-            }
-            #[cfg(not(feature = "inline_asm"))]
-            unsafe {
-                segment = crate::asm::$asm_get();
             }
             SegmentSelector(segment)
         }
@@ -32,14 +26,8 @@ macro_rules! segment_impl {
             get_reg_impl!($name, $asm_get);
 
             unsafe fn set_reg(sel: SegmentSelector) {
-                #[cfg(feature = "inline_asm")]
                 unsafe {
                     asm!(concat!("mov ", $name, ", {0:x}"), in(reg) sel.0, options(nostack, preserves_flags));
-                }
-
-                #[cfg(not(feature = "inline_asm"))]
-                unsafe{
-                    crate::asm::$asm_load(sel.0);
                 }
             }
         }
@@ -51,27 +39,16 @@ macro_rules! segment64_impl {
         impl Segment64 for $type {
             const BASE: Msr = <$base>::MSR;
             fn read_base() -> VirtAddr {
-                #[cfg(feature = "inline_asm")]
                 unsafe {
                     let val: u64;
                     asm!(concat!("rd", $name, "base {}"), out(reg) val, options(nomem, nostack, preserves_flags));
                     VirtAddr::new_unsafe(val)
                 }
-                #[cfg(not(feature = "inline_asm"))]
-                unsafe {
-                    VirtAddr::new_unsafe(crate::asm::$asm_rd())
-                }
             }
 
             unsafe fn write_base(base: VirtAddr) {
-                #[cfg(feature = "inline_asm")]
                 unsafe{
                     asm!(concat!("wr", $name, "base {}"), in(reg) base.as_u64(), options(nostack, preserves_flags));
-                }
-
-                #[cfg(not(feature = "inline_asm"))]
-                unsafe{
-                    crate::asm::$asm_wr(base.as_u64());
                 }
             }
         }
@@ -90,7 +67,6 @@ impl Segment for CS {
     /// would only be able to jump to 32-bit instruction pointers. Only Intel implements support
     /// for 64-bit far calls/jumps in long-mode, AMD does not.
     unsafe fn set_reg(sel: SegmentSelector) {
-        #[cfg(feature = "inline_asm")]
         unsafe {
             asm!(
                 "push {sel}",
@@ -102,11 +78,6 @@ impl Segment for CS {
                 tmp = lateout(reg) _,
                 options(preserves_flags),
             );
-        }
-
-        #[cfg(not(feature = "inline_asm"))]
-        unsafe {
-            crate::asm::x86_64_asm_set_cs(u64::from(sel.0));
         }
     }
 }
@@ -127,14 +98,8 @@ impl GS {
     /// This function is unsafe because the caller must ensure that the
     /// swap operation cannot lead to undefined behavior.
     pub unsafe fn swap() {
-        #[cfg(feature = "inline_asm")]
         unsafe {
             asm!("swapgs", options(nostack, preserves_flags));
-        }
-
-        #[cfg(not(feature = "inline_asm"))]
-        unsafe {
-            crate::asm::x86_64_asm_swapgs();
         }
     }
 }
