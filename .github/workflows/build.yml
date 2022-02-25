@@ -64,7 +64,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: doc
-        args: --no-default-features --features external_asm,instructions
+        args: --no-default-features --features instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo doc without default features"
@@ -83,14 +83,14 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --no-default-features --features external_asm,instructions
+        args: --no-default-features --features instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo build for stable on musl"
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+        args: --target x86_64-unknown-linux-musl --no-default-features --features instructions
       if: runner.os == 'Linux'
 
     - name: "Run cargo test"
@@ -102,14 +102,14 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --no-default-features --features external_asm,instructions
+        args: --no-default-features --features instructions
       if: runner.os != 'Windows'
 
     - name: "Run cargo test for stable on musl"
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+        args: --target x86_64-unknown-linux-musl --no-default-features --features instructions
       if: runner.os == 'Linux'
 
     - name: "Install Rustup Targets"
