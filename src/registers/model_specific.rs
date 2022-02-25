@@ -128,7 +128,6 @@ mod x86_64 {
         control::Cr4Flags,
         segmentation::{Segment, Segment64, CS, SS},
     };
-    #[cfg(feature = "inline_asm")]
     use core::arch::asm;
 
     impl Msr {
@@ -140,24 +139,16 @@ mod x86_64 {
         /// effects.
         #[inline]
         pub unsafe fn read(&self) -> u64 {
-            #[cfg(feature = "inline_asm")]
-            {
-                let (high, low): (u32, u32);
-                unsafe {
-                    asm!(
-                        "rdmsr",
-                        in("ecx") self.0,
-                        out("eax") low, out("edx") high,
-                        options(nomem, nostack, preserves_flags),
-                    );
-                }
-                ((high as u64) << 32) | (low as u64)
-            }
-
-            #[cfg(not(feature = "inline_asm"))]
+            let (high, low): (u32, u32);
             unsafe {
-                crate::asm::x86_64_asm_rdmsr(self.0)
+                asm!(
+                    "rdmsr",
+                    in("ecx") self.0,
+                    out("eax") low, out("edx") high,
+                    options(nomem, nostack, preserves_flags),
+                );
             }
+            ((high as u64) << 32) | (low as u64)
         }
 
         /// Write 64 bits to msr register.
@@ -171,7 +162,6 @@ mod x86_64 {
             let low = value as u32;
             let high = (value >> 32) as u32;
 
-            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!(
                     "wrmsr",
@@ -179,11 +169,6 @@ mod x86_64 {
                     in("eax") low, in("edx") high,
                     options(nostack, preserves_flags),
                 );
-            }
-
-            #[cfg(not(feature = "inline_asm"))]
-            unsafe {
-                crate::asm::x86_64_asm_wrmsr(self.0, low, high);
             }
         }
     }

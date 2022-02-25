@@ -3,18 +3,13 @@
 use core::fmt;
 
 use crate::VirtAddr;
-#[cfg(feature = "inline_asm")]
 use core::arch::asm;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
 pub fn flush(addr: VirtAddr) {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_invlpg(addr.as_u64());
     }
 }
 
@@ -112,13 +107,7 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
         InvPicdCommand::AllExceptGlobal => kind = 3,
     }
 
-    #[cfg(feature = "inline_asm")]
     unsafe {
         asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
-    }
-
-    #[cfg(not(feature = "inline_asm"))]
-    unsafe {
-        crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
     }
 }

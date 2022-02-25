@@ -1,6 +1,5 @@
 //! Enabling and disabling interrupts
 
-#[cfg(feature = "inline_asm")]
 use core::arch::asm;
 
 /// Returns whether interrupts are enabled.
@@ -17,11 +16,7 @@ pub fn are_enabled() -> bool {
 #[inline]
 pub fn enable() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("sti", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_interrupt_enable();
     }
 }
 
@@ -31,11 +26,7 @@ pub fn enable() {
 #[inline]
 pub fn disable() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("cli", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_interrupt_disable();
     }
 }
 
@@ -130,11 +121,7 @@ where
 #[inline]
 pub fn enable_and_hlt() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("sti; hlt", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_interrupt_enable_and_hlt();
     }
 }
 
@@ -142,12 +129,20 @@ pub fn enable_and_hlt() {
 #[inline]
 pub fn int3() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("int3", options(nomem, nostack));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_int3();
     }
+}
+
+/// Generate a software interrupt by invoking the `int` instruction.
+///
+/// This currently needs to be a macro because the `int` argument needs to be an
+/// immediate. This macro will be replaced by a generic function when support for
+/// const generics is implemented in Rust.
+#[macro_export]
+macro_rules! software_interrupt {
+    ($x:expr) => {{
+        asm!("int {id}", id = const $x, options(nomem, nostack));
+    }};
 }
 
 /// Generate a software interrupt by invoking the `int` instruction.
@@ -158,10 +153,10 @@ pub fn int3() {
 /// crash if you invoke a double-fault (#8) or machine-check (#18) exception.
 /// It can also cause memory/register corruption depending on the interrupt
 /// implementation (if it expects values/pointers to be passed in registers).
-#[cfg(feature = "inline_asm")]
+#[cfg(feature = "asm_const")]
 #[cfg_attr(
     feature = "doc_cfg",
-    doc(cfg(any(feature = "nightly", feature = "inline_asm")))
+    doc(cfg(any(feature = "nightly", feature = "asm_const")))
 )]
 pub unsafe fn software_interrupt<const NUM: u8>() {
     unsafe {

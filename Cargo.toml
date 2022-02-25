@@ -22,7 +22,7 @@ license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.14.7"
+version = "0.14.8"
 edition = "2018"
 
 [dependencies]
@@ -30,18 +30,18 @@ bit_field = "0.10.1"
 bitflags = "1.3.2"
 volatile = "0.4.4"
 
-[build-dependencies]
-cc = { version = "1.0.37", optional = true }
-
 [features]
 default = [ "nightly", "instructions" ]
 instructions = []
-external_asm = [ "cc" ]
-nightly = [ "inline_asm", "const_fn", "abi_x86_interrupt", "doc_cfg" ]
-inline_asm = []
+nightly = [ "const_fn", "abi_x86_interrupt", "asm_const", "doc_cfg" ]
 abi_x86_interrupt = []
 const_fn = []
+asm_const = []
 doc_cfg = []
+
+# These features are no longer used and only there for backwards compatibility.
+external_asm = []
+inline_asm = []
 
 [package.metadata.release]
 no-dev-version = true
