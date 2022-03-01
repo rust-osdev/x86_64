@@ -631,7 +631,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "step_trait")]
-    fn virtaddr_step() {
+    fn virtaddr_step_forward() {
         assert_eq!(Step::forward(VirtAddr(0), 0), VirtAddr(0));
         assert_eq!(Step::forward(VirtAddr(0), 1), VirtAddr(1));
         assert_eq!(
@@ -646,7 +646,32 @@ mod tests {
             Step::forward_checked(VirtAddr(0xffff_ffff_ffff_ffff), 1),
             None
         );
+        assert_eq!(
+            Step::forward(VirtAddr(0x7fff_ffff_ffff), 0x1234_5678_9abd),
+            VirtAddr(0xffff_9234_5678_9abc)
+        );
+        assert_eq!(
+            Step::forward(VirtAddr(0x7fff_ffff_ffff), 0x8000_0000_0000),
+            VirtAddr(0xffff_ffff_ffff_ffff)
+        );
+        assert_eq!(
+            Step::forward(VirtAddr(0x7fff_ffff_ff00), 0x8000_0000_00ff),
+            VirtAddr(0xffff_ffff_ffff_ffff)
+        );
+        assert_eq!(
+            Step::forward_checked(VirtAddr(0x7fff_ffff_ff00), 0x8000_0000_0100),
+            None
+        );
+        assert_eq!(
+            Step::forward_checked(VirtAddr(0x7fff_ffff_ffff), 0x8000_0000_0001),
+            None
+        );
+    }
 
+
+    #[test]
+    #[cfg(feature = "step_trait")]
+    fn virtaddr_step_backward() {
         assert_eq!(Step::backward(VirtAddr(0), 0), VirtAddr(0));
         assert_eq!(Step::backward_checked(VirtAddr(0), 1), None);
         assert_eq!(Step::backward(VirtAddr(1), 1), VirtAddr(0));
@@ -658,7 +683,27 @@ mod tests {
             Step::backward(VirtAddr(0xffff_8000_0000_0001), 1),
             VirtAddr(0xffff_8000_0000_0000)
         );
+        assert_eq!(
+            Step::backward(VirtAddr(0xffff_9234_5678_9abc), 0x1234_5678_9abd),
+            VirtAddr(0x7fff_ffff_ffff)
+        );
+        assert_eq!(
+            Step::backward(VirtAddr(0xffff_8000_0000_0000), 0x8000_0000_0000),
+            VirtAddr(0)
+        );
+        assert_eq!(
+            Step::backward(VirtAddr(0xffff_8000_0000_0000), 0x7fff_ffff_ff01),
+            VirtAddr(0xff)
+        );
+        assert_eq!(
+            Step::backward_checked(VirtAddr(0xffff_8000_0000_0000), 0x8000_0000_0001),
+            None
+        );
+    }
 
+    #[test]
+    #[cfg(feature = "step_trait")]
+    fn virtaddr_steps_between() {
         assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(0)), Some(0));
         assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(1)), Some(1));
         assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), None);
