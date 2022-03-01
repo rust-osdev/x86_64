@@ -70,7 +70,7 @@ impl VirtAddr {
         match addr.get_bits(47..64) {
             0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
             1 => Ok(VirtAddr::new_truncate(addr)), // address needs sign extension
-            other => Err(VirtAddrNotValid(other)),
+            _ => Err(VirtAddrNotValid(addr)),
         }
     }
 
@@ -367,7 +367,7 @@ impl PhysAddr {
     pub fn try_new(addr: u64) -> Result<PhysAddr, PhysAddrNotValid> {
         match addr.get_bits(52..64) {
             0 => Ok(PhysAddr(addr)), // address is valid
-            other => Err(PhysAddrNotValid(other)),
+            _ => Err(PhysAddrNotValid(addr)),
         }
     }
 
