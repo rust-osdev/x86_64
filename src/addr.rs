@@ -349,9 +349,16 @@ impl Step for VirtAddr {
 
         let mut addr = start.0.checked_add(offset)?;
 
-        // Jump the gap by sign extending the 47th bit.
-        if addr.get_bits(47..) == 0x1 {
-            addr.set_bits(47.., 0x1ffff);
+        match addr.get_bits(47..) {
+            0x1 => {
+                // Jump the gap by sign extending the 47th bit.
+                addr.set_bits(47.., 0x1ffff);
+            }
+            0x2 => {
+                // Address overflow
+                return None;
+            }
+            _ => {}
         }
 
         Some(Self::new(addr))
@@ -365,9 +372,16 @@ impl Step for VirtAddr {
 
         let mut addr = start.0.checked_sub(offset)?;
 
-        // Jump the gap by sign extending the 47th bit.
-        if addr.get_bits(47..) == 0x1fffe {
-            addr.set_bits(47.., 0);
+        match addr.get_bits(47..) {
+            0x1fffe => {
+                // Jump the gap by sign extending the 47th bit.
+                addr.set_bits(47.., 0);
+            }
+            0x1fffd => {
+                // Address underflow
+                return None;
+            }
+            _ => {}
         }
 
         Some(Self::new(addr))
