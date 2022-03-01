@@ -354,7 +354,7 @@ impl Step for VirtAddr {
             addr.set_bits(47.., 0x1ffff);
         }
 
-        Some(Self(addr))
+        Some(Self::new(addr))
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
@@ -370,7 +370,7 @@ impl Step for VirtAddr {
             addr.set_bits(47.., 0);
         }
 
-        Some(Self(addr))
+        Some(Self::new(addr))
     }
 }
 
