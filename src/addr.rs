@@ -40,8 +40,17 @@ pub struct PhysAddr(u64);
 /// a valid sign extension and are not null either. So automatic sign extension would have
 /// overwritten possibly meaningful bits. This likely indicates a bug, for example an invalid
 /// address calculation.
-#[derive(Debug)]
+///
+/// Contains the invalid address.
 pub struct VirtAddrNotValid(pub u64);
+
+impl core::fmt::Debug for VirtAddrNotValid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("VirtAddrNotValid")
+            .field(&format_args!("{:#x}", self.0))
+            .finish()
+    }
+}
 
 impl VirtAddr {
     /// Creates a new canonical virtual address.
@@ -70,7 +79,7 @@ impl VirtAddr {
         match addr.get_bits(47..64) {
             0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
             1 => Ok(VirtAddr::new_truncate(addr)), // address needs sign extension
-            other => Err(VirtAddrNotValid(other)),
+            _ => Err(VirtAddrNotValid(addr)),
         }
     }
 
@@ -325,8 +334,17 @@ impl Sub<VirtAddr> for VirtAddr {
 /// A passed `u64` was not a valid physical address.
 ///
 /// This means that bits 52 to 64 were not all null.
-#[derive(Debug)]
+///
+/// Contains the invalid address.
 pub struct PhysAddrNotValid(pub u64);
+
+impl core::fmt::Debug for PhysAddrNotValid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("PhysAddrNotValid")
+            .field(&format_args!("{:#x}", self.0))
+            .finish()
+    }
+}
 
 impl PhysAddr {
     /// Creates a new physical address.
@@ -367,7 +385,7 @@ impl PhysAddr {
     pub fn try_new(addr: u64) -> Result<PhysAddr, PhysAddrNotValid> {
         match addr.get_bits(52..64) {
             0 => Ok(PhysAddr(addr)), // address is valid
-            other => Err(PhysAddrNotValid(other)),
+            _ => Err(PhysAddrNotValid(addr)),
         }
     }
 
