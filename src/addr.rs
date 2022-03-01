@@ -335,7 +335,7 @@ impl Step for VirtAddr {
 
         // Check if we jumped the gap.
         if end.0.get_bit(47) && !start.0.get_bit(47) {
-            steps -= 0xffff_0000_0000_0000;
+            steps = steps.checked_sub(0xffff_0000_0000_0000).unwrap();
         }
 
         usize::try_from(steps).ok()
