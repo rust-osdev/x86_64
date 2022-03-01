@@ -668,7 +668,6 @@ mod tests {
         );
     }
 
-
     #[test]
     #[cfg(feature = "step_trait")]
     fn virtaddr_step_backward() {
