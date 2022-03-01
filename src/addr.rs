@@ -11,6 +11,8 @@ use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
 
+const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
+
 /// A canonical 64-bit virtual memory address.
 ///
 /// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
@@ -341,6 +343,10 @@ impl Step for VirtAddr {
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
+        if offset > ADDRESS_SPACE_SIZE {
+            return None;
+        }
+
         let mut addr = start.0.checked_add(offset)?;
 
         // Jump the gap by sign extending the 47th bit.
@@ -353,6 +359,10 @@ impl Step for VirtAddr {
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
+        if offset > ADDRESS_SPACE_SIZE {
+            return None;
+        }
+
         let mut addr = start.0.checked_sub(offset)?;
 
         // Jump the gap by sign extending the 47th bit.
