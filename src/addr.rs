@@ -11,6 +11,7 @@ use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
 
+#[cfg(feature = "step_trait")]
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
 /// A canonical 64-bit virtual memory address.
