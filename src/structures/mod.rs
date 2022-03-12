@@ -8,6 +8,7 @@ pub mod idt;
 
 pub mod paging;
 pub mod port;
+pub mod sgx;
 pub mod tss;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
