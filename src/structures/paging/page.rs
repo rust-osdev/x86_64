@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_max_page_overflow() {
+    pub fn test_page_range_inclusive_overflow() {
         let page_size = Size4KiB::SIZE;
         let number = 1000;
 
