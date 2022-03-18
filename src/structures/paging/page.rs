@@ -380,7 +380,16 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
             let page = self.start;
-            self.start += 1;
+
+            // If the end of the inclusive range is the maximum page possible for size S,
+            // incrementing start until it is greater than the end will cause an integer overflow.
+            // So instead, in that case we decrement end rather than incrementing start.
+            let max_page_addr = VirtAddr::new(u64::MAX) - (S::SIZE - 1);
+            if self.start.start_address() < max_page_addr {
+                self.start += 1;
+            } else {
+                self.end -= 1;
+            }
             Some(page)
         } else {
             None
