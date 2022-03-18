@@ -380,7 +380,16 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
             let page = self.start;
-            self.start += 1;
+
+            // If the end of the inclusive range is the maximum page possible for size S,
+            // incrementing start until it is greater than the end will cause an integer overflow.
+            // So instead, in that case we decrement end rather than incrementing start.
+            let max_page_addr = VirtAddr::new(u64::MAX) - (S::SIZE - 1);
+            if self.start.start_address() < max_page_addr {
+                self.start += 1;
+            } else {
+                self.end -= 1;
+            }
             Some(page)
         } else {
             None
@@ -428,6 +437,25 @@ mod tests {
             );
         }
         assert_eq!(range.next(), None);
+
+        let mut range_inclusive = Page::range_inclusive(start, end);
+        for i in 0..=number {
+            assert_eq!(
+                range_inclusive.next(),
+                Some(Page::containing_address(start_addr + page_size * i))
+            );
+        }
+        assert_eq!(range_inclusive.next(), None);
+    }
+
+    #[test]
+    pub fn test_page_range_inclusive_overflow() {
+        let page_size = Size4KiB::SIZE;
+        let number = 1000;
+
+        let start_addr = VirtAddr::new(u64::MAX).align_down(page_size) - number * page_size;
+        let start: Page = Page::containing_address(start_addr);
+        let end = start + number;
 
         let mut range_inclusive = Page::range_inclusive(start, end);
         for i in 0..=number {
