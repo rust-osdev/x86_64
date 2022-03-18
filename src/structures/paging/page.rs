@@ -447,4 +447,23 @@ mod tests {
         }
         assert_eq!(range_inclusive.next(), None);
     }
+
+    #[test]
+    pub fn test_max_page_overflow() {
+        let page_size = Size4KiB::SIZE;
+        let number = 1000;
+
+        let start_addr = VirtAddr::new(u64::MAX).align_down(page_size) - number * page_size;
+        let start: Page = Page::containing_address(start_addr);
+        let end = start + number;
+
+        let mut range_inclusive = Page::range_inclusive(start, end);
+        for i in 0..=number {
+            assert_eq!(
+                range_inclusive.next(),
+                Some(Page::containing_address(start_addr + page_size * i))
+            );
+        }
+        assert_eq!(range_inclusive.next(), None);
+    }
 }
