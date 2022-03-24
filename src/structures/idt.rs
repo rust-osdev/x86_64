@@ -410,39 +410,37 @@ pub struct InterruptDescriptorTable {
 }
 
 impl InterruptDescriptorTable {
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Creates a new IDT filled with non-present entries.
-        #[inline]
-        pub fn new() -> InterruptDescriptorTable {
-            InterruptDescriptorTable {
-                divide_error: Entry::missing(),
-                debug: Entry::missing(),
-                non_maskable_interrupt: Entry::missing(),
-                breakpoint: Entry::missing(),
-                overflow: Entry::missing(),
-                bound_range_exceeded: Entry::missing(),
-                invalid_opcode: Entry::missing(),
-                device_not_available: Entry::missing(),
-                double_fault: Entry::missing(),
-                coprocessor_segment_overrun: Entry::missing(),
-                invalid_tss: Entry::missing(),
-                segment_not_present: Entry::missing(),
-                stack_segment_fault: Entry::missing(),
-                general_protection_fault: Entry::missing(),
-                page_fault: Entry::missing(),
-                reserved_1: Entry::missing(),
-                x87_floating_point: Entry::missing(),
-                alignment_check: Entry::missing(),
-                machine_check: Entry::missing(),
-                simd_floating_point: Entry::missing(),
-                virtualization: Entry::missing(),
-                reserved_2: [Entry::missing(); 8],
-                vmm_communication_exception: Entry::missing(),
-                security_exception: Entry::missing(),
-                reserved_3: Entry::missing(),
-                interrupts: [Entry::missing(); 256 - 32],
-            }
+    /// Creates a new IDT filled with non-present entries.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn new() -> InterruptDescriptorTable {
+        InterruptDescriptorTable {
+            divide_error: Entry::missing(),
+            debug: Entry::missing(),
+            non_maskable_interrupt: Entry::missing(),
+            breakpoint: Entry::missing(),
+            overflow: Entry::missing(),
+            bound_range_exceeded: Entry::missing(),
+            invalid_opcode: Entry::missing(),
+            device_not_available: Entry::missing(),
+            double_fault: Entry::missing(),
+            coprocessor_segment_overrun: Entry::missing(),
+            invalid_tss: Entry::missing(),
+            segment_not_present: Entry::missing(),
+            stack_segment_fault: Entry::missing(),
+            general_protection_fault: Entry::missing(),
+            page_fault: Entry::missing(),
+            reserved_1: Entry::missing(),
+            x87_floating_point: Entry::missing(),
+            alignment_check: Entry::missing(),
+            machine_check: Entry::missing(),
+            simd_floating_point: Entry::missing(),
+            virtualization: Entry::missing(),
+            reserved_2: [Entry::missing(); 8],
+            vmm_communication_exception: Entry::missing(),
+            security_exception: Entry::missing(),
+            reserved_3: Entry::missing(),
+            interrupts: [Entry::missing(); 256 - 32],
         }
     }
 

@@ -77,19 +77,17 @@ impl<S: PageSize> Page<S> {
         Ok(Page::containing_address(address))
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the page that starts at the given virtual address.
-        ///
-        /// ## Safety
-        ///
-        /// The address must be correctly aligned.
-        #[inline]
-        pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
-            Page {
-                start_address,
-                size: PhantomData,
-            }
+    /// Returns the page that starts at the given virtual address.
+    ///
+    /// ## Safety
+    ///
+    /// The address must be correctly aligned.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+        Page {
+            start_address,
+            size: PhantomData,
         }
     }
 
@@ -102,78 +100,62 @@ impl<S: PageSize> Page<S> {
         }
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the start address of the page.
-        #[inline]
-        pub fn start_address(self) -> VirtAddr {
-            self.start_address
-        }
+    /// Returns the start address of the page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn start_address(self) -> VirtAddr {
+        self.start_address
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the size the page (4KB, 2MB or 1GB).
-        #[inline]
-        pub fn size(self) -> u64 {
-            S::SIZE
-        }
+    /// Returns the size the page (4KB, 2MB or 1GB).
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn size(self) -> u64 {
+        S::SIZE
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the level 4 page table index of this page.
-        #[inline]
-        pub fn p4_index(self) -> PageTableIndex {
-            self.start_address().p4_index()
-        }
+    /// Returns the level 4 page table index of this page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p4_index(self) -> PageTableIndex {
+        self.start_address().p4_index()
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the level 3 page table index of this page.
-        #[inline]
-        pub fn p3_index(self) -> PageTableIndex {
-            self.start_address().p3_index()
-        }
+    /// Returns the level 3 page table index of this page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p3_index(self) -> PageTableIndex {
+        self.start_address().p3_index()
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the table index of this page at the specified level.
-        #[inline]
-        pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
-            self.start_address().page_table_index(level)
-        }
+    /// Returns the table index of this page at the specified level.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+        self.start_address().page_table_index(level)
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns a range of pages, exclusive `end`.
-        #[inline]
-        pub fn range(start: Self, end: Self) -> PageRange<S> {
-            PageRange { start, end }
-        }
+    /// Returns a range of pages, exclusive `end`.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn range(start: Self, end: Self) -> PageRange<S> {
+        PageRange { start, end }
     }
 
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns a range of pages, inclusive `end`.
-        #[inline]
-        pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
-            PageRangeInclusive { start, end }
-        }
+    /// Returns a range of pages, inclusive `end`.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+        PageRangeInclusive { start, end }
     }
 }
 
 impl<S: NotGiantPageSize> Page<S> {
-    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
-    const_fn! {
-        /// Returns the level 2 page table index of this page.
-        #[inline]
-        pub fn p2_index(self) -> PageTableIndex {
-            self.start_address().p2_index()
-        }
+    /// Returns the level 2 page table index of this page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p2_index(self) -> PageTableIndex {
+        self.start_address().p2_index()
     }
 }
 
