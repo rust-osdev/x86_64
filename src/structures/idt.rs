@@ -735,8 +735,9 @@ impl<F> Entry<F> {
         &mut self.options
     }
 
+    /// Returns the virtual address of this IDT entry's handler function as a `u64`.
     #[inline]
-    fn handler_addr(&self) -> u64 {
+    pub fn handler_addr(&self) -> u64 {
         self.pointer_low as u64
             | (self.pointer_middle as u64) << 16
             | (self.pointer_high as u64) << 32
