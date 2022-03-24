@@ -11,7 +11,8 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
-    pub(crate) start_address: PhysAddr, // TODO: remove when start_address() is const
+    // TODO: Make private when our minimum supported stable Rust version is 1.61
+    pub(crate) start_address: PhysAddr,
     size: PhantomData<S>,
 }
 
@@ -29,6 +30,7 @@ impl<S: PageSize> PhysFrame<S> {
         Ok(unsafe { PhysFrame::from_start_address_unchecked(address) })
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the frame that starts at the given virtual address.
         ///
@@ -53,6 +55,7 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the start address of the frame.
         #[inline]
@@ -61,6 +64,7 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the size the frame (4KB, 2MB or 1GB).
         #[inline]
@@ -69,6 +73,7 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns a range of frames, exclusive `end`.
         #[inline]
@@ -77,6 +82,7 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns a range of frames, inclusive `end`.
         #[inline]
