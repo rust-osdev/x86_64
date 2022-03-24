@@ -625,8 +625,7 @@ impl Sub<PhysAddr> for PhysAddr {
 ///
 /// Returns the greatest `x` with alignment `align` so that `x <= addr`.
 ///
-/// Panics if the alignment is not a power of two. Without the `const_fn`
-/// feature, the panic message will be "index out of bounds".
+/// Panics if the alignment is not a power of two.
 #[inline]
 pub const fn align_down(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
@@ -637,8 +636,7 @@ pub const fn align_down(addr: u64, align: u64) -> u64 {
 ///
 /// Returns the smallest `x` with alignment `align` so that `x >= addr`.
 ///
-/// Panics if the alignment is not a power of two. Without the `const_fn`
-/// feature, the panic message will be "index out of bounds".
+/// Panics if the alignment is not a power of two.
 #[inline]
 pub const fn align_up(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
