@@ -93,35 +93,34 @@ impl GlobalDescriptorTable {
         &self.table[..self.next_free]
     }
 
-    const_fn! {
-        /// Adds the given segment descriptor to the GDT, returning the segment selector.
-        ///
-        /// Panics if the GDT has no free entries left.
-        #[inline]
-        pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
-            let index = match entry {
-                Descriptor::UserSegment(value) => self.push(value),
-                Descriptor::SystemSegment(value_low, value_high) => {
-                    let index = self.push(value_low);
-                    self.push(value_high);
-                    index
-                }
-            };
+    /// Adds the given segment descriptor to the GDT, returning the segment selector.
+    ///
+    /// Panics if the GDT has no free entries left.
+    #[inline]
+    #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
+    pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
+        let index = match entry {
+            Descriptor::UserSegment(value) => self.push(value),
+            Descriptor::SystemSegment(value_low, value_high) => {
+                let index = self.push(value_low);
+                self.push(value_high);
+                index
+            }
+        };
 
-            let rpl = match entry {
-                Descriptor::UserSegment(value) => {
-                    if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
-                    {
-                        PrivilegeLevel::Ring3
-                    } else {
-                        PrivilegeLevel::Ring0
-                    }
+        let rpl = match entry {
+            Descriptor::UserSegment(value) => {
+                if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
+                {
+                    PrivilegeLevel::Ring3
+                } else {
+                    PrivilegeLevel::Ring0
                 }
-                Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
-            };
+            }
+            Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
+        };
 
-            SegmentSelector::new(index as u16, rpl)
-        }
+        SegmentSelector::new(index as u16, rpl)
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
@@ -155,17 +154,16 @@ impl GlobalDescriptorTable {
         }
     }
 
-    const_fn! {
-        #[inline]
-        fn push(&mut self, value: u64) -> usize {
-            if self.next_free < self.table.len() {
-                let index = self.next_free;
-                self.table[index] = value;
-                self.next_free += 1;
-                index
-            } else {
-                panic!("GDT full");
-            }
+    #[inline]
+    #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
+    fn push(&mut self, value: u64) -> usize {
+        if self.next_free < self.table.len() {
+            let index = self.next_free;
+            self.table[index] = value;
+            self.next_free += 1;
+            index
+        } else {
+            panic!("GDT full");
         }
     }
 
