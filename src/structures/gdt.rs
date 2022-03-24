@@ -96,8 +96,7 @@ impl GlobalDescriptorTable {
     const_fn! {
         /// Adds the given segment descriptor to the GDT, returning the segment selector.
         ///
-        /// Panics if the GDT has no free entries left.  Without the `const_fn`
-        /// feature, the panic message will be "index out of bounds".
+        /// Panics if the GDT has no free entries left.
         #[inline]
         pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
             let index = match entry {
