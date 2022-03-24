@@ -77,6 +77,7 @@ impl<S: PageSize> Page<S> {
         Ok(Page::containing_address(address))
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the page that starts at the given virtual address.
         ///
@@ -101,6 +102,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the start address of the page.
         #[inline]
@@ -109,6 +111,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the size the page (4KB, 2MB or 1GB).
         #[inline]
@@ -117,6 +120,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the level 4 page table index of this page.
         #[inline]
@@ -125,6 +129,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the level 3 page table index of this page.
         #[inline]
@@ -133,6 +138,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the table index of this page at the specified level.
         #[inline]
@@ -141,6 +147,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns a range of pages, exclusive `end`.
         #[inline]
@@ -149,6 +156,7 @@ impl<S: PageSize> Page<S> {
         }
     }
 
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns a range of pages, inclusive `end`.
         #[inline]
@@ -159,6 +167,7 @@ impl<S: PageSize> Page<S> {
 }
 
 impl<S: NotGiantPageSize> Page<S> {
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Returns the level 2 page table index of this page.
         #[inline]

@@ -410,6 +410,7 @@ pub struct InterruptDescriptorTable {
 }
 
 impl InterruptDescriptorTable {
+    // TODO: Remove const_fn! when our minimum supported stable Rust version is 1.61
     const_fn! {
         /// Creates a new IDT filled with non-present entries.
         #[inline]
