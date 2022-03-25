@@ -733,11 +733,15 @@ impl<F> Entry<F> {
         &mut self.options
     }
 
+    /// Returns the virtual address of this IDT entry's handler function.
     #[inline]
-    fn handler_addr(&self) -> u64 {
-        self.pointer_low as u64
+    pub fn handler_addr(&self) -> VirtAddr {
+        let addr = self.pointer_low as u64
             | (self.pointer_middle as u64) << 16
-            | (self.pointer_high as u64) << 32
+            | (self.pointer_high as u64) << 32;
+        // addr is a valid VirtAddr, as the pointer members are either all zero,
+        // or have been set by set_handler_addr (which takes a VirtAddr).
+        VirtAddr::new_truncate(addr)
     }
 }
 
