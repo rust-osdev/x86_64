@@ -3,10 +3,9 @@
 
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(feature = "const_fn", feature(const_mut_refs))] // GDT add_entry()
-#![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))] // IDT new()
-#![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))] // PageSize marker trait
 #![cfg_attr(feature = "asm_const", feature(asm_const))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
+#![cfg_attr(feature = "step_trait", feature(step_trait))]
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
@@ -16,37 +15,6 @@ use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
-
-/// Makes a function const only when `feature = "const_fn"` is enabled.
-///
-/// This is needed for const functions with bounds on their generic parameters,
-/// such as those in `Page` and `PhysFrame` and many more.
-macro_rules! const_fn {
-    (
-        $(#[$attr:meta])*
-        $sv:vis fn $($fn:tt)*
-    ) => {
-        $(#[$attr])*
-        #[cfg(feature = "const_fn")]
-        $sv const fn $($fn)*
-
-        $(#[$attr])*
-        #[cfg(not(feature = "const_fn"))]
-        $sv fn $($fn)*
-    };
-    (
-        $(#[$attr:meta])*
-        $sv:vis unsafe fn $($fn:tt)*
-    ) => {
-        $(#[$attr])*
-        #[cfg(feature = "const_fn")]
-        $sv const unsafe fn $($fn)*
-
-        $(#[$attr])*
-        #[cfg(not(feature = "const_fn"))]
-        $sv unsafe fn $($fn)*
-    };
-}
 
 pub mod addr;
 pub mod instructions;

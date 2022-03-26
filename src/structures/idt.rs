@@ -416,38 +416,37 @@ pub struct InterruptDescriptorTable {
 }
 
 impl InterruptDescriptorTable {
-    const_fn! {
-        /// Creates a new IDT filled with non-present entries.
-        #[inline]
-        pub fn new() -> InterruptDescriptorTable {
-            InterruptDescriptorTable {
-                divide_error: Entry::missing(),
-                debug: Entry::missing(),
-                non_maskable_interrupt: Entry::missing(),
-                breakpoint: Entry::missing(),
-                overflow: Entry::missing(),
-                bound_range_exceeded: Entry::missing(),
-                invalid_opcode: Entry::missing(),
-                device_not_available: Entry::missing(),
-                double_fault: Entry::missing(),
-                coprocessor_segment_overrun: Entry::missing(),
-                invalid_tss: Entry::missing(),
-                segment_not_present: Entry::missing(),
-                stack_segment_fault: Entry::missing(),
-                general_protection_fault: Entry::missing(),
-                page_fault: Entry::missing(),
-                reserved_1: Entry::missing(),
-                x87_floating_point: Entry::missing(),
-                alignment_check: Entry::missing(),
-                machine_check: Entry::missing(),
-                simd_floating_point: Entry::missing(),
-                virtualization: Entry::missing(),
-                reserved_2: [Entry::missing(); 8],
-                vmm_communication_exception: Entry::missing(),
-                security_exception: Entry::missing(),
-                reserved_3: Entry::missing(),
-                interrupts: [Entry::missing(); 256 - 32],
-            }
+    /// Creates a new IDT filled with non-present entries.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn new() -> InterruptDescriptorTable {
+        InterruptDescriptorTable {
+            divide_error: Entry::missing(),
+            debug: Entry::missing(),
+            non_maskable_interrupt: Entry::missing(),
+            breakpoint: Entry::missing(),
+            overflow: Entry::missing(),
+            bound_range_exceeded: Entry::missing(),
+            invalid_opcode: Entry::missing(),
+            device_not_available: Entry::missing(),
+            double_fault: Entry::missing(),
+            coprocessor_segment_overrun: Entry::missing(),
+            invalid_tss: Entry::missing(),
+            segment_not_present: Entry::missing(),
+            stack_segment_fault: Entry::missing(),
+            general_protection_fault: Entry::missing(),
+            page_fault: Entry::missing(),
+            reserved_1: Entry::missing(),
+            x87_floating_point: Entry::missing(),
+            alignment_check: Entry::missing(),
+            machine_check: Entry::missing(),
+            simd_floating_point: Entry::missing(),
+            virtualization: Entry::missing(),
+            reserved_2: [Entry::missing(); 8],
+            vmm_communication_exception: Entry::missing(),
+            security_exception: Entry::missing(),
+            reserved_3: Entry::missing(),
+            interrupts: [Entry::missing(); 256 - 32],
         }
     }
 
@@ -767,11 +766,15 @@ impl<F> Entry<F> {
         &mut self.options
     }
 
+    /// Returns the virtual address of this IDT entry's handler function.
     #[inline]
-    fn handler_addr(&self) -> u64 {
-        self.pointer_low as u64
+    pub fn handler_addr(&self) -> VirtAddr {
+        let addr = self.pointer_low as u64
             | (self.pointer_middle as u64) << 16
-            | (self.pointer_high as u64) << 32
+            | (self.pointer_high as u64) << 32;
+        // addr is a valid VirtAddr, as the pointer members are either all zero,
+        // or have been set by set_handler_addr (which takes a VirtAddr).
+        VirtAddr::new_truncate(addr)
     }
 }
 

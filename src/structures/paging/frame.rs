@@ -11,7 +11,8 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
-    pub(crate) start_address: PhysAddr, // TODO: remove when start_address() is const
+    // TODO: Make private when our minimum supported stable Rust version is 1.61
+    pub(crate) start_address: PhysAddr,
     size: PhantomData<S>,
 }
 
@@ -29,18 +30,17 @@ impl<S: PageSize> PhysFrame<S> {
         Ok(unsafe { PhysFrame::from_start_address_unchecked(address) })
     }
 
-    const_fn! {
-        /// Returns the frame that starts at the given virtual address.
-        ///
-        /// ## Safety
-        ///
-        /// The address must be correctly aligned.
-        #[inline]
-        pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
-            PhysFrame {
-                start_address,
-                size: PhantomData,
-            }
+    /// Returns the frame that starts at the given virtual address.
+    ///
+    /// ## Safety
+    ///
+    /// The address must be correctly aligned.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
+        PhysFrame {
+            start_address,
+            size: PhantomData,
         }
     }
 
@@ -53,36 +53,32 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
-    const_fn! {
-        /// Returns the start address of the frame.
-        #[inline]
-        pub fn start_address(self) -> PhysAddr {
-            self.start_address
-        }
+    /// Returns the start address of the frame.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn start_address(self) -> PhysAddr {
+        self.start_address
     }
 
-    const_fn! {
-        /// Returns the size the frame (4KB, 2MB or 1GB).
-        #[inline]
-        pub fn size(self) -> u64 {
-            S::SIZE
-        }
+    /// Returns the size the frame (4KB, 2MB or 1GB).
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn size(self) -> u64 {
+        S::SIZE
     }
 
-    const_fn! {
-        /// Returns a range of frames, exclusive `end`.
-        #[inline]
-        pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
-            PhysFrameRange { start, end }
-        }
+    /// Returns a range of frames, exclusive `end`.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
+        PhysFrameRange { start, end }
     }
 
-    const_fn! {
-        /// Returns a range of frames, inclusive `end`.
-        #[inline]
-        pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
-            PhysFrameRangeInclusive { start, end }
-        }
+    /// Returns a range of frames, inclusive `end`.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
+        PhysFrameRangeInclusive { start, end }
     }
 }
 

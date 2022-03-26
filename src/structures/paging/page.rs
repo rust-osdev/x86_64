@@ -4,6 +4,8 @@ use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
 use core::fmt;
+#[cfg(feature = "step_trait")]
+use core::iter::Step;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -75,18 +77,17 @@ impl<S: PageSize> Page<S> {
         Ok(Page::containing_address(address))
     }
 
-    const_fn! {
-        /// Returns the page that starts at the given virtual address.
-        ///
-        /// ## Safety
-        ///
-        /// The address must be correctly aligned.
-        #[inline]
-        pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
-            Page {
-                start_address,
-                size: PhantomData,
-            }
+    /// Returns the page that starts at the given virtual address.
+    ///
+    /// ## Safety
+    ///
+    /// The address must be correctly aligned.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+        Page {
+            start_address,
+            size: PhantomData,
         }
     }
 
@@ -99,70 +100,62 @@ impl<S: PageSize> Page<S> {
         }
     }
 
-    const_fn! {
-        /// Returns the start address of the page.
-        #[inline]
-        pub fn start_address(self) -> VirtAddr {
-            self.start_address
-        }
+    /// Returns the start address of the page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn start_address(self) -> VirtAddr {
+        self.start_address
     }
 
-    const_fn! {
-        /// Returns the size the page (4KB, 2MB or 1GB).
-        #[inline]
-        pub fn size(self) -> u64 {
-            S::SIZE
-        }
+    /// Returns the size the page (4KB, 2MB or 1GB).
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn size(self) -> u64 {
+        S::SIZE
     }
 
-    const_fn! {
-        /// Returns the level 4 page table index of this page.
-        #[inline]
-        pub fn p4_index(self) -> PageTableIndex {
-            self.start_address().p4_index()
-        }
+    /// Returns the level 4 page table index of this page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p4_index(self) -> PageTableIndex {
+        self.start_address().p4_index()
     }
 
-    const_fn! {
-        /// Returns the level 3 page table index of this page.
-        #[inline]
-        pub fn p3_index(self) -> PageTableIndex {
-            self.start_address().p3_index()
-        }
+    /// Returns the level 3 page table index of this page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p3_index(self) -> PageTableIndex {
+        self.start_address().p3_index()
     }
 
-    const_fn! {
-        /// Returns the table index of this page at the specified level.
-        #[inline]
-        pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
-            self.start_address().page_table_index(level)
-        }
+    /// Returns the table index of this page at the specified level.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+        self.start_address().page_table_index(level)
     }
 
-    const_fn! {
-        /// Returns a range of pages, exclusive `end`.
-        #[inline]
-        pub fn range(start: Self, end: Self) -> PageRange<S> {
-            PageRange { start, end }
-        }
+    /// Returns a range of pages, exclusive `end`.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn range(start: Self, end: Self) -> PageRange<S> {
+        PageRange { start, end }
     }
 
-    const_fn! {
-        /// Returns a range of pages, inclusive `end`.
-        #[inline]
-        pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
-            PageRangeInclusive { start, end }
-        }
+    /// Returns a range of pages, inclusive `end`.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+        PageRangeInclusive { start, end }
     }
 }
 
 impl<S: NotGiantPageSize> Page<S> {
-    const_fn! {
-        /// Returns the level 2 page table index of this page.
-        #[inline]
-        pub fn p2_index(self) -> PageTableIndex {
-            self.start_address().p2_index()
-        }
+    /// Returns the level 2 page table index of this page.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p2_index(self) -> PageTableIndex {
+        self.start_address().p2_index()
     }
 }
 
@@ -274,6 +267,32 @@ impl<S: PageSize> Sub<Self> for Page<S> {
     }
 }
 
+#[cfg(feature = "step_trait")]
+impl<S: PageSize> Step for Page<S> {
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        Step::steps_between(&start.start_address, &end.start_address)
+            .map(|steps| steps / S::SIZE as usize)
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        let count = count.checked_mul(S::SIZE as usize)?;
+        let start_address = Step::forward_checked(start.start_address, count)?;
+        Some(Self {
+            start_address,
+            size: PhantomData,
+        })
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let count = count.checked_mul(S::SIZE as usize)?;
+        let start_address = Step::backward_checked(start.start_address, count)?;
+        Some(Self {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
 /// A range of pages with exclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
@@ -352,7 +371,16 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
             let page = self.start;
-            self.start += 1;
+
+            // If the end of the inclusive range is the maximum page possible for size S,
+            // incrementing start until it is greater than the end will cause an integer overflow.
+            // So instead, in that case we decrement end rather than incrementing start.
+            let max_page_addr = VirtAddr::new(u64::MAX) - (S::SIZE - 1);
+            if self.start.start_address() < max_page_addr {
+                self.start += 1;
+            } else {
+                self.end -= 1;
+            }
             Some(page)
         } else {
             None
@@ -400,6 +428,25 @@ mod tests {
             );
         }
         assert_eq!(range.next(), None);
+
+        let mut range_inclusive = Page::range_inclusive(start, end);
+        for i in 0..=number {
+            assert_eq!(
+                range_inclusive.next(),
+                Some(Page::containing_address(start_addr + page_size * i))
+            );
+        }
+        assert_eq!(range_inclusive.next(), None);
+    }
+
+    #[test]
+    pub fn test_page_range_inclusive_overflow() {
+        let page_size = Size4KiB::SIZE;
+        let number = 1000;
+
+        let start_addr = VirtAddr::new(u64::MAX).align_down(page_size) - number * page_size;
+        let start: Page = Page::containing_address(start_addr);
+        let end = start + number;
 
         let mut range_inclusive = Page::range_inclusive(start, end);
         for i in 0..=number {
