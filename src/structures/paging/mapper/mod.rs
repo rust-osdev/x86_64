@@ -502,9 +502,9 @@ pub trait CleanUp {
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::{RecursivePageTable, CleanUp}, page::{Page, PageRangeInclusive},
+    /// #    FrameDeallocator, Size4KiB, mapper::CleanUp, page::Page,
     /// # }};
-    /// # unsafe fn test(page_table: &mut RecursivePageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
     /// // clean up all page tables in the lower half of the address space
     /// let lower_half = Page::range_inclusive(
     ///     Page::containing_address(VirtAddr::new(0)),
