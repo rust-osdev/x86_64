@@ -24,7 +24,7 @@ readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
 version = "0.14.8"
 edition = "2018"
-rust-version = "1.57" # Needed to support panic! in const fns
+rust-version = "1.59" # Needed to support inline asm and default const generics
 
 [dependencies]
 bit_field = "0.10.1"

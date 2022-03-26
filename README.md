@@ -12,8 +12,10 @@ Support for x86_64 specific instructions (e.g. TLB flush), registers (e.g. contr
 
 ## Minimum Supported Rust Version (MSRV)
 
-If no features are enabled (`--no-default-features`), Rust 1.57.0 is required.
+If no nightly features are enabled, Rust 1.59.0 is required.
+This can be done by either:
+  - `--no-default-features --features instructions`
+  - `--no-default-features`
 
-If only the `instructions` feature is enabled (`--no-default-features --features instructions`), Rust 1.59.0 is required.
-
-If the `nightly` feature or any of its sub-features is enabled, a recent nightly is required.
+If the `nightly` feature or any of its sub-features is enabled (which is the
+default), a recent nightly is required.
