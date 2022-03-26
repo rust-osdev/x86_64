@@ -1405,6 +1405,7 @@ macro_rules! set_general_handler_entry {
 mod test {
     use super::*;
 
+    #[allow(dead_code)]
     fn entry_present(idt: &InterruptDescriptorTable, index: u8) -> bool {
         let options = match index {
             8 => &idt.double_fault.options,

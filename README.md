@@ -10,7 +10,10 @@ Support for x86_64 specific instructions (e.g. TLB flush), registers (e.g. contr
 * `nightly`: Enables features only available on nightly Rust; enabled by default.
 * `instructions`: Enabled by default, turns on x86\_64 specific instructions, and dependent features. Only available for x86\_64 targets.
 
-## Building with stable rust
+## Minimum Supported Rust Version (MSRV)
 
-This needs to have the [compile-time requirements](https://github.com/alexcrichton/cc-rs#compile-time-requirements) of the `cc` crate installed on your system.
-It was currently only tested on Linux and MacOS.
+If no features are enabled (`--no-default-features`), Rust 1.57.0 is required.
+
+If only the `instructions` feature is enabled (`--no-default-features --features instructions`), Rust 1.59.0 is required.
+
+If the `nightly` feature or any of its sub-features is enabled, a recent nightly is required.
