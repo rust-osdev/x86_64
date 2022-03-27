@@ -75,7 +75,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// # Safety
     ///
     /// * The user must make sure that the entries are well formed
-    /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
+    /// * Panics if the provided slice has more than `MAX` entries
     #[inline]
     pub const unsafe fn from_raw_slice(slice: &[u64]) -> Self {
         let next_free = slice.len();
@@ -84,7 +84,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
 
         assert!(
             next_free <= MAX,
-            "initializing a GDT from a slice requires it to be **at most** 8 elements."
+            "cannot initialize GDT with slice exceeding the maximum length"
         );
 
         while idx != next_free {
