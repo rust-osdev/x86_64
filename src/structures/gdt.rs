@@ -101,13 +101,13 @@ impl GlobalDescriptorTable {
     pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
             Descriptor::UserSegment(value) => {
-                if self.len > self.table.len() - 1 {
+                if self.len > self.table.len().saturating_sub(1) {
                     panic!("GDT full")
                 }
                 self.push(value)
             }
             Descriptor::SystemSegment(value_low, value_high) => {
-                if self.len > self.table.len() - 2 {
+                if self.len > self.table.len().saturating_sub(2) {
                     panic!("GDT requires two free spaces to hold a SystemSegment")
                 }
                 let index = self.push(value_low);
