@@ -95,13 +95,21 @@ impl GlobalDescriptorTable {
 
     /// Adds the given segment descriptor to the GDT, returning the segment selector.
     ///
-    /// Panics if the GDT has no free entries left.
+    /// Panics if the GDT doesn't have enough free entries to hold the Descriptor.
     #[inline]
     #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
     pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
-            Descriptor::UserSegment(value) => self.push(value),
+            Descriptor::UserSegment(value) => {
+                if self.next_free > self.table.len() - 1 {
+                    panic!("GDT full")
+                }
+                self.push(value)
+            }
             Descriptor::SystemSegment(value_low, value_high) => {
+                if self.next_free > self.table.len() - 2 {
+                    panic!("GDT requires two free spaces to hold a SystemSegment")
+                }
                 let index = self.push(value_low);
                 self.push(value_high);
                 index
@@ -157,14 +165,10 @@ impl GlobalDescriptorTable {
     #[inline]
     #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
     fn push(&mut self, value: u64) -> usize {
-        if self.next_free < self.table.len() {
-            let index = self.next_free;
-            self.table[index] = value;
-            self.next_free += 1;
-            index
-        } else {
-            panic!("GDT full");
-        }
+        let index = self.next_free;
+        self.table[index] = value;
+        self.next_free += 1;
+        index
     }
 
     /// Creates the descriptor pointer for this table. This pointer can only be
@@ -334,6 +338,7 @@ impl Descriptor {
 #[cfg(test)]
 mod tests {
     use super::DescriptorFlags as Flags;
+    use super::*;
 
     #[test]
     #[rustfmt::skip]
@@ -346,5 +351,50 @@ mod tests {
         assert_eq!(Flags::USER_CODE64.bits(),   0x00affb000000ffff);
         assert_eq!(Flags::USER_CODE32.bits(),   0x00cffb000000ffff);
         assert_eq!(Flags::USER_DATA.bits(),     0x00cff3000000ffff);
+    }
+
+    // Makes a GDT that has two free slots
+    fn make_six_entry_gdt() -> GlobalDescriptorTable {
+        let mut gdt = GlobalDescriptorTable::new();
+        gdt.add_entry(Descriptor::kernel_code_segment());
+        gdt.add_entry(Descriptor::kernel_data_segment());
+        gdt.add_entry(Descriptor::UserSegment(DescriptorFlags::USER_CODE32.bits()));
+        gdt.add_entry(Descriptor::user_data_segment());
+        gdt.add_entry(Descriptor::user_code_segment());
+        gdt
+    }
+
+    static TSS: TaskStateSegment = TaskStateSegment::new();
+
+    fn make_full_gdt() -> GlobalDescriptorTable {
+        let mut gdt = make_six_entry_gdt();
+        gdt.add_entry(Descriptor::tss_segment(&TSS));
+        gdt
+    }
+
+    #[test]
+    pub fn push_max_segments() {
+        // Make sure we don't panic with user segments
+        let mut gdt = make_six_entry_gdt();
+        gdt.add_entry(Descriptor::user_data_segment());
+        gdt.add_entry(Descriptor::user_data_segment());
+        // Make sure we don't panic with system segments
+        let _ = make_full_gdt();
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn panic_user_segment() {
+        let mut gdt = make_full_gdt();
+        gdt.add_entry(Descriptor::user_data_segment());
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn panic_system_segment() {
+        let mut gdt = make_six_entry_gdt();
+        gdt.add_entry(Descriptor::user_data_segment());
+        // We have one free slot, but the GDT requires two
+        gdt.add_entry(Descriptor::tss_segment(&TSS));
     }
 }
