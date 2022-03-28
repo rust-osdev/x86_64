@@ -281,23 +281,6 @@ impl AddAssign<u64> for VirtAddr {
     }
 }
 
-#[cfg(target_pointer_width = "64")]
-impl Add<usize> for VirtAddr {
-    type Output = Self;
-    #[inline]
-    fn add(self, rhs: usize) -> Self::Output {
-        self + rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl AddAssign<usize> for VirtAddr {
-    #[inline]
-    fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(rhs as u64)
-    }
-}
-
 impl Sub<u64> for VirtAddr {
     type Output = Self;
     #[inline]
@@ -310,23 +293,6 @@ impl SubAssign<u64> for VirtAddr {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl Sub<usize> for VirtAddr {
-    type Output = Self;
-    #[inline]
-    fn sub(self, rhs: usize) -> Self::Output {
-        self - rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl SubAssign<usize> for VirtAddr {
-    #[inline]
-    fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(rhs as u64)
     }
 }
 
@@ -564,23 +530,6 @@ impl AddAssign<u64> for PhysAddr {
     }
 }
 
-#[cfg(target_pointer_width = "64")]
-impl Add<usize> for PhysAddr {
-    type Output = Self;
-    #[inline]
-    fn add(self, rhs: usize) -> Self::Output {
-        self + rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl AddAssign<usize> for PhysAddr {
-    #[inline]
-    fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(rhs as u64)
-    }
-}
-
 impl Sub<u64> for PhysAddr {
     type Output = Self;
     #[inline]
@@ -593,23 +542,6 @@ impl SubAssign<u64> for PhysAddr {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl Sub<usize> for PhysAddr {
-    type Output = Self;
-    #[inline]
-    fn sub(self, rhs: usize) -> Self::Output {
-        self - rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl SubAssign<usize> for PhysAddr {
-    #[inline]
-    fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(rhs as u64)
     }
 }
 
