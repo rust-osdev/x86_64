@@ -312,6 +312,13 @@ impl Descriptor {
     }
 
     /// Creates a TSS system descriptor for the given TSS.
+    ///
+    /// While it is possible to create multiple Descriptors that point to the
+    /// same TSS, this generally isn't recommended, as the TSS usually contains
+    /// per-CPU information such as the RSP and IST pointers. Instead, there
+    /// should be exactly one TSS and one corresponding TSS Descriptor per CPU.
+    /// Then, each of these descriptors should be placed in a GDT (which can
+    /// either be global or per-CPU).
     #[inline]
     pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {
         use self::DescriptorFlags as Flags;
