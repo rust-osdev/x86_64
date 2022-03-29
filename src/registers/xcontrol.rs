@@ -24,9 +24,6 @@ bitflags! {
         /// Enables AVX instructions and using the upper halves of the AVX registers
         /// with `XSAVE`/`XRSTOR`.
         const AVX = 1 << 2;
-        /// Alias for [`AVX`](XCr0Flags::AVX)
-        #[deprecated(since = "0.14.5", note = "use `AVX` instead")]
-        const YMM = 1<<2;
         /// Enables MPX instructions and using the BND0-BND3 bound registers
         /// with `XSAVE`/`XRSTOR` (Intel Only).
         const BNDREG = 1 << 3;
