@@ -64,6 +64,9 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// Creates an empty GDT which can hold `MAX` number of [`Descriptor`]s.
     #[inline]
     pub const fn empty() -> Self {
+        // TODO: Replace with compiler error when feature(generic_const_exprs) is stable.
+        assert!(MAX > 0, "A GDT cannot have 0 entries");
+        assert!(MAX <= (1 << 13), "A GDT can only have at most 2^13 entries");
         Self {
             table: [0; MAX],
             next_free: 1,
@@ -184,6 +187,8 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         use core::mem::size_of;
         super::DescriptorTablePointer {
             base: crate::VirtAddr::new(self.table.as_ptr() as u64),
+            // 0 < self.next_free <= MAX <= 2^13, so the limit calculation
+            // will not underflow or overflow.
             limit: (self.next_free * size_of::<u64>() - 1) as u16,
         }
     }
