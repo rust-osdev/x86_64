@@ -77,11 +77,13 @@ pub fn sidt() -> DescriptorTablePointer {
 /// [`tss_segment`](crate::structures::gdt::Descriptor::tss_segment)
 /// for more information.
 ///
+/// Calling `load_tss` with a busy TSS selector results in a `#GP` exception.
+///
 /// ## Safety
 ///
 /// This function is unsafe because the caller must ensure that the given
-/// `SegmentSelector` points to a valid TSS entry in the GDT, that is entry is
-/// not busy, and that the corresponding data in the TSS is valid.
+/// `SegmentSelector` points to a valid TSS entry in the GDT and that the
+/// corresponding data in the TSS is valid.
 #[inline]
 pub unsafe fn load_tss(sel: SegmentSelector) {
     unsafe {
