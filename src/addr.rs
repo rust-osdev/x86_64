@@ -66,7 +66,8 @@ impl VirtAddr {
     ///
     /// ## Panics
     ///
-    /// This function panics if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
+    /// This function panics if the bits in the range 48 to 64 are invalid
+    /// (i.e. are not a proper sign extension of bit 47).
     #[inline]
     pub fn new(addr: u64) -> VirtAddr {
         Self::try_new(addr).expect(
@@ -77,16 +78,16 @@ impl VirtAddr {
 
     /// Tries to create a new canonical virtual address.
     ///
-    /// This function tries to performs sign
-    /// extension of bit 47 to make the address canonical. It succeeds if bits 48 to 64 are
-    /// either a correct sign extension (i.e. copies of bit 47) or all null. Else, an error
-    /// is returned.
+    /// This function tries to performs sign extension of bit 47 to make the
+    /// address canonical. It succeeds if bits 48 to 64 are a correct sign
+    /// extension (i.e. copies of bit 47). Else, an error is returned.
     #[inline]
     pub fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
-        match addr.get_bits(47..64) {
-            0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
-            1 => Ok(VirtAddr::new_truncate(addr)), // address needs sign extension
-            _ => Err(VirtAddrNotValid(addr)),
+        let v = Self::new_truncate(addr);
+        if v.0 == addr {
+            Ok(v)
+        } else {
+            Err(VirtAddrNotValid(addr))
         }
     }
 
