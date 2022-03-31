@@ -138,14 +138,14 @@ impl VirtAddr {
     /// Converts the address to a raw pointer.
     #[cfg(target_pointer_width = "64")]
     #[inline]
-    pub fn as_ptr<T>(self) -> *const T {
+    pub const fn as_ptr<T>(self) -> *const T {
         self.as_u64() as *const T
     }
 
     /// Converts the address to a mutable raw pointer.
     #[cfg(target_pointer_width = "64")]
     #[inline]
-    pub fn as_mut_ptr<T>(self) -> *mut T {
+    pub const fn as_mut_ptr<T>(self) -> *mut T {
         self.as_ptr::<T>() as *mut T
     }
 
@@ -420,13 +420,12 @@ impl PhysAddr {
     ///
     /// This function panics if a bit in the range 52 to 64 is set.
     #[inline]
-    pub fn new(addr: u64) -> PhysAddr {
-        assert_eq!(
-            addr.get_bits(52..64),
-            0,
-            "physical addresses must not have any bits in the range 52 to 64 set"
-        );
-        PhysAddr(addr)
+    pub const fn new(addr: u64) -> Self {
+        // TODO: Replace with .ok().expect(msg) when that works on stable.
+        match Self::try_new(addr) {
+            Ok(p) => p,
+            Err(_) => panic!("physical addresses must not have any bits in the range 52 to 64 set"),
+        }
     }
 
     /// Creates a new physical address, throwing bits 52..64 away.
@@ -449,10 +448,12 @@ impl PhysAddr {
     ///
     /// Fails if any bits in the range 52 to 64 are set.
     #[inline]
-    pub fn try_new(addr: u64) -> Result<PhysAddr, PhysAddrNotValid> {
-        match addr.get_bits(52..64) {
-            0 => Ok(PhysAddr(addr)), // address is valid
-            _ => Err(PhysAddrNotValid(addr)),
+    pub const fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {
+        let p = Self::new_truncate(addr);
+        if p.0 == addr {
+            Ok(p)
+        } else {
+            Err(PhysAddrNotValid(addr))
         }
     }
 
