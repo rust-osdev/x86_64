@@ -1,8 +1,36 @@
 # Unreleased
 
-# 0.14.9 - TODO
+# 0.14.9 - 2022-03-31
 
-- TODO
+## New Features
+
+- Address in `VirtAddrNotValid` and `PhysAddrNotValid` is now public ([#340](https://github.com/rust-osdev/x86_64/pull/340)).
+  - This field now contains the whole invalid address ([#347](https://github.com/rust-osdev/x86_64/pull/347)).
+- Remove all uses of external assembly ([#343](https://github.com/rust-osdev/x86_64/pull/343))
+  - `external_asm` and `inline_asm` features are deprecated and now have no effect.
+  - `instructions` feature (on by default) now requires Rust 1.59
+  - Specific MSRV now noted in `README` ([#355](https://github.com/rust-osdev/x86_64/pull/355))
+- Implement `core::iter::Step` for `VirtAddr` and `Page` ([#342](https://github.com/rust-osdev/x86_64/pull/342))
+  - This trait is only available on nightly.
+  - Gated behind `step_trait` feature flag
+- Add `UCet` and `SCet` registers ([#349](https://github.com/rust-osdev/x86_64/pull/349))
+- Use [`rustversion`](https://crates.io/crates/rustversion) to mark certian functions `const fn` on Rust 1.61 ([#353](https://github.com/rust-osdev/x86_64/pull/353))
+- `Entry::handler_addr()` is now public ([#354](https://github.com/rust-osdev/x86_64/pull/354))
+- Increase packed structure alignment ([#362](https://github.com/rust-osdev/x86_64/pull/362))
+- Make more address methods `const fn` ([#369](https://github.com/rust-osdev/x86_64/pull/369))
+  - `VirtAddr::as_ptr()`
+  - `VirtAddr::as_mut_ptr()`
+  - `PhysAddr::new()`
+  - `PhysAddr::try_new()`
+
+## Bug fixes and Documentation
+
+- Fixed overflow bug in PageRangeInclusive ([#351](https://github.com/rust-osdev/x86_64/pull/351))
+- Remove stabilized `const_fn_fn_ptr_basics` and `const_fn_trait_bound` features ([#352](https://github.com/rust-osdev/x86_64/pull/352))
+- Don't set `nomem` in `load_tss` ([#358](https://github.com/rust-osdev/x86_64/pull/358))
+- Correctly initialize TSS's IOPB to be empty ([#357](https://github.com/rust-osdev/x86_64/pull/357))
+- Improve `GlobalDescriptorTable::add_entry` error handling ([#361](https://github.com/rust-osdev/x86_64/pull/361))
+- Update `tss_segment` documentation ([#366](https://github.com/rust-osdev/x86_64/pull/366))
 
 # 0.14.8 – 2022-02-03
 
