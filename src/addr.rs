@@ -125,11 +125,7 @@ impl VirtAddr {
     }
 
     /// Creates a virtual address from the given pointer
-    // cfg(target_pointer_width = "32") is only here for backwards
-    // compatibility: Earlier versions of this crate did not have any `cfg()`
-    // on this function. At least for 32- and 64-bit we know the `as u64` cast
-    // doesn't truncate.
-    #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+    #[cfg(target_pointer_width = "64")]
     #[inline]
     pub fn from_ptr<T>(ptr: *const T) -> Self {
         Self::new(ptr as u64)
