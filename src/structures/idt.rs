@@ -42,7 +42,7 @@ use super::gdt::SegmentSelector;
 /// first entry, the entry for the `divide_error` exception. Note that the index access is
 /// not possible for entries for which an error code is pushed.
 ///
-/// The remaining entries are used for interrupts. They can be accesed through index
+/// The remaining entries are used for interrupts. They can be accessed through index
 /// operations on the idt, e.g. `idt[32]` returns the first interrupt entry, which is the 32nd IDT
 /// entry).
 ///
@@ -1263,7 +1263,7 @@ macro_rules! set_general_handler {
 #[macro_export]
 #[doc(hidden)]
 /// We can't loop in macros, but we can use recursion.
-/// This macro recursivly adds one more bit to it's arguments until we have 8 bits so that we can call set_general_handler_entry.
+/// This macro recursively adds one more bit to it's arguments until we have 8 bits so that we can call set_general_handler_entry.
 macro_rules! set_general_handler_recursive_bits {
     // if we have 8 all bits, construct the index from the bits, check if the entry is in range and invoke the macro that sets the handler
     ($idt:expr, $handler:ident, $range:expr, $bit7:tt, $bit6:tt, $bit5:tt, $bit4:tt, $bit3:tt, $bit2:tt, $bit1:tt, $bit0:tt) => {{
@@ -1274,7 +1274,7 @@ macro_rules! set_general_handler_recursive_bits {
             $crate::set_general_handler_entry!($idt, $handler, IDX, $bit7, $bit6, $bit5, $bit4, $bit3, $bit2, $bit1, $bit0);
         }
     }};
-    // otherwise recursivly invoke the macro adding one more bit
+    // otherwise recursively invoke the macro adding one more bit
     ($idt:expr, $handler:ident, $range:expr $(, $bits:tt)*) => {
         $crate::set_general_handler_recursive_bits!($idt, $handler, $range $(, $bits)*, 0);
         $crate::set_general_handler_recursive_bits!($idt, $handler, $range $(, $bits)*, 1);

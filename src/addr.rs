@@ -22,7 +22,7 @@ const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
-/// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterium
+/// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterion
 /// are called “canonical”. This type guarantees that it always represents a canonical address.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
@@ -62,7 +62,8 @@ impl core::fmt::Debug for VirtAddrNotValid {
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
-    /// This function performs sign extension of bit 47 to make the address canonical.
+    /// The provided address should already be canonical. If you want to check
+    /// whether an address is canonical, use [`try_new`](Self::try_new).
     ///
     /// ## Panics
     ///
@@ -79,9 +80,10 @@ impl VirtAddr {
 
     /// Tries to create a new canonical virtual address.
     ///
-    /// This function tries to performs sign extension of bit 47 to make the
-    /// address canonical. It succeeds if bits 48 to 64 are a correct sign
-    /// extension (i.e. copies of bit 47). Else, an error is returned.
+    /// This function checks wether the given address is canonical
+    /// and returns an error otherwise. An address is canonical
+    /// if bits 48 to 64 are a correct sign
+    /// extension (i.e. copies of bit 47).
     #[inline]
     pub const fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
         let v = Self::new_truncate(addr);
@@ -94,9 +96,9 @@ impl VirtAddr {
 
     /// Creates a new canonical virtual address, throwing out bits 48..64.
     ///
-    /// This function performs sign extension of bit 47 to make the address canonical, so
-    /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
-    /// use `new` or `try_new`.
+    /// This function performs sign extension of bit 47 to make the address
+    /// canonical, overwriting bits 48 to 64. If you want to check whether an
+    /// address is canonical, use [`new`](Self::new) or [`try_new`](Self::try_new).
     #[inline]
     pub const fn new_truncate(addr: u64) -> VirtAddr {
         // By doing the right shift as a signed operation (on a i64), it will
