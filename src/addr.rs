@@ -9,6 +9,7 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
+#[cfg(feature = "step_trait")]
 use bit_field::BitField;
 
 #[cfg(feature = "step_trait")]
