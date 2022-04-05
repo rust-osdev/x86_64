@@ -8,7 +8,7 @@ use core::mem::size_of;
 /// but is used for finding kernel level stack
 /// if interrupts arrive while in kernel mode.
 #[derive(Debug, Clone, Copy)]
-#[repr(C, packed)]
+#[repr(C, packed(4))]
 pub struct TaskStateSegment {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.

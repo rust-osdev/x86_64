@@ -70,14 +70,20 @@ pub fn sidt() -> DescriptorTablePointer {
 
 /// Load the task state register using the `ltr` instruction.
 ///
-/// Loading the task state register changes the type of the entry
-/// in the GDT from `Available 64-bit TSS` to `Busy 64-bit TSS`.
+/// Note that loading a TSS segment selector marks the corresponding TSS
+/// Descriptor in the GDT as "busy", preventing it from being loaded again
+/// (either on this CPU or another CPU). TSS structures (including Descriptors
+/// and Selectors) should generally be per-CPU. See
+/// [`tss_segment`](crate::structures::gdt::Descriptor::tss_segment)
+/// for more information.
+///
+/// Calling `load_tss` with a busy TSS selector results in a `#GP` exception.
 ///
 /// ## Safety
 ///
 /// This function is unsafe because the caller must ensure that the given
-/// `SegmentSelector` points to a valid TSS entry in the GDT and that loading
-/// this TSS is safe.
+/// `SegmentSelector` points to a valid TSS entry in the GDT and that the
+/// corresponding data in the TSS is valid.
 #[inline]
 pub unsafe fn load_tss(sel: SegmentSelector) {
     unsafe {
