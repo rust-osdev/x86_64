@@ -93,6 +93,14 @@ impl GlobalDescriptorTable {
         &self.table[..self.len]
     }
 
+    /// Get the GDT's null segment descriptor.
+    ///
+    /// Can be used as a selector into a non-existent segment and assigned to segment registers.
+    #[inline]
+    pub fn null_segment_descriptor(&self) -> SegmentSelector {
+        SegmentSelector::new(0u16, PrivilegeLevel::from_u16(0u16))
+    }
+
     /// Adds the given segment descriptor to the GDT, returning the segment selector.
     ///
     /// Panics if the GDT doesn't have enough free entries to hold the Descriptor.
