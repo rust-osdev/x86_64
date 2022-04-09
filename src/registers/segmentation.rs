@@ -107,10 +107,12 @@ impl fmt::Debug for SegmentSelector {
 
 /// Code Segment
 ///
-/// The segment base and limit are unused in 64-bit mode. Only the L (long), D
-/// (default operation size), and DPL (descriptor privilege-level) fields of the
-/// descriptor are recognized. So changing the segment register can be used to
-/// change privilege level or enable/disable long mode.
+/// Most fields like the segment base and limit are unused in 64-bit mode.
+/// Only the LONG_MODE, PRESENT, USER_SEGMENT, EXECUTABLE, DEFAULT_SIZE (default operand size)
+/// and DPL_RING_3 (descriptor privilege-level) fields of the
+/// descriptor are recognized by the CPU. Some of them (e.g. DEFAULT_SIZE) are required to hold
+/// a specific value and can't be changed. Others like the DPL_RING_3 and LONG_MODE
+/// can be used to change privilege level or enable/disable long mode.
 #[derive(Debug)]
 pub struct CS;
 
