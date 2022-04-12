@@ -77,6 +77,10 @@ impl SegmentSelector {
         SegmentSelector(index << 3 | (rpl as u16))
     }
 
+    /// Can be used as a selector into a non-existent segment and assigned to segment registers,
+    /// e.g. data segment register in ring 0
+    pub const NULL: Self = Self::new(0, PrivilegeLevel::Ring0);
+
     /// Returns the GDT index.
     #[inline]
     pub fn index(self) -> u16 {
