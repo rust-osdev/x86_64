@@ -483,12 +483,17 @@ impl PhysAddr {
     /// Aligns the physical address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the resulting address has a bit in the range 52
+    /// to 64 set.
     #[inline]
     pub fn align_up<U>(self, align: U) -> Self
     where
         U: Into<u64>,
     {
-        PhysAddr(align_up(self.0, align.into()))
+        PhysAddr::new(align_up(self.0, align.into()))
     }
 
     /// Aligns the physical address downwards to the given alignment.
