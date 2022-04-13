@@ -158,12 +158,17 @@ impl VirtAddr {
     /// Aligns the virtual address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the resulting address is higher than
+    /// `0xffff_ffff_ffff_ffff`.
     #[inline]
     pub fn align_up<U>(self, align: U) -> Self
     where
         U: Into<u64>,
     {
-        VirtAddr(align_up(self.0, align.into()))
+        VirtAddr::new_truncate(align_up(self.0, align.into()))
     }
 
     /// Aligns the virtual address downwards to the given alignment.
@@ -174,7 +179,7 @@ impl VirtAddr {
     where
         U: Into<u64>,
     {
-        VirtAddr(align_down(self.0, align.into()))
+        VirtAddr::new_truncate(align_down(self.0, align.into()))
     }
 
     /// Checks whether the virtual address has the demanded alignment.
@@ -790,5 +795,23 @@ mod tests {
         assert_eq!(align_up(0, 1), 0);
         assert_eq!(align_up(0, 2), 0);
         assert_eq!(align_up(0, 0x8000_0000_0000_0000), 0);
+    }
+
+    #[test]
+    fn test_virt_addr_align_up() {
+        // Make sure the 47th bit is extended.
+        assert_eq!(
+            VirtAddr::new(0x7fff_ffff_ffff).align_up(2u64),
+            VirtAddr::new(0xffff_8000_0000_0000)
+        );
+    }
+
+    #[test]
+    fn test_virt_addr_align_down() {
+        // Make sure the 47th bit is extended.
+        assert_eq!(
+            VirtAddr::new(0xffff_8000_0000_0000).align_down(1u64 << 48),
+            VirtAddr::new(0)
+        );
     }
 }
