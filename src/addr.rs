@@ -647,7 +647,7 @@ pub const fn align_down(addr: u64, align: u64) -> u64 {
 ///
 /// Returns the smallest `x` with alignment `align` so that `x >= addr`.
 ///
-/// Panics if the alignment is not a power of two.
+/// Panics if the alignment is not a power of two or if an overflow occurs.
 #[inline]
 pub const fn align_up(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
@@ -655,7 +655,12 @@ pub const fn align_up(addr: u64, align: u64) -> u64 {
     if addr & align_mask == 0 {
         addr // already aligned
     } else {
-        (addr | align_mask) + 1
+        // FIXME: Replace with .expect, once `Option::expect` is const.
+        if let Some(aligned) = (addr | align_mask).checked_add(1) {
+            aligned
+        } else {
+            panic!("attempt to add with overflow")
+        }
     }
 }
 
