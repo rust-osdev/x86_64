@@ -158,12 +158,17 @@ impl VirtAddr {
     /// Aligns the virtual address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the resulting address is higher than
+    /// `0xffff_ffff_ffff_ffff`.
     #[inline]
     pub fn align_up<U>(self, align: U) -> Self
     where
         U: Into<u64>,
     {
-        VirtAddr(align_up(self.0, align.into()))
+        VirtAddr::new_truncate(align_up(self.0, align.into()))
     }
 
     /// Aligns the virtual address downwards to the given alignment.
@@ -174,7 +179,7 @@ impl VirtAddr {
     where
         U: Into<u64>,
     {
-        VirtAddr(align_down(self.0, align.into()))
+        VirtAddr::new_truncate(align_down(self.0, align.into()))
     }
 
     /// Checks whether the virtual address has the demanded alignment.
@@ -478,12 +483,17 @@ impl PhysAddr {
     /// Aligns the physical address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the resulting address has a bit in the range 52
+    /// to 64 set.
     #[inline]
     pub fn align_up<U>(self, align: U) -> Self
     where
         U: Into<u64>,
     {
-        PhysAddr(align_up(self.0, align.into()))
+        PhysAddr::new(align_up(self.0, align.into()))
     }
 
     /// Aligns the physical address downwards to the given alignment.
@@ -637,7 +647,7 @@ pub const fn align_down(addr: u64, align: u64) -> u64 {
 ///
 /// Returns the smallest `x` with alignment `align` so that `x >= addr`.
 ///
-/// Panics if the alignment is not a power of two.
+/// Panics if the alignment is not a power of two or if an overflow occurs.
 #[inline]
 pub const fn align_up(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
@@ -645,7 +655,12 @@ pub const fn align_up(addr: u64, align: u64) -> u64 {
     if addr & align_mask == 0 {
         addr // already aligned
     } else {
-        (addr | align_mask) + 1
+        // FIXME: Replace with .expect, once `Option::expect` is const.
+        if let Some(aligned) = (addr | align_mask).checked_add(1) {
+            aligned
+        } else {
+            panic!("attempt to add with overflow")
+        }
     }
 }
 
@@ -790,5 +805,35 @@ mod tests {
         assert_eq!(align_up(0, 1), 0);
         assert_eq!(align_up(0, 2), 0);
         assert_eq!(align_up(0, 0x8000_0000_0000_0000), 0);
+    }
+
+    #[test]
+    fn test_virt_addr_align_up() {
+        // Make sure the 47th bit is extended.
+        assert_eq!(
+            VirtAddr::new(0x7fff_ffff_ffff).align_up(2u64),
+            VirtAddr::new(0xffff_8000_0000_0000)
+        );
+    }
+
+    #[test]
+    fn test_virt_addr_align_down() {
+        // Make sure the 47th bit is extended.
+        assert_eq!(
+            VirtAddr::new(0xffff_8000_0000_0000).align_down(1u64 << 48),
+            VirtAddr::new(0)
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_virt_addr_align_up_overflow() {
+        VirtAddr::new(0xffff_ffff_ffff_ffff).align_up(2u64);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_phys_addr_align_up_overflow() {
+        PhysAddr::new(0x000f_ffff_ffff_ffff).align_up(2u64);
     }
 }
