@@ -9,7 +9,7 @@ use crate::{
 use core::arch::asm;
 
 macro_rules! get_reg_impl {
-    ($name:literal, $asm_get:ident) => {
+    ($name:literal) => {
         fn get_reg() -> SegmentSelector {
             let segment: u16;
             unsafe {
@@ -21,9 +21,9 @@ macro_rules! get_reg_impl {
 }
 
 macro_rules! segment_impl {
-    ($type:ty, $name:literal, $asm_get:ident, $asm_load:ident) => {
+    ($type:ty, $name:literal) => {
         impl Segment for $type {
-            get_reg_impl!($name, $asm_get);
+            get_reg_impl!($name);
 
             unsafe fn set_reg(sel: SegmentSelector) {
                 unsafe {
@@ -35,7 +35,7 @@ macro_rules! segment_impl {
 }
 
 macro_rules! segment64_impl {
-    ($type:ty, $name:literal, $base:ty, $asm_rd:ident, $asm_wr:ident) => {
+    ($type:ty, $name:literal, $base:ty) => {
         impl Segment64 for $type {
             const BASE: Msr = <$base>::MSR;
             fn read_base() -> VirtAddr {
@@ -56,7 +56,7 @@ macro_rules! segment64_impl {
 }
 
 impl Segment for CS {
-    get_reg_impl!("cs", x86_64_asm_get_cs);
+    get_reg_impl!("cs");
 
     /// Note this is special since we cannot directly move to [`CS`]; x86 requires the instruction
     /// pointer and [`CS`] to be set at the same time. To do this, we push the new segment selector
@@ -82,13 +82,13 @@ impl Segment for CS {
     }
 }
 
-segment_impl!(SS, "ss", x86_64_asm_get_ss, x86_64_asm_load_ss);
-segment_impl!(DS, "ds", x86_64_asm_get_ds, x86_64_asm_load_ds);
-segment_impl!(ES, "es", x86_64_asm_get_es, x86_64_asm_load_es);
-segment_impl!(FS, "fs", x86_64_asm_get_fs, x86_64_asm_load_fs);
-segment64_impl!(FS, "fs", FsBase, x86_64_asm_rdfsbase, x86_64_asm_wrfsbase);
-segment_impl!(GS, "gs", x86_64_asm_get_gs, x86_64_asm_load_gs);
-segment64_impl!(GS, "gs", GsBase, x86_64_asm_rdgsbase, x86_64_asm_wrgsbase);
+segment_impl!(SS, "ss");
+segment_impl!(DS, "ds");
+segment_impl!(ES, "es");
+segment_impl!(FS, "fs");
+segment64_impl!(FS, "fs", FsBase);
+segment_impl!(GS, "gs");
+segment64_impl!(GS, "gs", GsBase);
 
 impl GS {
     /// Swap `KernelGsBase` MSR and `GsBase` MSR.
