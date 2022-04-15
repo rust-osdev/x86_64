@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use x86_64::structures::gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector};
 use x86_64::structures::tss::TaskStateSegment;
-use x86_64::{SingleUseCell, VirtAddr};
+use x86_64::VirtAddr;
 
 pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
 
@@ -18,12 +18,12 @@ lazy_static! {
         };
         tss
     };
-    static ref GDT: (SingleUseCell<GlobalDescriptorTable>, Selectors) = {
+    static ref GDT: (GlobalDescriptorTable, Selectors) = {
         let mut gdt = GlobalDescriptorTable::new();
         let code_selector = gdt.append(Descriptor::kernel_code_segment());
         let tss_selector = gdt.append(Descriptor::tss_segment(&TSS));
         (
-            SingleUseCell::new(gdt),
+            gdt,
             Selectors {
                 code_selector,
                 tss_selector,
@@ -41,7 +41,7 @@ pub fn init() {
     use x86_64::instructions::segmentation::{Segment, CS};
     use x86_64::instructions::tables::load_tss;
 
-    GDT.0.try_get_mut().unwrap().load();
+    GDT.0.load();
     unsafe {
         CS::set_reg(GDT.1.code_selector);
         load_tss(GDT.1.tss_selector);
