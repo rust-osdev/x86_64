@@ -223,7 +223,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// [`SS::set_reg()`] and [`CS::set_reg()`].
     #[cfg(feature = "instructions")]
     #[inline]
-    pub fn load(&'static mut self) {
+    pub fn load(&'static self) {
         // SAFETY: static lifetime ensures no modification after loading.
         unsafe { self.load_unsafe() };
     }
@@ -241,7 +241,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     ///
     #[cfg(feature = "instructions")]
     #[inline]
-    pub unsafe fn load_unsafe(&mut self) {
+    pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::lgdt;
         unsafe {
             lgdt(&self.pointer());
