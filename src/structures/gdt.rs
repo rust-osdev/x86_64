@@ -118,6 +118,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// * the provided slice has more than `MAX` entries
     /// * the provided slice is empty
     /// * the first entry is not zero
+    #[cfg_attr(not(feature = "instructions"), allow(rustdoc::broken_intra_doc_links))]
     #[inline]
     pub const fn from_raw_entries(slice: &[u64]) -> Self {
         let len = slice.len();
@@ -147,10 +148,10 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         &self.table[..self.len]
     }
 
-    /// Adds the given segment descriptor to the GDT, returning the segment selector.
+    /// Appends the given segment descriptor to the GDT, returning the segment selector.
     ///
-    /// Note that depending on the type of the [`Descriptor`] this may add either
-    /// one or two new entries.
+    /// Note that depending on the type of the [`Descriptor`] this may append
+    /// either one or two new [`Entry`]s to the table.
     ///
     /// Panics if the GDT doesn't have enough free entries.
     #[inline]
