@@ -124,6 +124,9 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         // TODO: Replace with compiler error when feature(generic_const_exprs) is stable.
         assert!(MAX > 0, "A GDT cannot have 0 entries");
         assert!(MAX <= (1 << 13), "A GDT can only have at most 2^13 entries");
+
+        // TODO: Replace with inline_const when it's stable.
+        #[allow(clippy::declare_interior_mutable_const)]
         const NULL: Entry = Entry::new(0);
         Self {
             table: [NULL; MAX],
