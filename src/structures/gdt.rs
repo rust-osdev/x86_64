@@ -106,18 +106,26 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         }
     }
 
-    /// Forms a GDT from a slice of raw [`Entry`] values.
+    /// Forms a GDT from a slice of `u64`.
     ///
-    /// # Safety
+    /// This method allows for creation of a GDT with malformed or invalid
+    /// entries. However, it is safe because loading a GDT with invalid
+    /// entires doesn't do anything until those entries are used. For example,
+    /// [`CS::set_reg`] and [`load_tss`](crate::instructions::tables::load_tss)
+    /// are both unsafe for this reason.
     ///
-    /// * The user must make sure that the entries are well formed
-    /// * Panics if the provided slice has more than `MAX` entries
+    /// Panics if:
+    /// * the provided slice has more than `MAX` entries
+    /// * the provided slice is empty
+    /// * the first entry is not zero
     #[inline]
-    pub const unsafe fn from_raw_entries(slice: &[u64]) -> Self {
+    pub const fn from_raw_entries(slice: &[u64]) -> Self {
         let len = slice.len();
         let mut table = Self::empty().table;
         let mut idx = 0;
 
+        assert!(len > 0, "cannot initialize GDT with empty slice");
+        assert!(slice[0] == 0, "first GDT entry must be zero");
         assert!(
             len <= MAX,
             "cannot initialize GDT with slice exceeding the maximum length"
@@ -463,7 +471,7 @@ mod tests {
     #[test]
     pub fn from_entries() {
         let raw = [0, Flags::KERNEL_CODE64.bits(), Flags::KERNEL_DATA.bits()];
-        let gdt = unsafe { GlobalDescriptorTable::<3>::from_raw_entries(&raw) };
+        let gdt = GlobalDescriptorTable::<3>::from_raw_entries(&raw);
         assert_eq!(gdt.table.len(), 3);
         assert_eq!(gdt.entries().len(), 3);
     }
