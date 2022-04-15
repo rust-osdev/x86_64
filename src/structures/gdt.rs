@@ -5,6 +5,7 @@ use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
+use core::fmt;
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
@@ -16,7 +17,7 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// uses either 1 Entry (if it is a [`UserSegment`](Descriptor::UserSegment)) or
 /// 2 Entries (if it is a [`SystemSegment`](Descriptor::SystemSegment)). This
 /// type exists to give users access to the raw entry bits in a GDT.
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Entry(u64);
 
@@ -30,6 +31,13 @@ impl Entry {
     /// bits may correspond to those in [`DescriptorFlags`].
     pub fn raw(&self) -> u64 {
         self.0
+    }
+}
+
+impl fmt::Debug for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Display inner value as hex
+        write!(f, "Entry({:#018x})", self.raw())
     }
 }
 
