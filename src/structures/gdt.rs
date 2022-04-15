@@ -10,6 +10,11 @@ use core::fmt;
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
 
+#[cfg(feature = "instructions")]
+use core::sync::atomic::{AtomicU64 as EntryValue, Ordering};
+#[cfg(not(feature = "instructions"))]
+use u64 as EntryValue;
+
 /// 8-byte entry in a descriptor table.
 ///
 /// A [`GlobalDescriptorTable`] (or LDT) is an array of these entries, and
@@ -17,22 +22,42 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// uses either 1 Entry (if it is a [`UserSegment`](Descriptor::UserSegment)) or
 /// 2 Entries (if it is a [`SystemSegment`](Descriptor::SystemSegment)). This
 /// type exists to give users access to the raw entry bits in a GDT.
-#[derive(Clone, PartialEq, Eq)]
 #[repr(transparent)]
-pub struct Entry(u64);
+pub struct Entry(EntryValue);
 
 impl Entry {
     // Create a new Entry from a raw value.
     const fn new(raw: u64) -> Self {
+        #[cfg(feature = "instructions")]
+        let raw = EntryValue::new(raw);
         Self(raw)
     }
 
     /// The raw bits for this entry. Depending on the [`Descriptor`] type, these
     /// bits may correspond to those in [`DescriptorFlags`].
     pub fn raw(&self) -> u64 {
-        self.0
+        // TODO: Make this const fn when AtomicU64::load is const.
+        #[cfg(feature = "instructions")]
+        let raw = self.0.load(Ordering::SeqCst);
+        #[cfg(not(feature = "instructions"))]
+        let raw = self.0;
+        raw
     }
 }
+
+impl Clone for Entry {
+    fn clone(&self) -> Self {
+        Self::new(self.raw())
+    }
+}
+
+impl PartialEq for Entry {
+    fn eq(&self, other: &Self) -> bool {
+        self.raw() == other.raw()
+    }
+}
+
+impl Eq for Entry {}
 
 impl fmt::Debug for Entry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
