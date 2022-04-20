@@ -6,13 +6,15 @@ use bit_field::BitField;
 use core::fmt;
 // imports for intra doc links
 #[cfg(doc)]
-use crate::registers::control::Cr4Flags;
+use crate::{
+    registers::control::Cr4Flags,
+    structures::gdt::{Descriptor, DescriptorFlags, GlobalDescriptorTable},
+};
 
 /// An x86 segment
 ///
 /// Segment registers on x86 are 16-bit [`SegmentSelector`]s, which index into
-/// the [`GlobalDescriptorTable`](crate::structures::gdt::GlobalDescriptorTable). The
-/// corresponding GDT entry is used to
+/// the [`GlobalDescriptorTable`]. The corresponding GDT entry is used to
 /// configure the segment itself. Note that most segmentation functionality is
 /// disabled in 64-bit mode. See the individual segments for more information.
 pub trait Segment {
@@ -77,6 +79,10 @@ impl SegmentSelector {
         SegmentSelector(index << 3 | (rpl as u16))
     }
 
+    /// Can be used as a selector into a non-existent segment and assigned to segment registers,
+    /// e.g. data segment register in ring 0
+    pub const NULL: Self = Self::new(0, PrivilegeLevel::Ring0);
+
     /// Returns the GDT index.
     #[inline]
     pub fn index(self) -> u16 {
@@ -107,10 +113,19 @@ impl fmt::Debug for SegmentSelector {
 
 /// Code Segment
 ///
-/// The segment base and limit are unused in 64-bit mode. Only the L (long), D
-/// (default operation size), and DPL (descriptor privilege-level) fields of the
-/// descriptor are recognized. So changing the segment register can be used to
-/// change privilege level or enable/disable long mode.
+/// While most fields in the Code-Segment [`Descriptor`] are unused in 64-bit
+/// long mode, some of them must be set to a specific value. The
+/// [`EXECUTABLE`](DescriptorFlags::EXECUTABLE),
+/// [`USER_SEGMENT`](DescriptorFlags::USER_SEGMENT), and
+/// [`LONG_MODE`](DescriptorFlags::LONG_MODE) bits must be set, while the
+/// [`DEFAULT_SIZE`](DescriptorFlags::DEFAULT_SIZE) bit must be unset.
+///
+/// The [`DPL_RING_3`](DescriptorFlags::DPL_RING_3) field can be used to change
+/// privilege level. The [`PRESENT`](DescriptorFlags::PRESENT) bit can be used
+/// to make a segment present or not present.
+///
+/// All other fields (like the segment base and limit) are ignored by the
+/// processor and setting them has no effect.
 #[derive(Debug)]
 pub struct CS;
 
@@ -118,7 +133,7 @@ pub struct CS;
 ///
 /// Entirely unused in 64-bit mode; setting the segment register does nothing.
 /// However, in ring 3, the SS register still has to point to a valid
-/// [`Descriptor`](crate::structures::gdt::Descriptor) (it cannot be zero). This
+/// [`Descriptor`] (it cannot be zero). This
 /// means a user-mode read/write segment descriptor must be present in the GDT.
 ///
 /// This register is also set by the `syscall`/`sysret` and
