@@ -10,6 +10,15 @@
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
+#![deny(
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    clippy::unnecessary_cast,
+    clippy::fn_to_numeric_cast,
+    clippy::char_lit_as_u8
+)]
 
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
