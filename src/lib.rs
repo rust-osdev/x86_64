@@ -11,9 +11,9 @@
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
+pub use crate::addr::*;
 
-pub mod addr;
+mod addr;
 pub mod instructions;
 pub mod registers;
 pub mod structures;
