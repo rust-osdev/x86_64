@@ -1,13 +1,13 @@
 use super::*;
-use core::{cmp::Ordering, fmt};
+use core::{cmp::Ordering, fmt, ops::Range};
+
+#[cfg(not(target_arch = "x86_64"))]
+use core::marker::PhantomData;
 
 #[cfg(target_arch = "x86_64")]
 type PtrValue<T> = *mut T;
 #[cfg(not(target_arch = "x86_64"))]
 type PtrValue<T> = (u64, PhantomData<*mut T>);
-
-#[cfg(not(target_arch = "x86_64"))]
-use core::marker::PhantomData;
 
 /// A Virtual Address representing a pointer to a type of T.
 pub struct VirtPtr<T>(PtrValue<T>);
@@ -33,7 +33,7 @@ impl<T> VirtPtr<T> {
         let a = self.0 as u64;
         #[cfg(not(target_arch = "x86_64"))]
         let a = self.0 .0;
-        VirtAddr(a)
+        VirtAddr::new(a)
     }
 }
 
@@ -54,11 +54,15 @@ impl<T> VirtPtr<T> {
     pub const fn from_ref(r: &T) -> Self {
         unsafe { Self::from_ptr_unchecked(r) }
     }
-    /// Create a `VirtPtr` from an exclusive reference.
+    /// Create a `VirtPtr` range from a slice
     ///
     /// This can be safe and infallible as references are required to be in-bounds.
-    pub const fn from_mut_ref(r: &mut T) -> Self {
-        unsafe { Self::from_ptr_unchecked(r) }
+    pub const fn from_slice(r: &[T]) -> Range<Self> {
+        let ptrs = r.as_ptr_range();
+        Range {
+            start: unsafe { Self::from_ptr_unchecked(ptrs.start) },
+            end: unsafe { Self::from_ptr_unchecked(ptrs.end) },
+        }
     }
     /// Create a new `VirtPtr` from a normal pointer.
     ///
