@@ -1,10 +1,10 @@
 //! Functions to load GDT, IDT, and TSS structures.
 
 use crate::structures::gdt::SegmentSelector;
-use crate::VirtAddr;
+use crate::VirtPtr;
 use core::arch::asm;
 
-pub use crate::structures::DescriptorTablePointer;
+pub use crate::structures::{GdtPointer, IdtPointer};
 
 /// Load a GDT.
 ///
@@ -18,7 +18,7 @@ pub use crate::structures::DescriptorTablePointer;
 /// `DescriptorTablePointer` points to a valid GDT and that loading this
 /// GDT is safe.
 #[inline]
-pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
+pub unsafe fn lgdt(gdt: &GdtPointer) {
     unsafe {
         asm!("lgdt [{}]", in(reg) gdt, options(readonly, nostack, preserves_flags));
     }
@@ -36,7 +36,7 @@ pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {
 /// `DescriptorTablePointer` points to a valid IDT and that loading this
 /// IDT is safe.
 #[inline]
-pub unsafe fn lidt(idt: &DescriptorTablePointer) {
+pub unsafe fn lidt(idt: &IdtPointer) {
     unsafe {
         asm!("lidt [{}]", in(reg) idt, options(readonly, nostack, preserves_flags));
     }
@@ -44,10 +44,10 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
 
 /// Get the address of the current GDT.
 #[inline]
-pub fn sgdt() -> DescriptorTablePointer {
-    let mut gdt: DescriptorTablePointer = DescriptorTablePointer {
+pub fn sgdt() -> GdtPointer {
+    let mut gdt = GdtPointer {
         limit: 0,
-        base: VirtAddr::new(0),
+        base: VirtPtr::null(),
     };
     unsafe {
         asm!("sgdt [{}]", in(reg) &mut gdt, options(nostack, preserves_flags));
@@ -57,10 +57,10 @@ pub fn sgdt() -> DescriptorTablePointer {
 
 /// Get the address of the current IDT.
 #[inline]
-pub fn sidt() -> DescriptorTablePointer {
-    let mut idt: DescriptorTablePointer = DescriptorTablePointer {
+pub fn sidt() -> IdtPointer {
+    let mut idt: IdtPointer = IdtPointer {
         limit: 0,
-        base: VirtAddr::new(0),
+        base: VirtPtr::null(),
     };
     unsafe {
         asm!("sidt [{}]", in(reg) &mut idt, options(nostack, preserves_flags));

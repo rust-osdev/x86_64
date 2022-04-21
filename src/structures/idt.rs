@@ -485,10 +485,10 @@ impl InterruptDescriptorTable {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
-    fn pointer(&self) -> crate::structures::DescriptorTablePointer {
+    fn pointer(&self) -> super::IdtPointer {
         use core::mem::size_of;
-        crate::structures::DescriptorTablePointer {
-            base: VirtAddr::new(self as *const _ as u64),
+        super::IdtPointer {
+            base: crate::VirtPtr::from_ref(self),
             limit: (size_of::<Self>() - 1) as u16,
         }
     }
