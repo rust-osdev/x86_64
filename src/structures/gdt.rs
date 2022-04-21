@@ -260,7 +260,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
-    fn pointer(&self) -> super::GdtPointer {
+    pub const fn pointer(&self) -> super::GdtPointer {
         use core::mem::size_of;
         super::GdtPointer {
             base: crate::VirtPtr::from_ref(&self.table[0]),

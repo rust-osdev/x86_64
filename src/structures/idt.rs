@@ -485,7 +485,7 @@ impl InterruptDescriptorTable {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
-    fn pointer(&self) -> super::IdtPointer {
+    pub const fn pointer(&self) -> super::IdtPointer {
         use core::mem::size_of;
         super::IdtPointer {
             base: crate::VirtPtr::from_ref(self),
