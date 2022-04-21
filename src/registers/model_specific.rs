@@ -5,15 +5,21 @@ use bitflags::bitflags;
 #[cfg(doc)]
 use crate::registers::segmentation::{FS, GS};
 
-/// A model specific register.
+/// A Model-Specific Register.
 #[derive(Debug)]
 pub struct Msr(u32);
 
 impl Msr {
-    /// Create an instance from a register.
+    /// Create an instance from a 32-bit MSR address.
     #[inline]
-    pub const fn new(reg: u32) -> Msr {
-        Msr(reg)
+    pub const fn new(addr: u32) -> Msr {
+        Msr(addr)
+    }
+
+    /// Return the raw register address of the MSR.
+    #[inline]
+    pub const fn addr(&self) -> u32 {
+        self.0
     }
 }
 
