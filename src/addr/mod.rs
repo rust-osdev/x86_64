@@ -55,7 +55,7 @@ pub struct VirtAddrNotValid(pub u64);
 impl core::fmt::Debug for VirtAddrNotValid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("VirtAddrNotValid")
-            .field(&format_args!("{:#x}", self.0))
+            .field(&format_args!("{:#018x}", self.0))
             .finish()
     }
 }
@@ -232,7 +232,7 @@ impl VirtAddr {
 impl fmt::Debug for VirtAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_tuple("VirtAddr")
-            .field(&format_args!("{:#x}", self.0))
+            .field(&format_args!("{:#018x}", self.0))
             .finish()
     }
 }
@@ -380,7 +380,7 @@ pub struct PhysAddrNotValid(pub u64);
 impl core::fmt::Debug for PhysAddrNotValid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("PhysAddrNotValid")
-            .field(&format_args!("{:#x}", self.0))
+            .field(&format_args!("{:#018x}", self.0))
             .finish()
     }
 }
@@ -487,7 +487,7 @@ impl PhysAddr {
 impl fmt::Debug for PhysAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_tuple("PhysAddr")
-            .field(&format_args!("{:#x}", self.0))
+            .field(&format_args!("{:#013x}", self.0))
             .finish()
     }
 }
