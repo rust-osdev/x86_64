@@ -19,7 +19,7 @@ pub enum FrameError {
 }
 
 /// A 64-bit page table entry.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct PageTableEntry {
     entry: u64,
@@ -182,7 +182,7 @@ const ENTRY_COUNT: usize = 512;
 /// mutable aliasing by using the cloned page tables.
 #[repr(align(4096))]
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct PageTable {
     entries: [PageTableEntry; ENTRY_COUNT],
 }
@@ -191,9 +191,8 @@ impl PageTable {
     /// Creates an empty page table.
     #[inline]
     pub const fn new() -> Self {
-        const EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
-            entries: [EMPTY; ENTRY_COUNT],
+            entries: [PageTableEntry::new(); ENTRY_COUNT],
         }
     }
 

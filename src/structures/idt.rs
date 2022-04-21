@@ -50,7 +50,7 @@ use super::gdt::SegmentSelector;
 /// The field descriptions are taken from the
 /// [AMD64 manual volume 2](https://support.amd.com/TechDocs/24593.pdf)
 /// (with slight modifications).
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 #[repr(C)]
 #[repr(align(16))]
 pub struct InterruptDescriptorTable {

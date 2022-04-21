@@ -275,7 +275,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
 ///
 /// Segmentation is no longer supported in 64-bit mode, so most of the descriptor
 /// contents are ignored.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Descriptor {
     /// Descriptor for a code or data segment.
     ///
