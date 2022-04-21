@@ -1,4 +1,5 @@
 //! Physical and virtual addresses manipulation
+pub(crate) mod ptr;
 
 #[cfg(feature = "step_trait")]
 use core::convert::TryFrom;

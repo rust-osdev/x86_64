@@ -11,7 +11,7 @@
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use crate::addr::*;
+pub use crate::addr::{ptr::VirtPtr, *};
 
 mod addr;
 pub mod instructions;
