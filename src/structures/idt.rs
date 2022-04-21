@@ -886,7 +886,7 @@ impl EntryOptions {
     }
 
     fn privilege_level(&self) -> PrivilegeLevel {
-        PrivilegeLevel::from_u16(self.bits.get_bits(13..15))
+        PrivilegeLevel::from_u8(self.bits.get_bits(13..15) as u8)
     }
 
     /// Assigns a Interrupt Stack Table (IST) stack to this handler. The CPU will then always
@@ -903,15 +903,18 @@ impl EntryOptions {
     /// This function is unsafe because the caller must ensure that the passed stack index is
     /// valid and not used by other interrupts. Otherwise, memory safety violations are possible.
     #[inline]
-    pub unsafe fn set_stack_index(&mut self, index: u16) -> &mut Self {
+    pub unsafe fn set_stack_index(&mut self, index: u8) -> &mut Self {
         // The hardware IST index starts at 1, but our software IST index
         // starts at 0. Therefore we need to add 1 here.
-        self.bits.set_bits(0..3, index + 1);
+        self.bits.set_bits(0..3, (index + 1) as u16);
         self
     }
 
-    fn stack_index(&self) -> u16 {
-        self.bits.get_bits(0..3) - 1
+    fn stack_index(&self) -> Option<u8> {
+        match self.bits.get_bits(0..3) as u8 {
+            0 => None,
+            hw_index => Some(hw_index - 1),
+        }
     }
 }
 

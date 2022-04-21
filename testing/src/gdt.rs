@@ -3,7 +3,7 @@ use x86_64::structures::gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector
 use x86_64::structures::tss::TaskStateSegment;
 use x86_64::VirtAddr;
 
-pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
+pub const DOUBLE_FAULT_IST_INDEX: u8 = 0;
 
 lazy_static! {
     static ref TSS: TaskStateSegment = {
