@@ -107,6 +107,9 @@ impl<T> fmt::Debug for VirtPtr<T> {
     }
 }
 
+unsafe impl<T> Send for VirtPtr<T> {}
+unsafe impl<T> Sync for VirtPtr<T> {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
