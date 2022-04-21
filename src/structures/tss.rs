@@ -1,6 +1,6 @@
 //! Provides a type for the task state segment structure.
 
-use crate::VirtAddr;
+use crate::VirtPtr;
 use core::mem::size_of;
 
 /// In 64-bit mode the TSS holds information that is not
@@ -12,10 +12,10 @@ use core::mem::size_of;
 pub struct TaskStateSegment {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
-    pub privilege_stack_table: [VirtAddr; 3],
+    pub privilege_stack_table: [VirtPtr<u8>; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
-    pub interrupt_stack_table: [VirtAddr; 7],
+    pub interrupt_stack_table: [VirtPtr<u8>; 7],
     reserved_3: u64,
     reserved_4: u16,
     /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base.
@@ -32,8 +32,8 @@ impl TaskStateSegment {
     #[inline]
     pub const fn new() -> TaskStateSegment {
         TaskStateSegment {
-            privilege_stack_table: [VirtAddr::zero(); 3],
-            interrupt_stack_table: [VirtAddr::zero(); 7],
+            privilege_stack_table: [VirtPtr::null(); 3],
+            interrupt_stack_table: [VirtPtr::null(); 7],
             iomap_base: size_of::<TaskStateSegment>() as u16,
             reserved_1: 0,
             reserved_2: 0,
