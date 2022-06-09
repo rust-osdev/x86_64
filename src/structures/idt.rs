@@ -1170,6 +1170,9 @@ macro_rules! set_general_handler {
     ($idt:expr, $handler:ident, $idx:literal) => {
         $crate::set_general_handler!($idt, $handler, $idx..=$idx);
     };
+    ($idt:expr, $handler:ident, $idx:ident) => {
+        $crate::set_general_handler!($idt, $handler, $idx..=$idx);
+    };
     ($idt:expr, $handler:ident, $range:expr) => {{
         /// This constant is used to avoid spamming the same compilation error ~200 times
         /// when the handler's signature is wrong.
