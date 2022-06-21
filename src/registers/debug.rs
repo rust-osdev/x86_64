@@ -7,8 +7,6 @@ use core::arch::asm;
 use core::convert::TryFrom;
 use core::ops::Range;
 
-use crate::VirtAddr;
-
 use bit_field::BitField;
 use bitflags::bitflags;
 
@@ -17,10 +15,10 @@ use bitflags::bitflags;
 /// Holds the address of a hardware breakpoint.
 pub trait DebugAddressRegister {
     /// Reads the current breakpoint address.
-    fn read() -> VirtAddr;
+    fn read() -> u64;
 
     /// Writes the provided breakpoint address.
-    fn write(addr: VirtAddr);
+    fn write(addr: u64);
 }
 
 macro_rules! debug_address_register {
@@ -34,18 +32,18 @@ macro_rules! debug_address_register {
         #[cfg(feature = "instructions")]
         impl DebugAddressRegister for $Dr {
             #[inline]
-            fn read() -> VirtAddr {
+            fn read() -> u64 {
                 let addr;
                 unsafe {
                     asm!(concat!("mov {}, ", $name), out(reg) addr, options(nomem, nostack, preserves_flags));
                 }
-                VirtAddr::new(addr)
+                addr
             }
 
             #[inline]
-            fn write(addr: VirtAddr) {
+            fn write(addr: u64) {
                 unsafe {
-                    asm!(concat!("mov ", $name, ", {}"), in(reg) addr.as_u64(), options(nomem, nostack, preserves_flags));
+                    asm!(concat!("mov ", $name, ", {}"), in(reg) addr, options(nomem, nostack, preserves_flags));
                 }
             }
         }
