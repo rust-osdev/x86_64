@@ -2,6 +2,8 @@
 
 #![deny(unsafe_op_in_unsafe_fn)]
 
+#[cfg(feature = "instructions")]
+use core::arch::asm;
 use core::convert::TryFrom;
 use core::ops::Range;
 
@@ -21,20 +23,39 @@ pub trait DebugAddressRegister {
     fn write(addr: VirtAddr);
 }
 
-macro_rules! debug_address_register_struct {
-    ($Dr:ident) => {
+macro_rules! debug_address_register {
+    ($Dr:ident, $name:literal) => {
         /// Debug Address Register
         ///
         /// Holds the address of a hardware breakpoint.
         #[derive(Debug)]
         pub struct $Dr;
+
+        #[cfg(feature = "instructions")]
+        impl DebugAddressRegister for $Dr {
+            #[inline]
+            fn read() -> VirtAddr {
+                let addr;
+                unsafe {
+                    asm!(concat!("mov {}, ", $name), out(reg) addr, options(nostack, preserves_flags));
+                }
+                VirtAddr::new(addr)
+            }
+
+            #[inline]
+            fn write(addr: VirtAddr) {
+                unsafe {
+                    asm!(concat!("mov ", $name, ", {}"), in(reg) addr.as_u64(), options(nostack, preserves_flags));
+                }
+            }
+        }
     };
 }
 
-debug_address_register_struct!(Dr0);
-debug_address_register_struct!(Dr1);
-debug_address_register_struct!(Dr2);
-debug_address_register_struct!(Dr3);
+debug_address_register!(Dr0, "dr0");
+debug_address_register!(Dr1, "dr1");
+debug_address_register!(Dr2, "dr2");
+debug_address_register!(Dr3, "dr3");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
@@ -437,86 +458,6 @@ pub struct Dr7;
 mod x86_64 {
     use super::*;
     use core::arch::asm;
-
-    impl DebugAddressRegister for Dr0 {
-        #[inline]
-        fn read() -> VirtAddr {
-            let addr;
-
-            unsafe {
-                asm!("mov {}, dr0", out(reg) addr, options(nostack, preserves_flags));
-            }
-
-            VirtAddr::new(addr)
-        }
-
-        #[inline]
-        fn write(addr: VirtAddr) {
-            unsafe {
-                asm!("mov dr0, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-            }
-        }
-    }
-
-    impl DebugAddressRegister for Dr1 {
-        #[inline]
-        fn read() -> VirtAddr {
-            let addr;
-
-            unsafe {
-                asm!("mov {}, dr1", out(reg) addr, options(nostack, preserves_flags));
-            }
-
-            VirtAddr::new(addr)
-        }
-
-        #[inline]
-        fn write(addr: VirtAddr) {
-            unsafe {
-                asm!("mov dr1, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-            }
-        }
-    }
-
-    impl DebugAddressRegister for Dr2 {
-        #[inline]
-        fn read() -> VirtAddr {
-            let addr;
-
-            unsafe {
-                asm!("mov {}, dr2", out(reg) addr, options(nostack, preserves_flags));
-            }
-
-            VirtAddr::new(addr)
-        }
-
-        #[inline]
-        fn write(addr: VirtAddr) {
-            unsafe {
-                asm!("mov dr2, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-            }
-        }
-    }
-
-    impl DebugAddressRegister for Dr3 {
-        #[inline]
-        fn read() -> VirtAddr {
-            let addr;
-
-            unsafe {
-                asm!("mov {}, dr3", out(reg) addr, options(nostack, preserves_flags));
-            }
-
-            VirtAddr::new(addr)
-        }
-
-        #[inline]
-        fn write(addr: VirtAddr) {
-            unsafe {
-                asm!("mov dr3, {}", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-            }
-        }
-    }
 
     impl Dr6 {
         /// Read the current set of DR6 flags.
