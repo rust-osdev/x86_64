@@ -1,7 +1,5 @@
 //! Functions to read and write debug registers.
 
-#![deny(unsafe_op_in_unsafe_fn)]
-
 #[cfg(feature = "instructions")]
 use core::arch::asm;
 use core::convert::TryFrom;
