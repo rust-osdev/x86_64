@@ -2,7 +2,6 @@
 
 #[cfg(feature = "instructions")]
 use core::arch::asm;
-use core::convert::TryFrom;
 use core::ops::Range;
 
 use bit_field::BitField;
@@ -81,24 +80,6 @@ impl DebugAddressRegisterNumber {
     /// Returns the number as a primitive type.
     pub const fn get(self) -> u8 {
         self.0
-    }
-}
-
-/// The error type returned when a checked integral type conversion fails.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct TryFromIntError(());
-
-impl From<core::num::TryFromIntError> for TryFromIntError {
-    fn from(_: core::num::TryFromIntError) -> Self {
-        Self(())
-    }
-}
-
-impl TryFrom<u8> for DebugAddressRegisterNumber {
-    type Error = TryFromIntError;
-
-    fn try_from(n: u8) -> Result<Self, Self::Error> {
-        Self::new(n).ok_or(TryFromIntError(()))
     }
 }
 
@@ -314,14 +295,6 @@ impl HwBreakpointSize {
     const fn bit_range(n: DebugAddressRegisterNumber) -> Range<usize> {
         let lsb = (18 + 4 * n.0) as usize;
         lsb..lsb + 2
-    }
-}
-
-impl TryFrom<usize> for HwBreakpointSize {
-    type Error = TryFromIntError;
-
-    fn try_from(size: usize) -> Result<Self, Self::Error> {
-        Self::new(size).ok_or(TryFromIntError(()))
     }
 }
 
