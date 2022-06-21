@@ -37,7 +37,7 @@ macro_rules! debug_address_register {
             fn read() -> VirtAddr {
                 let addr;
                 unsafe {
-                    asm!(concat!("mov {}, ", $name), out(reg) addr, options(nostack, preserves_flags));
+                    asm!(concat!("mov {}, ", $name), out(reg) addr, options(nomem, nostack, preserves_flags));
                 }
                 VirtAddr::new(addr)
             }
@@ -45,7 +45,7 @@ macro_rules! debug_address_register {
             #[inline]
             fn write(addr: VirtAddr) {
                 unsafe {
-                    asm!(concat!("mov ", $name, ", {}"), in(reg) addr.as_u64(), options(nostack, preserves_flags));
+                    asm!(concat!("mov ", $name, ", {}"), in(reg) addr.as_u64(), options(nomem, nostack, preserves_flags));
                 }
             }
         }
@@ -472,7 +472,7 @@ mod x86_64 {
             let value;
 
             unsafe {
-                asm!("mov {}, dr6", out(reg) value, options(nostack, preserves_flags));
+                asm!("mov {}, dr6", out(reg) value, options(nomem, nostack, preserves_flags));
             }
 
             value
@@ -492,7 +492,7 @@ mod x86_64 {
             let value;
 
             unsafe {
-                asm!("mov {}, dr7", out(reg) value, options(nostack, preserves_flags));
+                asm!("mov {}, dr7", out(reg) value, options(nomem, nostack, preserves_flags));
             }
 
             value
@@ -514,7 +514,7 @@ mod x86_64 {
         #[inline]
         pub fn write_raw(value: u64) {
             unsafe {
-                asm!("mov dr7, {}", in(reg) value, options(nostack, preserves_flags));
+                asm!("mov dr7, {}", in(reg) value, options(nomem, nostack, preserves_flags));
             }
         }
     }
