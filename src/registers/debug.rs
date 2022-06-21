@@ -56,29 +56,40 @@ debug_address_register!(Dr3, "dr3");
 /// A valid debug address register number.
 ///
 /// Must be between 0 and 3 (inclusive).
-pub struct DebugAddressRegisterNumber(u8);
+pub enum DebugAddressRegisterNumber {
+    /// The debug address register number of [`Dr0`] (0).
+    Dr0,
+
+    /// The debug address register number of [`Dr1`] (1).
+    Dr1,
+
+    /// The debug address register number of [`Dr2`] (2).
+    Dr2,
+
+    /// The debug address register number of [`Dr3`] (3).
+    Dr3,
+}
 
 impl DebugAddressRegisterNumber {
-    /// Creates a debug address register number without checking the value.
-    ///
-    /// # Safety
-    ///
-    /// The value must be between 0 and 3 (inclusive).
-    pub const unsafe fn new_unchecked(n: u8) -> Self {
-        Self(n)
-    }
-
     /// Creates a debug address register number if it is valid.
     pub const fn new(n: u8) -> Option<Self> {
         match n {
-            0..=3 => Some(Self(n)),
+            0 => Some(Self::Dr0),
+            1 => Some(Self::Dr1),
+            2 => Some(Self::Dr2),
+            3 => Some(Self::Dr3),
             _ => None,
         }
     }
 
     /// Returns the number as a primitive type.
     pub const fn get(self) -> u8 {
-        self.0
+        match self {
+            Self::Dr0 => 0,
+            Self::Dr1 => 1,
+            Self::Dr2 => 2,
+            Self::Dr3 => 3,
+        }
     }
 }
 
@@ -132,12 +143,11 @@ bitflags! {
 impl Dr6Flags {
     /// Returns the trap flag of the provided debug address register.
     pub fn trap(n: DebugAddressRegisterNumber) -> Self {
-        match n.0 {
-            0 => Self::TRAP0,
-            1 => Self::TRAP1,
-            2 => Self::TRAP2,
-            3 => Self::TRAP3,
-            _ => unreachable!(),
+        match n {
+            DebugAddressRegisterNumber::Dr0 => Self::TRAP0,
+            DebugAddressRegisterNumber::Dr1 => Self::TRAP1,
+            DebugAddressRegisterNumber::Dr2 => Self::TRAP2,
+            DebugAddressRegisterNumber::Dr3 => Self::TRAP3,
         }
     }
 }
@@ -195,23 +205,21 @@ bitflags! {
 impl Dr7Flags {
     /// Returns the local breakpoint enable flag of the provided debug address register.
     pub fn local_breakpoint_enable(n: DebugAddressRegisterNumber) -> Self {
-        match n.0 {
-            0 => Self::LOCAL_BREAKPOINT_0_ENABLE,
-            1 => Self::LOCAL_BREAKPOINT_1_ENABLE,
-            2 => Self::LOCAL_BREAKPOINT_2_ENABLE,
-            3 => Self::LOCAL_BREAKPOINT_3_ENABLE,
-            _ => unreachable!(),
+        match n {
+            DebugAddressRegisterNumber::Dr0 => Self::LOCAL_BREAKPOINT_0_ENABLE,
+            DebugAddressRegisterNumber::Dr1 => Self::LOCAL_BREAKPOINT_1_ENABLE,
+            DebugAddressRegisterNumber::Dr2 => Self::LOCAL_BREAKPOINT_2_ENABLE,
+            DebugAddressRegisterNumber::Dr3 => Self::LOCAL_BREAKPOINT_3_ENABLE,
         }
     }
 
     /// Returns the global breakpoint enable flag of the provided debug address register.
     pub fn global_breakpoint_enable(n: DebugAddressRegisterNumber) -> Self {
-        match n.0 {
-            0 => Self::GLOBAL_BREAKPOINT_0_ENABLE,
-            1 => Self::GLOBAL_BREAKPOINT_1_ENABLE,
-            2 => Self::GLOBAL_BREAKPOINT_2_ENABLE,
-            3 => Self::GLOBAL_BREAKPOINT_3_ENABLE,
-            _ => unreachable!(),
+        match n {
+            DebugAddressRegisterNumber::Dr0 => Self::GLOBAL_BREAKPOINT_0_ENABLE,
+            DebugAddressRegisterNumber::Dr1 => Self::GLOBAL_BREAKPOINT_1_ENABLE,
+            DebugAddressRegisterNumber::Dr2 => Self::GLOBAL_BREAKPOINT_2_ENABLE,
+            DebugAddressRegisterNumber::Dr3 => Self::GLOBAL_BREAKPOINT_3_ENABLE,
         }
     }
 }
@@ -246,7 +254,7 @@ impl HwBreakpointCondition {
     }
 
     const fn bit_range(n: DebugAddressRegisterNumber) -> Range<usize> {
-        let lsb = (16 + 4 * n.0) as usize;
+        let lsb = (16 + 4 * n.get()) as usize;
         lsb..lsb + 2
     }
 }
@@ -292,7 +300,7 @@ impl HwBreakpointSize {
     }
 
     const fn bit_range(n: DebugAddressRegisterNumber) -> Range<usize> {
-        let lsb = (18 + 4 * n.0) as usize;
+        let lsb = (18 + 4 * n.get()) as usize;
         lsb..lsb + 2
     }
 }
