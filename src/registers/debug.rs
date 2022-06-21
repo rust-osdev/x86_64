@@ -418,7 +418,7 @@ impl Dr7Value {
     }
 
     /// Returns the condition field of a debug address register.
-    pub fn get_condition(&self, n: DebugAddressRegisterNumber) -> HwBreakpointCondition {
+    pub fn condition(&self, n: DebugAddressRegisterNumber) -> HwBreakpointCondition {
         let condition = self.bits.get_bits(HwBreakpointCondition::bit_range(n));
         HwBreakpointCondition::from_bits(condition).expect("condition should be always valid")
     }
@@ -434,7 +434,7 @@ impl Dr7Value {
     }
 
     /// Returns the size field of a debug address register.
-    pub fn get_size(&self, n: DebugAddressRegisterNumber) -> HwBreakpointSize {
+    pub fn size(&self, n: DebugAddressRegisterNumber) -> HwBreakpointSize {
         let size = self.bits.get_bits(HwBreakpointSize::bit_range(n));
         HwBreakpointSize::from_bits(size).expect("condition should be always valid")
     }
