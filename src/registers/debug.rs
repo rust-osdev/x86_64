@@ -53,7 +53,6 @@ debug_address_register!(Dr2, "dr2");
 debug_address_register!(Dr3, "dr3");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(transparent)]
 /// A valid debug address register number.
 ///
 /// Must be between 0 and 3 (inclusive).
