@@ -433,7 +433,6 @@ pub struct Dr7;
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
-    use core::arch::asm;
 
     impl Dr6 {
         /// Read the current set of DR6 flags.
