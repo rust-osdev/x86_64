@@ -11,10 +11,15 @@ use bitflags::bitflags;
 ///
 /// Holds the address of a hardware breakpoint.
 pub trait DebugAddressRegister {
+    /// The corresponding [`DebugAddressRegisterNumber`].
+    const NUM: DebugAddressRegisterNumber;
+
     /// Reads the current breakpoint address.
+    #[cfg(feature = "instructions")]
     fn read() -> u64;
 
     /// Writes the provided breakpoint address.
+    #[cfg(feature = "instructions")]
     fn write(addr: u64);
 }
 
@@ -26,8 +31,10 @@ macro_rules! debug_address_register {
         #[derive(Debug)]
         pub struct $Dr;
 
-        #[cfg(feature = "instructions")]
         impl DebugAddressRegister for $Dr {
+            const NUM: DebugAddressRegisterNumber = DebugAddressRegisterNumber::$Dr;
+
+            #[cfg(feature = "instructions")]
             #[inline]
             fn read() -> u64 {
                 let addr;
@@ -37,6 +44,7 @@ macro_rules! debug_address_register {
                 addr
             }
 
+            #[cfg(feature = "instructions")]
             #[inline]
             fn write(addr: u64) {
                 unsafe {
