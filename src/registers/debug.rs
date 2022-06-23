@@ -235,7 +235,7 @@ impl Dr7Flags {
 /// The condition for a hardware breakpoint.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-pub enum HwBreakpointCondition {
+pub enum BreakpointCondition {
     /// Instruction execution
     InstructionExecution = 0b00,
 
@@ -249,7 +249,7 @@ pub enum HwBreakpointCondition {
     DataReadsWrites = 0b11,
 }
 
-impl HwBreakpointCondition {
+impl BreakpointCondition {
     /// Creates a new hardware breakpoint condition if `bits` is valid.
     pub const fn from_bits(bits: u64) -> Option<Self> {
         match bits {
@@ -270,7 +270,7 @@ impl HwBreakpointCondition {
 /// The size of a hardware breakpoint.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-pub enum HwBreakpointSize {
+pub enum BreakpointSize {
     /// 1 byte length
     Length1B = 0b00,
 
@@ -284,7 +284,7 @@ pub enum HwBreakpointSize {
     Length4B = 0b11,
 }
 
-impl HwBreakpointSize {
+impl BreakpointSize {
     /// Creates a new hardware breakpoint size if `size` is valid.
     pub const fn new(size: usize) -> Option<Self> {
         match size {
@@ -404,31 +404,27 @@ impl Dr7Value {
     }
 
     /// Returns the condition field of a debug address register.
-    pub fn condition(&self, n: DebugAddressRegisterNumber) -> HwBreakpointCondition {
-        let condition = self.bits.get_bits(HwBreakpointCondition::bit_range(n));
-        HwBreakpointCondition::from_bits(condition).expect("condition should be always valid")
+    pub fn condition(&self, n: DebugAddressRegisterNumber) -> BreakpointCondition {
+        let condition = self.bits.get_bits(BreakpointCondition::bit_range(n));
+        BreakpointCondition::from_bits(condition).expect("condition should be always valid")
     }
 
     /// Sets the condition field of a debug address register.
-    pub fn set_condition(
-        &mut self,
-        n: DebugAddressRegisterNumber,
-        condition: HwBreakpointCondition,
-    ) {
+    pub fn set_condition(&mut self, n: DebugAddressRegisterNumber, condition: BreakpointCondition) {
         self.bits
-            .set_bits(HwBreakpointCondition::bit_range(n), condition as u64);
+            .set_bits(BreakpointCondition::bit_range(n), condition as u64);
     }
 
     /// Returns the size field of a debug address register.
-    pub fn size(&self, n: DebugAddressRegisterNumber) -> HwBreakpointSize {
-        let size = self.bits.get_bits(HwBreakpointSize::bit_range(n));
-        HwBreakpointSize::from_bits(size).expect("condition should be always valid")
+    pub fn size(&self, n: DebugAddressRegisterNumber) -> BreakpointSize {
+        let size = self.bits.get_bits(BreakpointSize::bit_range(n));
+        BreakpointSize::from_bits(size).expect("condition should be always valid")
     }
 
     /// Sets the size field of a debug address register.
-    pub fn set_size(&mut self, n: DebugAddressRegisterNumber, size: HwBreakpointSize) {
+    pub fn set_size(&mut self, n: DebugAddressRegisterNumber, size: BreakpointSize) {
         self.bits
-            .set_bits(HwBreakpointSize::bit_range(n), size as u64);
+            .set_bits(BreakpointSize::bit_range(n), size as u64);
     }
 }
 
