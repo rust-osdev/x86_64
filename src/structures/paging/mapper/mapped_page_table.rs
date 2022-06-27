@@ -20,13 +20,13 @@ pub struct MappedPageTable<'a, P: PageTableFrameMapping> {
 }
 
 impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
-    /// Creates a new `MappedPageTable` that uses the passed closure for converting virtual
+    /// Creates a new `MappedPageTable` that uses the passed `PageTableFrameMapping` for converting virtual
     /// to physical addresses.
     ///
     /// ## Safety
     ///
     /// This function is unsafe because the caller must guarantee that the passed `page_table_frame_mapping`
-    /// closure is correct. Also, the passed `level_4_table` must point to the level 4 page table
+    /// `PageTableFrameMapping` is correct. Also, the passed `level_4_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
     #[inline]
