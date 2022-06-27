@@ -42,6 +42,11 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         &mut self.level_4_table
     }
 
+    /// Returns the `PageTableFrameMapping` used for converting virtual to physical addresses.
+    pub fn page_table_frame_mapping(&self) -> &P {
+        &self.page_table_walker.page_table_frame_mapping
+    }
+
     /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
     /// https://github.com/rust-lang/rfcs/pull/2585.
     fn map_to_1gib<A>(
