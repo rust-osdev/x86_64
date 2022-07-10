@@ -1,5 +1,24 @@
 # Unreleased
 
+# 0.14.10 – 2022-07-10
+
+## New Features
+
+- [Add `registers::debug`](https://github.com/rust-osdev/x86_64/pull/286)
+- [Provide null segment selector as associated constant on `SegmentSelector`](https://github.com/rust-osdev/x86_64/pull/373)
+- [Add getters for the page table frame mapping](https://github.com/rust-osdev/x86_64/pull/385)
+
+## Fixes
+
+- [Fix align functions](https://github.com/rust-osdev/x86_64/pull/375)
+- [Correct wrong comment](https://github.com/rust-osdev/x86_64/pull/374)
+
+## Other Improvements
+
+- [Cleanup Segment macros](https://github.com/rust-osdev/x86_64/pull/376)
+- [Update comment and docs](https://github.com/rust-osdev/x86_64/pull/382)
+
+
 # 0.14.9 - 2022-03-31
 
 ## New Features
