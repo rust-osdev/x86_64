@@ -9,15 +9,8 @@ authors = [
 ]
 description = "Support for x86_64 specific instructions, registers, and structures."
 documentation = "https://docs.rs/x86_64"
-keywords = [
-    "amd64",
-    "x86",
-    "x86_64",
-    "no_std",
-]
-categories = [
-    "no-std",
-]
+keywords = ["amd64", "x86", "x86_64", "no_std"]
+categories = ["no-std"]
 license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
@@ -33,9 +26,9 @@ volatile = "0.4.4"
 rustversion = "1.0.5"
 
 [features]
-default = [ "nightly", "instructions" ]
+default = ["nightly", "instructions"]
 instructions = []
-nightly = [ "const_fn", "step_trait", "abi_x86_interrupt", "doc_cfg" ]
+nightly = ["const_fn", "step_trait", "abi_x86_interrupt", "doc_cfg"]
 abi_x86_interrupt = []
 const_fn = []
 step_trait = []
