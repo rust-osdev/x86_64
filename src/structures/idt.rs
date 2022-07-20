@@ -340,8 +340,20 @@ pub struct InterruptDescriptorTable {
     /// vector nr. 20
     pub virtualization: Entry<HandlerFunc>,
 
-    /// vector nr. 21-27
-    reserved_2: [Entry<HandlerFunc>; 7],
+    /// A #CP exception is generated when shadow stacks are enabled and mismatch
+    /// scenarios are detected (possible error code cases below).
+    ///
+    /// The error code is the #CP error code, for each of the following situations:
+    /// - A RET (near) instruction encountered a return address mismatch.
+    /// - A RET (far) instruction encountered a return address mismatch.
+    /// - A RSTORSSP instruction encountered an invalid shadow stack restore token.
+    /// - A SETSSBY instruction encountered an invalid supervisor shadow stack token.
+    ///
+    /// vector nr. 21
+    pub cp_protection_exception: Entry<HandlerFuncWithErrorCode>,
+
+    /// vector nr. 22-27
+    reserved_2: [Entry<HandlerFunc>; 6],
 
     /// The Hypervisor Injection Exception (`#HV`) is injected by a hypervisor
     /// as a doorbell to inform an `SEV-SNP` enabled guest running with the
@@ -453,7 +465,8 @@ impl InterruptDescriptorTable {
             machine_check: Entry::missing(),
             simd_floating_point: Entry::missing(),
             virtualization: Entry::missing(),
-            reserved_2: [Entry::missing(); 7],
+            cp_protection_exception: Entry::missing(),
+            reserved_2: [Entry::missing(); 6],
             hv_injection_exception: Entry::missing(),
             vmm_communication_exception: Entry::missing(),
             security_exception: Entry::missing(),
