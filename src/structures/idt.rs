@@ -589,7 +589,7 @@ impl Index<usize> for InterruptDescriptorTable {
             20 => &self.virtualization,
             28 => &self.hv_injection_exception,
             i @ 32..=255 => &self.interrupts[i - 32],
-            i @ 15 | i @ 31 | i @ 21..=27 => panic!("entry {} is reserved", i),
+            i @ 15 | i @ 31 | i @ 22..=27 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 21 | i @ 29 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
@@ -621,7 +621,7 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             20 => &mut self.virtualization,
             28 => &mut self.hv_injection_exception,
             i @ 32..=255 => &mut self.interrupts[i - 32],
-            i @ 15 | i @ 31 | i @ 21..=27 => panic!("entry {} is reserved", i),
+            i @ 15 | i @ 31 | i @ 22..=27 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 21 | i @ 29 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
