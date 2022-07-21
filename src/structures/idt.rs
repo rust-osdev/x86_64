@@ -1388,7 +1388,9 @@ mod test {
             15 => &idt.reserved_1.options,
             17 => &idt.alignment_check.options,
             18 => &idt.machine_check.options,
-            i @ 21..=28 => &idt.reserved_2[i - 21].options,
+            21 => &idt.cp_protection_exception.options,
+            i @ 22..=27 => &idt.reserved_2[i - 22].options,
+            28 => &idt.hv_injection_exception.options,
             29 => &idt.vmm_communication_exception.options,
             30 => &idt.security_exception.options,
             31 => &idt.reserved_3.options,
@@ -1444,7 +1446,7 @@ mod test {
         }
         set_general_handler!(&mut idt, general_handler);
         for i in 0..256 {
-            if i == 15 || i == 31 || (21..=28).contains(&i) {
+            if i == 15 || i == 31 || (22..=27).contains(&i) {
                 // reserved entries should not be set
                 assert!(!entry_present(&idt, i));
             } else {
