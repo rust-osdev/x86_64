@@ -350,7 +350,7 @@ pub struct InterruptDescriptorTable {
     /// - A SETSSBY instruction encountered an invalid supervisor shadow stack token.
     ///
     /// vector nr. 21
-    pub cp_protection_exception: Entry<HandlerFuncWithErrorCode>,
+    pub cp_protection_exception: Entry<HandlerFuncWithErrCode>,
 
     /// vector nr. 22-27
     reserved_2: [Entry<HandlerFunc>; 6],
