@@ -348,6 +348,7 @@ pub struct InterruptDescriptorTable {
     /// - A RET (far) instruction encountered a return address mismatch.
     /// - A RSTORSSP instruction encountered an invalid shadow stack restore token.
     /// - A SETSSBY instruction encountered an invalid supervisor shadow stack token.
+    /// - A missing ENDBRANCH instruction if indirect branch tracking is enabled.
     ///
     /// vector nr. 21
     pub cp_protection_exception: Entry<HandlerFuncWithErrCode>,
