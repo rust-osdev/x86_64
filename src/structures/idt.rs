@@ -1323,6 +1323,15 @@ macro_rules! set_general_handler_entry {
         }
         $idt.machine_check.set_handler_fn(handler);
     }};
+    ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 0, 1) => {{
+        extern "x86-interrupt" fn handler(
+            frame: $crate::structures::idt::InterruptStackFrame,
+            error_code: u64,
+        ) {
+            $handler(frame, $idx.into(), Some(error_code));
+        }
+        $idt.cp_protection_exception.set_handler_fn(handler);
+    }};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 0, 1) => {
         extern "x86-interrupt" fn handler(
             frame: $crate::structures::idt::InterruptStackFrame,
@@ -1345,14 +1354,12 @@ macro_rules! set_general_handler_entry {
     // reserved_1
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 0, 1, 1, 1, 1) => {};
     // reserved_2
-    ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 0, 1) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 1, 0) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 1, 1, 1) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 0, 0, 0) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 0, 0, 1) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 0, 1, 0) => {};
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 0, 1, 1) => {};
-    ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 0, 0) => {};
     // reserved_3
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 1, 1, 1, 1) => {};
 
