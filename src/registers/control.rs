@@ -190,7 +190,6 @@ mod x86_64 {
         pub fn read_raw() -> u64 {
             let value: u64;
 
-            #[cfg(feature = "inline_asm")]
             unsafe {
                 asm!("mov {}, cr8", out(reg) value, options(nomem, nostack, preserves_flags));
             }
@@ -207,7 +206,6 @@ mod x86_64 {
         /// Could mask important external interrupts
         #[inline]
         pub unsafe fn write_raw(value: u64) {
-            #[cfg(feature = "inline_asm")]
             asm!("mov cr8, {}", in(reg) value, options(nostack, preserves_flags));
         }
 
