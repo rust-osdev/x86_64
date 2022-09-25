@@ -11,6 +11,56 @@ on:
   pull_request:
 
 jobs:
+  stable:
+    name: "Test MSRV and Stable Features"
+    strategy:
+      matrix:
+        rust:
+          - nightly
+          - 1.59
+          - 1.57
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust }}
+        override: true
+    - name: Run cargo build for stable
+      if: matrix.rust != 1.57
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --no-default-features --features instructions
+    - name: Run cargo build for stable without instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --no-default-features
+    - name: Run cargo doc for stable
+      if: matrix.rust != 1.57
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --no-default-features --features instructions
+    - name: Run cargo doc for stable without instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --no-default-features
+    - name: Run cargo test for stable
+      if: matrix.rust != 1.57
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --no-default-features --features instructions
+    - name: Run cargo test for stable without instructions
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --no-default-features
+
   test:
     name: "Test"
 
@@ -27,38 +77,18 @@ jobs:
     timeout-minutes: 15
 
     steps:
-    - name: "Checkout Repository"
-      uses: actions/checkout@v1
-
-    - name: Install Rustup
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      if: runner.os == 'macOS'
-
-    - name: Set Rustup profile to minimal
-      run: rustup set profile minimal
-
-    - name: Install musl target on Linux
-      run: |
-        rustup target add x86_64-unknown-linux-musl
-        sudo apt-get install musl-tools musl-dev
-      if: runner.os == 'Linux'
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
+        target: x86_64-unknown-linux-musl
 
     - name: "Print Rust Version"
       run: |
         rustc -Vv
         cargo -Vv
-
-    - name: Cache binaries
-      id: cache-bin
-      uses: actions/cache@v1
-      with:
-        path: binaries
-        key: ${{ runner.OS }}-binaries
-    - name: Add binaries/bin to PATH
-      run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
-      shell: bash
 
     - name: "Run cargo build"
       uses: actions-rs/cargo@v1
@@ -70,37 +100,11 @@ jobs:
       with:
         command: doc
 
-    - name: "Run cargo doc for stable"
-      uses: actions-rs/cargo@v1
-      with:
-        command: doc
-        args: --no-default-features --features external_asm,instructions
-      if: runner.os != 'Windows'
-
-    - name: "Run cargo doc without default features"
-      uses: actions-rs/cargo@v1
-      with:
-        command: doc
-        args: --no-default-features
-
-    - name: "Run cargo build for stable without instructions"
+    - name: "Run cargo build on musl"
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --no-default-features
-
-    - name: "Run cargo build for stable"
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --no-default-features --features external_asm,instructions
-      if: runner.os != 'Windows'
-
-    - name: "Run cargo build for stable on musl"
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+        args: --target x86_64-unknown-linux-musl
       if: runner.os == 'Linux'
 
     - name: "Run cargo test"
@@ -108,18 +112,11 @@ jobs:
       with:
         command: test
 
-    - name: "Run cargo test for stable"
+    - name: "Run cargo test on musl"
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --no-default-features --features external_asm,instructions
-      if: runner.os != 'Windows'
-
-    - name: "Run cargo test for stable on musl"
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --target x86_64-unknown-linux-musl --no-default-features --features external_asm,instructions
+        args: --target x86_64-unknown-linux-musl
       if: runner.os == 'Linux'
 
     - name: "Install Rustup Targets"
@@ -131,8 +128,42 @@ jobs:
         cargo build --target i686-unknown-linux-gnu --no-default-features --features nightly
         cargo build --target thumbv7em-none-eabihf --no-default-features --features nightly
 
+  bootloader-test:
+    name: "Bootloader Integration Test"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [
+          ubuntu-latest,
+          macos-latest,
+          windows-latest
+        ]
+
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 15
+
+    steps:
+    - name: "Checkout Repository"
+      uses: actions/checkout@v3
+
+    - name: Cache binaries
+      id: cache-bin
+      uses: actions/cache@v3
+      with:
+        path: binaries
+        key: ${{ runner.OS }}-binaries
+    - name: Add binaries/bin to PATH
+      run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
+      shell: bash
+
     - name: "Install Rustup Components"
-      run: rustup component add rust-src llvm-tools-preview
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        profile: minimal
+        components: rust-src, llvm-tools-preview
     - name: "Install cargo-xbuild"
       run: cargo install cargo-xbuild --debug --root binaries
     - name: "Install bootimage"
@@ -170,18 +201,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-    - uses: actions/checkout@v1
-    - run: rustup toolchain install nightly --profile minimal --component rustfmt
-    - run: cargo +nightly fmt -- --check
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        profile: minimal
+        components: rustfmt
+    - uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
 
   clippy:
     name: "Clippy"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v1
-    - run: rustup toolchain install nightly --profile minimal --component clippy
-    - name: "Run `cargo clippy`"
-      uses: actions-rs/cargo@v1
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        profile: minimal
+        components: clippy
+    - uses: actions-rs/cargo@v1
       with:
         command: clippy

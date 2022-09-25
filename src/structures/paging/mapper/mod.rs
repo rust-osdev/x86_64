@@ -192,7 +192,9 @@ pub trait Mapper<S: PageSize> {
                 | PageTableFlags::WRITABLE
                 | PageTableFlags::USER_ACCESSIBLE);
 
-        self.map_to_with_table_flags(page, frame, flags, parent_table_flags, frame_allocator)
+        unsafe {
+            self.map_to_with_table_flags(page, frame, flags, parent_table_flags, frame_allocator)
+        }
     }
 
     /// Creates a new mapping in the page table.
@@ -368,7 +370,7 @@ pub trait Mapper<S: PageSize> {
         Self: Mapper<S>,
     {
         let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
-        self.map_to(page, frame, flags, frame_allocator)
+        unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
 }
 
@@ -500,9 +502,9 @@ pub trait CleanUp {
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, MappedPageTable, mapper::{RecursivePageTable, CleanUp}, page::{Page, PageRangeInclusive},
+    /// #    FrameDeallocator, Size4KiB, mapper::CleanUp, page::Page,
     /// # }};
-    /// # unsafe fn test(page_table: &mut RecursivePageTable, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
     /// // clean up all page tables in the lower half of the address space
     /// let lower_half = Page::range_inclusive(
     ///     Page::containing_address(VirtAddr::new(0)),

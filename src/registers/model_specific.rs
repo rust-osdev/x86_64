@@ -67,6 +67,13 @@ impl Syscfg {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC001_0010);
 }
+/// IA32_U_CET: user mode CET configuration
+#[derive(Debug)]
+pub struct UCet;
+
+/// IA32_S_CET: supervisor mode CET configuration
+#[derive(Debug)]
+pub struct SCet;
 
 impl Efer {
     /// The underlying model specific register.
@@ -106,6 +113,16 @@ impl CStar {
 impl SFMask {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0084);
+}
+
+impl UCet {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0x6A0);
+}
+
+impl SCet {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0x6A2);
 }
 
 bitflags! {
@@ -152,12 +169,37 @@ bitflags! {
     }
 }
 
+bitflags! {
+    /// Flags stored in IA32_U_CET and IA32_S_CET (Table-2-2 in Intel SDM Volume
+    /// 4). The Intel SDM-equivalent names are described in parentheses.
+    pub struct CetFlags: u64 {
+        /// Enable shadow stack (SH_STK_EN)
+        const SS_ENABLE = 1 << 0;
+        /// Enable WRSS{D,Q}W instructions (WR_SHTK_EN)
+        const SS_WRITE_ENABLE = 1 << 1;
+        /// Enable indirect branch tracking (ENDBR_EN)
+        const IBT_ENABLE = 1 << 2;
+        /// Enable legacy treatment for indirect branch tracking (LEG_IW_EN)
+        const IBT_LEGACY_ENABLE = 1 << 3;
+        /// Enable no-track opcode prefix for indirect branch tracking (NO_TRACK_EN)
+        const IBT_NO_TRACK_ENABLE = 1 << 4;
+        /// Disable suppression of CET on legacy compatibility (SUPPRESS_DIS)
+        const IBT_LEGACY_SUPPRESS_ENABLE = 1 << 5;
+        /// Enable suppression of indirect branch tracking (SUPPRESS)
+        const IBT_SUPPRESS_ENABLE = 1 << 10;
+        /// Is IBT waiting for a branch to return? (read-only, TRACKER)
+        const IBT_TRACKED = 1 << 11;
+    }
+}
+
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
     use crate::addr::VirtAddr;
     use crate::registers::rflags::RFlags;
     use crate::structures::gdt::SegmentSelector;
+    use crate::structures::paging::Page;
+    use crate::structures::paging::Size4KiB;
     use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
@@ -167,6 +209,7 @@ mod x86_64 {
         control::Cr4Flags,
         segmentation::{Segment, Segment64, CS, SS},
     };
+    use core::arch::asm;
 
     impl Msr {
         /// Read 64 bits msr register.
@@ -177,20 +220,16 @@ mod x86_64 {
         /// effects.
         #[inline]
         pub unsafe fn read(&self) -> u64 {
-            #[cfg(feature = "inline_asm")]
-            {
-                let (high, low): (u32, u32);
+            let (high, low): (u32, u32);
+            unsafe {
                 asm!(
                     "rdmsr",
                     in("ecx") self.0,
                     out("eax") low, out("edx") high,
                     options(nomem, nostack, preserves_flags),
                 );
-                ((high as u64) << 32) | (low as u64)
             }
-
-            #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_rdmsr(self.0)
+            ((high as u64) << 32) | (low as u64)
         }
 
         /// Write 64 bits to msr register.
@@ -204,16 +243,14 @@ mod x86_64 {
             let low = value as u32;
             let high = (value >> 32) as u32;
 
-            #[cfg(feature = "inline_asm")]
-            asm!(
-                "wrmsr",
-                in("ecx") self.0,
-                in("eax") low, in("edx") high,
-                options(nostack, preserves_flags),
-            );
-
-            #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_wrmsr(self.0, low, high);
+            unsafe {
+                asm!(
+                    "wrmsr",
+                    in("ecx") self.0,
+                    in("eax") low, in("edx") high,
+                    options(nostack, preserves_flags),
+                );
+            }
         }
     }
 
@@ -307,7 +344,9 @@ mod x86_64 {
             let reserved = old_value & !(EferFlags::all().bits());
             let new_value = reserved | flags.bits();
 
-            Self::write_raw(new_value);
+            unsafe {
+                Self::write_raw(new_value);
+            }
         }
 
         /// Write the EFER flags.
@@ -321,7 +360,9 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_raw(flags: u64) {
             let mut msr = Self::MSR;
-            msr.write(flags);
+            unsafe {
+                msr.write(flags);
+            }
         }
 
         /// Update EFER flags.
@@ -339,7 +380,9 @@ mod x86_64 {
         {
             let mut flags = Self::read();
             f(&mut flags);
-            Self::write(flags);
+            unsafe {
+                Self::write(flags);
+            }
         }
     }
 
@@ -464,7 +507,9 @@ mod x86_64 {
             msr_value.set_bits(48..64, sysret.into());
             msr_value.set_bits(32..48, syscall.into());
             let mut msr = Self::MSR;
-            msr.write(msr_value);
+            unsafe {
+                msr.write(msr_value);
+            }
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.
@@ -560,6 +605,76 @@ mod x86_64 {
         pub fn write(value: RFlags) {
             let mut msr = Self::MSR;
             unsafe { msr.write(value.bits()) };
+        }
+    }
+
+    impl UCet {
+        /// Read the raw IA32_U_CET.
+        #[inline]
+        fn read_raw() -> u64 {
+            unsafe { Self::MSR.read() }
+        }
+
+        /// Write the raw IA32_U_CET.
+        #[inline]
+        fn write_raw(value: u64) {
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(value);
+            }
+        }
+
+        /// Read IA32_U_CET. Returns a tuple of the flags and the address to the legacy code page bitmap.
+        #[inline]
+        pub fn read() -> (CetFlags, Page) {
+            let value = Self::read_raw();
+            let cet_flags = CetFlags::from_bits_truncate(value);
+            let legacy_bitmap =
+                Page::from_start_address(VirtAddr::new(value & !(Page::<Size4KiB>::SIZE - 1)))
+                    .unwrap();
+
+            (cet_flags, legacy_bitmap)
+        }
+
+        /// Write IA32_U_CET.
+        #[inline]
+        pub fn write(flags: CetFlags, legacy_bitmap: Page) {
+            Self::write_raw(flags.bits() | legacy_bitmap.start_address().as_u64());
+        }
+    }
+
+    impl SCet {
+        /// Read the raw IA32_S_CET.
+        #[inline]
+        fn read_raw() -> u64 {
+            unsafe { Self::MSR.read() }
+        }
+
+        /// Write the raw IA32_S_CET.
+        #[inline]
+        fn write_raw(value: u64) {
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(value);
+            }
+        }
+
+        /// Read IA32_S_CET. Returns a tuple of the flags and the address to the legacy code page bitmap.
+        #[inline]
+        pub fn read() -> (CetFlags, Page) {
+            let value = Self::read_raw();
+            let cet_flags = CetFlags::from_bits_truncate(value);
+            let legacy_bitmap =
+                Page::from_start_address(VirtAddr::new(value & !(Page::<Size4KiB>::SIZE - 1)))
+                    .unwrap();
+
+            (cet_flags, legacy_bitmap)
+        }
+
+        /// Write IA32_S_CET.
+        #[inline]
+        pub fn write(flags: CetFlags, legacy_bitmap: Page) {
+            Self::write_raw(flags.bits() | legacy_bitmap.start_address().as_u64());
         }
     }
 }

@@ -334,8 +334,6 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    // allow unused_unsafe until https://github.com/rust-lang/rfcs/pull/2585 lands
-    #[allow(unused_unsafe)]
     unsafe fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
@@ -462,8 +460,6 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    // allow unused_unsafe until https://github.com/rust-lang/rfcs/pull/2585 lands
-    #[allow(unused_unsafe)]
     unsafe fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
@@ -521,7 +517,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
             return Err(FlagUpdateError::PageNotMapped);
         }
 
-        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &mut p3[page.p3_index()];
 
         if p3_entry.is_unused() {
@@ -620,8 +616,6 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
         Ok((frame, MapperFlush::new(page)))
     }
 
-    // allow unused_unsafe until https://github.com/rust-lang/rfcs/pull/2585 lands
-    #[allow(unused_unsafe)]
     unsafe fn update_flags(
         &mut self,
         page: Page<Size4KiB>,
@@ -684,7 +678,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
             return Err(FlagUpdateError::PageNotMapped);
         }
 
-        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &mut p3[page.p3_index()];
 
         if p3_entry.is_unused() {
@@ -707,13 +701,13 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
             return Err(FlagUpdateError::PageNotMapped);
         }
 
-        let p3 = &mut *(p3_ptr(page, self.recursive_index));
+        let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
 
         if p3[page.p3_index()].is_unused() {
             return Err(FlagUpdateError::PageNotMapped);
         }
 
-        let p2 = &mut *(p2_ptr(page, self.recursive_index));
+        let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &mut p2[page.p2_index()];
 
         if p2_entry.is_unused() {
@@ -835,13 +829,15 @@ impl<'a> CleanUp for RecursivePageTable<'a> {
     where
         D: FrameDeallocator<Size4KiB>,
     {
-        self.clean_up_addr_range(
-            PageRangeInclusive {
-                start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
-                end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
-            },
-            frame_deallocator,
-        )
+        unsafe {
+            self.clean_up_addr_range(
+                PageRangeInclusive {
+                    start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
+                    end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+                },
+                frame_deallocator,
+            )
+        }
     }
 
     unsafe fn clean_up_addr_range<D>(

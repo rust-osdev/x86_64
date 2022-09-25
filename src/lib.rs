@@ -3,62 +3,14 @@
 
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(feature = "const_fn", feature(const_mut_refs))] // GDT add_entry()
-#![cfg_attr(feature = "const_fn", feature(const_fn_fn_ptr_basics))] // IDT new()
-#![cfg_attr(feature = "const_fn", feature(const_fn_trait_bound))] // PageSize marker trait
-#![cfg_attr(feature = "inline_asm", feature(asm))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
+#![cfg_attr(feature = "step_trait", feature(step_trait))]
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
+#![deny(unsafe_op_in_unsafe_fn)]
 
 pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
-
-/// Makes a function const only when `feature = "const_fn"` is enabled.
-///
-/// This is needed for const functions with bounds on their generic parameters,
-/// such as those in `Page` and `PhysFrame` and many more.
-macro_rules! const_fn {
-    (
-        $(#[$attr:meta])*
-        $sv:vis fn $($fn:tt)*
-    ) => {
-        $(#[$attr])*
-        #[cfg(feature = "const_fn")]
-        $sv const fn $($fn)*
-
-        $(#[$attr])*
-        #[cfg(not(feature = "const_fn"))]
-        $sv fn $($fn)*
-    };
-    (
-        $(#[$attr:meta])*
-        $sv:vis unsafe fn $($fn:tt)*
-    ) => {
-        $(#[$attr])*
-        #[cfg(feature = "const_fn")]
-        $sv const unsafe fn $($fn)*
-
-        $(#[$attr])*
-        #[cfg(not(feature = "const_fn"))]
-        $sv unsafe fn $($fn)*
-    };
-}
-
-// Helper method for assert! in const fn. Uses out of bounds indexing if an
-// assertion fails and the "const_fn" feature is not enabled.
-#[cfg(feature = "const_fn")]
-macro_rules! const_assert {
-    ($cond:expr, $($arg:tt)+) => { assert!($cond, $($arg)*) };
-}
-#[cfg(not(feature = "const_fn"))]
-macro_rules! const_assert {
-    ($cond:expr, $($arg:tt)+) => {
-        [(); 1][!($cond as bool) as usize]
-    };
-}
-
-#[cfg(all(feature = "instructions", feature = "external_asm"))]
-pub(crate) mod asm;
 
 pub mod addr;
 pub mod instructions;
@@ -66,7 +18,7 @@ pub mod registers;
 pub mod structures;
 
 /// Represents a protection ring level.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum PrivilegeLevel {
     /// Privilege-level 0 (most privilege): This level is used by critical system-software

@@ -1,5 +1,74 @@
 # Unreleased
 
+# 0.14.10 – 2022-07-10
+
+## New Features
+
+- [Add `registers::debug`](https://github.com/rust-osdev/x86_64/pull/286)
+- [Provide null segment selector as associated constant on `SegmentSelector`](https://github.com/rust-osdev/x86_64/pull/373)
+- [Add getters for the page table frame mapping](https://github.com/rust-osdev/x86_64/pull/385)
+
+## Fixes
+
+- [Fix align functions](https://github.com/rust-osdev/x86_64/pull/375)
+- [Correct wrong comment](https://github.com/rust-osdev/x86_64/pull/374)
+
+## Other Improvements
+
+- [Cleanup Segment macros](https://github.com/rust-osdev/x86_64/pull/376)
+- [Update comment and docs](https://github.com/rust-osdev/x86_64/pull/382)
+
+
+# 0.14.9 - 2022-03-31
+
+## New Features
+
+- Address in `VirtAddrNotValid` and `PhysAddrNotValid` is now public ([#340](https://github.com/rust-osdev/x86_64/pull/340)).
+  - This field now contains the whole invalid address ([#347](https://github.com/rust-osdev/x86_64/pull/347)).
+- Remove all uses of external assembly ([#343](https://github.com/rust-osdev/x86_64/pull/343))
+  - `external_asm` and `inline_asm` features are deprecated and now have no effect.
+  - `instructions` feature (on by default) now requires Rust 1.59
+  - Specific MSRV now noted in `README` ([#355](https://github.com/rust-osdev/x86_64/pull/355))
+- Implement `core::iter::Step` for `VirtAddr` and `Page` ([#342](https://github.com/rust-osdev/x86_64/pull/342))
+  - This trait is only available on nightly.
+  - Gated behind `step_trait` feature flag
+- Add `UCet` and `SCet` registers ([#349](https://github.com/rust-osdev/x86_64/pull/349))
+- Use [`rustversion`](https://crates.io/crates/rustversion) to mark certian functions `const fn` on Rust 1.61 ([#353](https://github.com/rust-osdev/x86_64/pull/353))
+- `Entry::handler_addr()` is now public ([#354](https://github.com/rust-osdev/x86_64/pull/354))
+- Increase packed structure alignment ([#362](https://github.com/rust-osdev/x86_64/pull/362))
+- Make more address methods `const fn` ([#369](https://github.com/rust-osdev/x86_64/pull/369))
+  - `VirtAddr::as_ptr()`
+  - `VirtAddr::as_mut_ptr()`
+  - `PhysAddr::new()`
+  - `PhysAddr::try_new()`
+
+## Bug fixes and Documentation
+
+- Fixed overflow bug in PageRangeInclusive ([#351](https://github.com/rust-osdev/x86_64/pull/351))
+- Remove stabilized `const_fn_fn_ptr_basics` and `const_fn_trait_bound` features ([#352](https://github.com/rust-osdev/x86_64/pull/352))
+- Don't set `nomem` in `load_tss` ([#358](https://github.com/rust-osdev/x86_64/pull/358))
+- Correctly initialize TSS's IOPB to be empty ([#357](https://github.com/rust-osdev/x86_64/pull/357))
+- Improve `GlobalDescriptorTable::add_entry` error handling ([#361](https://github.com/rust-osdev/x86_64/pull/361))
+- Update `tss_segment` documentation ([#366](https://github.com/rust-osdev/x86_64/pull/366))
+
+# 0.14.8 – 2022-02-03
+
+- Add `Cr2::read_raw` ([#334](https://github.com/rust-osdev/x86_64/pull/334))
+- Add support for `MXCSR` register ([#336](https://github.com/rust-osdev/x86_64/pull/336))
+
+# 0.14.7 – 2021-12-18
+
+- fix: build error on the latest nightly ([#329](https://github.com/rust-osdev/x86_64/pull/329))
+- add `set_general_handler` macro ([#285](https://github.com/rust-osdev/x86_64/pull/285))
+- Derive common traits for number, range and enum types ([#315](https://github.com/rust-osdev/x86_64/pull/315))
+- Add the VMM Communication Exception (`#VC`) to the `InterruptDescriptorTable` ([#313](https://github.com/rust-osdev/x86_64/pull/313))
+- fix: enable manipulation of `InterruptStackFrame` ([#312](https://github.com/rust-osdev/x86_64/pull/312))
+- fix docs for `page_table_index` ([#318](https://github.com/rust-osdev/x86_64/pull/318))
+- Remove redundant alignment check ([#314](https://github.com/rust-osdev/x86_64/pull/314))
+- fix(idt): fix panic messages for `index` and `#VC` ([#321](https://github.com/rust-osdev/x86_64/pull/321))
+- remove `const_assert!` in favor of std's `assert!` ([#326](https://github.com/rust-osdev/x86_64/pull/326))
+- Move bootloader integration test to separate CI job ([#330](https://github.com/rust-osdev/x86_64/pull/330))
+
 # 0.14.6 – 2021-09-20
 
 - New `registers::segmentation` module ([#309](https://github.com/rust-osdev/x86_64/pull/309)), containing:

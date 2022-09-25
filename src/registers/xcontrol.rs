@@ -54,6 +54,8 @@ bitflags! {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
+    use core::arch::asm;
+
     impl XCr0 {
         /// Read the current set of XCR0 flags.
         #[inline]
@@ -64,7 +66,6 @@ mod x86_64 {
         /// Read the current raw XCR0 value.
         #[inline]
         pub fn read_raw() -> u64 {
-            #[cfg(feature = "inline_asm")]
             unsafe {
                 let (low, high): (u32, u32);
                 asm!(
@@ -74,11 +75,6 @@ mod x86_64 {
                     options(nomem, nostack, preserves_flags),
                 );
                 (high as u64) << 32 | (low as u64)
-            }
-
-            #[cfg(not(feature = "inline_asm"))]
-            unsafe {
-                crate::asm::x86_64_asm_xgetbv(0)
             }
         }
 
@@ -123,7 +119,9 @@ mod x86_64 {
                 );
             }
 
-            Self::write_raw(new_value);
+            unsafe {
+                Self::write_raw(new_value);
+            }
         }
 
         /// Write raw XCR0 flags.
@@ -139,16 +137,14 @@ mod x86_64 {
             let low = value as u32;
             let high = (value >> 32) as u32;
 
-            #[cfg(feature = "inline_asm")]
-            asm!(
-                "xsetbv",
-                in("ecx") 0,
-                in("rax") low, in("rdx") high,
-                options(nomem, nostack, preserves_flags),
-            );
-
-            #[cfg(not(feature = "inline_asm"))]
-            crate::asm::x86_64_asm_xsetbv(0, low, high);
+            unsafe {
+                asm!(
+                    "xsetbv",
+                    in("ecx") 0,
+                    in("rax") low, in("rdx") high,
+                    options(nomem, nostack, preserves_flags),
+                );
+            }
         }
     }
 }

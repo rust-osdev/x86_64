@@ -1,16 +1,13 @@
 //! Functions to flush the translation lookaside buffer (TLB).
 
 use crate::VirtAddr;
+use core::arch::asm;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
 pub fn flush(addr: VirtAddr) {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_invlpg(addr.as_u64());
     }
 }
 
@@ -49,7 +46,7 @@ struct InvpcidDescriptor {
 
 /// Structure of a PCID. A PCID has to be <= 4096 for x86_64.
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Pcid(u16);
 
 impl Pcid {
@@ -96,9 +93,7 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
         InvPicdCommand::AllExceptGlobal => kind = 3,
     }
 
-    #[cfg(feature = "inline_asm")]
-    asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
-
-    #[cfg(not(feature = "inline_asm"))]
-    crate::asm::x86_64_asm_invpcid(kind, &desc as *const _ as u64);
+    unsafe {
+        asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
+    }
 }

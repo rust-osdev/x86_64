@@ -9,9 +9,32 @@ Support for x86_64 specific instructions (e.g. TLB flush), registers (e.g. contr
 
 * `nightly`: Enables features only available on nightly Rust; enabled by default.
 * `instructions`: Enabled by default, turns on x86\_64 specific instructions, and dependent features. Only available for x86\_64 targets.
-* `external_asm`: Use this to build with non-nightly rust. Needs `default-features = false, features = ["instructions"]`. Is unsupported on Windows.
 
-## Building with stable rust
+## Minimum Supported Rust Version (MSRV)
 
-This needs to have the [compile-time requirements](https://github.com/alexcrichton/cc-rs#compile-time-requirements) of the `cc` crate installed on your system.
-It was currently only tested on Linux and MacOS.
+If no features are enabled (`--no-default-features`), Rust 1.57.0 is required.
+
+If only the `instructions` feature is enabled (`--no-default-features --features instructions`), Rust 1.59.0 is required.
+
+If the `nightly` feature or any of its sub-features is enabled, a recent nightly is required.
+
+## Other OS development crates
+
+This crate does not attempt to handle every facet of OS development. Other
+useful crates in this space include:
+  - [`raw-cpuid`](https://crates.io/crates/raw-cpuid): safe wrappers around the
+  [`cpuid` instruction](https://en.wikipedia.org/wiki/CPUID)
+    - Provides parsed versions of the CPUID data, rather than just raw binary values.
+    - Support for AMD and Intel specific values.
+    - Works on x86 and x86_64 systems, in both user and kernel mode.
+  - [`uefi`](https://crates.io/crates/uefi): abstractions for
+  [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)
+  (the successor to BIOS)
+    - Provides UEFI tables, functions, and types.
+    - Useful for writing UEFI applications, or calling UEFI functions from your OS.
+    - Works on a variety of modern platforms, not just x86_64.
+  - [`volatile`](https://crates.io/crates/volatile): interface to
+  [`read_volatile`](https://doc.rust-lang.org/std/ptr/fn.read_volatile.html) and
+  [`write_volatile`](https://doc.rust-lang.org/std/ptr/fn.write_volatile.html)
+    - Makes it easier to program [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O) interfaces and devices.
+    - Works on any Rust target.

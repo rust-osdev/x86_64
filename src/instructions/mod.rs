@@ -9,15 +9,13 @@ pub mod segmentation;
 pub mod tables;
 pub mod tlb;
 
+use core::arch::asm;
+
 /// Halts the CPU until the next interrupt arrives.
 #[inline]
 pub fn hlt() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("hlt", options(nomem, nostack, preserves_flags));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_hlt();
     }
 }
 
@@ -30,11 +28,7 @@ pub fn hlt() {
 #[inline]
 pub fn nop() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("nop", options(nomem, nostack, preserves_flags));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_nop();
     }
 }
 
@@ -43,21 +37,12 @@ pub fn nop() {
 #[inline]
 pub fn bochs_breakpoint() {
     unsafe {
-        #[cfg(feature = "inline_asm")]
         asm!("xchg bx, bx", options(nomem, nostack, preserves_flags));
-
-        #[cfg(not(feature = "inline_asm"))]
-        crate::asm::x86_64_asm_bochs();
     }
 }
 
 /// Gets the current instruction pointer. Note that this is only approximate as it requires a few
 /// instructions to execute.
-#[cfg(feature = "inline_asm")]
-#[cfg_attr(
-    feature = "doc_cfg",
-    doc(cfg(any(feature = "nightly", feature = "inline_asm")))
-)]
 #[inline(always)]
 pub fn read_rip() -> crate::VirtAddr {
     let rip: u64;
