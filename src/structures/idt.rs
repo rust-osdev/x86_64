@@ -810,7 +810,7 @@ impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct EntryOptions(u16);
 
 impl fmt::Debug for EntryOptions {
@@ -1090,7 +1090,7 @@ pub enum DescriptorTable {
 ///   * Intel Volume 3A: 6.3.1
 #[repr(u8)]
 #[non_exhaustive]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ExceptionVector {
     /// Error during Division
     Division = 0x00,
@@ -1486,7 +1486,7 @@ mod test {
         unsafe {
             frame
                 .as_mut()
-                .update(|f| f.instruction_pointer = f.instruction_pointer + 2u64);
+                .update(|f| f.instruction_pointer += 2u64);
         }
     }
 }

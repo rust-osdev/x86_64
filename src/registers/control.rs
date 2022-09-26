@@ -206,7 +206,9 @@ mod x86_64 {
         /// Could mask important external interrupts
         #[inline]
         pub unsafe fn write_raw(value: u64) {
-            asm!("mov cr8, {}", in(reg) value, options(nostack, preserves_flags));
+            unsafe {
+                asm!("mov cr8, {}", in(reg) value, options(nostack, preserves_flags));
+            }
         }
 
         /// Write CR8 flags.

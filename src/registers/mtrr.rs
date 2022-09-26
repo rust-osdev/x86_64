@@ -85,9 +85,9 @@ impl TryFrom<u64> for MTRRtype {
     }
 }
 
-impl Into<u8> for MTRRtype {
-    fn into(self) -> u8 {
-        self as u8
+impl From<MTRRtype> for u8 {
+    fn from(val: MTRRtype) -> Self {
+        val as u8
     }
 }
 

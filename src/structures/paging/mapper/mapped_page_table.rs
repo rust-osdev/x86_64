@@ -39,7 +39,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
 
     /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
     pub fn level_4_table(&mut self) -> &mut PageTable {
-        &mut self.level_4_table
+        self.level_4_table
     }
 
     /// Returns the `PageTableFrameMapping` used for converting virtual to physical addresses.
