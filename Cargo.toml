@@ -16,7 +16,7 @@ name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
 version = "0.14.10"
-edition = "2018"
+edition = "2021"
 rust-version = "1.57" # Needed to support panic! in const fns
 
 [dependencies]
@@ -33,6 +33,7 @@ abi_x86_interrupt = []
 const_fn = []
 step_trait = []
 doc_cfg = []
+binary = []
 
 # These features are no longer used and only there for backwards compatibility.
 external_asm = []
