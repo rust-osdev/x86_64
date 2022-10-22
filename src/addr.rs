@@ -1,7 +1,7 @@
 //! Physical and virtual addresses manipulation
 
-#[cfg(feature = "step_trait")]
 use core::convert::TryFrom;
+use core::convert::TryInto;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -400,6 +400,80 @@ impl Step for VirtAddr {
         }
 
         Some(Self::new(addr))
+    }
+}
+
+impl TryFrom<u64> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: u64) -> Result<Self, Self::Error> {
+        Self::try_new(addr)
+    }
+}
+
+// if `target_pointer_width > 64`, we would need a different error type
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl TryFrom<usize> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: usize) -> Result<Self, Self::Error> {
+        Self::try_new(addr.try_into().unwrap())
+    }
+}
+
+// if `target_pointer_width > 64`, we would need a different error type
+// (and `as` would truncate)
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl<T> TryFrom<*const T> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: *const T) -> Result<Self, Self::Error> {
+        Self::try_new(addr as u64)
+    }
+}
+
+// if target_pointer_width is 128, we would need a different error type
+// (and `as` would truncate)
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl<T> TryFrom<*mut T> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: *mut T) -> Result<Self, Self::Error> {
+        Self::try_new(addr as u64)
+    }
+}
+
+impl From<u32> for VirtAddr {
+    #[inline]
+    fn from(addr: u32) -> Self {
+        Self::new(addr.into())
+    }
+}
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl<T> From<&T> for VirtAddr {
+    #[inline]
+    fn from(addr: &T) -> Self {
+        Self::new(addr as *const _ as u64)
+    }
+}
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl<T> From<&mut T> for VirtAddr {
+    #[inline]
+    fn from(addr: &mut T) -> Self {
+        Self::new(addr as *mut _ as u64)
+    }
+}
+
+impl From<VirtAddr> for u64 {
+    #[inline]
+    fn from(addr: VirtAddr) -> Self {
+        addr.0
     }
 }
 
