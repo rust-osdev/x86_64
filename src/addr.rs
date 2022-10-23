@@ -706,6 +706,29 @@ impl Sub<PhysAddr> for PhysAddr {
     }
 }
 
+impl TryFrom<u64> for PhysAddr {
+    type Error = PhysAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: u64) -> Result<Self, Self::Error> {
+        Self::try_new(addr)
+    }
+}
+
+impl From<u32> for PhysAddr {
+    #[inline]
+    fn from(addr: u32) -> Self {
+        Self::new(addr.into())
+    }
+}
+
+impl From<PhysAddr> for u64 {
+    #[inline]
+    fn from(addr: PhysAddr) -> Self {
+        addr.0
+    }
+}
+
 /// Align address downwards.
 ///
 /// Returns the greatest `x` with alignment `align` so that `x <= addr`.
