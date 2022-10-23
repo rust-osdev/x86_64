@@ -477,6 +477,22 @@ impl From<VirtAddr> for u64 {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
+impl<T> From<VirtAddr> for *const T {
+    #[inline]
+    fn from(addr: VirtAddr) -> Self {
+        addr.0 as *const T
+    }
+}
+
+#[cfg(target_pointer_width = "64")]
+impl<T> From<VirtAddr> for *mut T {
+    #[inline]
+    fn from(addr: VirtAddr) -> Self {
+        addr.0 as *mut T
+    }
+}
+
 /// A passed `u64` was not a valid physical address.
 ///
 /// This means that bits 52 to 64 were not all null.
