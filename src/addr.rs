@@ -413,7 +413,11 @@ impl TryFrom<u64> for VirtAddr {
 }
 
 // if `target_pointer_width > 64`, we would need a different error type
-#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[cfg(any(
+    target_pointer_width = "16",
+    target_pointer_width = "32",
+    target_pointer_width = "64"
+))]
 impl TryFrom<usize> for VirtAddr {
     type Error = VirtAddrNotValid;
 
@@ -425,7 +429,11 @@ impl TryFrom<usize> for VirtAddr {
 
 // if `target_pointer_width > 64`, we would need a different error type
 // (and `as` would truncate)
-#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[cfg(any(
+    target_pointer_width = "16",
+    target_pointer_width = "32",
+    target_pointer_width = "64"
+))]
 impl<T> TryFrom<*const T> for VirtAddr {
     type Error = VirtAddrNotValid;
 
@@ -435,9 +443,13 @@ impl<T> TryFrom<*const T> for VirtAddr {
     }
 }
 
-// if target_pointer_width is 128, we would need a different error type
+// if `target_pointer_width > 64`, we would need a different error type
 // (and `as` would truncate)
-#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[cfg(any(
+    target_pointer_width = "16",
+    target_pointer_width = "32",
+    target_pointer_width = "64"
+))]
 impl<T> TryFrom<*mut T> for VirtAddr {
     type Error = VirtAddrNotValid;
 
@@ -454,7 +466,7 @@ impl From<u32> for VirtAddr {
     }
 }
 
-#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 impl<T> From<&T> for VirtAddr {
     #[inline]
     fn from(addr: &T) -> Self {
@@ -462,7 +474,7 @@ impl<T> From<&T> for VirtAddr {
     }
 }
 
-#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 impl<T> From<&mut T> for VirtAddr {
     #[inline]
     fn from(addr: &mut T) -> Self {
