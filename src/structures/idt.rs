@@ -1052,7 +1052,7 @@ impl SelectorErrorCode {
     /// The index of the selector which caused the error.
     pub fn index(&self) -> u64 {
         let descriptor_table = self.descriptor_table();
-        
+
         if descriptor_table == DescriptorTable::Idt {
             self.flags.get_bits(4..16)
         } else {
