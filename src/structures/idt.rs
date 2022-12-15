@@ -1051,7 +1051,19 @@ impl SelectorErrorCode {
 
     /// The index of the selector which caused the error.
     pub fn index(&self) -> u64 {
-        self.flags.get_bits(4..16)
+        let descriptor_table = match self.flags.get_bits(1..3) {
+            0b00 => DescriptorTable::Gdt,
+            0b01 => DescriptorTable::Idt,
+            0b10 => DescriptorTable::Ldt,
+            0b11 => DescriptorTable::Idt,
+            _ => unreachable!(),
+        };
+        
+        if descriptor_table == DescriptorTable::Idt {
+            self.flags.get_bits(4..16)
+        } else {
+            self.flags.get_bits(3..16)
+        }
     }
 
     /// If true, the #SS or #GP has returned zero as opposed to a SelectorErrorCode.
