@@ -171,7 +171,7 @@ impl Page<Size1GiB> {
         let mut addr = 0;
         addr.set_bits(39..48, u64::from(p4_index));
         addr.set_bits(30..39, u64::from(p3_index));
-        Page::containing_address(VirtAddr::new(addr))
+        Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
 
@@ -189,7 +189,7 @@ impl Page<Size2MiB> {
         addr.set_bits(39..48, u64::from(p4_index));
         addr.set_bits(30..39, u64::from(p3_index));
         addr.set_bits(21..30, u64::from(p2_index));
-        Page::containing_address(VirtAddr::new(addr))
+        Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
 
@@ -209,7 +209,7 @@ impl Page<Size4KiB> {
         addr.set_bits(30..39, u64::from(p3_index));
         addr.set_bits(21..30, u64::from(p2_index));
         addr.set_bits(12..21, u64::from(p1_index));
-        Page::containing_address(VirtAddr::new(addr))
+        Page::containing_address(VirtAddr::new_truncate(addr))
     }
 
     /// Returns the level 1 page table index of this page.
