@@ -216,6 +216,12 @@ impl PageTable {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
         self.entries.iter_mut()
     }
+
+    /// Checks if the page table is empty (all entries are zero).
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.entries.iter().all(|entry| entry.is_unused())
+    }
 }
 
 impl Index<usize> for PageTable {
