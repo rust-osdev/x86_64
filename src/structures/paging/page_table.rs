@@ -389,6 +389,16 @@ impl PageTableLevel {
         }
     }
 
+    /// Returns the next higher level or `None` for level 4
+    pub const fn next_higher_level(self) -> Option<Self> {
+        match self {
+            PageTableLevel::Four => None,
+            PageTableLevel::Three => Some(PageTableLevel::Four),
+            PageTableLevel::Two => Some(PageTableLevel::Three),
+            PageTableLevel::One => Some(PageTableLevel::Two),
+        }
+    }
+
     /// Returns the alignment for the address space described by a table of this level.
     pub const fn table_address_space_alignment(self) -> u64 {
         1u64 << (self as u8 * 9 + 12)
