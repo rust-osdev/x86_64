@@ -220,3 +220,16 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
+
+  semver-checks:
+    name: Semver Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "semver-checks"
+          cache-targets: false
+      - run: cargo install cargo-semver-checks --locked
+      - name: Check semver
+        run: cargo semver-checks check-release
