@@ -109,6 +109,7 @@ pub struct Dr6;
 
 bitflags! {
     /// Debug condition flags of the [`Dr6`] register.
+    #[repr(transparent)]
     pub struct Dr6Flags: u64 {
         /// Breakpoint condition 0 was detected.
         const TRAP0 = 1;

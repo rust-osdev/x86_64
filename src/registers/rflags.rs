@@ -7,6 +7,7 @@ use bitflags::bitflags;
 
 bitflags! {
     /// The RFLAGS register.
+    #[repr(transparent)]
     pub struct RFlags: u64 {
         /// Processor feature identification flag.
         ///
