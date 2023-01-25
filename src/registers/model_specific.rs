@@ -110,6 +110,7 @@ impl SCet {
 
 bitflags! {
     /// Flags of the Extended Feature Enable Register.
+    #[repr(transparent)]
     pub struct EferFlags: u64 {
         /// Enables the `syscall` and `sysret` instructions.
         const SYSTEM_CALL_EXTENSIONS = 1;
@@ -133,6 +134,7 @@ bitflags! {
 bitflags! {
     /// Flags stored in IA32_U_CET and IA32_S_CET (Table-2-2 in Intel SDM Volume
     /// 4). The Intel SDM-equivalent names are described in parentheses.
+    #[repr(transparent)]
     pub struct CetFlags: u64 {
         /// Enable shadow stack (SH_STK_EN)
         const SS_ENABLE = 1 << 0;

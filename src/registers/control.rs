@@ -9,6 +9,7 @@ pub struct Cr0;
 
 bitflags! {
     /// Configuration flags of the [`Cr0`] register.
+    #[repr(transparent)]
     pub struct Cr0Flags: u64 {
         /// Enables protected mode.
         const PROTECTED_MODE_ENABLE = 1;
@@ -78,6 +79,7 @@ pub struct Cr4;
 
 bitflags! {
     /// Configuration flags of the [`Cr4`] register.
+    #[repr(transparent)]
     pub struct Cr4Flags: u64 {
         /// Enables hardware-supported performance enhancements for software running in
         /// virtual-8086 mode.
