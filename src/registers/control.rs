@@ -3,6 +3,20 @@
 pub use super::model_specific::{Efer, EferFlags};
 use bitflags::bitflags;
 
+/// System software can use the TPR register to temporarily block low-priority interrupts from
+/// interrupting a high-priority task. This is accomplished by loading TPR with a value corresponding to
+/// the highest-priority interrupt that is to be blocked.
+#[derive(Debug)]
+pub struct Cr8;
+
+bitflags! {
+    /// Configuration flags of the [`Cr8`] register.
+    pub struct Cr8Flags: u64 {
+        /// A value corresponding to the highest-priority interrupt that is to be blocked
+        const TASK_PRIORITY = 0xf;
+    }
+}
+
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
 pub struct Cr0;
@@ -164,6 +178,57 @@ mod x86_64 {
     use super::*;
     use crate::{instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr, VirtAddr};
     use core::arch::asm;
+
+    impl Cr8 {
+        /// Returns the task priority
+        #[inline]
+        pub fn read() -> Cr8Flags {
+            let value = Self::read_raw();
+            Cr8Flags::from_bits_truncate(value)
+        }
+
+        /// Read the current raw CR8 value.
+        #[inline]
+        pub fn read_raw() -> u64 {
+            let value: u64;
+
+            unsafe {
+                asm!("mov {}, cr8", out(reg) value, options(nomem, nostack, preserves_flags));
+            }
+
+            value
+        }
+
+        /// Write raw CR8 flags.
+        ///
+        /// Does _not_ preserve any values, including reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Could mask important external interrupts
+        #[inline]
+        pub unsafe fn write_raw(value: u64) {
+            unsafe {
+                asm!("mov cr8, {}", in(reg) value, options(nostack, preserves_flags));
+            }
+        }
+
+        /// Write CR8 flags.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Could mask important external interrupts
+        #[inline]
+        pub unsafe fn write(flags: Cr8Flags) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !(Cr8Flags::all().bits());
+            let new_value = reserved | flags.bits();
+
+            Self::write_raw(new_value);
+        }
+    }
 
     impl Cr0 {
         /// Read the current set of CR0 flags.
