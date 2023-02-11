@@ -156,3 +156,15 @@ pub unsafe fn flush_broadcast<S>(
         );
     }
 }
+
+/// Synchronize broadcasted TLB Invalidations.
+///
+/// # Safety
+///
+/// This function is unsafe as it requires CPUID.(EAX=8000_0008H, ECX=0H):EBX.INVLPGB to be 1.
+#[inline]
+pub unsafe fn tlbsync() {
+    unsafe {
+        asm!("tlbsync", options(nomem, preserves_flags));
+    }
+}
