@@ -1,6 +1,11 @@
 //! Functions to flush the translation lookaside buffer (TLB).
 
-use crate::VirtAddr;
+use bit_field::BitField;
+
+use crate::{
+    structures::paging::{page::NotGiantPageSize, Page, PageSize, Size2MiB},
+    VirtAddr,
+};
 use core::arch::asm;
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
@@ -95,5 +100,59 @@ pub unsafe fn flush_pcid(command: InvPicdCommand) {
 
     unsafe {
         asm!("invpcid {0}, [{1}]", in(reg) kind, in(reg) &desc, options(nostack, preserves_flags));
+    }
+}
+
+/// Invalidates TLB entry(s) with Broadcast.
+///
+/// # Safety
+///
+/// This function is unsafe as it requires CPUID.(EAX=8000_0008H, ECX=0H):EBX.INVLPGB
+/// to be 1 and count to be less than or equal to CPUID.(EAX=8000_0008H, ECX=0H):EDX[0..=15].
+#[inline]
+pub unsafe fn flush_broadcast<S>(
+    va_and_count: Option<(Page<S>, u16)>,
+    pcid: Option<Pcid>,
+    asid: Option<u16>,
+    include_global: bool,
+    final_translation_only: bool,
+    include_nested_translations: bool,
+) where
+    S: NotGiantPageSize,
+{
+    let mut rax = 0;
+    let mut ecx = 0;
+    let mut edx = 0;
+
+    if let Some((va, count)) = va_and_count {
+        rax.set_bit(0, true);
+        rax.set_bits(12.., va.start_address().as_u64().get_bits(12..));
+
+        ecx.set_bits(0..=15, u32::from(count));
+        ecx.set_bit(31, S::SIZE == Size2MiB::SIZE);
+    }
+
+    if let Some(pcid) = pcid {
+        rax.set_bit(1, true);
+        edx.set_bits(16..=27, u32::from(pcid.value()));
+    }
+
+    if let Some(asid) = asid {
+        rax.set_bit(2, true);
+        edx.set_bits(0..=15, u32::from(asid));
+    }
+
+    rax.set_bit(3, include_global);
+    rax.set_bit(4, final_translation_only);
+    rax.set_bit(5, include_nested_translations);
+
+    unsafe {
+        asm!(
+            "invlpgb",
+            in("rax") rax,
+            in("ecx") ecx,
+            in("edx") edx,
+            options(nomem, preserves_flags),
+        );
     }
 }
