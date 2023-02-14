@@ -152,7 +152,7 @@ pub unsafe fn flush_broadcast<S>(
             in("rax") rax,
             in("ecx") ecx,
             in("edx") edx,
-            options(nomem, preserves_flags),
+            options(nostack, preserves_flags),
         );
     }
 }
