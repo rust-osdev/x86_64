@@ -1,6 +1,5 @@
 //! Physical and virtual addresses manipulation
 
-#[cfg(feature = "step_trait")]
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -11,7 +10,6 @@ use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
 
-#[cfg(feature = "step_trait")]
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
 /// A canonical 64-bit virtual memory address.
@@ -226,6 +224,42 @@ impl VirtAddr {
     pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
     }
+
+    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    pub(crate) fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        let mut steps = end.0.checked_sub(start.0)?;
+
+        // Check if we jumped the gap.
+        if end.0.get_bit(47) && !start.0.get_bit(47) {
+            steps = steps.checked_sub(0xffff_0000_0000_0000).unwrap();
+        }
+
+        usize::try_from(steps).ok()
+    }
+
+    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    pub(crate) fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        let offset = u64::try_from(count).ok()?;
+        if offset > ADDRESS_SPACE_SIZE {
+            return None;
+        }
+
+        let mut addr = start.0.checked_add(offset)?;
+
+        match addr.get_bits(47..) {
+            0x1 => {
+                // Jump the gap by sign extending the 47th bit.
+                addr.set_bits(47.., 0x1ffff);
+            }
+            0x2 => {
+                // Address overflow
+                return None;
+            }
+            _ => {}
+        }
+
+        Some(Self::new(addr))
+    }
 }
 
 impl fmt::Debug for VirtAddr {
@@ -346,37 +380,11 @@ impl Sub<VirtAddr> for VirtAddr {
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        let mut steps = end.0.checked_sub(start.0)?;
-
-        // Check if we jumped the gap.
-        if end.0.get_bit(47) && !start.0.get_bit(47) {
-            steps = steps.checked_sub(0xffff_0000_0000_0000).unwrap();
-        }
-
-        usize::try_from(steps).ok()
+        Self::steps_between(start, end)
     }
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        let offset = u64::try_from(count).ok()?;
-        if offset > ADDRESS_SPACE_SIZE {
-            return None;
-        }
-
-        let mut addr = start.0.checked_add(offset)?;
-
-        match addr.get_bits(47..) {
-            0x1 => {
-                // Jump the gap by sign extending the 47th bit.
-                addr.set_bits(47.., 0x1ffff);
-            }
-            0x2 => {
-                // Address overflow
-                return None;
-            }
-            _ => {}
-        }
-
-        Some(Self::new(addr))
+        Self::forward_checked(start, count)
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
