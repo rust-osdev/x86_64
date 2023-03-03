@@ -93,6 +93,43 @@ impl GlobalDescriptorTable {
         &self.table[..self.len]
     }
 
+    /// For stable rust. Adds the given segment descriptor to the GDT, returning a new GDT.
+    /// # Example
+    /// ```
+    /// use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor};
+    /// const GDT_TABLE : GlobalDescriptorTable = make_gdt_table();
+    ///
+    /// const fn make_gdt_table() -> GlobalDescriptorTable {
+    ///     let gdt = GlobalDescriptorTable::new();
+    ///     gdt.const_add_entry(Descriptor::kernel_code_segment())
+    ///         .const_add_entry(Descriptor::kernel_data_segment())
+    /// }
+    /// ```
+    pub const fn const_add_entry(mut self, entry: Descriptor) -> Self {
+        match entry {
+            Descriptor::UserSegment(value) => {
+                if self.len > self.table.len().saturating_sub(1) {
+                    panic!("GDT full")
+                }
+                let index = self.len;
+		self.table[index] = value;
+		self.len += 1;
+            }
+            Descriptor::SystemSegment(value_low, value_high) => {
+                if self.len > self.table.len().saturating_sub(2) {
+                    panic!("GDT requires two free spaces to hold a SystemSegment")
+                }
+                let index = self.len;
+		self.table[index] = value_low;
+		self.len += 1;
+		let index = self.len;
+		self.table[index] = value_high;
+		self.len += 1;
+            }
+        };
+        self
+    }
+
     /// Adds the given segment descriptor to the GDT, returning the segment selector.
     ///
     /// Panics if the GDT doesn't have enough free entries to hold the Descriptor.
