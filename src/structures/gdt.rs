@@ -112,19 +112,19 @@ impl GlobalDescriptorTable {
                     panic!("GDT full")
                 }
                 let index = self.len;
-		self.table[index] = value;
-		self.len += 1;
+                self.table[index] = value;
+                self.len += 1;
             }
             Descriptor::SystemSegment(value_low, value_high) => {
                 if self.len > self.table.len().saturating_sub(2) {
                     panic!("GDT requires two free spaces to hold a SystemSegment")
                 }
                 let index = self.len;
-		self.table[index] = value_low;
-		self.len += 1;
-		let index = self.len;
-		self.table[index] = value_high;
-		self.len += 1;
+                self.table[index] = value_low;
+                self.len += 1;
+                let index = self.len;
+                self.table[index] = value_high;
+                self.len += 1;
             }
         };
         self
