@@ -5,6 +5,7 @@
 #![cfg_attr(feature = "const_fn", feature(const_mut_refs))] // GDT add_entry()
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
 #![cfg_attr(feature = "step_trait", feature(step_trait))]
+#![cfg_attr(feature = "doc_auto_cfg", feature(doc_auto_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
