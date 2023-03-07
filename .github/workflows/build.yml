@@ -186,6 +186,7 @@ jobs:
 
       - name: "Run Test Framework"
         run: cargo xtest
+        shell: bash
         working-directory: "testing"
 
   check_formatting:
