@@ -115,20 +115,7 @@ impl GlobalDescriptorTable {
                 index
             }
         };
-
-        let rpl = match entry {
-            Descriptor::UserSegment(value) => {
-                if DescriptorFlags::from_bits_truncate(value).contains(DescriptorFlags::DPL_RING_3)
-                {
-                    PrivilegeLevel::Ring3
-                } else {
-                    PrivilegeLevel::Ring0
-                }
-            }
-            Descriptor::SystemSegment(_, _) => PrivilegeLevel::Ring0,
-        };
-
-        SegmentSelector::new(index as u16, rpl)
+        SegmentSelector::new(index as u16, entry.dpl())
     }
 
     /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
@@ -187,7 +174,7 @@ impl GlobalDescriptorTable {
 ///
 /// Segmentation is no longer supported in 64-bit mode, so most of the descriptor
 /// contents are ignored.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Descriptor {
     /// Descriptor for a code or data segment.
     ///
@@ -283,6 +270,19 @@ impl DescriptorFlags {
 }
 
 impl Descriptor {
+    /// Returns the Descriptor Privilage Level (DPL). When using this descriptor
+    /// via a [`SegmentSelector`], the `rpl` and Current Privilage Level (CPL)
+    /// must less than or equal to the DPL.
+    #[inline]
+    pub const fn dpl(self) -> PrivilegeLevel {
+        let value_low = match self {
+            Descriptor::UserSegment(v) => v,
+            Descriptor::SystemSegment(v, _) => v,
+        };
+        let dpl = (value_low & DescriptorFlags::DPL_RING_3.bits()) >> 45;
+        PrivilegeLevel::from_u16(dpl as u16)
+    }
+
     /// Creates a segment descriptor for a 64-bit kernel code segment. Suitable
     /// for use with `syscall` or 64-bit `sysenter`.
     #[inline]
@@ -407,5 +407,19 @@ mod tests {
         gdt.add_entry(Descriptor::user_data_segment());
         // We have one free slot, but the GDT requires two
         gdt.add_entry(Descriptor::tss_segment(&TSS));
+    }
+
+    #[test]
+    pub fn descriptor_dpl() {
+        assert_eq!(
+            Descriptor::kernel_code_segment().dpl(),
+            PrivilegeLevel::Ring0
+        );
+        assert_eq!(
+            Descriptor::kernel_data_segment().dpl(),
+            PrivilegeLevel::Ring0
+        );
+        assert_eq!(Descriptor::user_code_segment().dpl(), PrivilegeLevel::Ring3);
+        assert_eq!(Descriptor::user_code_segment().dpl(), PrivilegeLevel::Ring3);
     }
 }
