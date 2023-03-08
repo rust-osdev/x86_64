@@ -4,6 +4,7 @@ use core::arch::asm;
 use core::fmt;
 use core::marker::PhantomData;
 
+use crate::sealed::Sealed;
 pub use crate::structures::port::{PortRead, PortWrite};
 
 impl PortRead for u8 {
@@ -66,43 +67,43 @@ impl PortWrite for u32 {
     }
 }
 
-mod sealed {
-    pub trait Access {
-        const DEBUG_NAME: &'static str;
-    }
-}
+/// A marker trait for access types which allow accessing port values.
+pub trait PortAccess: Sealed {}
 
 /// A marker trait for access types which allow reading port values.
-pub trait PortReadAccess: sealed::Access {}
+pub trait PortReadAccess: PortAccess {}
 
 /// A marker trait for access types which allow writing port values.
-pub trait PortWriteAccess: sealed::Access {}
+pub trait PortWriteAccess: PortAccess {}
 
 /// An access marker type indicating that a port is only allowed to read values.
 #[derive(Debug)]
 pub struct ReadOnlyAccess(());
 
-impl sealed::Access for ReadOnlyAccess {
-    const DEBUG_NAME: &'static str = "ReadOnly";
+impl Sealed for ReadOnlyAccess {
+    const DEBUG_STR: &'static str = "ReadOnly";
 }
+impl PortAccess for ReadOnlyAccess {}
 impl PortReadAccess for ReadOnlyAccess {}
 
 /// An access marker type indicating that a port is only allowed to write values.
 #[derive(Debug)]
 pub struct WriteOnlyAccess(());
 
-impl sealed::Access for WriteOnlyAccess {
-    const DEBUG_NAME: &'static str = "WriteOnly";
+impl Sealed for WriteOnlyAccess {
+    const DEBUG_STR: &'static str = "WriteOnly";
 }
+impl PortAccess for WriteOnlyAccess {}
 impl PortWriteAccess for WriteOnlyAccess {}
 
 /// An access marker type indicating that a port is allowed to read or write values.
 #[derive(Debug)]
 pub struct ReadWriteAccess(());
 
-impl sealed::Access for ReadWriteAccess {
-    const DEBUG_NAME: &'static str = "ReadWrite";
+impl Sealed for ReadWriteAccess {
+    const DEBUG_STR: &'static str = "ReadWrite";
 }
+impl PortAccess for ReadWriteAccess {}
 impl PortReadAccess for ReadWriteAccess {}
 impl PortWriteAccess for ReadWriteAccess {}
 
@@ -165,12 +166,12 @@ impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     }
 }
 
-impl<T, A: sealed::Access> fmt::Debug for PortGeneric<T, A> {
+impl<T, A: PortAccess> fmt::Debug for PortGeneric<T, A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PortGeneric")
             .field("port", &self.port)
             .field("size", &core::mem::size_of::<T>())
-            .field("access", &format_args!("{}", A::DEBUG_NAME))
+            .field("access", &format_args!("{}", A::DEBUG_STR))
             .finish()
     }
 }
