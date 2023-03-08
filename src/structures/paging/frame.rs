@@ -86,7 +86,7 @@ impl<S: PageSize> fmt::Debug for PhysFrame<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "PhysFrame[{}]({:#x})",
-            S::SIZE_AS_DEBUG_STR,
+            S::DEBUG_STR,
             self.start_address().as_u64()
         ))
     }
