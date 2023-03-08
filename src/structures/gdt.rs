@@ -202,7 +202,8 @@ bitflags! {
         const EXECUTABLE        = 1 << 43;
         /// This flag must be set for user segments (in contrast to system segments).
         const USER_SEGMENT      = 1 << 44;
-        /// The DPL for this descriptor is Ring 3. In 64-bit mode, ignored for data segments.
+        /// These two bits encode the Descriptor Privilege Level (DPL) for this descriptor.
+        /// If both bits are set, the DPL is Ring 3, if both are unset, the DPL is Ring 0.
         const DPL_RING_3        = 3 << 45;
         /// Must be set for any segment, causes a segment not present exception if not set.
         const PRESENT           = 1 << 47;
@@ -270,9 +271,10 @@ impl DescriptorFlags {
 }
 
 impl Descriptor {
-    /// Returns the Descriptor Privilage Level (DPL). When using this descriptor
-    /// via a [`SegmentSelector`], the `rpl` and Current Privilage Level (CPL)
-    /// must less than or equal to the DPL.
+    /// Returns the Descriptor Privilege Level (DPL). When using this descriptor
+    /// via a [`SegmentSelector`], the RPL and Current Privilege Level (CPL)
+    /// must less than or equal to the DPL, except for stack segments where the
+    /// RPL, CPL, and DPL must all be equal.
     #[inline]
     pub const fn dpl(self) -> PrivilegeLevel {
         let value_low = match self {
