@@ -52,13 +52,13 @@ impl PrivilegeLevel {
     ///
     /// This function panics if the passed value is >3.
     #[inline]
-    pub fn from_u16(value: u16) -> PrivilegeLevel {
+    pub const fn from_u16(value: u16) -> PrivilegeLevel {
         match value {
             0 => PrivilegeLevel::Ring0,
             1 => PrivilegeLevel::Ring1,
             2 => PrivilegeLevel::Ring2,
             3 => PrivilegeLevel::Ring3,
-            i => panic!("{} is not a valid privilege level", i),
+            _ => panic!("invalid privilege level"),
         }
     }
 }
