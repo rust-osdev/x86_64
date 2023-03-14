@@ -368,6 +368,7 @@ impl fmt::Display for AsidOutOfRangeError {
     }
 }
 
+/// See `INVLPGB` in AMD64 Architecture Programmer's Manual Volume 3
 #[inline]
 unsafe fn flush_broadcast<S>(
     va_and_count: Option<(Page<S>, u16)>,
