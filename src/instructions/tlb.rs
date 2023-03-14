@@ -10,7 +10,7 @@ use crate::{
     },
     PrivilegeLevel, VirtAddr,
 };
-use core::{arch::asm, cmp, convert::TryFrom};
+use core::{arch::asm, cmp, convert::TryFrom, fmt};
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
@@ -353,6 +353,16 @@ where
 pub struct AsidOutOfRangeError {
     asid: u16,
     nasid: u32,
+}
+
+impl fmt::Display for AsidOutOfRangeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} is out of the range of available ASIDS ({})",
+            self.asid, self.nasid
+        )
+    }
 }
 
 #[inline]
