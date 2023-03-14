@@ -150,15 +150,15 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    pub(crate) fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        VirtAddr::steps_between(&start.start_address, &end.start_address)
+    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
+        VirtAddr::steps_between_impl(&start.start_address, &end.start_address)
             .map(|steps| steps / S::SIZE as usize)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    pub(crate) fn forward_checked(start: Self, count: usize) -> Option<Self> {
+    pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = count.checked_mul(S::SIZE as usize)?;
-        let start_address = VirtAddr::forward_checked(start.start_address, count)?;
+        let start_address = VirtAddr::forward_checked_impl(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -286,11 +286,11 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 #[cfg(feature = "step_trait")]
 impl<S: PageSize> Step for Page<S> {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        Self::steps_between(start, end)
+        Self::steps_between_impl(start, end)
     }
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        Self::forward_checked(start, count)
+        Self::forward_checked_impl(start, count)
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {

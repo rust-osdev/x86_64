@@ -226,7 +226,7 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    pub(crate) fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
         let mut steps = end.0.checked_sub(start.0)?;
 
         // Check if we jumped the gap.
@@ -238,7 +238,7 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    pub(crate) fn forward_checked(start: Self, count: usize) -> Option<Self> {
+    pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
         if offset > ADDRESS_SPACE_SIZE {
             return None;
@@ -380,11 +380,11 @@ impl Sub<VirtAddr> for VirtAddr {
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        Self::steps_between(start, end)
+        Self::steps_between_impl(start, end)
     }
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        Self::forward_checked(start, count)
+        Self::forward_checked_impl(start, count)
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
