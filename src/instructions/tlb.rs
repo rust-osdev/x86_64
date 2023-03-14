@@ -247,7 +247,7 @@ where
     /// # Safety
     ///
     /// The caller has to ensure that PCID is enabled in CR4 when the flush is executed.
-    pub unsafe fn pcid(mut self, pcid: Pcid) -> Self {
+    pub unsafe fn pcid(&mut self, pcid: Pcid) -> &mut Self {
         self.pcid = Some(pcid);
         self
     }
@@ -258,7 +258,7 @@ where
     ///
     /// The caller has to ensure that SVM is enabled in EFER when the flush is executed.
     // FIXME: Make ASID a type and remove error type.
-    pub unsafe fn asid(mut self, asid: u16) -> Result<Self, AsidOutOfRangeError> {
+    pub unsafe fn asid(&mut self, asid: u16) -> Result<&mut Self, AsidOutOfRangeError> {
         if u32::from(asid) > self.invlpgb.nasid {
             return Err(AsidOutOfRangeError {
                 asid,
@@ -271,13 +271,13 @@ where
     }
 
     /// Also flush global pages.
-    pub fn include_global(mut self) -> Self {
+    pub fn include_global(&mut self) -> &mut Self {
         self.include_global = true;
         self
     }
 
     /// Only flush the final translation and not the cached upper level TLB entries.
-    pub fn final_translation_only(mut self) -> Self {
+    pub fn final_translation_only(&mut self) -> &mut Self {
         self.final_translation_only = true;
         self
     }
@@ -294,7 +294,7 @@ where
     }
 
     /// Execute the flush.
-    pub fn flush(self) {
+    pub fn flush(&self) {
         if let Some(mut pages) = self.page_range {
             while !pages.is_empty() {
                 // Calculate out how many pages we still need to flush.
