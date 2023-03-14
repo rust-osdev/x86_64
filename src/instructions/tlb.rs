@@ -349,10 +349,13 @@ where
     }
 }
 
+/// An error returned when trying to use an invalid ASID.
 #[derive(Debug)]
 pub struct AsidOutOfRangeError {
-    asid: u16,
-    nasid: u32,
+    /// The requested ASID.
+    pub asid: u16,
+    /// The number of valid ASIDS.
+    pub nasid: u32,
 }
 
 impl fmt::Display for AsidOutOfRangeError {
