@@ -259,7 +259,7 @@ where
     /// The caller has to ensure that SVM is enabled in EFER when the flush is executed.
     // FIXME: Make ASID a type and remove error type.
     pub unsafe fn asid(&mut self, asid: u16) -> Result<&mut Self, AsidOutOfRangeError> {
-        if u32::from(asid) > self.invlpgb.nasid {
+        if u32::from(asid) >= self.invlpgb.nasid {
             return Err(AsidOutOfRangeError {
                 asid,
                 nasid: self.invlpgb.nasid,
