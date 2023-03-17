@@ -5,10 +5,15 @@ on:
     branches:
       - "master"
 
+permissions:
+  contents: read
+
 jobs:
   release:
     name: "Release"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     timeout-minutes: 15
     environment: crates_io_release
 
