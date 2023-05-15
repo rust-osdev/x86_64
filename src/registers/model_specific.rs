@@ -425,11 +425,16 @@ mod x86_64 {
             cs_syscall: SegmentSelector,
             ss_syscall: SegmentSelector,
         ) -> Result<(), &'static str> {
-            if cs_sysret.0 - 16 != ss_sysret.0 - 8 {
+            let cs_sysret_cmp = cs_sysret.0.checked_sub(16).ok_or("Sysret CS is not at least 16.")?;
+            let ss_sysret_cmp = ss_sysret.0.checked_sub(8).ok_or("Sysret SS is not at least 8.")?;
+            let cs_syscall_cmp = cs_syscall.0;
+            let ss_syscall_cmp = ss_syscall.0.checked_sub(8).ok_or("Syscall SS is not at least 8.")?;
+
+            if cs_sysret_cmp != ss_sysret_cmp {
                 return Err("Sysret CS and SS is not offset by 8.");
             }
 
-            if cs_syscall.0 != ss_syscall.0 - 8 {
+            if cs_syscall_cmp != ss_syscall_cmp {
                 return Err("Syscall CS and SS is not offset by 8.");
             }
 
