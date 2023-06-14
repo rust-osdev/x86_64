@@ -47,6 +47,11 @@ impl<'a> RecursivePageTable<'a> {
     /// - The page table must be active, i.e. the CR3 register must contain its physical address.
     ///
     /// Otherwise `Err(())` is returned.
+    ///
+    /// ## Safety
+    ///
+    /// Creating a recursive page table with recursive index 511 is unsound
+    /// because calculating the end ptr of the structure causes an overflow.
     #[inline]
     pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {
         let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
