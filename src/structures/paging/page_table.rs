@@ -106,6 +106,7 @@ impl fmt::Debug for PageTableEntry {
 
 bitflags! {
     /// Possible flags for a page table entry.
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct PageTableFlags: u64 {
         /// Specifies whether the mapped frame or page table is loaded in memory.
         const PRESENT =         1;

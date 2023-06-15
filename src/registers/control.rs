@@ -10,6 +10,7 @@ pub struct Cr0;
 bitflags! {
     /// Configuration flags of the [`Cr0`] register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Cr0Flags: u64 {
         /// Enables protected mode.
         const PROTECTED_MODE_ENABLE = 1;
@@ -64,6 +65,7 @@ bitflags! {
     /// Controls cache settings for the highest-level page table.
     ///
     /// Unused if paging is disabled or if [`PCID`](Cr4Flags::PCID) is enabled.
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Cr3Flags: u64 {
         /// Use a writethrough cache policy for the table (otherwise a writeback policy is used).
         const PAGE_LEVEL_WRITETHROUGH = 1 << 3;
@@ -80,6 +82,7 @@ pub struct Cr4;
 bitflags! {
     /// Configuration flags of the [`Cr4`] register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Cr4Flags: u64 {
         /// Enables hardware-supported performance enhancements for software running in
         /// virtual-8086 mode.

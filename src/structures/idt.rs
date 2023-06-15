@@ -968,6 +968,7 @@ bitflags! {
     ///   * AMD Volume 2: 8.4.2
     ///   * Intel Volume 3A: 4.7
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.

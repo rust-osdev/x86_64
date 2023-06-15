@@ -187,6 +187,7 @@ pub enum Descriptor {
 
 bitflags! {
     /// Flags for a GDT descriptor. Not all flags are valid for all descriptor types.
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct DescriptorFlags: u64 {
         /// Set by the processor if this segment has been accessed. Only cleared by software.
         /// _Setting_ this bit in software prevents GDT writes on first use.

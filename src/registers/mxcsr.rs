@@ -8,6 +8,7 @@ use bitflags::bitflags;
 bitflags! {
     /// MXCSR register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct MxCsr: u32 {
         /// Invalid operation
         const INVALID_OPERATION = 1 << 0;

@@ -110,6 +110,7 @@ pub struct Dr6;
 bitflags! {
     /// Debug condition flags of the [`Dr6`] register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Dr6Flags: u64 {
         /// Breakpoint condition 0 was detected.
         const TRAP0 = 1;
@@ -124,7 +125,7 @@ bitflags! {
         const TRAP3 = 1 << 3;
 
         /// Breakpoint condition was detected.
-        const TRAP = Self::TRAP0.bits | Self::TRAP1.bits | Self::TRAP2.bits | Self::TRAP3.bits;
+        const TRAP = Self::TRAP0.bits() | Self::TRAP1.bits() | Self::TRAP2.bits() | Self::TRAP3.bits();
 
         /// Next instruction accesses one of the debug registers.
         ///
@@ -164,6 +165,7 @@ impl Dr6Flags {
 bitflags! {
     /// Debug control flags of the [`Dr7`] register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Dr7Flags: u64 {
         /// Breakpoint 0 is enabled for the current task.
         const LOCAL_BREAKPOINT_0_ENABLE = 1;
