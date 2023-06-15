@@ -208,6 +208,12 @@ impl PageTable {
     /// Returns an iterator over the entries of the page table.
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
+        (0..512).map(move |i| &self.entries[i])
+    }
+
+    /// Returns an iterator that allows modifying the entries of the page table.
+    #[inline]
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
         // Note that we intentionally don't just return `self.entries.iter()`:
         // Some users may choose to create a reference to a page table at
         // `0xffff_ffff_ffff_f000`. This causes problems because calculating
@@ -222,14 +228,6 @@ impl PageTable {
         // calculate the end pointer. This doesn't make creating page tables at
         // that address sound, but it avoids some easy to trigger
         // miscompilations.
-        let ptr = self.entries.as_ptr();
-        (0..512).map(move |i| unsafe { &*ptr.add(i) })
-    }
-
-    /// Returns an iterator that allows modifying the entries of the page table.
-    #[inline]
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
-        // See `Self::iter`.
         let ptr = self.entries.as_mut_ptr();
         (0..512).map(move |i| unsafe { &mut *ptr.add(i) })
     }
