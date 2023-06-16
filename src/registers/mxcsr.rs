@@ -60,6 +60,14 @@ impl Default for MxCsr {
     }
 }
 
+impl MxCsr {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u32) -> Self {
+        Self::from_bits_retain(bits)
+    }
+}
+
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;

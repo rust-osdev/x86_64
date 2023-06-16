@@ -51,6 +51,14 @@ bitflags! {
     }
 }
 
+impl Cr0Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
+    }
+}
+
 /// Contains the Page Fault Linear Address (PFLA).
 ///
 /// When a page fault occurs, the CPU sets this register to the faulting virtual address.
@@ -71,6 +79,14 @@ bitflags! {
         const PAGE_LEVEL_WRITETHROUGH = 1 << 3;
         /// Disable caching for the table.
         const PAGE_LEVEL_CACHE_DISABLE = 1 << 4;
+    }
+}
+
+impl Cr3Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 
@@ -159,6 +175,14 @@ bitflags! {
         /// Also enables the `IA32_PKRS` MSR to set supervisor-mode protection
         /// key access controls.
         const PROTECTION_KEY_SUPERVISOR = 1 << 24;
+    }
+}
+
+impl Cr4Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 

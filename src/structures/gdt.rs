@@ -269,6 +269,12 @@ impl DescriptorFlags {
     /// A 64-bit user code segment
     pub const USER_CODE64: Self =
         Self::from_bits_truncate(Self::KERNEL_CODE64.bits() | Self::DPL_RING_3.bits());
+
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
+    }
 }
 
 impl Descriptor {

@@ -160,6 +160,12 @@ impl Dr6Flags {
             DebugAddressRegisterNumber::Dr3 => Self::TRAP3,
         }
     }
+
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
+    }
 }
 
 bitflags! {
@@ -232,6 +238,12 @@ impl Dr7Flags {
             DebugAddressRegisterNumber::Dr2 => Self::GLOBAL_BREAKPOINT_2_ENABLE,
             DebugAddressRegisterNumber::Dr3 => Self::GLOBAL_BREAKPOINT_3_ENABLE,
         }
+    }
+
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 
