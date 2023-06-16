@@ -135,7 +135,7 @@ bitflags! {
 impl EferFlags {
     #[deprecated = "use the safe `from_bits_retain` method instead"]
     /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
         Self::from_bits_retain(bits)
     }
 }
@@ -168,7 +168,7 @@ bitflags! {
 impl CetFlags {
     #[deprecated = "use the safe `from_bits_retain` method instead"]
     /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub unsafe fn from_bits_unchecked(bits: u64) -> Self {
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
         Self::from_bits_retain(bits)
     }
 }
