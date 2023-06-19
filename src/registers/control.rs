@@ -10,6 +10,7 @@ pub struct Cr0;
 bitflags! {
     /// Configuration flags of the [`Cr0`] register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Cr0Flags: u64 {
         /// Enables protected mode.
         const PROTECTED_MODE_ENABLE = 1;
@@ -50,6 +51,14 @@ bitflags! {
     }
 }
 
+impl Cr0Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
+    }
+}
+
 /// Contains the Page Fault Linear Address (PFLA).
 ///
 /// When a page fault occurs, the CPU sets this register to the faulting virtual address.
@@ -64,11 +73,20 @@ bitflags! {
     /// Controls cache settings for the highest-level page table.
     ///
     /// Unused if paging is disabled or if [`PCID`](Cr4Flags::PCID) is enabled.
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Cr3Flags: u64 {
         /// Use a writethrough cache policy for the table (otherwise a writeback policy is used).
         const PAGE_LEVEL_WRITETHROUGH = 1 << 3;
         /// Disable caching for the table.
         const PAGE_LEVEL_CACHE_DISABLE = 1 << 4;
+    }
+}
+
+impl Cr3Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 
@@ -80,6 +98,7 @@ pub struct Cr4;
 bitflags! {
     /// Configuration flags of the [`Cr4`] register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct Cr4Flags: u64 {
         /// Enables hardware-supported performance enhancements for software running in
         /// virtual-8086 mode.
@@ -156,6 +175,14 @@ bitflags! {
         /// Also enables the `IA32_PKRS` MSR to set supervisor-mode protection
         /// key access controls.
         const PROTECTION_KEY_SUPERVISOR = 1 << 24;
+    }
+}
+
+impl Cr4Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 

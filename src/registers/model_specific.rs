@@ -111,6 +111,7 @@ impl SCet {
 bitflags! {
     /// Flags of the Extended Feature Enable Register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct EferFlags: u64 {
         /// Enables the `syscall` and `sysret` instructions.
         const SYSTEM_CALL_EXTENSIONS = 1;
@@ -131,10 +132,19 @@ bitflags! {
     }
 }
 
+impl EferFlags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
+    }
+}
+
 bitflags! {
     /// Flags stored in IA32_U_CET and IA32_S_CET (Table-2-2 in Intel SDM Volume
     /// 4). The Intel SDM-equivalent names are described in parentheses.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct CetFlags: u64 {
         /// Enable shadow stack (SH_STK_EN)
         const SS_ENABLE = 1 << 0;
@@ -152,6 +162,14 @@ bitflags! {
         const IBT_SUPPRESS_ENABLE = 1 << 10;
         /// Is IBT waiting for a branch to return? (read-only, TRACKER)
         const IBT_TRACKED = 1 << 11;
+    }
+}
+
+impl CetFlags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 

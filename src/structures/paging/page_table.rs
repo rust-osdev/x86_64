@@ -106,6 +106,7 @@ impl fmt::Debug for PageTableEntry {
 
 bitflags! {
     /// Possible flags for a page table entry.
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct PageTableFlags: u64 {
         /// Specifies whether the mapped frame or page table is loaded in memory.
         const PRESENT =         1;
@@ -165,6 +166,14 @@ bitflags! {
         /// Can be only used when the no-execute page protection feature is enabled in the EFER
         /// register.
         const NO_EXECUTE =      1 << 63;
+    }
+}
+
+impl PageTableFlags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 

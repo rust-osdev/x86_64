@@ -8,6 +8,7 @@ use bitflags::bitflags;
 bitflags! {
     /// MXCSR register.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct MxCsr: u32 {
         /// Invalid operation
         const INVALID_OPERATION = 1 << 0;
@@ -56,6 +57,14 @@ impl Default for MxCsr {
             | MxCsr::OVERFLOW_MASK
             | MxCsr::UNDERFLOW_MASK
             | MxCsr::PRECISION_MASK
+    }
+}
+
+impl MxCsr {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u32) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 

@@ -968,6 +968,7 @@ bitflags! {
     ///   * AMD Volume 2: 8.4.2
     ///   * Intel Volume 3A: 4.7
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct PageFaultErrorCode: u64 {
         /// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.
@@ -1005,6 +1006,14 @@ bitflags! {
         /// If this flag is set, it indicates that the page fault is a result of the processor
         /// encountering an RMP violation (AMD-only).
         const RMP = 1 << 31;
+    }
+}
+
+impl PageFaultErrorCode {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 

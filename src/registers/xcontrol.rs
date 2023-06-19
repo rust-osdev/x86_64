@@ -11,6 +11,7 @@ bitflags! {
     /// For MPX, [`BNDREG`](XCr0Flags::BNDREG) and [`BNDCSR`](XCr0Flags::BNDCSR) must be set/unset simultaneously.
     /// For AVX-512, [`OPMASK`](XCr0Flags::OPMASK), [`ZMM_HI256`](XCr0Flags::ZMM_HI256), and [`HI16_ZMM`](XCr0Flags::HI16_ZMM) must be set/unset simultaneously.
     #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct XCr0Flags: u64 {
         /// Enables using the x87 FPU state
         /// with `XSAVE`/`XRSTOR`.
@@ -49,6 +50,14 @@ bitflags! {
         /// Enables Lightweight Profiling extensions and managing LWP state
         /// with `XSAVE`/`XRSTOR` (AMD Only).
         const LWP = 1<<62;
+    }
+}
+
+impl XCr0Flags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
     }
 }
 
