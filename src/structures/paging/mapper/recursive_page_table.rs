@@ -47,6 +47,14 @@ impl<'a> RecursivePageTable<'a> {
     /// - The page table must be active, i.e. the CR3 register must contain its physical address.
     ///
     /// Otherwise `Err(())` is returned.
+    ///
+    /// ## Safety
+    ///
+    /// Note that creating a `PageTable` with recursive index 511 is unsound
+    /// because allocating the last byte of the address space can lead to pointer
+    /// overflows and undefined behavior. For more details, see the discussions
+    /// [on Zulip](https://rust-lang.zulipchat.com/#narrow/stream/136281-t-opsem/topic/end-of-address-space)
+    /// and [in the `unsafe-code-guidelines ` repo]https://github.com/rust-lang/unsafe-code-guidelines/issues/420).
     #[inline]
     pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {
         let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
