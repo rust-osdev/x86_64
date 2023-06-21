@@ -185,7 +185,7 @@ const ENTRY_COUNT: usize = 512;
 /// Always page-sized.
 ///
 /// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed
-/// through index operations. For example, `page_table[15]` returns the 15th page table entry.
+/// through index operations. For example, `page_table[15]` returns the 16th page table entry.
 ///
 /// Note that while this type implements [`Clone`], the users must be careful not to introduce
 /// mutable aliasing by using the cloned page tables.
