@@ -330,10 +330,22 @@ impl Descriptor {
     /// either be global or per-CPU).
     #[inline]
     pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {
+        // SAFETY: The pointer is derived from a &'static reference, which ensures its validity.
+        unsafe { Self::tss_segment_unchecked(tss) }
+    }
+
+    /// Similar to [`Descriptor::tss_segment`], but unsafe since it does not enforce a lifetime
+    /// constraint on the provided TSS.
+    /// 
+    /// # Safety
+    /// The caller must ensure that the passed pointer is valid for as long as the descriptor is
+    /// being used.
+    #[inline]
+    pub unsafe fn tss_segment_unchecked(tss: *const TaskStateSegment) -> Descriptor {
         use self::DescriptorFlags as Flags;
         use core::mem::size_of;
 
-        let ptr = tss as *const _ as u64;
+        let ptr = tss as u64;
 
         let mut low = Flags::PRESENT.bits();
         // base
