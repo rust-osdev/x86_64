@@ -336,7 +336,7 @@ impl Descriptor {
 
     /// Similar to [`Descriptor::tss_segment`], but unsafe since it does not enforce a lifetime
     /// constraint on the provided TSS.
-    /// 
+    ///
     /// # Safety
     /// The caller must ensure that the passed pointer is valid for as long as the descriptor is
     /// being used.
