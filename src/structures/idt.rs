@@ -945,7 +945,7 @@ pub struct InterruptStackFrameValue {
 impl InterruptStackFrameValue {
     /// Call the `iretq` (interrupt return) instruction.
     ///
-    /// It is not required to be in a interrupt handler to be able to call this instruction.
+    /// This function doesn't have to be called in an interrupt handler.
     /// By manually construction a new [`InterruptStackFrameValue`] it's possible to transition
     /// from a higher privilege level to a lower one.
     ///
