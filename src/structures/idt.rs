@@ -942,6 +942,39 @@ pub struct InterruptStackFrameValue {
     pub stack_segment: u64,
 }
 
+impl InterruptStackFrameValue {
+    /// Call the `iretq` (interrupt return) instruction.
+    ///
+    /// It is not required to be in a interrupt handler to be able to call this instruction.
+    /// By manually construction a new [`InterruptStackFrameValue`] it's possible to transition
+    /// from a higher privilege level to a lower one.
+    ///
+    /// ## Safety
+    ///
+    /// Calling `iretq` is unsafe because setting the instruction pointer, stack pointer, RFlags,
+    /// CS and SS register can all cause undefined behaviour when done incorrectly.
+    ///
+    #[inline(always)]
+    pub unsafe fn iretq(&self) -> ! {
+        unsafe {
+            core::arch::asm!(
+                "push {data_segment}",
+                "push {new_stack_pointer}",
+                "push {rflags}",
+                "push {code_segment}",
+                "push {new_instruction_pointer}",
+                "iretq",
+                rflags = in(reg) self.cpu_flags,
+                new_instruction_pointer = in(reg) self.instruction_pointer.as_u64(),
+                new_stack_pointer = in(reg) self.stack_pointer.as_u64(),
+                code_segment = in(reg) self.code_segment,
+                data_segment = in(reg) self.stack_segment,
+                options(noreturn)
+            )
+        }
+    }
+}
+
 impl fmt::Debug for InterruptStackFrameValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         struct Hex(u64);
