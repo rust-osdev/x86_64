@@ -959,7 +959,7 @@ impl InterruptStackFrameValue {
     pub unsafe fn iretq(&self) -> ! {
         unsafe {
             core::arch::asm!(
-                "push {data_segment}",
+                "push {stack_segment}",
                 "push {new_stack_pointer}",
                 "push {rflags}",
                 "push {code_segment}",
@@ -969,7 +969,7 @@ impl InterruptStackFrameValue {
                 new_instruction_pointer = in(reg) self.instruction_pointer.as_u64(),
                 new_stack_pointer = in(reg) self.stack_pointer.as_u64(),
                 code_segment = in(reg) self.code_segment,
-                data_segment = in(reg) self.stack_segment,
+                stack_segment = in(reg) self.stack_segment,
                 options(noreturn)
             )
         }
