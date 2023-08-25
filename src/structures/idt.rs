@@ -955,6 +955,7 @@ impl InterruptStackFrameValue {
     /// CS and SS register can all cause undefined behaviour when done incorrectly.
     ///
     #[inline(always)]
+    #[cfg(feature = "instructions")]
     pub unsafe fn iretq(&self) -> ! {
         unsafe {
             core::arch::asm!(
