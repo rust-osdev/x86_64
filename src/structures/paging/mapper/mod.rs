@@ -60,7 +60,7 @@ pub enum TranslateResult {
     Mapped {
         /// The mapped frame.
         frame: MappedFrame,
-        /// The offset whithin the mapped frame.
+        /// The offset within the mapped frame.
         offset: u64,
         /// The entry flags in the lowest-level page table.
         ///
@@ -136,7 +136,7 @@ pub trait Mapper<S: PageSize> {
     ///   the same physical address. This is undefined behavior in Rust.
     ///     - This can be ensured by mapping each page to an individual physical
     ///       frame that is not mapped anywhere else.
-    /// - Creating uninitalized or invalid values: Rust requires that all values
+    /// - Creating uninitialized or invalid values: Rust requires that all values
     ///   have a correct memory layout. For example, a `bool` must be either a 0
     ///   or a 1 in memory, but not a 3 or 4. An exception is the `MaybeUninit`
     ///   wrapper type, which abstracts over possibly uninitialized memory.
@@ -224,7 +224,7 @@ pub trait Mapper<S: PageSize> {
     ///   the same physical address. This is undefined behavior in Rust.
     ///     - This can be ensured by mapping each page to an individual physical
     ///       frame that is not mapped anywhere else.
-    /// - Creating uninitalized or invalid values: Rust requires that all values
+    /// - Creating uninitialized or invalid values: Rust requires that all values
     ///   have a correct memory layout. For example, a `bool` must be either a 0
     ///   or a 1 in memory, but not a 3 or 4. An exception is the `MaybeUninit`
     ///   wrapper type, which abstracts over possibly uninitialized memory.

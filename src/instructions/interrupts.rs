@@ -109,10 +109,10 @@ where
 /// On some processors, the interrupt shadow of `sti` does not apply to
 /// non-maskable interrupts (NMIs). This means that an NMI can occur between
 /// the `sti` and `hlt` instruction, with the result that the CPU is put to
-/// sleep even though a new interrupt occured.
+/// sleep even though a new interrupt occurred.
 ///
 /// To work around this, it is recommended to check in the NMI handler if
-/// the interrupt occured between `sti` and `hlt` instructions. If this is the
+/// the interrupt occurred between `sti` and `hlt` instructions. If this is the
 /// case, the handler should increase the instruction pointer stored in the
 /// interrupt stack frame so that the `hlt` instruction is skipped.
 ///

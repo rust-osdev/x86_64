@@ -28,7 +28,7 @@ bitflags! {
         const ALIGNMENT_CHECK = 1 << 18;
         /// Enable the virtual-8086 mode.
         const VIRTUAL_8086_MODE = 1 << 17;
-        /// Allows to restart an instruction following an instrucion breakpoint.
+        /// Allows to restart an instruction following an instruction breakpoint.
         const RESUME_FLAG = 1 << 16;
         /// Used by `iret` in hardware task switch mode to determine if current task is nested.
         const NESTED_TASK = 1 << 14;
