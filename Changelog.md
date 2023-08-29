@@ -33,7 +33,7 @@
   - This trait is only available on nightly.
   - Gated behind `step_trait` feature flag
 - Add `UCet` and `SCet` registers ([#349](https://github.com/rust-osdev/x86_64/pull/349))
-- Use [`rustversion`](https://crates.io/crates/rustversion) to mark certian functions `const fn` on Rust 1.61 ([#353](https://github.com/rust-osdev/x86_64/pull/353))
+- Use [`rustversion`](https://crates.io/crates/rustversion) to mark certain functions `const fn` on Rust 1.61 ([#353](https://github.com/rust-osdev/x86_64/pull/353))
 - `Entry::handler_addr()` is now public ([#354](https://github.com/rust-osdev/x86_64/pull/354))
 - Increase packed structure alignment ([#362](https://github.com/rust-osdev/x86_64/pull/362))
 - Make more address methods `const fn` ([#369](https://github.com/rust-osdev/x86_64/pull/369))
