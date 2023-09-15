@@ -1,6 +1,7 @@
 //! Enabling and disabling interrupts
 
 use core::arch::asm;
+use core::sync::atomic::{compiler_fence, Ordering};
 
 /// Returns whether interrupts are enabled.
 #[inline]
@@ -15,6 +16,8 @@ pub fn are_enabled() -> bool {
 /// This is a wrapper around the `sti` instruction.
 #[inline]
 pub fn enable() {
+    // Prevent earlier writes to be moved beyond this point
+    compiler_fence(Ordering::Release);
     unsafe {
         asm!("sti", options(nomem, nostack));
     }
@@ -25,6 +28,8 @@ pub fn enable() {
 /// This is a wrapper around the `cli` instruction.
 #[inline]
 pub fn disable() {
+    // Prevent future writes to be moved before this point.
+    compiler_fence(Ordering::Acquire);
     unsafe {
         asm!("cli", options(nomem, nostack));
     }
