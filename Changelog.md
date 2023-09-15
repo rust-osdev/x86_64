@@ -2,6 +2,33 @@
 
 # 0.14.11 – 2022-09-15
 
+## New Features
+
+- [Add missing IDT entries #CP and #HV`](https://github.com/rust-osdev/x86_64/pull/387)
+- [Adding next_higher_level to PageLevelIndex](https://github.com/rust-osdev/x86_64/pull/400)
+- [Adding `is_empty` to PageTable](https://github.com/rust-osdev/x86_64/pull/399)
+- [Add `Descriptor::tss_segment_unchecked`](https://github.com/rust-osdev/x86_64/pull/428)
+- [Add the `iretq` function to the `InterruptStackFrameValue` struct.](https://github.com/rust-osdev/x86_64/pull/431)
+- [add `flush_broadcast` and `tlbsync` functions](https://github.com/rust-osdev/x86_64/pull/403)
+
+## Fixes
+
+- [Change Star::write() to use checked subtractions](https://github.com/rust-osdev/x86_64/pull/422)
+- [add workaround for recursive page tables with recursive index 511](https://github.com/rust-osdev/x86_64/pull/425)
+- [Fix off-by-one in documentation](https://github.com/rust-osdev/x86_64/pull/427)
+- [Fix misc doc typos](https://github.com/rust-osdev/x86_64/pull/432)
+- [add compiler fences to enable and disable](https://github.com/rust-osdev/x86_64/pull/436)
+
+## Other Improvements
+
+- [set repr to transparent for various types](https://github.com/rust-osdev/x86_64/pull/402)
+- [Remove unused `doc_cfg` feature](https://github.com/rust-osdev/x86_64/pull/408)
+- [Enable `doc_auto_cfg` on `docs.rs` builds](https://github.com/rust-osdev/x86_64/pull/407)
+- [Add Descriptor::dpl const method and use it in GDT construction](https://github.com/rust-osdev/x86_64/pull/410)
+- [Bump bitflags to 2.3.2](https://github.com/rust-osdev/x86_64/pull/426)
+- [Add `inline` attribute to segment functions](https://github.com/rust-osdev/x86_64/pull/430)
+
+
 # 0.14.10 – 2022-07-10
 
 ## New Features
