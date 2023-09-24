@@ -779,34 +779,47 @@ impl<F> Entry<F> {
     }
 }
 
-macro_rules! impl_set_handler_fn {
-    ($h:ty) => {
-        #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
-        impl Entry<$h> {
-            /// Set the handler function for the IDT entry and sets the present bit.
-            ///
-            /// For the code selector field, this function uses the code segment selector currently
-            /// active in the CPU.
-            ///
-            /// The function returns a mutable reference to the entry's options that allows
-            /// further customization.
-            ///
-            /// This method is only usable with the `abi_x86_interrupt` feature enabled. Without it, the
-            /// unsafe [`Entry::set_handler_addr`] method has to be used instead.
+#[cfg(feature = "instructions")]
+impl<F: HandlerFuncType> Entry<F> {
+    /// Set the handler function for the IDT entry and sets the present bit.
+    ///
+    /// For the code selector field, this function uses the code segment selector currently
+    /// active in the CPU.
+    ///
+    /// The function returns a mutable reference to the entry's options that allows
+    /// further customization.
+    ///
+    /// This method is only usable with the `abi_x86_interrupt` feature enabled. Without it, the
+    /// unsafe [`Entry::set_handler_addr`] method has to be used instead.
+    #[inline]
+    pub fn set_handler_fn(&mut self, handler: F) -> &mut EntryOptions {
+        unsafe { self.set_handler_addr(handler.to_virt_addr()) }
+    }
+}
+
+/// A common trait for all handler functions usable in [`Entry`].
+pub trait HandlerFuncType {
+    /// Get the virtual address of the handler function.
+    fn to_virt_addr(self) -> VirtAddr;
+}
+
+macro_rules! impl_handler_func_type {
+    ($f:ty) => {
+        #[cfg(feature = "abi_x86_interrupt")]
+        impl HandlerFuncType for $f {
             #[inline]
-            pub fn set_handler_fn(&mut self, handler: $h) -> &mut EntryOptions {
-                let handler = VirtAddr::new(handler as u64);
-                unsafe { self.set_handler_addr(handler) }
+            fn to_virt_addr(self) -> VirtAddr {
+                VirtAddr::new(self as u64)
             }
         }
     };
 }
 
-impl_set_handler_fn!(HandlerFunc);
-impl_set_handler_fn!(HandlerFuncWithErrCode);
-impl_set_handler_fn!(PageFaultHandlerFunc);
-impl_set_handler_fn!(DivergingHandlerFunc);
-impl_set_handler_fn!(DivergingHandlerFuncWithErrCode);
+impl_handler_func_type!(HandlerFunc);
+impl_handler_func_type!(HandlerFuncWithErrCode);
+impl_handler_func_type!(PageFaultHandlerFunc);
+impl_handler_func_type!(DivergingHandlerFunc);
+impl_handler_func_type!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the options field of an IDT entry.
 #[repr(transparent)]
