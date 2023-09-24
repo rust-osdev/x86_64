@@ -797,9 +797,9 @@ impl<F: HandlerFuncType> Entry<F> {
     }
 }
 
-/// The trait for all function types that can be used as a handler function in `Entry`.
+/// A common trait for all handler functions usable in [`Entry`].
 pub trait HandlerFuncType {
-    /// Get the virtual memory address of the function
+    /// Get the virtual address of the handler function.
     fn to_virt_addr(self) -> VirtAddr;
 }
 
