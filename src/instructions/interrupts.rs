@@ -18,7 +18,7 @@ pub fn enable() {
     // Omit `nomem` to imitate a lock release. Otherwise, the compiler
     // is free to move reads and writes through this asm block.
     unsafe {
-        asm!("sti", options(nostack));
+        asm!("sti", options(preserves_flags, nostack));
     }
 }
 
@@ -30,7 +30,7 @@ pub fn disable() {
     // Omit `nomem` to imitate a lock acquire. Otherwise, the compiler
     // is free to move reads and writes through this asm block.
     unsafe {
-        asm!("cli", options(nostack));
+        asm!("cli", options(preserves_flags, nostack));
     }
 }
 
