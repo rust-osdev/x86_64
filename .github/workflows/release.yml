@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: "Checkout Repository"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # TODO: Remove when Python 3.11 is the default on the Gihtub Actions image
       - name: "Install Python 3.11"
