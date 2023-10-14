@@ -129,8 +129,8 @@ impl VirtAddr {
     // doesn't truncate.
     #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
     #[inline]
-    pub fn from_ptr<T>(ptr: *const T) -> Self {
-        Self::new(ptr as u64)
+    pub fn from_ptr<T: ?Sized>(ptr: *const T) -> Self {
+        Self::new(ptr as *const () as u64)
     }
 
     /// Converts the address to a raw pointer.
@@ -843,5 +843,12 @@ mod tests {
     #[should_panic]
     fn test_phys_addr_align_up_overflow() {
         PhysAddr::new(0x000f_ffff_ffff_ffff).align_up(2u64);
+    }
+
+    #[test]
+    fn test_from_ptr_array() {
+        let slice = &[1, 2, 3, 4, 5];
+        // Make sure that from_ptr(slice) is the address of the first element
+        assert_eq!(VirtAddr::from_ptr(slice), VirtAddr::from_ptr(&slice[0]));
     }
 }
