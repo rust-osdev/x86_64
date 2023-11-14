@@ -14,7 +14,7 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// In 64-bit mode, segmentation is not supported. The GDT is used nonetheless, for example for
 /// switching between user and kernel mode or for loading a TSS.
 ///
-/// The GDT has a fixed size of 8 entries, trying to add more entries will panic.
+/// The GDT has a fixed size of `N` entries, trying to add more entries will panic.
 ///
 /// You do **not** need to add a null segment descriptor yourself - this is already done
 /// internally.
@@ -34,9 +34,9 @@ use crate::registers::segmentation::{Segment, CS, SS};
 ///
 /// # Example
 /// ```
-/// use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor};
+/// use x86_64::structures::gdt::{BasicGlobalDescriptorTable, Descriptor};
 ///
-/// let mut gdt = GlobalDescriptorTable::new();
+/// let mut gdt = BasicGlobalDescriptorTable::<8>::new();
 /// gdt.add_entry(Descriptor::kernel_code_segment());
 /// gdt.add_entry(Descriptor::user_code_segment());
 /// gdt.add_entry(Descriptor::user_data_segment());
@@ -45,17 +45,17 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// ```
 
 #[derive(Debug, Clone)]
-pub struct GlobalDescriptorTable {
-    table: [u64; 8],
+pub struct BasicGlobalDescriptorTable<const N: usize> {
+    table: [u64; N],
     len: usize,
 }
 
-impl GlobalDescriptorTable {
+impl<const N: usize> BasicGlobalDescriptorTable<N> {
     /// Creates an empty GDT.
     #[inline]
-    pub const fn new() -> GlobalDescriptorTable {
-        GlobalDescriptorTable {
-            table: [0; 8],
+    pub const fn new() -> Self {
+        Self {
+            table: [0; N],
             len: 1,
         }
     }
@@ -65,16 +65,16 @@ impl GlobalDescriptorTable {
     /// # Safety
     ///
     /// * The user must make sure that the entries are well formed
-    /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
+    /// * The provided slice **must not be larger than `N` items** (only up to the first `N` will be observed.)
     #[inline]
-    pub const unsafe fn from_raw_slice(slice: &[u64]) -> GlobalDescriptorTable {
+    pub const unsafe fn from_raw_slice(slice: &[u64]) -> Self {
         let len = slice.len();
-        let mut table = [0; 8];
+        let mut table = [0; N];
         let mut idx = 0;
 
         assert!(
-            len <= 8,
-            "initializing a GDT from a slice requires it to be **at most** 8 elements."
+            len <= N,
+            "initializing a GDT from a slice requires it to be **at most** N elements."
         );
 
         while idx < len {
@@ -82,7 +82,7 @@ impl GlobalDescriptorTable {
             idx += 1;
         }
 
-        GlobalDescriptorTable { table, len }
+        Self { table, len }
     }
 
     /// Get a reference to the internal table.
@@ -169,6 +169,9 @@ impl GlobalDescriptorTable {
         }
     }
 }
+
+/// Alias for a `BasicGlobalDescriptorTable` with 8 entries.
+pub type GlobalDescriptorTable = BasicGlobalDescriptorTable<8>;
 
 /// A 64-bit mode segment descriptor.
 ///
