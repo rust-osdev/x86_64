@@ -325,7 +325,7 @@ mod x86_64 {
         /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
         /// changing the page mapping.
         #[inline]
-        unsafe fn write_raw(frame: PhysFrame, val: u16) {
+        pub unsafe fn write_raw(frame: PhysFrame, val: u16) {
             let addr = frame.start_address();
             let value = addr.as_u64() | val as u64;
 
