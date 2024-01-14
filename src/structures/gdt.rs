@@ -72,10 +72,14 @@ impl<const N: usize> GlobalDescriptorTable<N> {
 
     /// Forms a GDT from a slice of `u64`.
     ///
+    /// If the slice has less than `N` entries, the remaining GDT entries are
+    /// left empty.
+    ///
+    /// Panics if the provided slice has _more_ than `N` entries.
+    ///
     /// # Safety
     ///
     /// * The user must make sure that the entries are well formed
-    /// * The provided slice **must not be larger than `N` items** (only up to the first `N` will be observed.)
     #[inline]
     pub const unsafe fn from_raw_slice(slice: &[u64]) -> Self {
         let len = slice.len();
