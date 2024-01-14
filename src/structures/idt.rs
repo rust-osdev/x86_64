@@ -771,10 +771,12 @@ impl<F> Entry<F> {
         }
     }
 
-    /// Set the handler address for the IDT entry and sets the present bit.
-    ///
-    /// For the code selector field, this function uses the code segment selector currently
-    /// active in the CPU.
+    /// Sets the handler address for the IDT entry and sets the following defaults:
+    ///   - The code selector is the code segment currently active in the CPU
+    ///   - The present bit is set
+    ///   - Interrupts are disabled on handler invocation
+    ///   - The privilege level (DPL) is [`PrivilegeLevel::Ring0`]
+    ///   - No IST is configured (existing stack will be used)
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
@@ -814,10 +816,12 @@ impl<F> Entry<F> {
 
 #[cfg(feature = "instructions")]
 impl<F: HandlerFuncType> Entry<F> {
-    /// Set the handler function for the IDT entry and sets the present bit.
-    ///
-    /// For the code selector field, this function uses the code segment selector currently
-    /// active in the CPU.
+    /// Sets the handler function for the IDT entry and sets the following defaults:
+    ///   - The code selector is the code segment currently active in the CPU
+    ///   - The present bit is set
+    ///   - Interrupts are disabled on handler invocation
+    ///   - The privilege level (DPL) is [`PrivilegeLevel::Ring0`]
+    ///   - No IST is configured (existing stack will be used)
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
