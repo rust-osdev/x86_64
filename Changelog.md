@@ -22,6 +22,7 @@
 - [Add structures::gdt::Entry type](https://github.com/rust-osdev/x86_64/pull/380)
 - [Allow GDT to be loaded with shared reference](https://github.com/rust-osdev/x86_64/pull/381)
 - [seal off the `PageSize` trait](https://github.com/rust-osdev/x86_64/pull/404)
+- [idt: Fixup Options structure and cleanup set_handler_fn](https://github.com/rust-osdev/x86_64/pull/226)
 
 ## New Features
 
@@ -33,10 +34,6 @@
 - [activate `feature(asm_const)`](https://github.com/rust-osdev/x86_64/pull/320)
 - [gdt: Check that MAX is in range](https://github.com/rust-osdev/x86_64/pull/365)
 - [fix `Page::from_page_table_indices`](https://github.com/rust-osdev/x86_64/pull/398)
-
-## Other improvements
-
-- [idt: Fixup Options structure and cleanup set_handler_fn](https://github.com/rust-osdev/x86_64/pull/226)
 
 # 0.14.11 – 2023-09-15
 
