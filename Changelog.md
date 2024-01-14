@@ -1,8 +1,42 @@
 # Unreleased
 
+# 0.15.0 – 2024-01-14
+
+## Breaking changes
+
+- [replace software_interrupt! macro with generic function](https://github.com/rust-osdev/x86_64/pull/259)
+- [Use SegmentSelector in InterruptStackFrame](https://github.com/rust-osdev/x86_64/pull/263)
+- [add `InvalidStarSegmentSelectors` error](https://github.com/rust-osdev/x86_64/pull/317)
+- [add `PcidTooBig` error](https://github.com/rust-osdev/x86_64/pull/316)
+- [implement `Index<u8>` for IDT instead of `Index<usize>`](https://github.com/rust-osdev/x86_64/pull/319)
+- [change `cpu_flags`'s type to `RFlags`](https://github.com/rust-osdev/x86_64/pull/324)
+- [fix `load_tss` and `GlobalDescriptorTable`](https://github.com/rust-osdev/x86_64/pull/323)
+- [add an immutable getter for the level 4 page table](https://github.com/rust-osdev/x86_64/pull/327)
+- [make `Cr2::read` return a result](https://github.com/rust-osdev/x86_64/pull/335)
+- [remove `external_asm` and `inline_asm` features](https://github.com/rust-osdev/x86_64/pull/345)
+- [Allow the GDT to be of any length](https://github.com/rust-osdev/x86_64/pull/360)
+- [Remove software_interrupt! macro](https://github.com/rust-osdev/x86_64/pull/363)
+- [Remove usize trait impls](https://github.com/rust-osdev/x86_64/pull/364)
+- [Remove deprecated functions/flags](https://github.com/rust-osdev/x86_64/pull/368)
+- [VirtAddr improvements](https://github.com/rust-osdev/x86_64/pull/370)
+- [Add structures::gdt::Entry type](https://github.com/rust-osdev/x86_64/pull/380)
+- [Allow GDT to be loaded with shared reference](https://github.com/rust-osdev/x86_64/pull/381)
+- [seal off the `PageSize` trait](https://github.com/rust-osdev/x86_64/pull/404)
+
 ## New Features
 
 - [Add `HandlerFuncType` trait](https://github.com/rust-osdev/x86_64/pull/439)
+
+## Fixes
+
+- [fix typo in docs](https://github.com/rust-osdev/x86_64/pull/265)
+- [activate `feature(asm_const)`](https://github.com/rust-osdev/x86_64/pull/320)
+- [gdt: Check that MAX is in range](https://github.com/rust-osdev/x86_64/pull/365)
+- [fix `Page::from_page_table_indices`](https://github.com/rust-osdev/x86_64/pull/398)
+
+## Other improvements
+
+- [idt: Fixup Options structure and cleanup set_handler_fn](https://github.com/rust-osdev/x86_64/pull/226)
 
 # 0.14.11 – 2023-09-15
 
