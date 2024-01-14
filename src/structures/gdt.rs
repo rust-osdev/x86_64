@@ -99,6 +99,16 @@ impl<const N: usize> GlobalDescriptorTable<N> {
         Self { table, len }
     }
 
+    /// Creates a GDT from an array of `u64`.
+    ///
+    /// # Safety
+    ///
+    /// * The user must make sure that the entries are well formed
+    #[inline]
+    pub const unsafe fn from_array(array: [u64; N]) -> Self {
+        unsafe { Self::from_raw_slice(&array) }
+    }
+
     /// Get a reference to the internal table.
     ///
     /// The resulting slice may contain system descriptors, which span two `u64`s.
