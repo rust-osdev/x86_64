@@ -1115,14 +1115,6 @@ bitflags! {
     }
 }
 
-impl PageFaultErrorCode {
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
-    }
-}
-
 /// Describes an error code referencing a segment selector.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
