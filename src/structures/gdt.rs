@@ -34,9 +34,9 @@ use crate::registers::segmentation::{Segment, CS, SS};
 ///
 /// # Example
 /// ```
-/// use x86_64::structures::gdt::{BasicGlobalDescriptorTable, Descriptor};
+/// use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor};
 ///
-/// let mut gdt = BasicGlobalDescriptorTable::<8>::new();
+/// let mut gdt = GlobalDescriptorTable::new();
 /// gdt.add_entry(Descriptor::kernel_code_segment());
 /// gdt.add_entry(Descriptor::user_code_segment());
 /// gdt.add_entry(Descriptor::user_data_segment());
@@ -45,15 +45,25 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// ```
 
 #[derive(Debug, Clone)]
-pub struct BasicGlobalDescriptorTable<const N: usize> {
+pub struct GlobalDescriptorTable<const N: usize = 8> {
     table: [u64; N],
     len: usize,
 }
 
-impl<const N: usize> BasicGlobalDescriptorTable<N> {
-    /// Creates an empty GDT.
+impl GlobalDescriptorTable<8> {
+    /// Creates an empty GDT with 8 entries.
+    ///
+    /// Use [`Self::empty`] to create a GDT with a custom size.
     #[inline]
     pub const fn new() -> Self {
+        Self::empty()
+    }
+}
+
+impl<const N: usize> GlobalDescriptorTable<N> {
+    /// Creates an empty GDT.
+    #[inline]
+    pub const fn empty() -> Self {
         Self {
             table: [0; N],
             len: 1,
@@ -169,9 +179,6 @@ impl<const N: usize> BasicGlobalDescriptorTable<N> {
         }
     }
 }
-
-/// Alias for a `BasicGlobalDescriptorTable` with 8 entries.
-pub type GlobalDescriptorTable = BasicGlobalDescriptorTable<8>;
 
 /// A 64-bit mode segment descriptor.
 ///

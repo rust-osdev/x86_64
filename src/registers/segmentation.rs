@@ -8,13 +8,13 @@ use core::fmt;
 #[cfg(doc)]
 use crate::{
     registers::control::Cr4Flags,
-    structures::gdt::{Descriptor, DescriptorFlags, BasicGlobalDescriptorTable},
+    structures::gdt::{Descriptor, DescriptorFlags, GlobalDescriptorTable},
 };
 
 /// An x86 segment
 ///
 /// Segment registers on x86 are 16-bit [`SegmentSelector`]s, which index into
-/// the [`BasicGlobalDescriptorTable`]. The corresponding GDT entry is used to
+/// the [`GlobalDescriptorTable`]. The corresponding GDT entry is used to
 /// configure the segment itself. Note that most segmentation functionality is
 /// disabled in 64-bit mode. See the individual segments for more information.
 pub trait Segment {

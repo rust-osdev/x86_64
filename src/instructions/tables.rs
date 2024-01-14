@@ -9,7 +9,7 @@ pub use crate::structures::DescriptorTablePointer;
 /// Load a GDT.
 ///
 /// Use the
-/// [`BasicGlobalDescriptorTable`](crate::structures::gdt::BasicGlobalDescriptorTable) struct for a high-level
+/// [`GlobalDescriptorTable`](crate::structures::gdt::BasicGlobalDescriptorTable) struct for a high-level
 /// interface to loading a GDT.
 ///
 /// ## Safety
