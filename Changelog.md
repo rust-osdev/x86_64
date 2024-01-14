@@ -4,7 +4,7 @@
 
 - [Add `HandlerFuncType` trait](https://github.com/rust-osdev/x86_64/pull/439)
 
-# 0.14.11 – 2022-09-15
+# 0.14.11 – 2023-09-15
 
 ## New Features
 
