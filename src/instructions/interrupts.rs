@@ -15,8 +15,10 @@ pub fn are_enabled() -> bool {
 /// This is a wrapper around the `sti` instruction.
 #[inline]
 pub fn enable() {
+    // Omit `nomem` to imitate a lock release. Otherwise, the compiler
+    // is free to move reads and writes through this asm block.
     unsafe {
-        asm!("sti", options(nomem, nostack));
+        asm!("sti", options(preserves_flags, nostack));
     }
 }
 
@@ -25,8 +27,10 @@ pub fn enable() {
 /// This is a wrapper around the `cli` instruction.
 #[inline]
 pub fn disable() {
+    // Omit `nomem` to imitate a lock acquire. Otherwise, the compiler
+    // is free to move reads and writes through this asm block.
     unsafe {
-        asm!("cli", options(nomem, nostack));
+        asm!("cli", options(preserves_flags, nostack));
     }
 }
 

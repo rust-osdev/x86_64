@@ -1,5 +1,91 @@
 # Unreleased
 
+# 0.15.0 – 2024-01-14
+
+## Breaking changes
+
+- [replace software_interrupt! macro with generic function](https://github.com/rust-osdev/x86_64/pull/259)
+- [Use SegmentSelector in InterruptStackFrame](https://github.com/rust-osdev/x86_64/pull/263)
+- [add `InvalidStarSegmentSelectors` error](https://github.com/rust-osdev/x86_64/pull/317)
+- [add `PcidTooBig` error](https://github.com/rust-osdev/x86_64/pull/316)
+- [implement `Index<u8>` for IDT instead of `Index<usize>`](https://github.com/rust-osdev/x86_64/pull/319)
+- [change `cpu_flags`'s type to `RFlags`](https://github.com/rust-osdev/x86_64/pull/324)
+- [fix `load_tss` and `GlobalDescriptorTable`](https://github.com/rust-osdev/x86_64/pull/323)
+- [add an immutable getter for the level 4 page table](https://github.com/rust-osdev/x86_64/pull/327)
+- [make `Cr2::read` return a result](https://github.com/rust-osdev/x86_64/pull/335)
+- [remove `external_asm` and `inline_asm` features](https://github.com/rust-osdev/x86_64/pull/345)
+- [Allow the GDT to be of any length](https://github.com/rust-osdev/x86_64/pull/360)
+- [Remove software_interrupt! macro](https://github.com/rust-osdev/x86_64/pull/363)
+- [Remove usize trait impls](https://github.com/rust-osdev/x86_64/pull/364)
+- [Remove deprecated functions/flags](https://github.com/rust-osdev/x86_64/pull/368)
+- [VirtAddr improvements](https://github.com/rust-osdev/x86_64/pull/370)
+- [Add structures::gdt::Entry type](https://github.com/rust-osdev/x86_64/pull/380)
+- [Allow GDT to be loaded with shared reference](https://github.com/rust-osdev/x86_64/pull/381)
+- [seal off the `PageSize` trait](https://github.com/rust-osdev/x86_64/pull/404)
+
+## New Features
+
+- [Add `HandlerFuncType` trait](https://github.com/rust-osdev/x86_64/pull/439)
+
+## Fixes
+
+- [fix typo in docs](https://github.com/rust-osdev/x86_64/pull/265)
+- [activate `feature(asm_const)`](https://github.com/rust-osdev/x86_64/pull/320)
+- [gdt: Check that MAX is in range](https://github.com/rust-osdev/x86_64/pull/365)
+- [fix `Page::from_page_table_indices`](https://github.com/rust-osdev/x86_64/pull/398)
+
+## Other improvements
+
+- [idt: Fixup Options structure and cleanup set_handler_fn](https://github.com/rust-osdev/x86_64/pull/226)
+
+# 0.14.11 – 2023-09-15
+
+## New Features
+
+- [Add missing IDT entries #CP and #HV`](https://github.com/rust-osdev/x86_64/pull/387)
+- [Adding next_higher_level to PageLevelIndex](https://github.com/rust-osdev/x86_64/pull/400)
+- [Adding `is_empty` to PageTable](https://github.com/rust-osdev/x86_64/pull/399)
+- [Add `Descriptor::tss_segment_unchecked`](https://github.com/rust-osdev/x86_64/pull/428)
+- [Add the `iretq` function to the `InterruptStackFrameValue` struct.](https://github.com/rust-osdev/x86_64/pull/431)
+- [add `flush_broadcast` and `tlbsync` functions](https://github.com/rust-osdev/x86_64/pull/403)
+
+## Fixes
+
+- [Change Star::write() to use checked subtractions](https://github.com/rust-osdev/x86_64/pull/422)
+- [add workaround for recursive page tables with recursive index 511](https://github.com/rust-osdev/x86_64/pull/425)
+- [Fix off-by-one in documentation](https://github.com/rust-osdev/x86_64/pull/427)
+- [Fix misc doc typos](https://github.com/rust-osdev/x86_64/pull/432)
+- [add compiler fences to enable and disable](https://github.com/rust-osdev/x86_64/pull/436)
+
+## Other Improvements
+
+- [set repr to transparent for various types](https://github.com/rust-osdev/x86_64/pull/402)
+- [Remove unused `doc_cfg` feature](https://github.com/rust-osdev/x86_64/pull/408)
+- [Enable `doc_auto_cfg` on `docs.rs` builds](https://github.com/rust-osdev/x86_64/pull/407)
+- [Add Descriptor::dpl const method and use it in GDT construction](https://github.com/rust-osdev/x86_64/pull/410)
+- [Bump bitflags to 2.3.2](https://github.com/rust-osdev/x86_64/pull/426)
+- [Add `inline` attribute to segment functions](https://github.com/rust-osdev/x86_64/pull/430)
+
+
+# 0.14.10 – 2022-07-10
+
+## New Features
+
+- [Add `registers::debug`](https://github.com/rust-osdev/x86_64/pull/286)
+- [Provide null segment selector as associated constant on `SegmentSelector`](https://github.com/rust-osdev/x86_64/pull/373)
+- [Add getters for the page table frame mapping](https://github.com/rust-osdev/x86_64/pull/385)
+
+## Fixes
+
+- [Fix align functions](https://github.com/rust-osdev/x86_64/pull/375)
+- [Correct wrong comment](https://github.com/rust-osdev/x86_64/pull/374)
+
+## Other Improvements
+
+- [Cleanup Segment macros](https://github.com/rust-osdev/x86_64/pull/376)
+- [Update comment and docs](https://github.com/rust-osdev/x86_64/pull/382)
+
+
 # 0.14.9 - 2022-03-31
 
 ## New Features
@@ -14,7 +100,7 @@
   - This trait is only available on nightly.
   - Gated behind `step_trait` feature flag
 - Add `UCet` and `SCet` registers ([#349](https://github.com/rust-osdev/x86_64/pull/349))
-- Use [`rustversion`](https://crates.io/crates/rustversion) to mark certian functions `const fn` on Rust 1.61 ([#353](https://github.com/rust-osdev/x86_64/pull/353))
+- Use [`rustversion`](https://crates.io/crates/rustversion) to mark certain functions `const fn` on Rust 1.61 ([#353](https://github.com/rust-osdev/x86_64/pull/353))
 - `Entry::handler_addr()` is now public ([#354](https://github.com/rust-osdev/x86_64/pull/354))
 - Increase packed structure alignment ([#362](https://github.com/rust-osdev/x86_64/pull/362))
 - Make more address methods `const fn` ([#369](https://github.com/rust-osdev/x86_64/pull/369))

@@ -10,6 +10,7 @@ use core::arch::asm;
 
 macro_rules! get_reg_impl {
     ($name:literal) => {
+        #[inline]
         fn get_reg() -> SegmentSelector {
             let segment: u16;
             unsafe {
@@ -25,6 +26,7 @@ macro_rules! segment_impl {
         impl Segment for $type {
             get_reg_impl!($name);
 
+            #[inline]
             unsafe fn set_reg(sel: SegmentSelector) {
                 unsafe {
                     asm!(concat!("mov ", $name, ", {0:x}"), in(reg) sel.0, options(nostack, preserves_flags));
@@ -38,6 +40,7 @@ macro_rules! segment64_impl {
     ($type:ty, $name:literal, $base:ty) => {
         impl Segment64 for $type {
             const BASE: Msr = <$base>::MSR;
+            #[inline]
             fn read_base() -> VirtAddr {
                 unsafe {
                     let val: u64;
@@ -46,6 +49,7 @@ macro_rules! segment64_impl {
                 }
             }
 
+            #[inline]
             unsafe fn write_base(base: VirtAddr) {
                 unsafe{
                     asm!(concat!("wr", $name, "base {}"), in(reg) base.as_u64(), options(nostack, preserves_flags));
@@ -66,6 +70,7 @@ impl Segment for CS {
     /// Note we cannot use a "far call" (`lcall`) or "far jmp" (`ljmp`) to do this because then we
     /// would only be able to jump to 32-bit instruction pointers. Only Intel implements support
     /// for 64-bit far calls/jumps in long-mode, AMD does not.
+    #[inline]
     unsafe fn set_reg(sel: SegmentSelector) {
         unsafe {
             asm!(
@@ -97,6 +102,7 @@ impl GS {
     ///
     /// This function is unsafe because the caller must ensure that the
     /// swap operation cannot lead to undefined behavior.
+    #[inline]
     pub unsafe fn swap() {
         unsafe {
             asm!("swapgs", options(nostack, preserves_flags));

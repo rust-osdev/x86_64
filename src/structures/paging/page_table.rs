@@ -106,6 +106,7 @@ impl fmt::Debug for PageTableEntry {
 
 bitflags! {
     /// Possible flags for a page table entry.
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct PageTableFlags: u64 {
         /// Specifies whether the mapped frame or page table is loaded in memory.
         const PRESENT =         1;
@@ -168,6 +169,14 @@ bitflags! {
     }
 }
 
+impl PageTableFlags {
+    #[deprecated = "use the safe `from_bits_retain` method instead"]
+    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
+    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+        Self::from_bits_retain(bits)
+    }
+}
+
 /// The number of entries in a page table.
 const ENTRY_COUNT: usize = 512;
 
@@ -176,7 +185,7 @@ const ENTRY_COUNT: usize = 512;
 /// Always page-sized.
 ///
 /// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed
-/// through index operations. For example, `page_table[15]` returns the 15th page table entry.
+/// through index operations. For example, `page_table[15]` returns the 16th page table entry.
 ///
 /// Note that while this type implements [`Clone`], the users must be careful not to introduce
 /// mutable aliasing by using the cloned page tables.
@@ -200,7 +209,7 @@ impl PageTable {
     /// Clears all entries.
     #[inline]
     pub fn zero(&mut self) {
-        for entry in self.entries.iter_mut() {
+        for entry in self.iter_mut() {
             entry.set_unused();
         }
     }
@@ -208,13 +217,34 @@ impl PageTable {
     /// Returns an iterator over the entries of the page table.
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {
-        self.entries.iter()
+        (0..512).map(move |i| &self.entries[i])
     }
 
     /// Returns an iterator that allows modifying the entries of the page table.
     #[inline]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {
-        self.entries.iter_mut()
+        // Note that we intentionally don't just return `self.entries.iter()`:
+        // Some users may choose to create a reference to a page table at
+        // `0xffff_ffff_ffff_f000`. This causes problems because calculating
+        // the end pointer of the page tables causes an overflow. Therefore
+        // creating page tables at that address is unsound and must be avoided.
+        // Unfortunately creating such page tables is quite common when
+        // recursive page tables are used, so we try to avoid calculating the
+        // end pointer if possible. `core::slice::Iter` calculates the end
+        // pointer to determine when it should stop yielding elements. Because
+        // we want to avoid calculating the end pointer, we don't use
+        // `core::slice::Iter`, we implement our own iterator that doesn't
+        // calculate the end pointer. This doesn't make creating page tables at
+        // that address sound, but it avoids some easy to trigger
+        // miscompilations.
+        let ptr = self.entries.as_mut_ptr();
+        (0..512).map(move |i| unsafe { &mut *ptr.add(i) })
+    }
+
+    /// Checks if the page table is empty (all entries are zero).
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.iter().all(|entry| entry.is_unused())
     }
 }
 
@@ -386,6 +416,16 @@ impl PageTableLevel {
             PageTableLevel::Three => Some(PageTableLevel::Two),
             PageTableLevel::Two => Some(PageTableLevel::One),
             PageTableLevel::One => None,
+        }
+    }
+
+    /// Returns the next higher level or `None` for level 4
+    pub const fn next_higher_level(self) -> Option<Self> {
+        match self {
+            PageTableLevel::Four => None,
+            PageTableLevel::Three => Some(PageTableLevel::Four),
+            PageTableLevel::Two => Some(PageTableLevel::Three),
+            PageTableLevel::One => Some(PageTableLevel::Two),
         }
     }
 

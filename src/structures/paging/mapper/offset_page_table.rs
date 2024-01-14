@@ -47,6 +47,11 @@ impl<'a> OffsetPageTable<'a> {
     pub fn level_4_table_mut(&mut self) -> &mut PageTable {
         self.inner.level_4_table_mut()
     }
+
+    /// Returns the offset used for converting virtual to physical addresses.
+    pub fn phys_offset(&self) -> VirtAddr {
+        self.inner.page_table_frame_mapping().offset
+    }
 }
 
 #[derive(Debug)]

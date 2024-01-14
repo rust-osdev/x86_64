@@ -9,45 +9,41 @@ authors = [
 ]
 description = "Support for x86_64 specific instructions, registers, and structures."
 documentation = "https://docs.rs/x86_64"
-keywords = [
-    "amd64",
-    "x86",
-    "x86_64",
-    "no_std",
-]
-categories = [
-    "no-std",
-]
+keywords = ["amd64", "x86", "x86_64", "no_std"]
+categories = ["no-std"]
 license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.14.9"
+version = "0.15.0"
 edition = "2018"
 rust-version = "1.59" # Needed to support inline asm and default const generics
 
 [dependencies]
 bit_field = "0.10.1"
-bitflags = "1.3.2"
+bitflags = "2.3.2"
 volatile = "0.4.4"
 rustversion = "1.0.5"
 
 [features]
-default = [ "nightly", "instructions" ]
+default = ["nightly", "instructions"]
 instructions = []
-nightly = [ "const_fn", "step_trait", "abi_x86_interrupt", "asm_const", "doc_cfg" ]
+nightly = [ "const_fn", "step_trait", "abi_x86_interrupt", "asm_const" ]
 abi_x86_interrupt = []
 const_fn = []
 asm_const = []
 step_trait = []
-doc_cfg = []
+doc_auto_cfg = []
+
+[package.metadata.docs.rs]
+all-features = true
 
 [package.metadata.release]
-no-dev-version = true
+dev-version = false
 pre-release-replacements = [
-    { file="Changelog.md", search="# Unreleased", replace="# Unreleased\n\n# {{version}} – {{date}}", exactly=1 },
+    { file = "Changelog.md", search = "# Unreleased", replace = "# Unreleased\n\n# {{version}} – {{date}}", exactly = 1 },
 ]
 pre-release-commit-message = "Bump version to {{version}}"
-disable-push = true
-disable-publish = true
-disable-tag = true
+push = false
+publish = false
+tag = false

@@ -6,7 +6,7 @@
 #![cfg_attr(feature = "asm_const", feature(asm_const))]
 #![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
 #![cfg_attr(feature = "step_trait", feature(step_trait))]
-#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
+#![cfg_attr(feature = "doc_auto_cfg", feature(doc_auto_cfg))]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
@@ -53,13 +53,13 @@ impl PrivilegeLevel {
     ///
     /// This function panics if the passed value is >3.
     #[inline]
-    pub fn from_u16(value: u16) -> PrivilegeLevel {
+    pub const fn from_u16(value: u16) -> PrivilegeLevel {
         match value {
             0 => PrivilegeLevel::Ring0,
             1 => PrivilegeLevel::Ring1,
             2 => PrivilegeLevel::Ring2,
             3 => PrivilegeLevel::Ring3,
-            i => panic!("{} is not a valid privilege level", i),
+            _ => panic!("invalid privilege level"),
         }
     }
 }
