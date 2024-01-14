@@ -20,7 +20,7 @@ const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 /// between `u64` and `usize`.
 ///
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
-/// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterium
+/// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterion
 /// are called “canonical”. This type guarantees that it always represents a canonical address.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
@@ -60,39 +60,43 @@ impl core::fmt::Debug for VirtAddrNotValid {
 impl VirtAddr {
     /// Creates a new canonical virtual address.
     ///
-    /// This function performs sign extension of bit 47 to make the address canonical.
+    /// The provided address should already be canonical. If you want to check
+    /// whether an address is canonical, use [`try_new`](Self::try_new).
     ///
     /// ## Panics
     ///
-    /// This function panics if the bits in the range 48 to 64 contain data (i.e. are not null and no sign extension).
+    /// This function panics if the bits in the range 48 to 64 are invalid
+    /// (i.e. are not a proper sign extension of bit 47).
     #[inline]
-    pub fn new(addr: u64) -> VirtAddr {
-        Self::try_new(addr).expect(
-            "address passed to VirtAddr::new must not contain any data \
-             in bits 48 to 64",
-        )
+    pub const fn new(addr: u64) -> VirtAddr {
+        // TODO: Replace with .ok().expect(msg) when that works on stable.
+        match Self::try_new(addr) {
+            Ok(v) => v,
+            Err(_) => panic!("virtual address must be sign extended in bits 48 to 64"),
+        }
     }
 
     /// Tries to create a new canonical virtual address.
     ///
-    /// This function tries to performs sign
-    /// extension of bit 47 to make the address canonical. It succeeds if bits 48 to 64 are
-    /// either a correct sign extension (i.e. copies of bit 47) or all null. Else, an error
-    /// is returned.
+    /// This function checks wether the given address is canonical
+    /// and returns an error otherwise. An address is canonical
+    /// if bits 48 to 64 are a correct sign
+    /// extension (i.e. copies of bit 47).
     #[inline]
-    pub fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
-        match addr.get_bits(47..64) {
-            0 | 0x1ffff => Ok(VirtAddr(addr)),     // address is canonical
-            1 => Ok(VirtAddr::new_truncate(addr)), // address needs sign extension
-            _ => Err(VirtAddrNotValid(addr)),
+    pub const fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {
+        let v = Self::new_truncate(addr);
+        if v.0 == addr {
+            Ok(v)
+        } else {
+            Err(VirtAddrNotValid(addr))
         }
     }
 
     /// Creates a new canonical virtual address, throwing out bits 48..64.
     ///
-    /// This function performs sign extension of bit 47 to make the address canonical, so
-    /// bits 48 to 64 are overwritten. If you want to check that these bits contain no data,
-    /// use `new` or `try_new`.
+    /// This function performs sign extension of bit 47 to make the address
+    /// canonical, overwriting bits 48 to 64. If you want to check whether an
+    /// address is canonical, use [`new`](Self::new) or [`try_new`](Self::try_new).
     #[inline]
     pub const fn new_truncate(addr: u64) -> VirtAddr {
         // By doing the right shift as a signed operation (on a i64), it will
@@ -123,11 +127,7 @@ impl VirtAddr {
     }
 
     /// Creates a virtual address from the given pointer
-    // cfg(target_pointer_width = "32") is only here for backwards
-    // compatibility: Earlier versions of this crate did not have any `cfg()`
-    // on this function. At least for 32- and 64-bit we know the `as u64` cast
-    // doesn't truncate.
-    #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+    #[cfg(target_pointer_width = "64")]
     #[inline]
     pub fn from_ptr<T: ?Sized>(ptr: *const T) -> Self {
         Self::new(ptr as *const () as u64)
@@ -320,23 +320,6 @@ impl AddAssign<u64> for VirtAddr {
     }
 }
 
-#[cfg(target_pointer_width = "64")]
-impl Add<usize> for VirtAddr {
-    type Output = Self;
-    #[inline]
-    fn add(self, rhs: usize) -> Self::Output {
-        self + rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl AddAssign<usize> for VirtAddr {
-    #[inline]
-    fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(rhs as u64)
-    }
-}
-
 impl Sub<u64> for VirtAddr {
     type Output = Self;
     #[inline]
@@ -349,23 +332,6 @@ impl SubAssign<u64> for VirtAddr {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl Sub<usize> for VirtAddr {
-    type Output = Self;
-    #[inline]
-    fn sub(self, rhs: usize) -> Self::Output {
-        self - rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl SubAssign<usize> for VirtAddr {
-    #[inline]
-    fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(rhs as u64)
     }
 }
 
@@ -583,23 +549,6 @@ impl AddAssign<u64> for PhysAddr {
     }
 }
 
-#[cfg(target_pointer_width = "64")]
-impl Add<usize> for PhysAddr {
-    type Output = Self;
-    #[inline]
-    fn add(self, rhs: usize) -> Self::Output {
-        self + rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl AddAssign<usize> for PhysAddr {
-    #[inline]
-    fn add_assign(&mut self, rhs: usize) {
-        self.add_assign(rhs as u64)
-    }
-}
-
 impl Sub<u64> for PhysAddr {
     type Output = Self;
     #[inline]
@@ -612,23 +561,6 @@ impl SubAssign<u64> for PhysAddr {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl Sub<usize> for PhysAddr {
-    type Output = Self;
-    #[inline]
-    fn sub(self, rhs: usize) -> Self::Output {
-        self - rhs as u64
-    }
-}
-
-#[cfg(target_pointer_width = "64")]
-impl SubAssign<usize> for PhysAddr {
-    #[inline]
-    fn sub_assign(&mut self, rhs: usize) {
-        self.sub_assign(rhs as u64)
     }
 }
 

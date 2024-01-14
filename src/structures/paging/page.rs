@@ -1,5 +1,6 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
@@ -10,12 +11,9 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
-pub trait PageSize: Copy + Eq + PartialOrd + Ord {
+pub trait PageSize: Copy + Eq + PartialOrd + Ord + Sealed {
     /// The page size in bytes.
     const SIZE: u64;
-
-    /// A string representation of the page size for debug output.
-    const SIZE_AS_DEBUG_STR: &'static str;
 }
 
 /// This trait is implemented for 4KiB and 2MiB pages, but not for 1GiB pages.
@@ -37,21 +35,30 @@ pub enum Size1GiB {}
 
 impl PageSize for Size4KiB {
     const SIZE: u64 = 4096;
-    const SIZE_AS_DEBUG_STR: &'static str = "4KiB";
 }
 
 impl NotGiantPageSize for Size4KiB {}
 
+impl Sealed for super::Size4KiB {
+    const DEBUG_STR: &'static str = "4KiB";
+}
+
 impl PageSize for Size2MiB {
     const SIZE: u64 = Size4KiB::SIZE * 512;
-    const SIZE_AS_DEBUG_STR: &'static str = "2MiB";
 }
 
 impl NotGiantPageSize for Size2MiB {}
 
+impl Sealed for super::Size2MiB {
+    const DEBUG_STR: &'static str = "2MiB";
+}
+
 impl PageSize for Size1GiB {
     const SIZE: u64 = Size2MiB::SIZE * 512;
-    const SIZE_AS_DEBUG_STR: &'static str = "1GiB";
+}
+
+impl Sealed for super::Size1GiB {
+    const DEBUG_STR: &'static str = "1GiB";
 }
 
 /// A virtual memory page.
@@ -187,7 +194,7 @@ impl Page<Size1GiB> {
         let mut addr = 0;
         addr.set_bits(39..48, u64::from(p4_index));
         addr.set_bits(30..39, u64::from(p3_index));
-        Page::containing_address(VirtAddr::new(addr))
+        Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
 
@@ -205,7 +212,7 @@ impl Page<Size2MiB> {
         addr.set_bits(39..48, u64::from(p4_index));
         addr.set_bits(30..39, u64::from(p3_index));
         addr.set_bits(21..30, u64::from(p2_index));
-        Page::containing_address(VirtAddr::new(addr))
+        Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
 
@@ -225,7 +232,7 @@ impl Page<Size4KiB> {
         addr.set_bits(30..39, u64::from(p3_index));
         addr.set_bits(21..30, u64::from(p2_index));
         addr.set_bits(12..21, u64::from(p1_index));
-        Page::containing_address(VirtAddr::new(addr))
+        Page::containing_address(VirtAddr::new_truncate(addr))
     }
 
     /// Returns the level 1 page table index of this page.
@@ -239,7 +246,7 @@ impl<S: PageSize> fmt::Debug for Page<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "Page[{}]({:#x})",
-            S::SIZE_AS_DEBUG_STR,
+            S::DEBUG_STR,
             self.start_address().as_u64()
         ))
     }

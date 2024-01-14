@@ -162,9 +162,6 @@ bitflags! {
         /// Also enables access to the PKRU register (via the `RDPKRU`/`WRPKRU`
         /// instructions) to set user-mode protection key access controls.
         const PROTECTION_KEY_USER = 1 << 22;
-        /// Alias for [`PROTECTION_KEY_USER`](Cr4Flags::PROTECTION_KEY_USER)
-        #[deprecated(since = "0.14.5", note = "use `PROTECTION_KEY_USER` instead")]
-        const PROTECTION_KEY = 1 << 22;
         /// Enables Control-flow Enforcement Technology (CET)
         ///
         /// This enables the shadow stack feature, ensuring return addresses read
@@ -189,7 +186,10 @@ impl Cr4Flags {
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
-    use crate::{instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr, VirtAddr};
+    use crate::{
+        addr::VirtAddrNotValid, instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr,
+        VirtAddr,
+    };
     use core::arch::asm;
 
     impl Cr0 {
@@ -268,9 +268,14 @@ mod x86_64 {
 
     impl Cr2 {
         /// Read the current page fault linear address from the CR2 register.
+        ///
+        /// # Errors
+        ///
+        /// This method returns a [`VirtAddrNotValid`] error if the CR2 register contains a
+        /// non-canonical address. Call [`Cr2::read_raw`] to handle such cases.
         #[inline]
-        pub fn read() -> VirtAddr {
-            VirtAddr::new(Self::read_raw())
+        pub fn read() -> Result<VirtAddr, VirtAddrNotValid> {
+            VirtAddr::try_new(Self::read_raw())
         }
 
         /// Read the current page fault linear address from the CR2 register as a raw `u64`.

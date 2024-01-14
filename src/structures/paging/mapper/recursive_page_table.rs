@@ -91,9 +91,14 @@ impl<'a> RecursivePageTable<'a> {
         }
     }
 
+    /// Returns an immutable reference to the wrapped level 4 `PageTable` instance.
+    pub fn level_4_table(&self) -> &PageTable {
+        self.p4
+    }
+
     /// Returns a mutable reference to the wrapped level 4 `PageTable` instance.
-    pub fn level_4_table(&mut self) -> &mut PageTable {
-        &mut self.p4
+    pub fn level_4_table_mut(&mut self) -> &mut PageTable {
+        self.p4
     }
 
     /// Internal helper function to create the page table of the next level if needed.
@@ -916,7 +921,7 @@ impl<'a> CleanUp for RecursivePageTable<'a> {
 
         clean_up(
             self.recursive_index,
-            self.level_4_table(),
+            self.level_4_table_mut(),
             PageTableLevel::Four,
             range,
             frame_deallocator,

@@ -6,7 +6,7 @@ pub use self::x86_64::*;
 use bitflags::bitflags;
 
 bitflags! {
-    /// The RFLAGS register.
+    /// The RFLAGS register. All bit patterns are valid representations for this type.
     #[repr(transparent)]
     #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct RFlags: u64 {
