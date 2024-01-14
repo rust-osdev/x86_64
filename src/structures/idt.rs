@@ -831,7 +831,11 @@ impl<F: HandlerFuncType> Entry<F> {
 }
 
 /// A common trait for all handler functions usable in [`Entry`].
-pub trait HandlerFuncType {
+///
+/// # Safety
+///
+/// Implementors have to ensure that `to_virt_addr` returns a valid address.
+pub unsafe trait HandlerFuncType {
     /// Get the virtual address of the handler function.
     fn to_virt_addr(self) -> VirtAddr;
 }
@@ -839,7 +843,7 @@ pub trait HandlerFuncType {
 macro_rules! impl_handler_func_type {
     ($f:ty) => {
         #[cfg(feature = "abi_x86_interrupt")]
-        impl HandlerFuncType for $f {
+        unsafe impl HandlerFuncType for $f {
             #[inline]
             fn to_virt_addr(self) -> VirtAddr {
                 VirtAddr::new(self as u64)
