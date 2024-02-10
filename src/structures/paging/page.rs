@@ -189,11 +189,9 @@ impl Page<Size1GiB> {
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
     ) -> Self {
-        use bit_field::BitField;
-
         let mut addr = 0;
-        addr.set_bits(39..48, u64::from(p4_index));
-        addr.set_bits(30..39, u64::from(p3_index));
+        addr |= u64::from(p4_index) << 39;
+        addr |= u64::from(p3_index) << 30;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
@@ -206,12 +204,10 @@ impl Page<Size2MiB> {
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
     ) -> Self {
-        use bit_field::BitField;
-
         let mut addr = 0;
-        addr.set_bits(39..48, u64::from(p4_index));
-        addr.set_bits(30..39, u64::from(p3_index));
-        addr.set_bits(21..30, u64::from(p2_index));
+        addr |= u64::from(p4_index) << 39;
+        addr |= u64::from(p3_index) << 30;
+        addr |= u64::from(p2_index) << 21;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
@@ -225,13 +221,11 @@ impl Page<Size4KiB> {
         p2_index: PageTableIndex,
         p1_index: PageTableIndex,
     ) -> Self {
-        use bit_field::BitField;
-
         let mut addr = 0;
-        addr.set_bits(39..48, u64::from(p4_index));
-        addr.set_bits(30..39, u64::from(p3_index));
-        addr.set_bits(21..30, u64::from(p2_index));
-        addr.set_bits(12..21, u64::from(p1_index));
+        addr |= u64::from(p4_index) << 39;
+        addr |= u64::from(p3_index) << 30;
+        addr |= u64::from(p2_index) << 21;
+        addr |= u64::from(p1_index) << 12;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 
