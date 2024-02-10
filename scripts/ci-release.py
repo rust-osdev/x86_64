@@ -1,22 +1,20 @@
 import json
 import subprocess
 import tomllib
-from urllib.request import urlopen
+import urllib.request
 
 with open("Cargo.toml", "rb") as f:
     cargo_toml = tomllib.load(f)
 crate_version = cargo_toml["package"]["version"]
 print("Detected crate version " + crate_version)
 
-api_url = "https://crates.io/api/v1/crates/x86_64/" + crate_version
-version_data = json.loads(urlopen(api_url).read())
-
-if "version" in version_data:
-    version = version_data["version"]
-    assert (version["crate"] == "x86_64")
-    assert (version["num"] == crate_version)
-    print("Version " + crate_version + " already exists on crates.io")
-
+index_url = "https://index.crates.io/x8/6_/x86_64"
+for line in urllib.request.urlopen(index_url):
+    version_info = json.loads(line)
+    assert (version_info["name"] == "x86_64")
+    if version_info["vers"] == crate_version:
+        print("Version " + crate_version + " already exists on crates.io")
+        break
 else:
     print("Could not find version " + crate_version +
           " on crates.io; creating a new release")
