@@ -1,8 +1,20 @@
 # Unreleased
 
+# 0.14.12 – 2023-02-09
+
 ## New Features
 
 - [Add `HandlerFuncType` trait](https://github.com/rust-osdev/x86_64/pull/439)
+- [Support `VirtAddr::from_ptr` for `T: ?Sized`](https://github.com/rust-osdev/x86_64/pull/442)
+- [Expose `Cr3::write_raw`](https://github.com/rust-osdev/x86_64/pull/445)
+
+## Fixes
+
+- [Use synchronizing assembly for `interrupts::enable`/`disable`](https://github.com/rust-osdev/x86_64/pull/440)
+
+## Other Improvements
+
+- [Optimize `Page::from_page_table_indices`](https://github.com/rust-osdev/x86_64/pull/456)
 
 # 0.14.11 – 2022-09-15
 
