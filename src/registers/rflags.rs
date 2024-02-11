@@ -6,7 +6,7 @@ pub use self::x86_64::*;
 use bitflags::bitflags;
 
 bitflags! {
-    /// The RFLAGS register.
+    /// The RFLAGS register. All bit patterns are valid representations for this type.
     #[repr(transparent)]
     #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct RFlags: u64 {
@@ -61,14 +61,6 @@ bitflags! {
         /// Set by hardware if last arithmetic operation generated a carry out of the
         /// most-significant bit of the result.
         const CARRY_FLAG = 1;
-    }
-}
-
-impl RFlags {
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
     }
 }
 

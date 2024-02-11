@@ -132,14 +132,6 @@ bitflags! {
     }
 }
 
-impl EferFlags {
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
-    }
-}
-
 bitflags! {
     /// Flags stored in IA32_U_CET and IA32_S_CET (Table-2-2 in Intel SDM Volume
     /// 4). The Intel SDM-equivalent names are described in parentheses.
@@ -165,14 +157,6 @@ bitflags! {
     }
 }
 
-impl CetFlags {
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
-    }
-}
-
 #[cfg(feature = "instructions")]
 mod x86_64 {
     use super::*;
@@ -184,6 +168,7 @@ mod x86_64 {
     use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
+    use core::fmt;
     // imports for intra doc links
     #[cfg(doc)]
     use crate::registers::{
@@ -442,40 +427,55 @@ mod x86_64 {
             ss_sysret: SegmentSelector,
             cs_syscall: SegmentSelector,
             ss_syscall: SegmentSelector,
-        ) -> Result<(), &'static str> {
-            let cs_sysret_cmp = cs_sysret
-                .0
-                .checked_sub(16)
-                .ok_or("Sysret CS is not at least 16.")?;
-            let ss_sysret_cmp = ss_sysret
-                .0
-                .checked_sub(8)
-                .ok_or("Sysret SS is not at least 8.")?;
-            let cs_syscall_cmp = cs_syscall.0;
-            let ss_syscall_cmp = ss_syscall
-                .0
-                .checked_sub(8)
-                .ok_or("Syscall SS is not at least 8.")?;
+        ) -> Result<(), InvalidStarSegmentSelectors> {
+            // Convert to i32 to prevent underflows.
+            let cs_sysret_cmp = i32::from(cs_sysret.0) - 16;
+            let ss_sysret_cmp = i32::from(ss_sysret.0) - 8;
+            let cs_syscall_cmp = i32::from(cs_syscall.0);
+            let ss_syscall_cmp = i32::from(ss_syscall.0) - 8;
 
             if cs_sysret_cmp != ss_sysret_cmp {
-                return Err("Sysret CS and SS is not offset by 8.");
+                return Err(InvalidStarSegmentSelectors::SysretOffset);
             }
 
             if cs_syscall_cmp != ss_syscall_cmp {
-                return Err("Syscall CS and SS is not offset by 8.");
+                return Err(InvalidStarSegmentSelectors::SyscallOffset);
             }
 
             if ss_sysret.rpl() != PrivilegeLevel::Ring3 {
-                return Err("Sysret's segment must be a Ring3 segment.");
+                return Err(InvalidStarSegmentSelectors::SysretPrivilegeLevel);
             }
 
             if ss_syscall.rpl() != PrivilegeLevel::Ring0 {
-                return Err("Syscall's segment must be a Ring0 segment.");
+                return Err(InvalidStarSegmentSelectors::SyscallPrivilegeLevel);
             }
 
             unsafe { Self::write_raw(ss_sysret.0 - 8, cs_syscall.0) };
 
             Ok(())
+        }
+    }
+
+    #[derive(Debug)]
+    pub enum InvalidStarSegmentSelectors {
+        SysretOffset,
+        SyscallOffset,
+        SysretPrivilegeLevel,
+        SyscallPrivilegeLevel,
+    }
+
+    impl fmt::Display for InvalidStarSegmentSelectors {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::SysretOffset => write!(f, "Sysret CS and SS are not offset by 8."),
+                Self::SyscallOffset => write!(f, "Syscall CS and SS are not offset by 8."),
+                Self::SysretPrivilegeLevel => {
+                    write!(f, "Sysret's segment must be a Ring3 segment.")
+                }
+                Self::SyscallPrivilegeLevel => {
+                    write!(f, "Syscall's segment must be a Ring0 segment.")
+                }
+            }
         }
     }
 

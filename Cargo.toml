@@ -15,9 +15,9 @@ license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.14.12"
+version = "0.15.0-beta"
 edition = "2018"
-rust-version = "1.57" # Needed to support panic! in const fns
+rust-version = "1.59" # Needed to support inline asm and default const generics
 
 [dependencies]
 bit_field = "0.10.1"
@@ -28,16 +28,12 @@ rustversion = "1.0.5"
 [features]
 default = ["nightly", "instructions"]
 instructions = []
-nightly = ["const_fn", "step_trait", "abi_x86_interrupt"]
+nightly = [ "const_fn", "step_trait", "abi_x86_interrupt", "asm_const" ]
 abi_x86_interrupt = []
 const_fn = []
+asm_const = []
 step_trait = []
 doc_auto_cfg = []
-
-# These features are no longer used and only there for backwards compatibility.
-external_asm = []
-inline_asm = []
-doc_cfg = []
 
 [package.metadata.docs.rs]
 all-features = true

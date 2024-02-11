@@ -5,19 +5,79 @@ use crate::structures::tss::TaskStateSegment;
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
+use core::fmt;
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
+
+#[cfg(feature = "instructions")]
+use core::sync::atomic::{AtomicU64 as EntryValue, Ordering};
+#[cfg(not(feature = "instructions"))]
+use u64 as EntryValue;
+
+/// 8-byte entry in a descriptor table.
+///
+/// A [`GlobalDescriptorTable`] (or LDT) is an array of these entries, and
+/// [`SegmentSelector`]s index into this array. Each [`Descriptor`] in the table
+/// uses either 1 Entry (if it is a [`UserSegment`](Descriptor::UserSegment)) or
+/// 2 Entries (if it is a [`SystemSegment`](Descriptor::SystemSegment)). This
+/// type exists to give users access to the raw entry bits in a GDT.
+#[repr(transparent)]
+pub struct Entry(EntryValue);
+
+impl Entry {
+    // Create a new Entry from a raw value.
+    const fn new(raw: u64) -> Self {
+        #[cfg(feature = "instructions")]
+        let raw = EntryValue::new(raw);
+        Self(raw)
+    }
+
+    /// The raw bits for this entry. Depending on the [`Descriptor`] type, these
+    /// bits may correspond to those in [`DescriptorFlags`].
+    pub fn raw(&self) -> u64 {
+        // TODO: Make this const fn when AtomicU64::load is const.
+        #[cfg(feature = "instructions")]
+        let raw = self.0.load(Ordering::SeqCst);
+        #[cfg(not(feature = "instructions"))]
+        let raw = self.0;
+        raw
+    }
+}
+
+impl Clone for Entry {
+    fn clone(&self) -> Self {
+        Self::new(self.raw())
+    }
+}
+
+impl PartialEq for Entry {
+    fn eq(&self, other: &Self) -> bool {
+        self.raw() == other.raw()
+    }
+}
+
+impl Eq for Entry {}
+
+impl fmt::Debug for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Display inner value as hex
+        write!(f, "Entry({:#018x})", self.raw())
+    }
+}
 
 /// A 64-bit mode global descriptor table (GDT).
 ///
 /// In 64-bit mode, segmentation is not supported. The GDT is used nonetheless, for example for
 /// switching between user and kernel mode or for loading a TSS.
 ///
-/// The GDT has a fixed size of 8 entries, trying to add more entries will panic.
+/// The GDT has a fixed maximum size given by the `MAX` const generic parameter.
+/// Overflowing this limit by adding too many [`Descriptor`]s via
+/// [`GlobalDescriptorTable::append`] will panic.
 ///
 /// You do **not** need to add a null segment descriptor yourself - this is already done
-/// internally.
+/// internally. This means you can add up to `MAX - 1` additional [`Entry`]s to
+/// this table. Note that some [`Descriptor`]s may take up 2 [`Entry`]s.
 ///
 /// Data segment registers in ring 0 can be loaded with the null segment selector. When running in
 /// ring 3, the `ss` register must point to a valid data segment which can be obtained through the
@@ -37,68 +97,94 @@ use crate::registers::segmentation::{Segment, CS, SS};
 /// use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor};
 ///
 /// let mut gdt = GlobalDescriptorTable::new();
-/// gdt.add_entry(Descriptor::kernel_code_segment());
-/// gdt.add_entry(Descriptor::user_code_segment());
-/// gdt.add_entry(Descriptor::user_data_segment());
+/// gdt.append(Descriptor::kernel_code_segment());
+/// gdt.append(Descriptor::user_code_segment());
+/// gdt.append(Descriptor::user_data_segment());
 ///
 /// // Add entry for TSS, call gdt.load() then update segment registers
 /// ```
 
 #[derive(Debug, Clone)]
-pub struct GlobalDescriptorTable {
-    table: [u64; 8],
+pub struct GlobalDescriptorTable<const MAX: usize = 8> {
+    table: [Entry; MAX],
     len: usize,
 }
 
 impl GlobalDescriptorTable {
-    /// Creates an empty GDT.
+    /// Creates an empty GDT with the default length of 8.
+    pub const fn new() -> Self {
+        Self::empty()
+    }
+}
+
+impl<const MAX: usize> GlobalDescriptorTable<MAX> {
+    /// Creates an empty GDT which can hold `MAX` number of [`Entry`]s.
     #[inline]
-    pub const fn new() -> GlobalDescriptorTable {
-        GlobalDescriptorTable {
-            table: [0; 8],
+    pub const fn empty() -> Self {
+        // TODO: Replace with compiler error when feature(generic_const_exprs) is stable.
+        assert!(MAX > 0, "A GDT cannot have 0 entries");
+        assert!(MAX <= (1 << 13), "A GDT can only have at most 2^13 entries");
+
+        // TODO: Replace with inline_const when it's stable.
+        #[allow(clippy::declare_interior_mutable_const)]
+        const NULL: Entry = Entry::new(0);
+        Self {
+            table: [NULL; MAX],
             len: 1,
         }
     }
 
     /// Forms a GDT from a slice of `u64`.
     ///
-    /// # Safety
+    /// This method allows for creation of a GDT with malformed or invalid
+    /// entries. However, it is safe because loading a GDT with invalid
+    /// entires doesn't do anything until those entries are used. For example,
+    /// [`CS::set_reg`] and [`load_tss`](crate::instructions::tables::load_tss)
+    /// are both unsafe for this reason.
     ///
-    /// * The user must make sure that the entries are well formed
-    /// * The provided slice **must not be larger than 8 items** (only up to the first 8 will be observed.)
+    /// Panics if:
+    /// * the provided slice has more than `MAX` entries
+    /// * the provided slice is empty
+    /// * the first entry is not zero
+    #[cfg_attr(not(feature = "instructions"), allow(rustdoc::broken_intra_doc_links))]
     #[inline]
-    pub const unsafe fn from_raw_slice(slice: &[u64]) -> GlobalDescriptorTable {
+    pub const fn from_raw_entries(slice: &[u64]) -> Self {
         let len = slice.len();
-        let mut table = [0; 8];
+        let mut table = Self::empty().table;
         let mut idx = 0;
 
+        assert!(len > 0, "cannot initialize GDT with empty slice");
+        assert!(slice[0] == 0, "first GDT entry must be zero");
         assert!(
-            len <= 8,
-            "initializing a GDT from a slice requires it to be **at most** 8 elements."
+            len <= MAX,
+            "cannot initialize GDT with slice exceeding the maximum length"
         );
 
         while idx < len {
-            table[idx] = slice[idx];
+            table[idx] = Entry::new(slice[idx]);
             idx += 1;
         }
 
-        GlobalDescriptorTable { table, len }
+        Self { table, len }
     }
 
-    /// Get a reference to the internal table.
+    /// Get a reference to the internal [`Entry`] table.
     ///
-    /// The resulting slice may contain system descriptors, which span two `u64`s.
+    /// The resulting slice may contain system descriptors, which span two [`Entry`]s.
     #[inline]
-    pub fn as_raw_slice(&self) -> &[u64] {
+    pub fn entries(&self) -> &[Entry] {
         &self.table[..self.len]
     }
 
-    /// Adds the given segment descriptor to the GDT, returning the segment selector.
+    /// Appends the given segment descriptor to the GDT, returning the segment selector.
     ///
-    /// Panics if the GDT doesn't have enough free entries to hold the Descriptor.
+    /// Note that depending on the type of the [`Descriptor`] this may append
+    /// either one or two new [`Entry`]s to the table.
+    ///
+    /// Panics if the GDT doesn't have enough free entries.
     #[inline]
     #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
-    pub fn add_entry(&mut self, entry: Descriptor) -> SegmentSelector {
+    pub fn append(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
             Descriptor::UserSegment(value) => {
                 if self.len > self.table.len().saturating_sub(1) {
@@ -153,7 +239,7 @@ impl GlobalDescriptorTable {
     #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
     fn push(&mut self, value: u64) -> usize {
         let index = self.len;
-        self.table[index] = value;
+        self.table[index] = Entry::new(value);
         self.len += 1;
         index
     }
@@ -165,6 +251,8 @@ impl GlobalDescriptorTable {
         use core::mem::size_of;
         super::DescriptorTablePointer {
             base: crate::VirtAddr::new(self.table.as_ptr() as u64),
+            // 0 < self.next_free <= MAX <= 2^13, so the limit calculation
+            // will not underflow or overflow.
             limit: (self.len * size_of::<u64>() - 1) as u16,
         }
     }
@@ -269,12 +357,6 @@ impl DescriptorFlags {
     /// A 64-bit user code segment
     pub const USER_CODE64: Self =
         Self::from_bits_truncate(Self::KERNEL_CODE64.bits() | Self::DPL_RING_3.bits());
-
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
-    }
 }
 
 impl Descriptor {
@@ -384,11 +466,11 @@ mod tests {
     // Makes a GDT that has two free slots
     fn make_six_entry_gdt() -> GlobalDescriptorTable {
         let mut gdt = GlobalDescriptorTable::new();
-        gdt.add_entry(Descriptor::kernel_code_segment());
-        gdt.add_entry(Descriptor::kernel_data_segment());
-        gdt.add_entry(Descriptor::UserSegment(DescriptorFlags::USER_CODE32.bits()));
-        gdt.add_entry(Descriptor::user_data_segment());
-        gdt.add_entry(Descriptor::user_code_segment());
+        gdt.append(Descriptor::kernel_code_segment());
+        gdt.append(Descriptor::kernel_data_segment());
+        gdt.append(Descriptor::UserSegment(DescriptorFlags::USER_CODE32.bits()));
+        gdt.append(Descriptor::user_data_segment());
+        gdt.append(Descriptor::user_code_segment());
         assert_eq!(gdt.len, 6);
         gdt
     }
@@ -397,7 +479,7 @@ mod tests {
 
     fn make_full_gdt() -> GlobalDescriptorTable {
         let mut gdt = make_six_entry_gdt();
-        gdt.add_entry(Descriptor::tss_segment(&TSS));
+        gdt.append(Descriptor::tss_segment(&TSS));
         assert_eq!(gdt.len, 8);
         gdt
     }
@@ -406,9 +488,9 @@ mod tests {
     pub fn push_max_segments() {
         // Make sure we don't panic with user segments
         let mut gdt = make_six_entry_gdt();
-        gdt.add_entry(Descriptor::user_data_segment());
+        gdt.append(Descriptor::user_data_segment());
         assert_eq!(gdt.len, 7);
-        gdt.add_entry(Descriptor::user_data_segment());
+        gdt.append(Descriptor::user_data_segment());
         assert_eq!(gdt.len, 8);
         // Make sure we don't panic with system segments
         let _ = make_full_gdt();
@@ -418,16 +500,24 @@ mod tests {
     #[should_panic]
     pub fn panic_user_segment() {
         let mut gdt = make_full_gdt();
-        gdt.add_entry(Descriptor::user_data_segment());
+        gdt.append(Descriptor::user_data_segment());
     }
 
     #[test]
     #[should_panic]
     pub fn panic_system_segment() {
         let mut gdt = make_six_entry_gdt();
-        gdt.add_entry(Descriptor::user_data_segment());
+        gdt.append(Descriptor::user_data_segment());
         // We have one free slot, but the GDT requires two
-        gdt.add_entry(Descriptor::tss_segment(&TSS));
+        gdt.append(Descriptor::tss_segment(&TSS));
+    }
+
+    #[test]
+    pub fn from_entries() {
+        let raw = [0, Flags::KERNEL_CODE64.bits(), Flags::KERNEL_DATA.bits()];
+        let gdt = GlobalDescriptorTable::<3>::from_raw_entries(&raw);
+        assert_eq!(gdt.table.len(), 3);
+        assert_eq!(gdt.entries().len(), 3);
     }
 
     #[test]

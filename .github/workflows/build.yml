@@ -21,7 +21,6 @@ jobs:
         rust:
           - nightly
           - 1.59
-          - 1.57
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +30,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
       - name: Run cargo build for stable
-        if: matrix.rust != 1.57
         uses: actions-rs/cargo@v1
         with:
           command: build
@@ -42,7 +40,6 @@ jobs:
           command: build
           args: --no-default-features
       - name: Run cargo doc for stable
-        if: matrix.rust != 1.57
         uses: actions-rs/cargo@v1
         with:
           command: doc
@@ -53,7 +50,6 @@ jobs:
           command: doc
           args: --no-default-features
       - name: Run cargo test for stable
-        if: matrix.rust != 1.57
         uses: actions-rs/cargo@v1
         with:
           command: test

@@ -26,9 +26,6 @@ bitflags! {
         /// Enables AVX instructions and using the upper halves of the AVX registers
         /// with `XSAVE`/`XRSTOR`.
         const AVX = 1 << 2;
-        /// Alias for [`AVX`](XCr0Flags::AVX)
-        #[deprecated(since = "0.14.5", note = "use `AVX` instead")]
-        const YMM = 1<<2;
         /// Enables MPX instructions and using the BND0-BND3 bound registers
         /// with `XSAVE`/`XRSTOR` (Intel Only).
         const BNDREG = 1 << 3;
@@ -50,14 +47,6 @@ bitflags! {
         /// Enables Lightweight Profiling extensions and managing LWP state
         /// with `XSAVE`/`XRSTOR` (AMD Only).
         const LWP = 1<<62;
-    }
-}
-
-impl XCr0Flags {
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
     }
 }
 

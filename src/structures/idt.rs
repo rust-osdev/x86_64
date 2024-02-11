@@ -20,14 +20,20 @@
 //!
 //! These types are defined for the compatibility with the Nightly Rust build.
 
+use crate::registers::rflags::RFlags;
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
-use core::ops::{Deref, Index, IndexMut, RangeBounds};
+use core::ops::{
+    Bound, Deref, Index, IndexMut, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive,
+    RangeTo, RangeToInclusive,
+};
 use volatile::Volatile;
+
+use super::gdt::SegmentSelector;
 
 /// An Interrupt Descriptor Table with 256 entries.
 ///
@@ -519,25 +525,21 @@ impl InterruptDescriptorTable {
         }
     }
 
-    /// Returns a normalized and ranged check slice range from a RangeBounds trait object
+    /// Returns a normalized and ranged check slice range from a RangeBounds trait object.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
-    fn condition_slice_bounds(&self, bounds: impl RangeBounds<usize>) -> (usize, usize) {
+    /// Panics if the entry is an exception.
+    fn condition_slice_bounds(&self, bounds: impl RangeBounds<u8>) -> (usize, usize) {
         let lower_idx = match bounds.start_bound() {
-            Included(start) => *start,
-            Excluded(start) => *start + 1,
+            Included(start) => usize::from(*start),
+            Excluded(start) => usize::from(*start) + 1,
             Unbounded => 0,
         };
         let upper_idx = match bounds.end_bound() {
-            Included(end) => *end + 1,
-            Excluded(end) => *end,
+            Included(end) => usize::from(*end) + 1,
+            Excluded(end) => usize::from(*end),
             Unbounded => 256,
         };
 
-        if lower_idx > 256 || upper_idx > 256 {
-            panic!("Index out of range [{}..{}]", lower_idx, upper_idx);
-        }
         if lower_idx < 32 {
             panic!("Cannot return slice from traps, faults, and exception handlers");
         }
@@ -546,34 +548,31 @@ impl InterruptDescriptorTable {
 
     /// Returns slice of IDT entries with the specified range.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
+    /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice(&self, bounds: impl RangeBounds<usize>) -> &[Entry<HandlerFunc>] {
+    pub fn slice(&self, bounds: impl RangeBounds<u8>) -> &[Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 
     /// Returns a mutable slice of IDT entries with the specified range.
     ///
-    /// Panics if range is outside the range of user interrupts (i.e. greater than 255) or if the entry is an
-    /// exception
+    /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice_mut(&mut self, bounds: impl RangeBounds<usize>) -> &mut [Entry<HandlerFunc>] {
+    pub fn slice_mut(&mut self, bounds: impl RangeBounds<u8>) -> &mut [Entry<HandlerFunc>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 }
 
-impl Index<usize> for InterruptDescriptorTable {
+impl Index<u8> for InterruptDescriptorTable {
     type Output = Entry<HandlerFunc>;
 
     /// Returns the IDT entry with the specified index.
     ///
-    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
-    /// exception that pushes an error code (use the struct fields for accessing these entries).
+    /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
     #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: u8) -> &Self::Output {
         match index {
             0 => &self.divide_error,
             1 => &self.debug,
@@ -588,24 +587,22 @@ impl Index<usize> for InterruptDescriptorTable {
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
             28 => &self.hv_injection_exception,
-            i @ 32..=255 => &self.interrupts[i - 32],
+            i @ 32..=255 => &self.interrupts[usize::from(i) - 32],
             i @ 15 | i @ 31 | i @ 22..=27 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 21 | i @ 29 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
-            i => panic!("no entry with index {}", i),
         }
     }
 }
 
-impl IndexMut<usize> for InterruptDescriptorTable {
+impl IndexMut<u8> for InterruptDescriptorTable {
     /// Returns a mutable reference to the IDT entry with the specified index.
     ///
-    /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
-    /// exception that pushes an error code (use the struct fields for accessing these entries).
+    /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
     #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+    fn index_mut(&mut self, index: u8) -> &mut Self::Output {
         match index {
             0 => &mut self.divide_error,
             1 => &mut self.debug,
@@ -620,26 +617,65 @@ impl IndexMut<usize> for InterruptDescriptorTable {
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
             28 => &mut self.hv_injection_exception,
-            i @ 32..=255 => &mut self.interrupts[i - 32],
+            i @ 32..=255 => &mut self.interrupts[usize::from(i) - 32],
             i @ 15 | i @ 31 | i @ 22..=27 => panic!("entry {} is reserved", i),
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 21 | i @ 29 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
             i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
-            i => panic!("no entry with index {}", i),
         }
     }
 }
 
+macro_rules! impl_index_for_idt {
+    ($ty:ty) => {
+        impl Index<$ty> for InterruptDescriptorTable {
+            type Output = [Entry<HandlerFunc>];
+
+            /// Returns the IDT entry with the specified index.
+            ///
+            /// Panics if index is outside the IDT (i.e. greater than 255) or if the entry is an
+            /// exception that pushes an error code (use the struct fields for accessing these entries).
+            #[inline]
+            fn index(&self, index: $ty) -> &Self::Output {
+                self.slice(index)
+            }
+        }
+
+        impl IndexMut<$ty> for InterruptDescriptorTable {
+            /// Returns a mutable reference to the IDT entry with the specified index.
+            ///
+            /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
+            #[inline]
+            fn index_mut(&mut self, index: $ty) -> &mut Self::Output {
+                self.slice_mut(index)
+            }
+        }
+    };
+}
+
+// this list was stolen from the list of implementors in https://doc.rust-lang.org/core/ops/trait.RangeBounds.html
+impl_index_for_idt!((Bound<&u8>, Bound<&u8>));
+impl_index_for_idt!((Bound<u8>, Bound<u8>));
+impl_index_for_idt!(Range<&u8>);
+impl_index_for_idt!(Range<u8>);
+impl_index_for_idt!(RangeFrom<&u8>);
+impl_index_for_idt!(RangeFrom<u8>);
+impl_index_for_idt!(RangeInclusive<&u8>);
+impl_index_for_idt!(RangeInclusive<u8>);
+impl_index_for_idt!(RangeTo<u8>);
+impl_index_for_idt!(RangeTo<&u8>);
+impl_index_for_idt!(RangeToInclusive<&u8>);
+impl_index_for_idt!(RangeToInclusive<u8>);
+impl_index_for_idt!(RangeFull);
+
 /// An Interrupt Descriptor Table entry.
 ///
-/// The generic parameter can either be `HandlerFunc` or `HandlerFuncWithErrCode`, depending
-/// on the interrupt vector.
+/// The generic parameter is some [`InterruptFn`], depending on the interrupt vector.
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry<F> {
     pointer_low: u16,
-    gdt_selector: u16,
     options: EntryOptions,
     pointer_middle: u16,
     pointer_high: u32,
@@ -651,7 +687,6 @@ impl<T> fmt::Debug for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Entry")
             .field("handler_addr", &format_args!("{:#x}", self.handler_addr()))
-            .field("gdt_selector", &self.gdt_selector)
             .field("options", &self.options)
             .finish()
     }
@@ -660,7 +695,6 @@ impl<T> fmt::Debug for Entry<T> {
 impl<T> PartialEq for Entry<T> {
     fn eq(&self, other: &Self) -> bool {
         self.pointer_low == other.pointer_low
-            && self.gdt_selector == other.gdt_selector
             && self.options == other.options
             && self.pointer_middle == other.pointer_middle
             && self.pointer_high == other.pointer_high
@@ -728,7 +762,6 @@ impl<F> Entry<F> {
     #[inline]
     pub const fn missing() -> Self {
         Entry {
-            gdt_selector: 0,
             pointer_low: 0,
             pointer_middle: 0,
             pointer_high: 0,
@@ -738,10 +771,12 @@ impl<F> Entry<F> {
         }
     }
 
-    /// Set the handler address for the IDT entry and sets the present bit.
-    ///
-    /// For the code selector field, this function uses the code segment selector currently
-    /// active in the CPU.
+    /// Sets the handler address for the IDT entry and sets the following defaults:
+    ///   - The code selector is the code segment currently active in the CPU
+    ///   - The present bit is set
+    ///   - Interrupts are disabled on handler invocation
+    ///   - The privilege level (DPL) is [`PrivilegeLevel::Ring0`]
+    ///   - No IST is configured (existing stack will be used)
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
@@ -756,13 +791,13 @@ impl<F> Entry<F> {
         use crate::instructions::segmentation::{Segment, CS};
 
         let addr = addr.as_u64();
-
         self.pointer_low = addr as u16;
         self.pointer_middle = (addr >> 16) as u16;
         self.pointer_high = (addr >> 32) as u32;
 
-        self.gdt_selector = CS::get_reg().0;
-
+        self.options = EntryOptions::minimal();
+        // SAFETY: The current CS is a valid, long-mode code segment.
+        unsafe { self.options.set_code_selector(CS::get_reg()) };
         self.options.set_present(true);
         &mut self.options
     }
@@ -781,10 +816,12 @@ impl<F> Entry<F> {
 
 #[cfg(feature = "instructions")]
 impl<F: HandlerFuncType> Entry<F> {
-    /// Set the handler function for the IDT entry and sets the present bit.
-    ///
-    /// For the code selector field, this function uses the code segment selector currently
-    /// active in the CPU.
+    /// Sets the handler function for the IDT entry and sets the following defaults:
+    ///   - The code selector is the code segment currently active in the CPU
+    ///   - The present bit is set
+    ///   - Interrupts are disabled on handler invocation
+    ///   - The privilege level (DPL) is [`PrivilegeLevel::Ring0`]
+    ///   - No IST is configured (existing stack will be used)
     ///
     /// The function returns a mutable reference to the entry's options that allows
     /// further customization.
@@ -798,7 +835,11 @@ impl<F: HandlerFuncType> Entry<F> {
 }
 
 /// A common trait for all handler functions usable in [`Entry`].
-pub trait HandlerFuncType {
+///
+/// # Safety
+///
+/// Implementors have to ensure that `to_virt_addr` returns a valid address.
+pub unsafe trait HandlerFuncType {
     /// Get the virtual address of the handler function.
     fn to_virt_addr(self) -> VirtAddr;
 }
@@ -806,7 +847,7 @@ pub trait HandlerFuncType {
 macro_rules! impl_handler_func_type {
     ($f:ty) => {
         #[cfg(feature = "abi_x86_interrupt")]
-        impl HandlerFuncType for $f {
+        unsafe impl HandlerFuncType for $f {
             #[inline]
             fn to_virt_addr(self) -> VirtAddr {
                 VirtAddr::new(self as u64)
@@ -821,38 +862,63 @@ impl_handler_func_type!(PageFaultHandlerFunc);
 impl_handler_func_type!(DivergingHandlerFunc);
 impl_handler_func_type!(DivergingHandlerFuncWithErrCode);
 
-/// Represents the options field of an IDT entry.
-#[repr(transparent)]
+/// Represents the 4 non-offset bytes of an IDT entry.
+#[repr(C)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct EntryOptions(u16);
+pub struct EntryOptions {
+    cs: SegmentSelector,
+    bits: u16,
+}
 
 impl fmt::Debug for EntryOptions {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("EntryOptions")
-            .field(&format_args!("{:#06x}", self.0))
+        f.debug_struct("EntryOptions")
+            .field("code_selector", &self.cs)
+            .field("stack_index", &self.stack_index())
+            .field("type", &format_args!("{:#04b}", self.bits.get_bits(8..12)))
+            .field("privilege_level", &self.privilege_level())
+            .field("present", &self.present())
             .finish()
     }
 }
 
 impl EntryOptions {
-    /// Creates a minimal options field with all the must-be-one bits set.
+    /// Creates a minimal options field with all the must-be-one bits set. This
+    /// means the CS selector, IST, and DPL field are all 0.
     #[inline]
     const fn minimal() -> Self {
-        EntryOptions(0b1110_0000_0000)
+        EntryOptions {
+            cs: SegmentSelector(0),
+            bits: 0b1110_0000_0000, // Default to a 64-bit Interrupt Gate
+        }
+    }
+
+    /// Set the code segment that will be used by this interrupt.
+    ///
+    /// ## Safety
+    /// This function is unsafe because the caller must ensure that the passed
+    /// segment selector points to a valid, long-mode code segment.
+    pub unsafe fn set_code_selector(&mut self, cs: SegmentSelector) -> &mut Self {
+        self.cs = cs;
+        self
     }
 
     /// Set or reset the preset bit.
     #[inline]
     pub fn set_present(&mut self, present: bool) -> &mut Self {
-        self.0.set_bit(15, present);
+        self.bits.set_bit(15, present);
         self
+    }
+
+    fn present(&self) -> bool {
+        self.bits.get_bit(15)
     }
 
     /// Let the CPU disable hardware interrupts when the handler is invoked. By default,
     /// interrupts are disabled on handler invocation.
     #[inline]
     pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {
-        self.0.set_bit(8, !disable);
+        self.bits.set_bit(8, !disable);
         self
     }
 
@@ -860,8 +926,12 @@ impl EntryOptions {
     /// or 3, the default is 0. If CPL < DPL, a general protection fault occurs.
     #[inline]
     pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {
-        self.0.set_bits(13..15, dpl as u16);
+        self.bits.set_bits(13..15, dpl as u16);
         self
+    }
+
+    fn privilege_level(&self) -> PrivilegeLevel {
+        PrivilegeLevel::from_u16(self.bits.get_bits(13..15))
     }
 
     /// Assigns a Interrupt Stack Table (IST) stack to this handler. The CPU will then always
@@ -881,8 +951,12 @@ impl EntryOptions {
     pub unsafe fn set_stack_index(&mut self, index: u16) -> &mut Self {
         // The hardware IST index starts at 1, but our software IST index
         // starts at 0. Therefore we need to add 1 here.
-        self.0.set_bits(0..3, index + 1);
+        self.bits.set_bits(0..3, index + 1);
         self
+    }
+
+    fn stack_index(&self) -> u16 {
+        self.bits.get_bits(0..3) - 1
     }
 }
 
@@ -893,10 +967,8 @@ impl EntryOptions {
 /// This wrapper type ensures that no accidental modification of the interrupt stack frame
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
-#[repr(C)]
-pub struct InterruptStackFrame {
-    value: InterruptStackFrameValue,
-}
+#[repr(transparent)]
+pub struct InterruptStackFrame(InterruptStackFrameValue);
 
 impl InterruptStackFrame {
     /// Gives mutable access to the contents of the interrupt stack frame.
@@ -915,7 +987,7 @@ impl InterruptStackFrame {
     /// officially supported by LLVM's x86 interrupt calling convention.
     #[inline]
     pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
-        Volatile::new(&mut self.value)
+        Volatile::new(&mut self.0)
     }
 }
 
@@ -924,14 +996,14 @@ impl Deref for InterruptStackFrame {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        &self.value
+        &self.0
     }
 }
 
 impl fmt::Debug for InterruptStackFrame {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.value.fmt(f)
+        self.0.fmt(f)
     }
 }
 
@@ -945,14 +1017,16 @@ pub struct InterruptStackFrameValue {
     /// this value points to the faulting instruction, so that the instruction is restarted on
     /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
     pub instruction_pointer: VirtAddr,
-    /// The code segment selector, padded with zeros.
-    pub code_segment: u64,
+    /// The code segment selector at the time of the interrupt.
+    pub code_segment: SegmentSelector,
+    _reserved1: [u8; 6],
     /// The flags register before the interrupt handler was invoked.
-    pub cpu_flags: u64,
+    pub cpu_flags: RFlags,
     /// The stack pointer at the time of the interrupt.
     pub stack_pointer: VirtAddr,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
-    pub stack_segment: u64,
+    pub stack_segment: SegmentSelector,
+    _reserved2: [u8; 6],
 }
 
 impl InterruptStackFrameValue {
@@ -972,17 +1046,17 @@ impl InterruptStackFrameValue {
     pub unsafe fn iretq(&self) -> ! {
         unsafe {
             core::arch::asm!(
-                "push {stack_segment}",
+                "push {stack_segment:r}",
                 "push {new_stack_pointer}",
                 "push {rflags}",
-                "push {code_segment}",
+                "push {code_segment:r}",
                 "push {new_instruction_pointer}",
                 "iretq",
-                rflags = in(reg) self.cpu_flags,
+                rflags = in(reg) self.cpu_flags.bits(),
                 new_instruction_pointer = in(reg) self.instruction_pointer.as_u64(),
                 new_stack_pointer = in(reg) self.stack_pointer.as_u64(),
-                code_segment = in(reg) self.code_segment,
-                stack_segment = in(reg) self.stack_segment,
+                code_segment = in(reg) self.code_segment.0,
+                stack_segment = in(reg) self.stack_segment.0,
                 options(noreturn)
             )
         }
@@ -991,17 +1065,10 @@ impl InterruptStackFrameValue {
 
 impl fmt::Debug for InterruptStackFrameValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        struct Hex(u64);
-        impl fmt::Debug for Hex {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "{:#x}", self.0)
-            }
-        }
-
         let mut s = f.debug_struct("InterruptStackFrame");
         s.field("instruction_pointer", &self.instruction_pointer);
         s.field("code_segment", &self.code_segment);
-        s.field("cpu_flags", &Hex(self.cpu_flags));
+        s.field("cpu_flags", &self.cpu_flags);
         s.field("stack_pointer", &self.stack_pointer);
         s.field("stack_segment", &self.stack_segment);
         s.finish()
@@ -1053,14 +1120,6 @@ bitflags! {
         /// If this flag is set, it indicates that the page fault is a result of the processor
         /// encountering an RMP violation (AMD-only).
         const RMP = 1 << 31;
-    }
-}
-
-impl PageFaultErrorCode {
-    #[deprecated = "use the safe `from_bits_retain` method instead"]
-    /// Convert from underlying bit representation, preserving all bits (even those not corresponding to a defined flag).
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
-        Self::from_bits_retain(bits)
     }
 }
 
@@ -1425,7 +1484,7 @@ macro_rules! set_general_handler_entry {
         extern "x86-interrupt" fn handler(frame: $crate::structures::idt::InterruptStackFrame) {
             $handler(frame, $idx.into(), None);
         }
-        $idt[$idx as usize].set_handler_fn(handler);
+        $idt[$idx].set_handler_fn(handler);
     }};
 }
 
@@ -1434,7 +1493,7 @@ mod test {
     use super::*;
 
     #[allow(dead_code)]
-    fn entry_present(idt: &InterruptDescriptorTable, index: usize) -> bool {
+    fn entry_present(idt: &InterruptDescriptorTable, index: u8) -> bool {
         let options = match index {
             8 => &idt.double_fault.options,
             10 => &idt.invalid_tss.options,
@@ -1446,14 +1505,14 @@ mod test {
             17 => &idt.alignment_check.options,
             18 => &idt.machine_check.options,
             21 => &idt.cp_protection_exception.options,
-            i @ 22..=27 => &idt.reserved_2[i - 22].options,
+            i @ 22..=27 => &idt.reserved_2[usize::from(i) - 22].options,
             28 => &idt.hv_injection_exception.options,
             29 => &idt.vmm_communication_exception.options,
             30 => &idt.security_exception.options,
             31 => &idt.reserved_3.options,
             other => &idt[other].options,
         };
-        options.0.get_bit(15)
+        options.bits.get_bit(15)
     }
 
     #[test]
@@ -1461,6 +1520,8 @@ mod test {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+        assert_eq!(size_of::<InterruptStackFrame>(), 40);
+        assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
     }
 
     #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
@@ -1478,7 +1539,7 @@ mod test {
 
         let mut idt = InterruptDescriptorTable::new();
         set_general_handler!(&mut idt, general_handler, 0);
-        for i in 0..256 {
+        for i in 0..=255 {
             if i == 0 {
                 assert!(entry_present(&idt, i));
             } else {
@@ -1486,7 +1547,7 @@ mod test {
             }
         }
         set_general_handler!(&mut idt, general_handler, 14);
-        for i in 0..256 {
+        for i in 0..=255 {
             if i == 0 || i == 14 {
                 assert!(entry_present(&idt, i));
             } else {
@@ -1494,7 +1555,7 @@ mod test {
             }
         }
         set_general_handler!(&mut idt, general_handler, 32..64);
-        for i in 1..256 {
+        for i in 1..=255 {
             if i == 0 || i == 14 || (32..64).contains(&i) {
                 assert!(entry_present(&idt, i), "{}", i);
             } else {
@@ -1502,7 +1563,7 @@ mod test {
             }
         }
         set_general_handler!(&mut idt, general_handler);
-        for i in 0..256 {
+        for i in 0..=255 {
             if i == 15 || i == 31 || (22..=27).contains(&i) {
                 // reserved entries should not be set
                 assert!(!entry_present(&idt, i));
@@ -1518,8 +1579,7 @@ mod test {
 
         foo(Entry::<HandlerFuncWithErrCode> {
             pointer_low: 0,
-            gdt_selector: 0,
-            options: EntryOptions(0),
+            options: EntryOptions::minimal(),
             pointer_middle: 0,
             pointer_high: 0,
             reserved: 0,
@@ -1529,15 +1589,15 @@ mod test {
 
     #[test]
     fn isr_frame_manipulation() {
-        let mut frame = InterruptStackFrame {
-            value: InterruptStackFrameValue {
-                instruction_pointer: VirtAddr::new(0x1000),
-                code_segment: 0,
-                cpu_flags: 0,
-                stack_pointer: VirtAddr::new(0x2000),
-                stack_segment: 0,
-            },
-        };
+        let mut frame = InterruptStackFrame(InterruptStackFrameValue {
+            instruction_pointer: VirtAddr::new(0x1000),
+            code_segment: SegmentSelector(0),
+            cpu_flags: RFlags::empty(),
+            stack_pointer: VirtAddr::new(0x2000),
+            stack_segment: SegmentSelector(0),
+            _reserved1: Default::default(),
+            _reserved2: Default::default(),
+        });
 
         unsafe {
             frame
