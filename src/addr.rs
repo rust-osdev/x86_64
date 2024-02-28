@@ -229,10 +229,8 @@ impl VirtAddr {
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
         let mut steps = end.0.checked_sub(start.0)?;
 
-        // Check if we jumped the gap.
-        if end.0.get_bit(47) && !start.0.get_bit(47) {
-            steps = steps.checked_sub(0xffff_0000_0000_0000).unwrap();
-        }
+        // Mask away extra bits that appear while jumping the gap.
+        steps &= 0xffff_ffff_ffff;
 
         usize::try_from(steps).ok()
     }
