@@ -233,3 +233,13 @@ jobs:
       - run: cargo install cargo-semver-checks --locked
       - name: Check semver
         run: cargo +stable semver-checks check-release
+
+  kani:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "kani"
+          cache-targets: false
+      - uses: model-checking/kani-github-action@v1.1
