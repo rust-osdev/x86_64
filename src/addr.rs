@@ -256,7 +256,7 @@ impl VirtAddr {
             _ => {}
         }
 
-        Some(Self::new(addr))
+        Some(unsafe { Self::new_unsafe(addr) })
     }
 }
 
@@ -371,7 +371,7 @@ impl Step for VirtAddr {
             _ => {}
         }
 
-        Some(Self::new(addr))
+        Some(unsafe { Self::new_unsafe(addr) })
     }
 }
 
