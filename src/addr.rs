@@ -803,7 +803,7 @@ mod proofs {
         let same = Step::forward(start, 0);
         assert!(start == same);
 
-        // Verify that we can add 1 to any address.
+        // Manually calculate the expected address after stepping once.
         let expected = match start_raw {
             // Adding 1 to addresses in this range don't require gap jumps, so
             // we can just add 1.
@@ -818,6 +818,11 @@ mod proofs {
             // Adding 1 to this address causes an overflow.
             0xffff_ffff_ffff_ffff => None,
         };
+        if let Some(expected) = expected {
+            // Verify that `expected` is a valid address.
+            assert!(VirtAddr::try_new(expected).is_ok());
+        }
+        // Verify `forward_checked`.
         let next = Step::forward_checked(start, 1);
         assert!(next.map(VirtAddr::as_u64) == expected);
     }
