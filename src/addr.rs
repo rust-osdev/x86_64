@@ -236,6 +236,7 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[inline]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
         if offset > ADDRESS_SPACE_SIZE {
@@ -343,14 +344,17 @@ impl Sub<VirtAddr> for VirtAddr {
 
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
+    #[inline]
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
         Self::steps_between_impl(start, end)
     }
 
+    #[inline]
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
         Self::forward_checked_impl(start, count)
     }
 
+    #[inline]
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
         if offset > ADDRESS_SPACE_SIZE {
