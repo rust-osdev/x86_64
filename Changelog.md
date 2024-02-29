@@ -1,6 +1,6 @@
 # Unreleased
 
-# 0.15.0-beta – 2024-02-10
+# 0.15.0 – 2024-03-04
 
 ## Breaking changes
 
@@ -24,11 +24,20 @@
 - [seal off the `PageSize` trait](https://github.com/rust-osdev/x86_64/pull/404)
 - [idt: Fixup Options structure and cleanup set_handler_fn](https://github.com/rust-osdev/x86_64/pull/226)
 
+## New Features
+
+- [implement `Step` for `PageTableIndex`](https://github.com/rust-osdev/x86_64/pull/464)
+
 ## Fixes
 
 - [fix typo in docs](https://github.com/rust-osdev/x86_64/pull/265)
 - [activate `feature(asm_const)`](https://github.com/rust-osdev/x86_64/pull/320)
 - [gdt: Check that MAX is in range](https://github.com/rust-osdev/x86_64/pull/365)
+
+## Other Improvements
+
+- [allow inlining Step methods](https://github.com/rust-osdev/x86_64/pull/464)
+- [constify more `Page` and `PageTableIndex` functions](https://github.com/rust-osdev/x86_64/pull/464)
 
 # 0.14.12 – 2023-02-09
 
