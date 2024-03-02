@@ -1,6 +1,8 @@
 //! Abstractions for page tables and page table entries.
 
 use core::fmt;
+#[cfg(feature = "step_trait")]
+use core::iter::Step;
 use core::ops::{Index, IndexMut};
 
 use super::{PageSize, PhysFrame, Size4KiB};
@@ -338,6 +340,26 @@ impl From<PageTableIndex> for usize {
     #[inline]
     fn from(index: PageTableIndex) -> Self {
         usize::from(index.0)
+    }
+}
+
+#[cfg(feature = "step_trait")]
+impl Step for PageTableIndex {
+    #[inline]
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        end.0.checked_sub(start.0).map(usize::from)
+    }
+
+    #[inline]
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        let idx = usize::from(start).checked_add(count)?;
+        (idx < ENTRY_COUNT).then(|| Self::new(idx as u16))
+    }
+
+    #[inline]
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let idx = usize::from(start).checked_sub(count)?;
+        Some(Self::new(idx as u16))
     }
 }
 
