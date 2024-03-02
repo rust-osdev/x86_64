@@ -307,6 +307,7 @@ impl PageTableIndex {
         Self(index % ENTRY_COUNT as u16)
     }
 
+    #[inline]
     pub(crate) const fn into_u64(self) -> u64 {
         self.0 as u64
     }

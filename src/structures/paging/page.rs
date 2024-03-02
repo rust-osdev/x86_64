@@ -77,8 +77,9 @@ impl<S: PageSize> Page<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
-        if !address.is_aligned(S::SIZE) {
+        if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
         Ok(Page::containing_address(address))
@@ -100,9 +101,10 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the page that contains the given virtual address.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn containing_address(address: VirtAddr) -> Self {
         Page {
-            start_address: address.align_down(S::SIZE),
+            start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
         }
     }
@@ -185,13 +187,14 @@ impl<S: NotGiantPageSize> Page<S> {
 impl Page<Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_page_table_indices_1gib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
     ) -> Self {
         let mut addr = 0;
-        addr |= u64::from(p4_index) << 39;
-        addr |= u64::from(p3_index) << 30;
+        addr |= p4_index.into_u64() << 39;
+        addr |= p3_index.into_u64() << 30;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
@@ -199,15 +202,16 @@ impl Page<Size1GiB> {
 impl Page<Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_page_table_indices_2mib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
     ) -> Self {
         let mut addr = 0;
-        addr |= u64::from(p4_index) << 39;
-        addr |= u64::from(p3_index) << 30;
-        addr |= u64::from(p2_index) << 21;
+        addr |= p4_index.into_u64() << 39;
+        addr |= p3_index.into_u64() << 30;
+        addr |= p2_index.into_u64() << 21;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
@@ -215,6 +219,7 @@ impl Page<Size2MiB> {
 impl Page<Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_page_table_indices(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -222,10 +227,10 @@ impl Page<Size4KiB> {
         p1_index: PageTableIndex,
     ) -> Self {
         let mut addr = 0;
-        addr |= u64::from(p4_index) << 39;
-        addr |= u64::from(p3_index) << 30;
-        addr |= u64::from(p2_index) << 21;
-        addr |= u64::from(p1_index) << 12;
+        addr |= p4_index.into_u64() << 39;
+        addr |= p3_index.into_u64() << 30;
+        addr |= p2_index.into_u64() << 21;
+        addr |= p1_index.into_u64() << 12;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 
