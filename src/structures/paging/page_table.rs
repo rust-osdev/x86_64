@@ -306,6 +306,10 @@ impl PageTableIndex {
     pub const fn new_truncate(index: u16) -> Self {
         Self(index % ENTRY_COUNT as u16)
     }
+
+    pub(crate) const fn into_u64(self) -> u64 {
+        self.0 as u64
+    }
 }
 
 impl From<PageTableIndex> for u16 {
@@ -325,7 +329,7 @@ impl From<PageTableIndex> for u32 {
 impl From<PageTableIndex> for u64 {
     #[inline]
     fn from(index: PageTableIndex) -> Self {
-        u64::from(index.0)
+        index.into_u64()
     }
 }
 
