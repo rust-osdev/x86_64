@@ -296,8 +296,8 @@ pub struct PageTableIndex(u16);
 impl PageTableIndex {
     /// Creates a new index from the given `u16`. Panics if the given value is >=512.
     #[inline]
-    pub fn new(index: u16) -> Self {
-        assert!(usize::from(index) < ENTRY_COUNT);
+    pub const fn new(index: u16) -> Self {
+        assert!((index as usize) < ENTRY_COUNT);
         Self(index)
     }
 
