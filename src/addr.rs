@@ -177,7 +177,15 @@ impl VirtAddr {
     where
         U: Into<u64>,
     {
-        VirtAddr::new_truncate(align_down(self.0, align.into()))
+        self.align_down_u64(align.into())
+    }
+
+    /// Aligns the virtual address downwards to the given alignment.
+    ///
+    /// See the `align_down` function for more information.
+    #[inline]
+    pub(crate) const fn align_down_u64(self, align: u64) -> Self {
+        VirtAddr::new_truncate(align_down(self.0, align))
     }
 
     /// Checks whether the virtual address has the demanded alignment.
@@ -186,7 +194,13 @@ impl VirtAddr {
     where
         U: Into<u64>,
     {
-        self.align_down(align) == self
+        self.is_aligned_u64(align.into())
+    }
+
+    /// Checks whether the virtual address has the demanded alignment.
+    #[inline]
+    pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {
+        self.align_down_u64(align).as_u64() == self.as_u64()
     }
 
     /// Returns the 12-bit page offset of this virtual address.
@@ -236,6 +250,7 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[inline]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
         if offset > ADDRESS_SPACE_SIZE {
@@ -343,14 +358,17 @@ impl Sub<VirtAddr> for VirtAddr {
 
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
+    #[inline]
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
         Self::steps_between_impl(start, end)
     }
 
+    #[inline]
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
         Self::forward_checked_impl(start, count)
     }
 
+    #[inline]
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
         let offset = u64::try_from(count).ok()?;
         if offset > ADDRESS_SPACE_SIZE {

@@ -1,6 +1,8 @@
 //! Abstractions for page tables and page table entries.
 
 use core::fmt;
+#[cfg(feature = "step_trait")]
+use core::iter::Step;
 use core::ops::{Index, IndexMut};
 
 use super::{PageSize, PhysFrame, Size4KiB};
@@ -296,8 +298,8 @@ pub struct PageTableIndex(u16);
 impl PageTableIndex {
     /// Creates a new index from the given `u16`. Panics if the given value is >=512.
     #[inline]
-    pub fn new(index: u16) -> Self {
-        assert!(usize::from(index) < ENTRY_COUNT);
+    pub const fn new(index: u16) -> Self {
+        assert!((index as usize) < ENTRY_COUNT);
         Self(index)
     }
 
@@ -305,6 +307,11 @@ impl PageTableIndex {
     #[inline]
     pub const fn new_truncate(index: u16) -> Self {
         Self(index % ENTRY_COUNT as u16)
+    }
+
+    #[inline]
+    pub(crate) const fn into_u64(self) -> u64 {
+        self.0 as u64
     }
 }
 
@@ -325,7 +332,7 @@ impl From<PageTableIndex> for u32 {
 impl From<PageTableIndex> for u64 {
     #[inline]
     fn from(index: PageTableIndex) -> Self {
-        u64::from(index.0)
+        index.into_u64()
     }
 }
 
@@ -333,6 +340,26 @@ impl From<PageTableIndex> for usize {
     #[inline]
     fn from(index: PageTableIndex) -> Self {
         usize::from(index.0)
+    }
+}
+
+#[cfg(feature = "step_trait")]
+impl Step for PageTableIndex {
+    #[inline]
+    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+        end.0.checked_sub(start.0).map(usize::from)
+    }
+
+    #[inline]
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        let idx = usize::from(start).checked_add(count)?;
+        (idx < ENTRY_COUNT).then(|| Self::new(idx as u16))
+    }
+
+    #[inline]
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let idx = usize::from(start).checked_sub(count)?;
+        Some(Self::new(idx as u16))
     }
 }
 
