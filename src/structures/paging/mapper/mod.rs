@@ -293,6 +293,7 @@ pub trait Mapper<S: PageSize> {
     /// `GLOBAL` and `WRITABLE` flags for a page might result in the corruption
     /// of values stored in that page from processes running in other address
     /// spaces.
+    /// If you instead want to get the current flags on a mapped page, you can see the trait implementation `TranslateResult::Mapped` flags
     unsafe fn update_flags(
         &mut self,
         page: Page<S>,
