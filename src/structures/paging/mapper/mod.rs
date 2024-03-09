@@ -286,6 +286,8 @@ pub trait Mapper<S: PageSize> {
 
     /// Updates the flags of an existing mapping.
     ///
+    /// To read the current flags of a mapped page, use the [`Translate::translate`] method.
+    ///
     /// ## Safety
     ///
     /// This method is unsafe because changing the flags of a mapping
