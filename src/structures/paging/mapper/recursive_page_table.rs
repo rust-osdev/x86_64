@@ -891,7 +891,11 @@ impl<'a> CleanUp for RecursivePageTable<'a> {
                     })
                 {
                     if let Ok(frame) = entry.frame() {
-                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let start = VirtAddr::forward_checked_impl(
+                            table_addr,
+                            (offset_per_entry as usize) * i,
+                        )
+                        .unwrap();
                         let end = start + (offset_per_entry - 1);
                         let start = Page::<Size4KiB>::containing_address(start);
                         let start = start.max(range.start);
