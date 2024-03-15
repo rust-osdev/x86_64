@@ -971,6 +971,24 @@ impl EntryOptions {
 pub struct InterruptStackFrame(InterruptStackFrameValue);
 
 impl InterruptStackFrame {
+    /// Creates a new interrupt stack frame with the given values.
+    #[inline]
+    pub fn new(
+        instruction_pointer: VirtAddr,
+        code_segment: SegmentSelector,
+        cpu_flags: RFlags,
+        stack_pointer: VirtAddr,
+        stack_segment: SegmentSelector,
+    ) -> Self {
+        Self(InterruptStackFrameValue::new(
+            instruction_pointer,
+            code_segment,
+            cpu_flags,
+            stack_pointer,
+            stack_segment,
+        ))
+    }
+
     /// Gives mutable access to the contents of the interrupt stack frame.
     ///
     /// The `Volatile` wrapper is used because LLVM optimizations remove non-volatile
@@ -1030,6 +1048,26 @@ pub struct InterruptStackFrameValue {
 }
 
 impl InterruptStackFrameValue {
+    /// Creates a new interrupt stack frame with the given values.
+    #[inline]
+    pub fn new(
+        instruction_pointer: VirtAddr,
+        code_segment: SegmentSelector,
+        cpu_flags: RFlags,
+        stack_pointer: VirtAddr,
+        stack_segment: SegmentSelector,
+    ) -> Self {
+        Self {
+            instruction_pointer,
+            code_segment,
+            _reserved1: Default::default(),
+            cpu_flags,
+            stack_pointer,
+            stack_segment,
+            _reserved2: Default::default(),
+        }
+    }
+
     /// Call the `iretq` (interrupt return) instruction.
     ///
     /// This function doesn't have to be called in an interrupt handler.
