@@ -116,7 +116,7 @@ impl<'a> RecursivePageTable<'a> {
     /// Returns `MapToError::FrameAllocationFailed` if the entry is unused and the allocator
     /// returned `None`. Returns `MapToError::ParentEntryHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
-    unsafe fn create_next_table<'b, A, S: PageSize>(
+    unsafe fn create_next_table<'b, A, S: PageSize + DebugOutput>(
         entry: &'b mut PageTableEntry,
         next_table_page: Page,
         insert_flags: PageTableFlags,
@@ -128,7 +128,7 @@ impl<'a> RecursivePageTable<'a> {
         /// This inner function is used to limit the scope of `unsafe`.
         ///
         /// This is a safe function, so we need to use `unsafe` blocks when we do something unsafe.
-        fn inner<'b, A, S: PageSize>(
+        fn inner<'b, A, S: PageSize + DebugOutput>(
             entry: &'b mut PageTableEntry,
             next_table_page: Page,
             insert_flags: PageTableFlags,

@@ -6,11 +6,14 @@ pub use self::offset_page_table::OffsetPageTable;
 #[cfg(feature = "instructions")]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
-use crate::structures::paging::{
-    frame_alloc::{FrameAllocator, FrameDeallocator},
-    page::PageRangeInclusive,
-    page_table::PageTableFlags,
-    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+use crate::{
+    structures::paging::{
+        frame_alloc::{FrameAllocator, FrameDeallocator},
+        page::PageRangeInclusive,
+        page_table::PageTableFlags,
+        Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    },
+    DebugOutput,
 };
 use crate::{PhysAddr, VirtAddr};
 
@@ -107,7 +110,7 @@ impl MappedFrame {
 }
 
 /// A trait for common page table operations on pages of size `S`.
-pub trait Mapper<S: PageSize> {
+pub trait Mapper<S: PageSize + DebugOutput> {
     /// Creates a new mapping in the page table.
     ///
     /// This function might need additional physical frames to create new page tables. These
@@ -383,9 +386,9 @@ pub trait Mapper<S: PageSize> {
 /// changed the mapping of a page to ensure that the TLB flush is not forgotten.
 #[derive(Debug)]
 #[must_use = "Page Table changes must be flushed or ignored."]
-pub struct MapperFlush<S: PageSize>(Page<S>);
+pub struct MapperFlush<S: PageSize + DebugOutput>(Page<S>);
 
-impl<S: PageSize> MapperFlush<S> {
+impl<S: PageSize + DebugOutput> MapperFlush<S> {
     /// Create a new flush promise
     ///
     /// Note that this method is intended for implementing the [`Mapper`] trait and no other uses
@@ -440,7 +443,7 @@ impl MapperFlushAll {
 
 /// This error is returned from `map_to` and similar methods.
 #[derive(Debug)]
-pub enum MapToError<S: PageSize> {
+pub enum MapToError<S: PageSize + DebugOutput> {
     /// An additional frame was needed for the mapping process, but the frame allocator
     /// returned `None`.
     FrameAllocationFailed,

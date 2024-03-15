@@ -2,7 +2,7 @@
 
 use super::page::AddressNotAligned;
 use crate::structures::paging::page::{PageSize, Size4KiB};
-use crate::PhysAddr;
+use crate::{DebugOutput, PhysAddr};
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
@@ -82,7 +82,7 @@ impl<S: PageSize> PhysFrame<S> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PhysFrame<S> {
+impl<S: PageSize + DebugOutput> fmt::Debug for PhysFrame<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "PhysFrame[{}]({:#x})",
@@ -163,7 +163,7 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
+impl<S: PageSize + DebugOutput> fmt::Debug for PhysFrameRange<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PhysFrameRange")
             .field("start", &self.start)
@@ -205,7 +205,7 @@ impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PhysFrameRangeInclusive<S> {
+impl<S: PageSize + DebugOutput> fmt::Debug for PhysFrameRangeInclusive<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PhysFrameRangeInclusive")
             .field("start", &self.start)

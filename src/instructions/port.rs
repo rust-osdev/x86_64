@@ -4,8 +4,8 @@ use core::arch::asm;
 use core::fmt;
 use core::marker::PhantomData;
 
-use crate::sealed::Sealed;
 pub use crate::structures::port::{PortRead, PortWrite};
+use crate::{sealed::Sealed, DebugOutput};
 
 impl PortRead for u8 {
     #[inline]
@@ -80,7 +80,8 @@ pub trait PortWriteAccess: PortAccess {}
 #[derive(Debug)]
 pub struct ReadOnlyAccess(());
 
-impl Sealed for ReadOnlyAccess {
+impl Sealed for ReadOnlyAccess {}
+impl DebugOutput for ReadOnlyAccess {
     const DEBUG_STR: &'static str = "ReadOnly";
 }
 impl PortAccess for ReadOnlyAccess {}
@@ -90,7 +91,8 @@ impl PortReadAccess for ReadOnlyAccess {}
 #[derive(Debug)]
 pub struct WriteOnlyAccess(());
 
-impl Sealed for WriteOnlyAccess {
+impl Sealed for WriteOnlyAccess {}
+impl DebugOutput for WriteOnlyAccess {
     const DEBUG_STR: &'static str = "WriteOnly";
 }
 impl PortAccess for WriteOnlyAccess {}
@@ -100,7 +102,8 @@ impl PortWriteAccess for WriteOnlyAccess {}
 #[derive(Debug)]
 pub struct ReadWriteAccess(());
 
-impl Sealed for ReadWriteAccess {
+impl Sealed for ReadWriteAccess {}
+impl DebugOutput for ReadWriteAccess {
     const DEBUG_STR: &'static str = "ReadWrite";
 }
 impl PortAccess for ReadWriteAccess {}
@@ -166,7 +169,7 @@ impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     }
 }
 
-impl<T, A: PortAccess> fmt::Debug for PortGeneric<T, A> {
+impl<T, A: PortAccess + DebugOutput> fmt::Debug for PortGeneric<T, A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PortGeneric")
             .field("port", &self.port)

@@ -65,8 +65,10 @@ impl PrivilegeLevel {
 }
 
 pub(crate) mod sealed {
-    pub trait Sealed {
-        /// A string representation for debug output.
-        const DEBUG_STR: &'static str;
-    }
+    pub trait Sealed {}
+}
+
+trait DebugOutput {
+    /// A string representation for debug output.
+    const DEBUG_STR: &'static str;
 }

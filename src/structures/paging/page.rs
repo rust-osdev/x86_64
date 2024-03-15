@@ -3,7 +3,7 @@
 use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
-use crate::VirtAddr;
+use crate::{DebugOutput, VirtAddr};
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -39,7 +39,9 @@ impl PageSize for Size4KiB {
 
 impl NotGiantPageSize for Size4KiB {}
 
-impl Sealed for super::Size4KiB {
+impl Sealed for super::Size4KiB {}
+
+impl DebugOutput for super::Size4KiB {
     const DEBUG_STR: &'static str = "4KiB";
 }
 
@@ -49,7 +51,9 @@ impl PageSize for Size2MiB {
 
 impl NotGiantPageSize for Size2MiB {}
 
-impl Sealed for super::Size2MiB {
+impl Sealed for super::Size2MiB {}
+
+impl DebugOutput for super::Size2MiB {
     const DEBUG_STR: &'static str = "2MiB";
 }
 
@@ -57,7 +61,9 @@ impl PageSize for Size1GiB {
     const SIZE: u64 = Size2MiB::SIZE * 512;
 }
 
-impl Sealed for super::Size1GiB {
+impl Sealed for super::Size1GiB {}
+
+impl DebugOutput for super::Size1GiB {
     const DEBUG_STR: &'static str = "1GiB";
 }
 
@@ -241,7 +247,7 @@ impl Page<Size4KiB> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for Page<S> {
+impl<S: PageSize + DebugOutput> fmt::Debug for Page<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "Page[{}]({:#x})",
@@ -353,7 +359,7 @@ impl PageRange<Size2MiB> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PageRange<S> {
+impl<S: PageSize + DebugOutput> fmt::Debug for PageRange<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageRange")
             .field("start", &self.start)
@@ -404,7 +410,7 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
+impl<S: PageSize + DebugOutput> fmt::Debug for PageRangeInclusive<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageRangeInclusive")
             .field("start", &self.start)

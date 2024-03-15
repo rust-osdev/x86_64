@@ -8,7 +8,7 @@ use crate::{
         page::{NotGiantPageSize, PageRange},
         Page, PageSize, Size2MiB, Size4KiB,
     },
-    PrivilegeLevel, VirtAddr,
+    DebugOutput, PrivilegeLevel, VirtAddr,
 };
 use core::{arch::asm, cmp, convert::TryFrom, fmt};
 
@@ -220,7 +220,7 @@ impl Invlpgb {
 #[must_use]
 pub struct InvlpgbFlushBuilder<'a, S = Size4KiB>
 where
-    S: NotGiantPageSize,
+    S: NotGiantPageSize + DebugOutput,
 {
     invlpgb: &'a Invlpgb,
     page_range: Option<PageRange<S>>,
@@ -233,7 +233,7 @@ where
 
 impl<'a, S> InvlpgbFlushBuilder<'a, S>
 where
-    S: NotGiantPageSize,
+    S: NotGiantPageSize + DebugOutput,
 {
     /// Flush a range of pages.
     ///
@@ -241,7 +241,7 @@ where
     /// executed multiple times.
     pub fn pages<T>(self, page_range: PageRange<T>) -> InvlpgbFlushBuilder<'a, T>
     where
-        T: NotGiantPageSize,
+        T: NotGiantPageSize + DebugOutput,
     {
         InvlpgbFlushBuilder {
             invlpgb: self.invlpgb,
