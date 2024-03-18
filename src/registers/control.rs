@@ -326,6 +326,21 @@ mod x86_64 {
             }
         }
 
+        /// Write a new P4 table address into the CR3 register without flushing existing TLB entries for
+        /// the PCID.
+        ///
+        /// ## Safety
+        ///
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        /// [`Cr4Flags::PCID`] must be set before calling this method.
+        #[inline]
+        pub unsafe fn write_pcid_no_flush(frame: PhysFrame, pcid: Pcid) {
+            unsafe {
+                Cr3::write_raw_impl(true, frame, pcid.value());
+            }
+        }
+
         /// Write a new P4 table address into the CR3 register.
         ///
         /// ## Safety
