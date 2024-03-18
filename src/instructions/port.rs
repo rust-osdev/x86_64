@@ -68,7 +68,10 @@ impl PortWrite for u32 {
 }
 
 /// A marker trait for access types which allow accessing port values.
-pub trait PortAccess: Sealed {}
+pub trait PortAccess: Sealed {
+    /// A string representation for debug output.
+    const DEBUG_STR: &'static str;
+}
 
 /// A marker trait for access types which allow reading port values.
 pub trait PortReadAccess: PortAccess {}
@@ -80,30 +83,30 @@ pub trait PortWriteAccess: PortAccess {}
 #[derive(Debug)]
 pub struct ReadOnlyAccess(());
 
-impl Sealed for ReadOnlyAccess {
+impl Sealed for ReadOnlyAccess {}
+impl PortAccess for ReadOnlyAccess {
     const DEBUG_STR: &'static str = "ReadOnly";
 }
-impl PortAccess for ReadOnlyAccess {}
 impl PortReadAccess for ReadOnlyAccess {}
 
 /// An access marker type indicating that a port is only allowed to write values.
 #[derive(Debug)]
 pub struct WriteOnlyAccess(());
 
-impl Sealed for WriteOnlyAccess {
+impl Sealed for WriteOnlyAccess {}
+impl PortAccess for WriteOnlyAccess {
     const DEBUG_STR: &'static str = "WriteOnly";
 }
-impl PortAccess for WriteOnlyAccess {}
 impl PortWriteAccess for WriteOnlyAccess {}
 
 /// An access marker type indicating that a port is allowed to read or write values.
 #[derive(Debug)]
 pub struct ReadWriteAccess(());
 
-impl Sealed for ReadWriteAccess {
+impl Sealed for ReadWriteAccess {}
+impl PortAccess for ReadWriteAccess {
     const DEBUG_STR: &'static str = "ReadWrite";
 }
-impl PortAccess for ReadWriteAccess {}
 impl PortReadAccess for ReadWriteAccess {}
 impl PortWriteAccess for ReadWriteAccess {}
 
