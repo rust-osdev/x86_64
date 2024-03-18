@@ -308,7 +308,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
             unsafe {
-                Cr3::write_raw(frame, flags.bits() as u16);
+                Cr3::write_raw_impl(false, frame, flags.bits() as u16);
             }
         }
 
@@ -322,7 +322,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_pcid(frame: PhysFrame, pcid: Pcid) {
             unsafe {
-                Cr3::write_raw(frame, pcid.value());
+                Cr3::write_raw_impl(false, frame, pcid.value());
             }
         }
 
@@ -334,8 +334,13 @@ mod x86_64 {
         /// changing the page mapping.
         #[inline]
         pub unsafe fn write_raw(frame: PhysFrame, val: u16) {
+            unsafe { Self::write_raw_impl(false, frame, val) }
+        }
+
+        #[inline]
+        unsafe fn write_raw_impl(top_bit: bool, frame: PhysFrame, val: u16) {
             let addr = frame.start_address();
-            let value = addr.as_u64() | val as u64;
+            let value = ((top_bit as u64) << 63) | addr.as_u64() | val as u64;
 
             unsafe {
                 asm!("mov cr3, {}", in(reg) value, options(nostack, preserves_flags));
