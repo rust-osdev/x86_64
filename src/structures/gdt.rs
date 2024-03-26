@@ -244,16 +244,21 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         index
     }
 
+    /// Returns the value of the limit for a gdt pointer. It is one less than the number of bytes of the table.
+    pub const fn limit(&self) -> u16 {
+        use core::mem::size_of;
+        // 0 < self.next_free <= MAX <= 2^13, so the limit calculation
+        // will not underflow or overflow.
+        (self.len * size_of::<u64>() - 1) as u16
+    }
+
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(feature = "instructions")]
     fn pointer(&self) -> super::DescriptorTablePointer {
-        use core::mem::size_of;
         super::DescriptorTablePointer {
             base: crate::VirtAddr::new(self.table.as_ptr() as u64),
-            // 0 < self.next_free <= MAX <= 2^13, so the limit calculation
-            // will not underflow or overflow.
-            limit: (self.len * size_of::<u64>() - 1) as u16,
+            limit: self.limit(),
         }
     }
 }
