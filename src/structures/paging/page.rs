@@ -159,12 +159,14 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
         VirtAddr::steps_between_impl(&start.start_address, &end.start_address)
             .map(|steps| steps / S::SIZE as usize)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = count.checked_mul(S::SIZE as usize)?;
         let start_address = VirtAddr::forward_checked_impl(start.start_address, count)?;

@@ -383,6 +383,7 @@ pub trait Mapper<S: PageSize> {
 /// changed the mapping of a page to ensure that the TLB flush is not forgotten.
 #[derive(Debug)]
 #[must_use = "Page Table changes must be flushed or ignored."]
+#[cfg_attr(not(feature = "instructions"), allow(dead_code))] // FIXME
 pub struct MapperFlush<S: PageSize>(Page<S>);
 
 impl<S: PageSize> MapperFlush<S> {
