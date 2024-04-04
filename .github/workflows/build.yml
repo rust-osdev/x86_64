@@ -27,41 +27,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
-      - name: Run cargo build for stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --no-default-features --features instructions
-      - name: Run cargo build for stable without instructions
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --no-default-features
-      - name: Run cargo doc for stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-default-features --features instructions
-      - name: Run cargo doc for stable without instructions
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-default-features
-      - name: Run cargo test for stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features instructions
-      - name: Run cargo test for stable without instructions
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features
+      - run: cargo build --no-default-features --features instructions
+      - run: cargo build --no-default-features
+      - run: cargo doc --no-default-features --features instructions
+      - run: cargo doc --no-default-features
+      - run: cargo test --no-default-features --features instructions
+      - run: cargo test --no-default-features
 
   test:
     name: "Test"
@@ -76,51 +50,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          target: x86_64-unknown-linux-musl
+          targets: x86_64-unknown-linux-musl, i686-unknown-linux-gnu, thumbv7em-none-eabihf
 
-      - name: "Print Rust Version"
-        run: |
-          rustc -Vv
-          cargo -Vv
+      - run: cargo build
 
-      - name: "Run cargo build"
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
+      - run: cargo doc
 
-      - name: "Run cargo doc"
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-
-      - name: "Run cargo build on musl"
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --target x86_64-unknown-linux-musl
+      - run: cargo build --target x86_64-unknown-linux-musl
         if: runner.os == 'Linux'
 
-      - name: "Run cargo test"
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - run: cargo test
 
-      - name: "Run cargo test on musl"
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --target x86_64-unknown-linux-musl
+      - run: cargo test --target x86_64-unknown-linux-musl
         if: runner.os == 'Linux'
 
-      - name: "Install Rustup Targets"
-        run: |
-          rustup target add i686-unknown-linux-gnu
-          rustup target add thumbv7em-none-eabihf
       - name: "Build on non x86_64 platforms"
         run: |
           cargo build --target i686-unknown-linux-gnu --no-default-features --features nightly
@@ -151,13 +96,9 @@ jobs:
         run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: "Install Rustup Components"
-        uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          profile: minimal
-          components: rust-src, llvm-tools-preview
+          components: rust-src, llvm-tools
       - name: "Install cargo-xbuild"
         run: cargo install cargo-xbuild --debug --root binaries
       - name: "Install bootimage"
@@ -197,16 +138,10 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          profile: minimal
           components: rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - run: cargo fmt --all -- --check
 
   clippy:
     name: "Clippy"
@@ -214,15 +149,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          profile: minimal
           components: clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
+      - run: cargo clippy
 
   semver-checks:
     name: Semver Checks
