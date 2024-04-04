@@ -78,11 +78,6 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl
 
-      - name: "Print Rust Version"
-        run: |
-          rustc -Vv
-          cargo -Vv
-
       - name: "Run cargo build"
         uses: actions-rs/cargo@v1
         with:
