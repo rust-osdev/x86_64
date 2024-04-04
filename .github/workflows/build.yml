@@ -27,11 +27,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
       - name: Run cargo build for stable
         uses: actions-rs/cargo@v1
         with:
@@ -76,12 +74,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          target: x86_64-unknown-linux-musl
+          targets: x86_64-unknown-linux-musl
 
       - name: "Print Rust Version"
         run: |
@@ -151,13 +146,9 @@ jobs:
         run: echo "$GITHUB_WORKSPACE/binaries/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: "Install Rustup Components"
-        uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          profile: minimal
-          components: rust-src, llvm-tools-preview
+          components: rust-src, llvm-tools
       - name: "Install cargo-xbuild"
         run: cargo install cargo-xbuild --debug --root binaries
       - name: "Install bootimage"
@@ -197,11 +188,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          profile: minimal
           components: rustfmt
       - uses: actions-rs/cargo@v1
         with:
@@ -214,11 +202,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          profile: minimal
           components: clippy
       - uses: actions-rs/cargo@v1
         with:
