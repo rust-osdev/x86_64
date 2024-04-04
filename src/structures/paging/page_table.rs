@@ -97,6 +97,13 @@ impl PageTableEntry {
     }
 }
 
+impl Default for PageTableEntry {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Debug for PageTableEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut f = f.debug_struct("PageTableEntry");
