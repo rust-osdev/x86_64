@@ -150,6 +150,10 @@ impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
+    #[doc(alias = "in")]
+    #[doc(alias = "inb")]
+    #[doc(alias = "inw")]
+    #[doc(alias = "inl")]
     #[inline]
     pub unsafe fn read(&mut self) -> T {
         unsafe { T::read_from_port(self.port) }
@@ -163,6 +167,10 @@ impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     ///
     /// This function is unsafe because the I/O port could have side effects that violate memory
     /// safety.
+    #[doc(alias = "out")]
+    #[doc(alias = "outb")]
+    #[doc(alias = "outw")]
+    #[doc(alias = "outl")]
     #[inline]
     pub unsafe fn write(&mut self, value: T) {
         unsafe { T::write_to_port(self.port, value) }
