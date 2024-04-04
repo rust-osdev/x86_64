@@ -787,6 +787,7 @@ impl<'a> Translate for RecursivePageTable<'a> {
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let entry = &p3[addr.p3_index()];
             let frame = PhysFrame::containing_address(entry.addr());
+            #[allow(clippy::unusual_byte_groupings)]
             let offset = addr.as_u64() & 0o_777_777_7777;
             let flags = entry.flags();
             return TranslateResult::Mapped {
@@ -804,6 +805,7 @@ impl<'a> Translate for RecursivePageTable<'a> {
         if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let entry = &p2[addr.p2_index()];
             let frame = PhysFrame::containing_address(entry.addr());
+            #[allow(clippy::unusual_byte_groupings)]
             let offset = addr.as_u64() & 0o_777_7777;
             let flags = entry.flags();
             return TranslateResult::Mapped {

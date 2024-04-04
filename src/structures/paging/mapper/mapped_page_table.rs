@@ -549,6 +549,7 @@ impl<'a, P: PageTableFrameMapping> Translate for MappedPageTable<'a, P> {
             Err(PageTableWalkError::MappedToHugePage) => {
                 let entry = &p3[addr.p3_index()];
                 let frame = PhysFrame::containing_address(entry.addr());
+                #[allow(clippy::unusual_byte_groupings)]
                 let offset = addr.as_u64() & 0o_777_777_7777;
                 let flags = entry.flags();
                 return TranslateResult::Mapped {
@@ -564,6 +565,7 @@ impl<'a, P: PageTableFrameMapping> Translate for MappedPageTable<'a, P> {
             Err(PageTableWalkError::MappedToHugePage) => {
                 let entry = &p2[addr.p2_index()];
                 let frame = PhysFrame::containing_address(entry.addr());
+                #[allow(clippy::unusual_byte_groupings)]
                 let offset = addr.as_u64() & 0o_777_7777;
                 let flags = entry.flags();
                 return TranslateResult::Mapped {
