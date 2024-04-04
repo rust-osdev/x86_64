@@ -671,7 +671,7 @@ impl_index_for_idt!(RangeFull);
 
 /// An Interrupt Descriptor Table entry.
 ///
-/// The generic parameter is some [`InterruptFn`], depending on the interrupt vector.
+/// The generic parameter is some [`HandlerFuncType`], depending on the interrupt vector.
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry<F> {
