@@ -13,6 +13,9 @@ on:
 permissions:
   contents: read
 
+env:
+  RUSTDOCFLAGS: -Dwarnings
+
 jobs:
   stable:
     name: "Test MSRV and Stable Features"
