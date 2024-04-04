@@ -6,12 +6,10 @@ use super::*;
 use crate::registers::control::Cr3;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{
-    frame_alloc::FrameAllocator,
-    page::{AddressNotAligned, NotGiantPageSize, PageRangeInclusive},
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    FrameDeallocator, Page, PageSize, PageTableIndex, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    page::{AddressNotAligned, NotGiantPageSize},
+    page_table::{FrameError, PageTable, PageTableEntry},
+    PageTableIndex,
 };
-use crate::VirtAddr;
 
 /// A recursive page table is a last level page table with an entry mapped to the table itself.
 ///

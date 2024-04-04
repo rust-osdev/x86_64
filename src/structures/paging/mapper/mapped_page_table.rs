@@ -1,9 +1,7 @@
 use crate::structures::paging::{
-    frame::PhysFrame,
-    frame_alloc::{FrameAllocator, FrameDeallocator},
     mapper::*,
-    page::{AddressNotAligned, Page, PageRangeInclusive, Size1GiB, Size2MiB, Size4KiB},
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags, PageTableLevel},
+    page::AddressNotAligned,
+    page_table::{FrameError, PageTable, PageTableEntry, PageTableLevel},
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
