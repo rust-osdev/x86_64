@@ -65,7 +65,7 @@ impl RdRand {
     }
 }
 
-#[cfg(all(test))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
