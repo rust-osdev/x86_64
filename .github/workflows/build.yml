@@ -99,8 +99,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src, llvm-tools
-      - name: "Install cargo-xbuild"
-        run: cargo install cargo-xbuild --debug --root binaries
       - name: "Install bootimage"
         run: cargo install bootimage --debug --root binaries
 
@@ -128,7 +126,7 @@ jobs:
         run: qemu-system-x86_64 --version
 
       - name: "Run Test Framework"
-        run: cargo xtest
+        run: cargo test -Zbuild-std=core -Zbuild-std-features=compiler-builtins-mem
         shell: bash
         working-directory: "testing"
 
