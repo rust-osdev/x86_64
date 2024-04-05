@@ -98,9 +98,8 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
+          targets: x86_64-unknown-none
           components: rust-src, llvm-tools
-      - name: "Install cargo-xbuild"
-        run: cargo install cargo-xbuild --debug --root binaries
       - name: "Install bootimage"
         run: cargo install bootimage --debug --root binaries
 
@@ -128,7 +127,7 @@ jobs:
         run: qemu-system-x86_64 --version
 
       - name: "Run Test Framework"
-        run: cargo xtest
+        run: cargo test
         shell: bash
         working-directory: "testing"
 
