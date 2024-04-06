@@ -1,9 +1,6 @@
 #![cfg(target_pointer_width = "64")]
 
-use crate::structures::paging::{
-    frame::PhysFrame, mapper::*, page::PageRangeInclusive, page_table::PageTable, FrameDeallocator,
-    Page, PageTableFlags,
-};
+use crate::structures::paging::{mapper::*, page_table::PageTable};
 
 /// A Mapper implementation that requires that the complete physically memory is mapped at some
 /// offset in the virtual address space.

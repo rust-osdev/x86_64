@@ -296,7 +296,7 @@ mod x86_64 {
         #[inline]
         pub fn read_pcid() -> (PhysFrame, Pcid) {
             let (frame, value) = Cr3::read_raw();
-            (frame, Pcid::new(value as u16).unwrap())
+            (frame, Pcid::new(value).unwrap())
         }
 
         /// Write a new P4 table address into the CR3 register.

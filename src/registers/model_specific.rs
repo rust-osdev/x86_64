@@ -6,6 +6,7 @@ use bitflags::bitflags;
 use crate::registers::segmentation::{FS, GS};
 
 /// A model specific register.
+#[cfg_attr(not(feature = "instructions"), allow(dead_code))] // FIXME
 #[derive(Debug)]
 pub struct Msr(u32);
 

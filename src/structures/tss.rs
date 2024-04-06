@@ -43,6 +43,13 @@ impl TaskStateSegment {
     }
 }
 
+impl Default for TaskStateSegment {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -117,6 +117,13 @@ impl GlobalDescriptorTable {
     }
 }
 
+impl Default for GlobalDescriptorTable {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// Creates an empty GDT which can hold `MAX` number of [`Entry`]s.
     #[inline]

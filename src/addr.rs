@@ -240,6 +240,7 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
         let mut steps = end.0.checked_sub(start.0)?;
 
