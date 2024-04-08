@@ -83,6 +83,9 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 15
 
+    env:
+      RUSTFLAGS: -Crelocation-model=static -Dwarnings
+
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v4
