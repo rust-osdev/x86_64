@@ -857,6 +857,12 @@ macro_rules! impl_handler_func_type {
         unsafe impl HandlerFuncType for $f {
             #[inline]
             fn to_virt_addr(self) -> VirtAddr {
+                // Casting a function pointer to u64 is fine, if the pointer
+                // width doesn't exeed 64 bits.
+                #[cfg_attr(
+                    any(target_pointer_width = "32", target_pointer_width = "64"),
+                    allow(clippy::fn_to_numeric_cast)
+                )]
                 VirtAddr::new(self as u64)
             }
         }
