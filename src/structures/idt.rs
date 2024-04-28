@@ -489,7 +489,7 @@ impl InterruptDescriptorTable {
     }
 
     /// Loads the IDT in the CPU using the `lidt` command.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub fn load(&'static self) {
         unsafe { self.load_unsafe() }
@@ -505,7 +505,7 @@ impl InterruptDescriptorTable {
     /// - `self` always stays at the same memory location. It is recommended to wrap it in
     /// a `Box`.
     ///
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::lidt;
@@ -516,7 +516,7 @@ impl InterruptDescriptorTable {
 
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     fn pointer(&self) -> crate::structures::DescriptorTablePointer {
         use core::mem::size_of;
         crate::structures::DescriptorTablePointer {
@@ -792,7 +792,7 @@ impl<F> Entry<F> {
     ///
     /// The caller must ensure that `addr` is the address of a valid interrupt handler function,
     /// and the signature of such a function is correct for the entry type.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
         use crate::instructions::segmentation::{Segment, CS};
@@ -821,7 +821,7 @@ impl<F> Entry<F> {
     }
 }
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 impl<F: HandlerFuncType> Entry<F> {
     /// Sets the handler function for the IDT entry and sets the following defaults:
     ///   - The code selector is the code segment currently active in the CPU
@@ -1093,7 +1093,7 @@ impl InterruptStackFrameValue {
     /// CS and SS register can all cause undefined behaviour when done incorrectly.
     ///
     #[inline(always)]
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     pub unsafe fn iretq(&self) -> ! {
         unsafe {
             core::arch::asm!(
@@ -1328,7 +1328,11 @@ pub enum ExceptionVector {
     Security = 0x1E,
 }
 
-#[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
+#[cfg(all(
+    feature = "instructions",
+    feature = "abi_x86_interrupt",
+    target_arch = "x86_64"
+))]
 #[macro_export]
 /// Set a general handler in an [`InterruptDescriptorTable`].
 /// ```
@@ -1390,7 +1394,11 @@ macro_rules! set_general_handler {
     }};
 }
 
-#[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
+#[cfg(all(
+    feature = "instructions",
+    feature = "abi_x86_interrupt",
+    target_arch = "x86_64"
+))]
 #[macro_export]
 #[doc(hidden)]
 /// We can't loop in macros, but we can use recursion.
@@ -1412,7 +1420,11 @@ macro_rules! set_general_handler_recursive_bits {
     };
 }
 
-#[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
+#[cfg(all(
+    feature = "instructions",
+    feature = "abi_x86_interrupt",
+    target_arch = "x86_64"
+))]
 #[macro_export]
 #[doc(hidden)]
 macro_rules! set_general_handler_entry {
@@ -1575,7 +1587,11 @@ mod test {
         assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
     }
 
-    #[cfg(all(feature = "instructions", feature = "abi_x86_interrupt"))]
+    #[cfg(all(
+        feature = "instructions",
+        feature = "abi_x86_interrupt",
+        target_arch = "x86_64"
+    ))]
     // there seems to be a bug in LLVM that causes rustc to crash on windows when compiling this test:
     // https://github.com/rust-osdev/x86_64/pull/285#issuecomment-962642984
     #[cfg(not(windows))]

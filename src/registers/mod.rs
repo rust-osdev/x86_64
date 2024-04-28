@@ -8,5 +8,5 @@ pub mod rflags;
 pub mod segmentation;
 pub mod xcontrol;
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use crate::instructions::read_rip;
