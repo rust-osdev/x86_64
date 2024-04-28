@@ -10,9 +10,9 @@ use core::fmt;
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 use core::sync::atomic::{AtomicU64 as EntryValue, Ordering};
-#[cfg(not(feature = "instructions"))]
+#[cfg(not(all(feature = "instructions", target_arch = "x86_64")))]
 use u64 as EntryValue;
 
 /// 8-byte entry in a descriptor table.
@@ -28,7 +28,7 @@ pub struct Entry(EntryValue);
 impl Entry {
     // Create a new Entry from a raw value.
     const fn new(raw: u64) -> Self {
-        #[cfg(feature = "instructions")]
+        #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
         let raw = EntryValue::new(raw);
         Self(raw)
     }
@@ -37,9 +37,9 @@ impl Entry {
     /// bits may correspond to those in [`DescriptorFlags`].
     pub fn raw(&self) -> u64 {
         // TODO: Make this const fn when AtomicU64::load is const.
-        #[cfg(feature = "instructions")]
+        #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
         let raw = self.0.load(Ordering::SeqCst);
-        #[cfg(not(feature = "instructions"))]
+        #[cfg(not(all(feature = "instructions", target_arch = "x86_64")))]
         let raw = self.0;
         raw
     }
@@ -153,7 +153,10 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// * the provided slice has more than `MAX` entries
     /// * the provided slice is empty
     /// * the first entry is not zero
-    #[cfg_attr(not(feature = "instructions"), allow(rustdoc::broken_intra_doc_links))]
+    #[cfg_attr(
+        not(all(feature = "instructions", target_arch = "x86_64")),
+        allow(rustdoc::broken_intra_doc_links)
+    )]
     #[inline]
     pub const fn from_raw_entries(slice: &[u64]) -> Self {
         let len = slice.len();
@@ -215,7 +218,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// segment registers; you **must** (re)load them yourself using [the appropriate
     /// functions](crate::instructions::segmentation):
     /// [`SS::set_reg()`] and [`CS::set_reg()`].
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub fn load(&'static self) {
         // SAFETY: static lifetime ensures no modification after loading.
@@ -233,7 +236,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// this means its up to the user to ensure that there will be no modifications
     /// after loading and that the GDT will live for as long as it's loaded.
     ///
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub unsafe fn load_unsafe(&self) {
         use crate::instructions::tables::lgdt;
@@ -261,7 +264,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
 
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     fn pointer(&self) -> super::DescriptorTablePointer {
         super::DescriptorTablePointer {
             base: crate::VirtAddr::new(self.table.as_ptr() as u64),

@@ -1,6 +1,6 @@
 //! Functions to read and write MXCSR register.
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::x86_64::*;
 
 use bitflags::bitflags;
@@ -60,7 +60,7 @@ impl Default for MxCsr {
     }
 }
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
     use core::arch::asm;

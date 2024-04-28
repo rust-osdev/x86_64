@@ -1,6 +1,6 @@
 //! Functions to read and write debug registers.
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 use core::arch::asm;
 use core::ops::Range;
 
@@ -15,11 +15,11 @@ pub trait DebugAddressRegister {
     const NUM: DebugAddressRegisterNumber;
 
     /// Reads the current breakpoint address.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     fn read() -> u64;
 
     /// Writes the provided breakpoint address.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     fn write(addr: u64);
 }
 
@@ -34,7 +34,7 @@ macro_rules! debug_address_register {
         impl DebugAddressRegister for $Dr {
             const NUM: DebugAddressRegisterNumber = DebugAddressRegisterNumber::$Dr;
 
-            #[cfg(feature = "instructions")]
+            #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
             #[inline]
             fn read() -> u64 {
                 let addr;
@@ -44,7 +44,7 @@ macro_rules! debug_address_register {
                 addr
             }
 
-            #[cfg(feature = "instructions")]
+            #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
             #[inline]
             fn write(addr: u64) {
                 unsafe {
@@ -437,7 +437,7 @@ impl Dr7Value {
 #[derive(Debug)]
 pub struct Dr7;
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
 
