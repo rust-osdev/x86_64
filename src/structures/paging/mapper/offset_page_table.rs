@@ -93,6 +93,11 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    fn clear(&mut self, page: Page<Size1GiB>) -> Result<UnmappedFrame<Size1GiB>, UnmapError> {
+        self.inner.clear(page)
+    }
+
+    #[inline]
     unsafe fn update_flags(
         &mut self,
         page: Page<Size1GiB>,
@@ -162,6 +167,11 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 
     #[inline]
+    fn clear(&mut self, page: Page<Size2MiB>) -> Result<UnmappedFrame<Size2MiB>, UnmapError> {
+        self.inner.clear(page)
+    }
+
+    #[inline]
     unsafe fn update_flags(
         &mut self,
         page: Page<Size2MiB>,
@@ -228,6 +238,11 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
         page: Page<Size4KiB>,
     ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
         self.inner.unmap(page)
+    }
+
+    #[inline]
+    fn clear(&mut self, page: Page<Size4KiB>) -> Result<UnmappedFrame<Size4KiB>, UnmapError> {
+        self.inner.clear(page)
     }
 
     #[inline]
