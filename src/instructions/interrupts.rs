@@ -146,10 +146,6 @@ pub fn int3() {
 /// It can also cause memory/register corruption depending on the interrupt
 /// implementation (if it expects values/pointers to be passed in registers).
 #[cfg(feature = "asm_const")]
-#[cfg_attr(
-    feature = "doc_cfg",
-    doc(cfg(any(feature = "nightly", feature = "asm_const")))
-)]
 pub unsafe fn software_interrupt<const NUM: u8>() {
     unsafe {
         asm!("int {num}", num = const NUM, options(nomem, nostack));

@@ -47,3 +47,6 @@ pre-release-commit-message = "Bump version to {{version}}"
 push = false
 publish = false
 tag = false
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
