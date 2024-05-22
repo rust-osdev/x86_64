@@ -14,6 +14,9 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 pub trait PageSize: Copy + Eq + PartialOrd + Ord + Sealed {
     /// The page size in bytes.
     const SIZE: u64;
+
+    /// A string representation of the page size for debug output.
+    const DEBUG_STR: &'static str;
 }
 
 /// This trait is implemented for 4KiB and 2MiB pages, but not for 1GiB pages.
@@ -35,31 +38,28 @@ pub enum Size1GiB {}
 
 impl PageSize for Size4KiB {
     const SIZE: u64 = 4096;
+    const DEBUG_STR: &'static str = "4KiB";
 }
 
 impl NotGiantPageSize for Size4KiB {}
 
-impl Sealed for super::Size4KiB {
-    const DEBUG_STR: &'static str = "4KiB";
-}
+impl Sealed for super::Size4KiB {}
 
 impl PageSize for Size2MiB {
     const SIZE: u64 = Size4KiB::SIZE * 512;
+    const DEBUG_STR: &'static str = "2MiB";
 }
 
 impl NotGiantPageSize for Size2MiB {}
 
-impl Sealed for super::Size2MiB {
-    const DEBUG_STR: &'static str = "2MiB";
-}
+impl Sealed for super::Size2MiB {}
 
 impl PageSize for Size1GiB {
     const SIZE: u64 = Size2MiB::SIZE * 512;
-}
-
-impl Sealed for super::Size1GiB {
     const DEBUG_STR: &'static str = "1GiB";
 }
+
+impl Sealed for super::Size1GiB {}
 
 /// A virtual memory page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -77,8 +77,9 @@ impl<S: PageSize> Page<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
-        if !address.is_aligned(S::SIZE) {
+        if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
         Ok(Page::containing_address(address))
@@ -100,9 +101,10 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the page that contains the given virtual address.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn containing_address(address: VirtAddr) -> Self {
         Page {
-            start_address: address.align_down(S::SIZE),
+            start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
         }
     }
@@ -157,12 +159,14 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
         VirtAddr::steps_between_impl(&start.start_address, &end.start_address)
             .map(|steps| steps / S::SIZE as usize)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = count.checked_mul(S::SIZE as usize)?;
         let start_address = VirtAddr::forward_checked_impl(start.start_address, count)?;
@@ -185,13 +189,14 @@ impl<S: NotGiantPageSize> Page<S> {
 impl Page<Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_page_table_indices_1gib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
     ) -> Self {
         let mut addr = 0;
-        addr |= u64::from(p4_index) << 39;
-        addr |= u64::from(p3_index) << 30;
+        addr |= p4_index.into_u64() << 39;
+        addr |= p3_index.into_u64() << 30;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
@@ -199,15 +204,16 @@ impl Page<Size1GiB> {
 impl Page<Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_page_table_indices_2mib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
     ) -> Self {
         let mut addr = 0;
-        addr |= u64::from(p4_index) << 39;
-        addr |= u64::from(p3_index) << 30;
-        addr |= u64::from(p2_index) << 21;
+        addr |= p4_index.into_u64() << 39;
+        addr |= p3_index.into_u64() << 30;
+        addr |= p2_index.into_u64() << 21;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 }
@@ -215,6 +221,7 @@ impl Page<Size2MiB> {
 impl Page<Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_page_table_indices(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -222,10 +229,10 @@ impl Page<Size4KiB> {
         p1_index: PageTableIndex,
     ) -> Self {
         let mut addr = 0;
-        addr |= u64::from(p4_index) << 39;
-        addr |= u64::from(p3_index) << 30;
-        addr |= u64::from(p2_index) << 21;
-        addr |= u64::from(p1_index) << 12;
+        addr |= p4_index.into_u64() << 39;
+        addr |= p3_index.into_u64() << 30;
+        addr |= p2_index.into_u64() << 21;
+        addr |= p1_index.into_u64() << 12;
         Page::containing_address(VirtAddr::new_truncate(addr))
     }
 

@@ -6,6 +6,10 @@ use bitflags::bitflags;
 use crate::registers::segmentation::{FS, GS};
 
 /// A model specific register.
+#[cfg_attr(
+    not(all(feature = "instructions", target_arch = "x86_64")),
+    allow(dead_code)
+)] // FIXME
 #[derive(Debug)]
 pub struct Msr(u32);
 
@@ -28,7 +32,7 @@ pub struct FsBase;
 /// [GS].Base Model Specific Register.
 ///
 #[cfg_attr(
-    feature = "instructions",
+    all(feature = "instructions", target_arch = "x86_64"),
     doc = "[`GS::swap`] swaps this register with [`KernelGsBase`]."
 )]
 #[derive(Debug)]
@@ -37,7 +41,7 @@ pub struct GsBase;
 /// KernelGsBase Model Specific Register.
 ///
 #[cfg_attr(
-    feature = "instructions",
+    all(feature = "instructions", target_arch = "x86_64"),
     doc = "[`GS::swap`] swaps this register with [`GsBase`]."
 )]
 #[derive(Debug)]
@@ -157,7 +161,7 @@ bitflags! {
     }
 }
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
     use crate::addr::VirtAddr;

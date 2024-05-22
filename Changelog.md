@@ -1,6 +1,22 @@
 # Unreleased
 
-# 0.15.0-beta – 2024-02-08
+# 0.15.1 – 2024-03-19
+
+## New Features
+
+- [add constructor for `InterruptStackFrameValue`](https://github.com/rust-osdev/x86_64/pull/467)
+- [add `Cr3::write_pcid_no_flush`](https://github.com/rust-osdev/x86_64/pull/472)
+
+## Fixes
+
+- [properly jump the address gap in CleanUp](https://github.com/rust-osdev/x86_64/pull/469)
+
+## Other Improvements
+
+- [added help on update_flags to get flags](https://github.com/rust-osdev/x86_64/pull/465)
+- [expose DEBUG_STR more directly](https://github.com/rust-osdev/x86_64/pull/471)
+
+# 0.15.0 – 2024-03-04
 
 ## Breaking changes
 
@@ -26,16 +42,36 @@
 
 ## New Features
 
-- [Add `HandlerFuncType` trait](https://github.com/rust-osdev/x86_64/pull/439)
+- [implement `Step` for `PageTableIndex`](https://github.com/rust-osdev/x86_64/pull/464)
 
 ## Fixes
 
 - [fix typo in docs](https://github.com/rust-osdev/x86_64/pull/265)
 - [activate `feature(asm_const)`](https://github.com/rust-osdev/x86_64/pull/320)
 - [gdt: Check that MAX is in range](https://github.com/rust-osdev/x86_64/pull/365)
-- [fix `Page::from_page_table_indices`](https://github.com/rust-osdev/x86_64/pull/398)
 
-# 0.14.11 – 2023-09-15
+## Other Improvements
+
+- [allow inlining Step methods](https://github.com/rust-osdev/x86_64/pull/464)
+- [constify more `Page` and `PageTableIndex` functions](https://github.com/rust-osdev/x86_64/pull/464)
+
+# 0.14.12 – 2023-02-09
+
+## New Features
+
+- [Add `HandlerFuncType` trait](https://github.com/rust-osdev/x86_64/pull/439)
+- [Support `VirtAddr::from_ptr` for `T: ?Sized`](https://github.com/rust-osdev/x86_64/pull/442)
+- [Expose `Cr3::write_raw`](https://github.com/rust-osdev/x86_64/pull/445)
+
+## Fixes
+
+- [Use synchronizing assembly for `interrupts::enable`/`disable`](https://github.com/rust-osdev/x86_64/pull/440)
+
+## Other Improvements
+
+- [Optimize `Page::from_page_table_indices`](https://github.com/rust-osdev/x86_64/pull/456)
+
+# 0.14.11 – 2022-09-15
 
 ## New Features
 

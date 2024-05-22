@@ -6,12 +6,10 @@ use super::*;
 use crate::registers::control::Cr3;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{
-    frame_alloc::FrameAllocator,
-    page::{AddressNotAligned, NotGiantPageSize, PageRangeInclusive},
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableFlags},
-    FrameDeallocator, Page, PageSize, PageTableIndex, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    page::{AddressNotAligned, NotGiantPageSize},
+    page_table::{FrameError, PageTable, PageTableEntry},
+    PageTableIndex,
 };
-use crate::VirtAddr;
 
 /// A recursive page table is a last level page table with an entry mapped to the table itself.
 ///
@@ -54,7 +52,7 @@ impl<'a> RecursivePageTable<'a> {
     /// because allocating the last byte of the address space can lead to pointer
     /// overflows and undefined behavior. For more details, see the discussions
     /// [on Zulip](https://rust-lang.zulipchat.com/#narrow/stream/136281-t-opsem/topic/end-of-address-space)
-    /// and [in the `unsafe-code-guidelines ` repo]https://github.com/rust-lang/unsafe-code-guidelines/issues/420).
+    /// and [in the `unsafe-code-guidelines ` repo](https://github.com/rust-lang/unsafe-code-guidelines/issues/420).
     #[inline]
     pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {
         let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
@@ -787,6 +785,7 @@ impl<'a> Translate for RecursivePageTable<'a> {
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let entry = &p3[addr.p3_index()];
             let frame = PhysFrame::containing_address(entry.addr());
+            #[allow(clippy::unusual_byte_groupings)]
             let offset = addr.as_u64() & 0o_777_777_7777;
             let flags = entry.flags();
             return TranslateResult::Mapped {
@@ -804,6 +803,7 @@ impl<'a> Translate for RecursivePageTable<'a> {
         if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             let entry = &p2[addr.p2_index()];
             let frame = PhysFrame::containing_address(entry.addr());
+            #[allow(clippy::unusual_byte_groupings)]
             let offset = addr.as_u64() & 0o_777_7777;
             let flags = entry.flags();
             return TranslateResult::Mapped {
@@ -891,7 +891,11 @@ impl<'a> CleanUp for RecursivePageTable<'a> {
                     })
                 {
                     if let Ok(frame) = entry.frame() {
-                        let start = table_addr + (offset_per_entry * (i as u64));
+                        let start = VirtAddr::forward_checked_impl(
+                            table_addr,
+                            (offset_per_entry as usize) * i,
+                        )
+                        .unwrap();
                         let end = start + (offset_per_entry - 1);
                         let start = Page::<Size4KiB>::containing_address(start);
                         let start = start.max(range.start);

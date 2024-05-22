@@ -159,7 +159,7 @@ bitflags! {
     }
 }
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
     use crate::{
@@ -296,7 +296,7 @@ mod x86_64 {
         #[inline]
         pub fn read_pcid() -> (PhysFrame, Pcid) {
             let (frame, value) = Cr3::read_raw();
-            (frame, Pcid::new(value as u16).unwrap())
+            (frame, Pcid::new(value).unwrap())
         }
 
         /// Write a new P4 table address into the CR3 register.
@@ -308,7 +308,7 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {
             unsafe {
-                Cr3::write_raw(frame, flags.bits() as u16);
+                Cr3::write_raw_impl(false, frame, flags.bits() as u16);
             }
         }
 
@@ -322,7 +322,22 @@ mod x86_64 {
         #[inline]
         pub unsafe fn write_pcid(frame: PhysFrame, pcid: Pcid) {
             unsafe {
-                Cr3::write_raw(frame, pcid.value());
+                Cr3::write_raw_impl(false, frame, pcid.value());
+            }
+        }
+
+        /// Write a new P4 table address into the CR3 register without flushing existing TLB entries for
+        /// the PCID.
+        ///
+        /// ## Safety
+        ///
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        /// [`Cr4Flags::PCID`] must be set before calling this method.
+        #[inline]
+        pub unsafe fn write_pcid_no_flush(frame: PhysFrame, pcid: Pcid) {
+            unsafe {
+                Cr3::write_raw_impl(true, frame, pcid.value());
             }
         }
 
@@ -334,8 +349,13 @@ mod x86_64 {
         /// changing the page mapping.
         #[inline]
         pub unsafe fn write_raw(frame: PhysFrame, val: u16) {
+            unsafe { Self::write_raw_impl(false, frame, val) }
+        }
+
+        #[inline]
+        unsafe fn write_raw_impl(top_bit: bool, frame: PhysFrame, val: u16) {
             let addr = frame.start_address();
-            let value = addr.as_u64() | val as u64;
+            let value = ((top_bit as u64) << 63) | addr.as_u64() | val as u64;
 
             unsafe {
                 asm!("mov cr3, {}", in(reg) value, options(nostack, preserves_flags));

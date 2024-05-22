@@ -3,7 +3,7 @@
 pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
 #[cfg(target_pointer_width = "64")]
 pub use self::offset_page_table::OffsetPageTable;
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use crate::structures::paging::{
@@ -16,7 +16,7 @@ use crate::{PhysAddr, VirtAddr};
 
 mod mapped_page_table;
 mod offset_page_table;
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod recursive_page_table;
 
 /// An empty convencience trait that requires the `Mapper` trait for all page sizes.
@@ -154,12 +154,12 @@ pub trait Mapper<S: PageSize> {
     /// Create a USER_ACCESSIBLE mapping:
     ///
     /// ```
-    /// # #[cfg(feature = "instructions")]
+    /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # use x86_64::structures::paging::{
     /// #    Mapper, Page, PhysFrame, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
-    /// # #[cfg(feature = "instructions")]
+    /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
     /// #         page: Page<Size4KiB>, frame: PhysFrame) {
     ///         mapper
@@ -243,12 +243,12 @@ pub trait Mapper<S: PageSize> {
     /// the top hierarchy only with USER_ACCESSIBLE:
     ///
     /// ```
-    /// # #[cfg(feature = "instructions")]
+    /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # use x86_64::structures::paging::{
     /// #    Mapper, PhysFrame, Page, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
-    /// # #[cfg(feature = "instructions")]
+    /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
     /// #         page: Page<Size4KiB>, frame: PhysFrame) {
     ///         mapper
@@ -285,6 +285,8 @@ pub trait Mapper<S: PageSize> {
     fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
     /// Updates the flags of an existing mapping.
+    ///
+    /// To read the current flags of a mapped page, use the [`Translate::translate`] method.
     ///
     /// ## Safety
     ///
@@ -381,6 +383,10 @@ pub trait Mapper<S: PageSize> {
 /// changed the mapping of a page to ensure that the TLB flush is not forgotten.
 #[derive(Debug)]
 #[must_use = "Page Table changes must be flushed or ignored."]
+#[cfg_attr(
+    not(all(feature = "instructions", target_arch = "x86_64")),
+    allow(dead_code)
+)] // FIXME
 pub struct MapperFlush<S: PageSize>(Page<S>);
 
 impl<S: PageSize> MapperFlush<S> {
@@ -394,7 +400,7 @@ impl<S: PageSize> MapperFlush<S> {
     }
 
     /// Flush the page from the TLB to ensure that the newest mapping is used.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub fn flush(self) {
         crate::instructions::tlb::flush(self.0.start_address());
@@ -425,7 +431,7 @@ impl MapperFlushAll {
     }
 
     /// Flush all pages from the TLB to ensure that the newest mapping is used.
-    #[cfg(feature = "instructions")]
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub fn flush_all(self) {
         crate::instructions::tlb::flush_all()

@@ -50,7 +50,7 @@ bitflags! {
     }
 }
 
-#[cfg(feature = "instructions")]
+#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
     use core::arch::asm;
