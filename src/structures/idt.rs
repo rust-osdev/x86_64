@@ -1642,7 +1642,7 @@ mod test {
 
     #[test]
     fn entry_derive_test() {
-        fn foo(_: impl Clone + Copy + PartialEq + fmt::Debug) {}
+        fn foo(_: impl Copy + PartialEq + fmt::Debug) {}
 
         foo(Entry::<HandlerFuncWithErrCode> {
             pointer_low: 0,
@@ -1667,9 +1667,7 @@ mod test {
         });
 
         unsafe {
-            frame
-                .as_mut()
-                .update(|f| f.instruction_pointer = f.instruction_pointer + 2u64);
+            frame.as_mut().update(|f| f.instruction_pointer += 2u64);
         }
     }
 }
