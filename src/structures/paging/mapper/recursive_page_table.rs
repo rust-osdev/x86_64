@@ -318,7 +318,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
-    ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size1GiB>, PageTableFlags, MapperFlush<Size1GiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
 
@@ -342,7 +342,42 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
 
         p3_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
+    }
+
+    fn clear(&mut self, page: Page<Size1GiB>) -> Result<UnmappedFrame<Size1GiB>, UnmapError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &p4[page.p4_index()];
+
+        p4_entry.frame().map_err(|err| match err {
+            FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+        })?;
+
+        let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &mut p3[page.p3_index()];
+        let flags = p3_entry.flags();
+
+        if !flags.contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
+
+        if !flags.contains(PageTableFlags::PRESENT) {
+            let cloned = p3_entry.clone();
+            p3_entry.set_unused();
+            return Ok(UnmappedFrame::NotPresent { entry: cloned });
+        }
+
+        let frame = PhysFrame::from_start_address(p3_entry.addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
+        let flags = p3_entry.flags();
+
+        p3_entry.set_unused();
+        Ok(UnmappedFrame::Present {
+            frame,
+            flags,
+            flush: MapperFlush::new(page),
+        })
     }
 
     unsafe fn update_flags(
@@ -438,7 +473,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
-    ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size2MiB>, PageTableFlags, MapperFlush<Size2MiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
         p4_entry.frame().map_err(|err| match err {
@@ -468,7 +503,48 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
 
         p2_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
+    }
+
+    fn clear(&mut self, page: Page<Size2MiB>) -> Result<UnmappedFrame<Size2MiB>, UnmapError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &p4[page.p4_index()];
+        p4_entry.frame().map_err(|err| match err {
+            FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+        })?;
+
+        let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[page.p3_index()];
+        p3_entry.frame().map_err(|err| match err {
+            FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+        })?;
+
+        let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
+        let p2_entry = &mut p2[page.p2_index()];
+        let flags = p2_entry.flags();
+
+        if !flags.contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
+
+        if !flags.contains(PageTableFlags::PRESENT) {
+            let cloned = p2_entry.clone();
+            p2_entry.set_unused();
+            return Ok(UnmappedFrame::NotPresent { entry: cloned });
+        }
+
+        let frame = PhysFrame::from_start_address(p2_entry.addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
+        let flags = p2_entry.flags();
+
+        p2_entry.set_unused();
+        Ok(UnmappedFrame::Present {
+            frame,
+            flags,
+            flush: MapperFlush::new(page),
+        })
     }
 
     unsafe fn update_flags(
@@ -593,7 +669,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
-    ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size4KiB>, PageTableFlags, MapperFlush<Size4KiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
         p4_entry.frame().map_err(|err| match err {
@@ -622,9 +698,54 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
+        let flags = p1_entry.flags();
 
         p1_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
+    }
+
+    fn clear(&mut self, page: Page<Size4KiB>) -> Result<UnmappedFrame<Size4KiB>, UnmapError> {
+        let p4 = &mut self.p4;
+        let p4_entry = &p4[page.p4_index()];
+        p4_entry.frame().map_err(|err| match err {
+            FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+        })?;
+
+        let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
+        let p3_entry = &p3[page.p3_index()];
+        p3_entry.frame().map_err(|err| match err {
+            FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+        })?;
+
+        let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
+        let p2_entry = &p2[page.p2_index()];
+        p2_entry.frame().map_err(|err| match err {
+            FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+        })?;
+
+        let p1 = unsafe { &mut *(p1_ptr(page, self.recursive_index)) };
+        let p1_entry = &mut p1[page.p1_index()];
+
+        let frame = match p1_entry.frame() {
+            Ok(frame) => frame,
+            Err(FrameError::FrameNotPresent) => {
+                let cloned = p1_entry.clone();
+                p1_entry.set_unused();
+                return Ok(UnmappedFrame::NotPresent { entry: cloned });
+            }
+            Err(FrameError::HugeFrame) => return Err(UnmapError::ParentEntryHugePage),
+        };
+        let flags = p1_entry.flags();
+
+        p1_entry.set_unused();
+        Ok(UnmappedFrame::Present {
+            frame,
+            flags,
+            flush: MapperFlush::new(page),
+        })
     }
 
     unsafe fn update_flags(

@@ -169,7 +169,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
-    ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size1GiB>, PageTableFlags, MapperFlush<Size1GiB>), UnmapError> {
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -189,7 +189,39 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
 
         p3_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
+    }
+
+    fn clear(&mut self, page: Page<Size1GiB>) -> Result<UnmappedFrame<Size1GiB>, UnmapError> {
+        let p4 = &mut self.level_4_table;
+        let p3 = self
+            .page_table_walker
+            .next_table_mut(&mut p4[page.p4_index()])?;
+
+        let p3_entry = &mut p3[page.p3_index()];
+        let flags = p3_entry.flags();
+
+        if !flags.contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
+
+        if !flags.contains(PageTableFlags::PRESENT) {
+            let cloned = p3_entry.clone();
+            p3_entry.set_unused();
+            return Ok(UnmappedFrame::NotPresent { entry: cloned });
+        }
+
+        let frame = PhysFrame::from_start_address(p3_entry.addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
+        let flags = p3_entry.flags();
+
+        p3_entry.set_unused();
+
+        Ok(UnmappedFrame::Present {
+            frame,
+            flags,
+            flush: MapperFlush::new(page),
+        })
     }
 
     unsafe fn update_flags(
@@ -277,7 +309,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
-    ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size2MiB>, PageTableFlags, MapperFlush<Size2MiB>), UnmapError> {
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -300,7 +332,40 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
 
         p2_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
+    }
+
+    fn clear(&mut self, page: Page<Size2MiB>) -> Result<UnmappedFrame<Size2MiB>, UnmapError> {
+        let p4 = &mut self.level_4_table;
+        let p3 = self
+            .page_table_walker
+            .next_table_mut(&mut p4[page.p4_index()])?;
+        let p2 = self
+            .page_table_walker
+            .next_table_mut(&mut p3[page.p3_index()])?;
+
+        let p2_entry = &mut p2[page.p2_index()];
+        let flags = p2_entry.flags();
+
+        if !flags.contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
+
+        if !flags.contains(PageTableFlags::PRESENT) {
+            let cloned = p2_entry.clone();
+            p2_entry.set_unused();
+            return Ok(UnmappedFrame::NotPresent { entry: cloned });
+        }
+        let frame = PhysFrame::from_start_address(p2_entry.addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
+        let flags = p2_entry.flags();
+
+        p2_entry.set_unused();
+        Ok(UnmappedFrame::Present {
+            frame,
+            flags,
+            flush: MapperFlush::new(page),
+        })
     }
 
     unsafe fn update_flags(
@@ -405,7 +470,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
-    ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size4KiB>, PageTableFlags, MapperFlush<Size4KiB>), UnmapError> {
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -423,9 +488,43 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
+        let flags = p1_entry.flags();
 
         p1_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
+    }
+
+    fn clear(&mut self, page: Page<Size4KiB>) -> Result<UnmappedFrame<Size4KiB>, UnmapError> {
+        let p4 = &mut self.level_4_table;
+        let p3 = self
+            .page_table_walker
+            .next_table_mut(&mut p4[page.p4_index()])?;
+        let p2 = self
+            .page_table_walker
+            .next_table_mut(&mut p3[page.p3_index()])?;
+        let p1 = self
+            .page_table_walker
+            .next_table_mut(&mut p2[page.p2_index()])?;
+
+        let p1_entry = &mut p1[page.p1_index()];
+
+        let frame = match p1_entry.frame() {
+            Ok(frame) => frame,
+            Err(FrameError::HugeFrame) => return Err(UnmapError::ParentEntryHugePage),
+            Err(FrameError::FrameNotPresent) => {
+                let cloned = p1_entry.clone();
+                p1_entry.set_unused();
+                return Ok(UnmappedFrame::NotPresent { entry: cloned });
+            }
+        };
+        let flags = p1_entry.flags();
+
+        p1_entry.set_unused();
+        Ok(UnmappedFrame::Present {
+            frame,
+            flags,
+            flush: MapperFlush::new(page),
+        })
     }
 
     unsafe fn update_flags(
