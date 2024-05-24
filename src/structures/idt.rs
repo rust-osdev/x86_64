@@ -153,9 +153,9 @@ pub struct InterruptDescriptorTable {
     ///   is enabled.
     /// - Execution of any legacy SSE instruction when `CR4.OSFXSR` is cleared to 0.
     /// - Execution of any SSE instruction (uses `YMM`/`XMM` registers), or 64-bit media
-    /// instruction (uses `MMXTM` registers) when `CR0.EM` = 1.
+    ///   instruction (uses `MMXTM` registers) when `CR0.EM` = 1.
     /// - Execution of any SSE floating-point instruction (uses `YMM`/`XMM` registers) that
-    /// causes a numeric exception when `CR4.OSXMMEXCPT` = 0.
+    ///   causes a numeric exception when `CR4.OSXMMEXCPT` = 0.
     /// - Use of the `DR4` or `DR5` debug registers when `CR4.DE` = 1.
     /// - Execution of `RSM` when not in `SMM` mode.
     ///
@@ -503,7 +503,7 @@ impl InterruptDescriptorTable {
     ///
     /// - `self` is never destroyed.
     /// - `self` always stays at the same memory location. It is recommended to wrap it in
-    /// a `Box`.
+    ///   a `Box`.
     ///
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
@@ -1642,7 +1642,7 @@ mod test {
 
     #[test]
     fn entry_derive_test() {
-        fn foo(_: impl Clone + Copy + PartialEq + fmt::Debug) {}
+        fn foo(_: impl Copy + PartialEq + fmt::Debug) {}
 
         foo(Entry::<HandlerFuncWithErrCode> {
             pointer_low: 0,
@@ -1667,9 +1667,7 @@ mod test {
         });
 
         unsafe {
-            frame
-                .as_mut()
-                .update(|f| f.instruction_pointer = f.instruction_pointer + 2u64);
+            frame.as_mut().update(|f| f.instruction_pointer += 2u64);
         }
     }
 }
