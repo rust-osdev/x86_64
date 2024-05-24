@@ -88,7 +88,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
-    ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size1GiB>, PageTableFlags, MapperFlush<Size1GiB>), UnmapError> {
         self.inner.unmap(page)
     }
 
@@ -162,7 +162,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
-    ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size2MiB>, PageTableFlags, MapperFlush<Size2MiB>), UnmapError> {
         self.inner.unmap(page)
     }
 
@@ -236,7 +236,7 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
-    ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size4KiB>, PageTableFlags, MapperFlush<Size4KiB>), UnmapError> {
         self.inner.unmap(page)
     }
 

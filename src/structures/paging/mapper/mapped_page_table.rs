@@ -169,7 +169,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
-    ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size1GiB>, PageTableFlags, MapperFlush<Size1GiB>), UnmapError> {
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -189,7 +189,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
 
         p3_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
     }
 
     fn clear(&mut self, page: Page<Size1GiB>) -> Result<UnmappedFrame<Size1GiB>, UnmapError> {
@@ -309,7 +309,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
-    ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size2MiB>, PageTableFlags, MapperFlush<Size2MiB>), UnmapError> {
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -332,7 +332,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
 
         p2_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
     }
 
     fn clear(&mut self, page: Page<Size2MiB>) -> Result<UnmappedFrame<Size2MiB>, UnmapError> {
@@ -470,7 +470,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
-    ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size4KiB>, PageTableFlags, MapperFlush<Size4KiB>), UnmapError> {
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -488,9 +488,10 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
+        let flags = p1_entry.flags();
 
         p1_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
     }
 
     fn clear(&mut self, page: Page<Size4KiB>) -> Result<UnmappedFrame<Size4KiB>, UnmapError> {

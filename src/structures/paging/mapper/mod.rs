@@ -282,7 +282,10 @@ pub trait Mapper<S: PageSize> {
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
     /// Note that no page tables or pages are deallocated.
-    fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
+    fn unmap(
+        &mut self,
+        page: Page<S>,
+    ) -> Result<(PhysFrame<S>, PageTableFlags, MapperFlush<S>), UnmapError>;
 
     /// Clears a mapping from the page table and returns the frame that used to be mapped.
     ///

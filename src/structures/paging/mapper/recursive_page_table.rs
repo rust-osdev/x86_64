@@ -318,7 +318,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size1GiB>,
-    ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size1GiB>, PageTableFlags, MapperFlush<Size1GiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
 
@@ -342,7 +342,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
 
         p3_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
     }
 
     fn clear(&mut self, page: Page<Size1GiB>) -> Result<UnmappedFrame<Size1GiB>, UnmapError> {
@@ -473,7 +473,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size2MiB>,
-    ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size2MiB>, PageTableFlags, MapperFlush<Size2MiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
         p4_entry.frame().map_err(|err| match err {
@@ -503,7 +503,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
             .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
 
         p2_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
     }
 
     fn clear(&mut self, page: Page<Size2MiB>) -> Result<UnmappedFrame<Size2MiB>, UnmapError> {
@@ -669,7 +669,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     fn unmap(
         &mut self,
         page: Page<Size4KiB>,
-    ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
+    ) -> Result<(PhysFrame<Size4KiB>, PageTableFlags, MapperFlush<Size4KiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
         p4_entry.frame().map_err(|err| match err {
@@ -698,9 +698,10 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
+        let flags = p1_entry.flags();
 
         p1_entry.set_unused();
-        Ok((frame, MapperFlush::new(page)))
+        Ok((frame, flags, MapperFlush::new(page)))
     }
 
     fn clear(&mut self, page: Page<Size4KiB>) -> Result<UnmappedFrame<Size4KiB>, UnmapError> {
