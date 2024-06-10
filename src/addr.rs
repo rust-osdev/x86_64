@@ -495,7 +495,15 @@ impl PhysAddr {
     where
         U: Into<u64>,
     {
-        PhysAddr(align_down(self.0, align.into()))
+        self.align_down_u64(align.into())
+    }
+
+    /// Aligns the physical address downwards to the given alignment.
+    ///
+    /// See the `align_down` function for more information.
+    #[inline]
+    pub(crate) const fn align_down_u64(self, align: u64) -> Self {
+        PhysAddr(align_down(self.0, align))
     }
 
     /// Checks whether the physical address has the demanded alignment.
@@ -504,7 +512,13 @@ impl PhysAddr {
     where
         U: Into<u64>,
     {
-        self.align_down(align) == self
+        self.is_aligned_u64(align.into())
+    }
+
+    /// Checks whether the physical address has the demanded alignment.
+    #[inline]
+    pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {
+        self.align_down_u64(align).as_u64() == self.as_u64()
     }
 }
 
