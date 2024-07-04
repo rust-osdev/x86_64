@@ -23,17 +23,17 @@ pub trait PageSize: Copy + Eq + PartialOrd + Ord + Sealed {
 pub trait NotGiantPageSize: PageSize {}
 
 /// A standard 4KiB page.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Size4KiB {}
 
 /// A “huge” 2MiB page.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Size2MiB {}
 
 /// A “giant” 1GiB page.
 ///
 /// (Only available on newer x86_64 CPUs.)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Size1GiB {}
 
 impl PageSize for Size4KiB {
@@ -428,6 +428,15 @@ impl fmt::Display for AddressNotAligned {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_is_hash<T: core::hash::Hash>() {}
+
+    #[test]
+    pub fn test_page_is_hash() {
+        test_is_hash::<Page<Size4KiB>>();
+        test_is_hash::<Page<Size2MiB>>();
+        test_is_hash::<Page<Size1GiB>>();
+    }
 
     #[test]
     pub fn test_page_ranges() {
