@@ -1,5 +1,9 @@
 # Unreleased
 
+## New Features
+
+- [add `size` and `len` for `PageRange`, `PhysFrameRange`, `PageRangeInclusive` and `PhysFrameRangeInclusive`](https://github.com/rust-osdev/x86_64/pull/491)
+
 # 0.15.1 – 2024-03-19
 
 ## New Features

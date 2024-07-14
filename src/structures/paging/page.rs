@@ -327,6 +327,22 @@ impl<S: PageSize> PageRange<S> {
     pub fn is_empty(&self) -> bool {
         self.start >= self.end
     }
+
+    /// Returns the number of pages in the range.
+    #[inline]
+    pub fn len(&self) -> u64 {
+        if !self.is_empty() {
+            self.end - self.start
+        } else {
+            0
+        }
+    }
+
+    /// Returns the size in bytes of all pages within the range.
+    #[inline]
+    pub fn size(&self) -> u64 {
+        S::SIZE * self.len()
+    }
 }
 
 impl<S: PageSize> Iterator for PageRange<S> {
@@ -379,6 +395,22 @@ impl<S: PageSize> PageRangeInclusive<S> {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.start > self.end
+    }
+
+    /// Returns the number of frames in the range.
+    #[inline]
+    pub fn len(&self) -> u64 {
+        if !self.is_empty() {
+            self.end - self.start + 1
+        } else {
+            0
+        }
+    }
+
+    /// Returns the size in bytes of all frames within the range.
+    #[inline]
+    pub fn size(&self) -> u64 {
+        S::SIZE * self.len()
     }
 }
 
@@ -483,5 +515,18 @@ mod tests {
             );
         }
         assert_eq!(range_inclusive.next(), None);
+    }
+
+    #[test]
+    pub fn test_page_range_len() {
+        let start_addr = VirtAddr::new(0xdead_beaf);
+        let start = Page::<Size4KiB>::containing_address(start_addr);
+        let end = start + 50;
+
+        let range = PageRange { start, end };
+        assert_eq!(range.len(), 50);
+
+        let range_inclusive = PageRangeInclusive { start, end };
+        assert_eq!(range_inclusive.len(), 51);
     }
 }
