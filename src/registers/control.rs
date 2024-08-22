@@ -5,6 +5,7 @@ use bitflags::bitflags;
 
 /// Various control flags modifying the basic operation of the CPU.
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct Cr0;
 
 bitflags! {
@@ -55,10 +56,12 @@ bitflags! {
 ///
 /// When a page fault occurs, the CPU sets this register to the faulting virtual address.
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct Cr2;
 
 /// Contains the physical address of the highest-level page table.
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct Cr3;
 
 bitflags! {
@@ -77,6 +80,7 @@ bitflags! {
 /// Contains various control flags that enable architectural extensions, and
 /// indicate support for specific processor capabilities.
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct Cr4;
 
 bitflags! {

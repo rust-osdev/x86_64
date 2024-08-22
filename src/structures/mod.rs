@@ -14,6 +14,7 @@ pub mod tss;
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed(2))]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct DescriptorTablePointer {
     /// Size of the DT.
     pub limit: u16,

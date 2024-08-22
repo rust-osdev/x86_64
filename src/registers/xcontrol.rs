@@ -3,6 +3,7 @@ use bitflags::bitflags;
 
 /// Extended feature enable mask register
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct XCr0;
 
 bitflags! {

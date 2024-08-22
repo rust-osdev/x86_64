@@ -52,6 +52,7 @@ impl<'a> OffsetPageTable<'a> {
 }
 
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 struct PhysOffset {
     offset: VirtAddr,
 }
