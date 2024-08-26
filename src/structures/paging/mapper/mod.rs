@@ -387,7 +387,7 @@ pub trait Mapper<S: PageSize> {
 #[cfg_attr(
     not(all(feature = "instructions", target_arch = "x86_64")),
     allow(dead_code)
-)]
+)] // FIXME
 #[cfg_attr(kani, derive(kani::Arbitrary))]
 pub struct MapperFlush<S: PageSize>(Page<S>);
 
