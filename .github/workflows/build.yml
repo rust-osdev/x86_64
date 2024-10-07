@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 env:
-  RUSTFLAGS: -Dwarnings
-  RUSTDOCFLAGS: -Dwarnings
+  RUSTFLAGS: -Dwarnings -Wstable-features
+  RUSTDOCFLAGS: -Dwarnings -Wstable-features
 
 jobs:
   stable:
@@ -84,7 +84,7 @@ jobs:
     timeout-minutes: 15
 
     env:
-      RUSTFLAGS: -Crelocation-model=static -Dwarnings
+      RUSTFLAGS: -Crelocation-model=static -Dwarnings -Wstable-features
 
     steps:
       - name: "Checkout Repository"
