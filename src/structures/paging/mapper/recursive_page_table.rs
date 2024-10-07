@@ -299,7 +299,7 @@ impl<'a> RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
+impl Mapper<Size1GiB> for RecursivePageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -419,7 +419,7 @@ impl<'a> Mapper<Size1GiB> for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
+impl Mapper<Size2MiB> for RecursivePageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -574,7 +574,7 @@ impl<'a> Mapper<Size2MiB> for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
+impl Mapper<Size4KiB> for RecursivePageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -763,7 +763,7 @@ impl<'a> Mapper<Size4KiB> for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> Translate for RecursivePageTable<'a> {
+impl Translate for RecursivePageTable<'_> {
     #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let page = Page::containing_address(addr);
@@ -836,7 +836,7 @@ impl<'a> Translate for RecursivePageTable<'a> {
     }
 }
 
-impl<'a> CleanUp for RecursivePageTable<'a> {
+impl CleanUp for RecursivePageTable<'_> {
     #[inline]
     unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where
