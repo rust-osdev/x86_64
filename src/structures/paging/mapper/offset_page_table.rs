@@ -65,7 +65,7 @@ unsafe impl PageTableFrameMapping for PhysOffset {
 
 // delegate all trait implementations to inner
 
-impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
+impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -134,7 +134,7 @@ impl<'a> Mapper<Size1GiB> for OffsetPageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
+impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -203,7 +203,7 @@ impl<'a> Mapper<Size2MiB> for OffsetPageTable<'a> {
     }
 }
 
-impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
+impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -272,14 +272,14 @@ impl<'a> Mapper<Size4KiB> for OffsetPageTable<'a> {
     }
 }
 
-impl<'a> Translate for OffsetPageTable<'a> {
+impl Translate for OffsetPageTable<'_> {
     #[inline]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         self.inner.translate(addr)
     }
 }
 
-impl<'a> CleanUp for OffsetPageTable<'a> {
+impl CleanUp for OffsetPageTable<'_> {
     #[inline]
     unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where
