@@ -15,7 +15,7 @@ pub mod tss;
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed(2))]
 pub struct DescriptorTablePointer {
-    /// Size of the DT.
+    /// Size of the DT in bytes - 1.
     pub limit: u16,
     /// Pointer to the memory region containing the DT.
     pub base: VirtAddr,
