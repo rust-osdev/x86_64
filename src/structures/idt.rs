@@ -712,52 +712,82 @@ impl<T> PartialEq for Entry<T> {
 /// A handler function for an interrupt or an exception without error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct HandlerFunc(());
 
 /// A handler function for an exception that pushes an error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct HandlerFuncWithErrCode(());
 
 /// A page fault handler function that pushes a page fault error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
 
 /// A handler function that must not return, e.g. for a machine check exception.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFunc(());
 
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFuncWithErrCode(());
 
@@ -853,7 +883,10 @@ pub unsafe trait HandlerFuncType {
 
 macro_rules! impl_handler_func_type {
     ($f:ty) => {
-        #[cfg(feature = "abi_x86_interrupt")]
+        #[cfg(all(
+            any(target_arch = "x86", target_arch = "x86_64"),
+            feature = "abi_x86_interrupt"
+        ))]
         unsafe impl HandlerFuncType for $f {
             #[inline]
             fn to_virt_addr(self) -> VirtAddr {
