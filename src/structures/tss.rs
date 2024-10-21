@@ -5,7 +5,7 @@ use core::mem::size_of;
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
-/// but is used for stack switching when interrupt occurs.
+/// but is used for stack switching when an interrupt or exception occurs.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed(4))]
 pub struct TaskStateSegment {
