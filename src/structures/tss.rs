@@ -15,7 +15,7 @@ pub struct TaskStateSegment {
     pub privilege_stack_table: [VirtAddr; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
-    /// The stack pointers used to load the stack when an entry in the Interrupt Descriptor Table has an IST value other than 0.
+    /// The stack pointers used when an entry in the Interrupt Descriptor Table has an IST value other than 0.
     pub interrupt_stack_table: [VirtAddr; 7],
     reserved_3: u64,
     reserved_4: u16,
