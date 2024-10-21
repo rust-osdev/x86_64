@@ -11,7 +11,7 @@ use core::mem::size_of;
 pub struct TaskStateSegment {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
-    /// The stack pointers used to load the stack when a privilege level change occurs from a lower privilege level to a higher one.
+    /// The stack pointers used when a privilege level change occurs from a lower privilege level to a higher one.
     pub privilege_stack_table: [VirtAddr; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
