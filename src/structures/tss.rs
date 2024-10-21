@@ -5,16 +5,17 @@ use core::mem::size_of;
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
-/// but is used for finding kernel level stack
-/// if interrupts arrive while in kernel mode.
+/// but is used for stack switching when an interrupt or exception occurs.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed(4))]
 pub struct TaskStateSegment {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
+    /// The stack pointers used when a privilege level change occurs from a lower privilege level to a higher one.
     pub privilege_stack_table: [VirtAddr; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
+    /// The stack pointers used when an entry in the Interrupt Descriptor Table has an IST value other than 0.
     pub interrupt_stack_table: [VirtAddr; 7],
     reserved_3: u64,
     reserved_4: u16,
