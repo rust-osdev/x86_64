@@ -24,6 +24,7 @@ use crate::registers::rflags::RFlags;
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
+use core::convert::TryFrom;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
@@ -1326,6 +1327,52 @@ pub enum ExceptionVector {
 
     /// Security Exception
     Security = 0x1E,
+}
+
+/// Exception vector number is invalid
+#[derive(Debug)]
+pub struct InvalidExceptionVectorNumber(u8);
+
+impl fmt::Display for InvalidExceptionVectorNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} is not a valid exception vector", self.0)
+    }
+}
+
+impl TryFrom<u8> for ExceptionVector {
+    type Error = InvalidExceptionVectorNumber;
+
+    /// Tries to convert the exception vector number to [`ExceptionVector`]
+    ///
+    /// Fails if exception vector number is Coprocessor Segment Overrun, reserved or not exception vector number
+    fn try_from(exception_vector_number: u8) -> Result<Self, Self::Error> {
+        match exception_vector_number {
+            0x00 => Ok(Self::Division),
+            0x01 => Ok(Self::Debug),
+            0x02 => Ok(Self::NonMaskableInterrupt),
+            0x03 => Ok(Self::Breakpoint),
+            0x04 => Ok(Self::Overflow),
+            0x05 => Ok(Self::BoundRange),
+            0x06 => Ok(Self::InvalidOpcode),
+            0x07 => Ok(Self::DeviceNotAvailable),
+            0x08 => Ok(Self::Double),
+            0x0A => Ok(Self::InvalidTss),
+            0x0B => Ok(Self::SegmentNotPresent),
+            0x0C => Ok(Self::Stack),
+            0x0D => Ok(Self::GeneralProtection),
+            0x0E => Ok(Self::Page),
+            0x10 => Ok(Self::X87FloatingPoint),
+            0x11 => Ok(Self::AlignmentCheck),
+            0x12 => Ok(Self::MachineCheck),
+            0x13 => Ok(Self::SimdFloatingPoint),
+            0x14 => Ok(Self::Virtualization),
+            0x15 => Ok(Self::ControlProtection),
+            0x1C => Ok(Self::HypervisorInjection),
+            0x1D => Ok(Self::VmmCommunication),
+            0x1E => Ok(Self::Security),
+            _ => Err(InvalidExceptionVectorNumber(exception_vector_number)),
+        }
+    }
 }
 
 #[cfg(all(
