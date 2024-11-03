@@ -49,8 +49,8 @@ pub enum InvPicdCommand {
 #[repr(C)]
 #[derive(Debug)]
 struct InvpcidDescriptor {
-    address: u64,
     pcid: u64,
+    address: u64,
 }
 
 /// Structure of a PCID. A PCID has to be <= 4096 for x86_64.
@@ -95,8 +95,8 @@ impl fmt::Display for PcidTooBig {
 #[inline]
 pub unsafe fn flush_pcid(command: InvPicdCommand) {
     let mut desc = InvpcidDescriptor {
-        address: 0,
         pcid: 0,
+        address: 0,
     };
 
     let kind: u64;
