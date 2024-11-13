@@ -26,6 +26,9 @@ jobs:
           - nightly
           - 1.59
     runs-on: ubuntu-latest
+    env:
+      # rustup prioritizes environment variables over rust-toolchain.toml files.
+      RUSTUP_TOOLCHAIN: ${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
