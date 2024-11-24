@@ -241,13 +241,18 @@ impl VirtAddr {
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
-        let mut steps = end.0.checked_sub(start.0)?;
+    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        let mut steps = if let Some(steps) = end.0.checked_sub(start.0) {
+            steps
+        } else {
+            return (0, None);
+        };
 
         // Mask away extra bits that appear while jumping the gap.
         steps &= 0xffff_ffff_ffff;
 
-        usize::try_from(steps).ok()
+        let steps = usize::try_from(steps).ok();
+        (steps.unwrap_or(usize::MAX), steps)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
@@ -360,7 +365,7 @@ impl Sub<VirtAddr> for VirtAddr {
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
     #[inline]
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
 
@@ -721,43 +726,49 @@ mod tests {
     #[test]
     #[cfg(feature = "step_trait")]
     fn virtaddr_steps_between() {
-        assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(0)), Some(0));
-        assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(1)), Some(1));
-        assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), None);
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0)),
+            (0, Some(0))
+        );
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(1)),
+            (1, Some(1))
+        );
+        assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), (0, None));
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0x7fff_ffff_ffff),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            Some(1)
+            (1, Some(1))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0x7fff_ffff_ffff)
             ),
-            None
+            (0, None)
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            Some(0)
+            (0, Some(0))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0xffff_8000_0000_0001)
             ),
-            Some(1)
+            (1, Some(1))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0001),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            None
+            (0, None)
         );
     }
 
@@ -951,7 +962,7 @@ mod proofs {
         };
 
         // ...then `steps_between` succeeds as well.
-        assert!(Step::steps_between(&start, &end) == Some(count));
+        assert!(Step::steps_between(&start, &end) == (count, Some(count)));
     }
 
     // This harness proves that for all inputs for which `steps_between`
@@ -968,7 +979,7 @@ mod proofs {
         };
 
         // If `steps_between` succeeds...
-        let Some(count) = Step::steps_between(&start, &end) else {
+        let Some(count) = Step::steps_between(&start, &end).1 else {
             return;
         };
 

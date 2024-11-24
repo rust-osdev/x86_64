@@ -160,9 +160,11 @@ impl<S: PageSize> Page<S> {
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
-        VirtAddr::steps_between_impl(&start.start_address, &end.start_address)
-            .map(|steps| steps / S::SIZE as usize)
+    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        let (lower, upper) = VirtAddr::steps_between_impl(&start.start_address, &end.start_address);
+        let lower = lower / S::SIZE as usize;
+        let upper = upper.map(|steps| steps / S::SIZE as usize);
+        (lower, upper)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
@@ -293,7 +295,7 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 
 #[cfg(feature = "step_trait")]
 impl<S: PageSize> Step for Page<S> {
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
 
