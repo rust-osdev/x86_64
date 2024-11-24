@@ -669,22 +669,27 @@ mod tests {
             Step::forward_checked(VirtAddr(0xffff_ffff_ffff_ffff), 1),
             None
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward(VirtAddr(0x7fff_ffff_ffff), 0x1234_5678_9abd),
             VirtAddr(0xffff_9234_5678_9abc)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward(VirtAddr(0x7fff_ffff_ffff), 0x8000_0000_0000),
             VirtAddr(0xffff_ffff_ffff_ffff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward(VirtAddr(0x7fff_ffff_ff00), 0x8000_0000_00ff),
             VirtAddr(0xffff_ffff_ffff_ffff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward_checked(VirtAddr(0x7fff_ffff_ff00), 0x8000_0000_0100),
             None
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward_checked(VirtAddr(0x7fff_ffff_ffff), 0x8000_0000_0001),
             None
@@ -705,18 +710,22 @@ mod tests {
             Step::backward(VirtAddr(0xffff_8000_0000_0001), 1),
             VirtAddr(0xffff_8000_0000_0000)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward(VirtAddr(0xffff_9234_5678_9abc), 0x1234_5678_9abd),
             VirtAddr(0x7fff_ffff_ffff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward(VirtAddr(0xffff_8000_0000_0000), 0x8000_0000_0000),
             VirtAddr(0)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward(VirtAddr(0xffff_8000_0000_0000), 0x7fff_ffff_ff01),
             VirtAddr(0xff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward_checked(VirtAddr(0xffff_8000_0000_0000), 0x8000_0000_0001),
             None
@@ -820,6 +829,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_pointer_width = "64")]
     fn test_from_ptr_array() {
         let slice = &[1, 2, 3, 4, 5];
         // Make sure that from_ptr(slice) is the address of the first element
