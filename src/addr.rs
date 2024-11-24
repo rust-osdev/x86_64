@@ -823,7 +823,10 @@ mod tests {
     fn test_from_ptr_array() {
         let slice = &[1, 2, 3, 4, 5];
         // Make sure that from_ptr(slice) is the address of the first element
-        assert_eq!(VirtAddr::from_ptr(slice), VirtAddr::from_ptr(&slice[0]));
+        assert_eq!(
+            VirtAddr::from_ptr(slice.as_slice()),
+            VirtAddr::from_ptr(&slice[0])
+        );
     }
 }
 
