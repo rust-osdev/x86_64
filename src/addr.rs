@@ -240,30 +240,43 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    #[cfg(any(feature = "instructions", feature = "step_trait"))]
+    #[cfg(feature = "step_trait")]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
-        let mut steps = if let Some(steps) = end.0.checked_sub(start.0) {
-            steps
+        if let Some(steps) = Self::steps_between_u64(start, end) {
+            let steps = usize::try_from(steps).ok();
+            (steps.unwrap_or(usize::MAX), steps)
         } else {
-            return (0, None);
-        };
+            (0, None)
+        }
+    }
+
+    /// An implementation of steps_between that returns u64. Note that this
+    /// function always returns the exact bound, so it doesn't need to return a
+    /// lower and upper bound like steps_between does.
+    #[cfg(any(feature = "instructions", feature = "step_trait"))]
+    pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
+        let mut steps = end.0.checked_sub(start.0)?;
 
         // Mask away extra bits that appear while jumping the gap.
         steps &= 0xffff_ffff_ffff;
 
-        let steps = usize::try_from(steps).ok();
-        (steps.unwrap_or(usize::MAX), steps)
+        Some(steps)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[inline]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
-        let offset = u64::try_from(count).ok()?;
-        if offset > ADDRESS_SPACE_SIZE {
+        Self::forward_checked_u64(start, u64::try_from(count).ok()?)
+    }
+
+    /// An implementation of forward_checked that takes u64 instead of usize.
+    #[inline]
+    pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
+        if count > ADDRESS_SPACE_SIZE {
             return None;
         }
 
-        let mut addr = start.0.checked_add(offset)?;
+        let mut addr = start.0.checked_add(count)?;
 
         match addr.get_bits(47..) {
             0x1 => {
@@ -272,6 +285,31 @@ impl VirtAddr {
             }
             0x2 => {
                 // Address overflow
+                return None;
+            }
+            _ => {}
+        }
+
+        Some(unsafe { Self::new_unsafe(addr) })
+    }
+
+    /// An implementation of backward_checked that takes u64 instead of usize.
+    #[cfg(feature = "step_trait")]
+    #[inline]
+    pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {
+        if count > ADDRESS_SPACE_SIZE {
+            return None;
+        }
+
+        let mut addr = start.0.checked_sub(count)?;
+
+        match addr.get_bits(47..) {
+            0x1fffe => {
+                // Jump the gap by sign extending the 47th bit.
+                addr.set_bits(47.., 0);
+            }
+            0x1fffd => {
+                // Address underflow
                 return None;
             }
             _ => {}
@@ -376,26 +414,7 @@ impl Step for VirtAddr {
 
     #[inline]
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
-        let offset = u64::try_from(count).ok()?;
-        if offset > ADDRESS_SPACE_SIZE {
-            return None;
-        }
-
-        let mut addr = start.0.checked_sub(offset)?;
-
-        match addr.get_bits(47..) {
-            0x1fffe => {
-                // Jump the gap by sign extending the 47th bit.
-                addr.set_bits(47.., 0);
-            }
-            0x1fffd => {
-                // Address underflow
-                return None;
-            }
-            _ => {}
-        }
-
-        Some(unsafe { Self::new_unsafe(addr) })
+        Self::backward_checked_u64(start, u64::try_from(count).ok()?)
     }
 }
 
@@ -778,6 +797,21 @@ mod tests {
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
             (0, None)
+        );
+        // Make sure that we handle `steps > u32::MAX` correctly on 32-bit
+        // targets. On 64-bit targets, `0x1_0000_0000` fits into `usize`, so we
+        // can return exact lower and upper bounds. On 32-bit targets,
+        // `0x1_0000_0000` doesn't fit into `usize`, so we only return an lower
+        // bound of `usize::MAX` and don't return an upper bound.
+        #[cfg(target_pointer_width = "64")]
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0x1_0000_0000)),
+            (0x1_0000_0000, Some(0x1_0000_0000))
+        );
+        #[cfg(not(target_pointer_width = "64"))]
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0x1_0000_0000)),
+            (usize::MAX, None)
         );
     }
 
