@@ -602,10 +602,8 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
     {
         unsafe {
             self.clean_up_addr_range(
-                PageRangeInclusive {
-                    start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
-                    end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
-                },
+                Page::from_start_address(VirtAddr::new(0)).unwrap()
+                    ..=Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
                 frame_deallocator,
             )
         }
@@ -613,7 +611,7 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
 
     unsafe fn clean_up_addr_range<D>(
         &mut self,
-        range: PageRangeInclusive,
+        range: RangeInclusive<Page>,
         frame_deallocator: &mut D,
     ) where
         D: FrameDeallocator<Size4KiB>,
@@ -622,7 +620,7 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
             page_table: &mut PageTable,
             page_table_walker: &PageTableWalker<P>,
             level: PageTableLevel,
-            range: PageRangeInclusive,
+            range: RangeInclusive<Page>,
             frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
         ) -> bool {
             if range.is_empty() {
@@ -630,12 +628,12 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
             }
 
             let table_addr = range
-                .start
+                .start()
                 .start_address()
                 .align_down(level.table_address_space_alignment());
 
-            let start = range.start.page_table_index(level);
-            let end = range.end.page_table_index(level);
+            let start = range.start().page_table_index(level);
+            let end = range.end().page_table_index(level);
 
             if let Some(next_level) = level.next_lower_level() {
                 let offset_per_entry = level.entry_address_space_alignment();
@@ -653,15 +651,15 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
                         .unwrap();
                         let end = start + (offset_per_entry - 1);
                         let start = Page::<Size4KiB>::containing_address(start);
-                        let start = start.max(range.start);
+                        let start = start.max(*range.start());
                         let end = Page::<Size4KiB>::containing_address(end);
-                        let end = end.min(range.end);
+                        let end = end.min(*range.end());
                         unsafe {
                             if clean_up(
                                 page_table,
                                 page_table_walker,
                                 next_level,
-                                Page::range_inclusive(start, end),
+                                start..=end,
                                 frame_deallocator,
                             ) {
                                 let frame = entry.frame().unwrap();

@@ -291,7 +291,7 @@ impl CleanUp for OffsetPageTable<'_> {
     #[inline]
     unsafe fn clean_up_addr_range<D>(
         &mut self,
-        range: PageRangeInclusive,
+        range: RangeInclusive<Page>,
         frame_deallocator: &mut D,
     ) where
         D: FrameDeallocator<Size4KiB>,

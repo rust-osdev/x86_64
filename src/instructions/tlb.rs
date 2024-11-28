@@ -4,13 +4,10 @@ use bit_field::BitField;
 
 use crate::{
     instructions::segmentation::{Segment, CS},
-    structures::paging::{
-        page::{NotGiantPageSize, PageRange},
-        Page, PageSize, Size2MiB, Size4KiB,
-    },
+    structures::paging::{page::NotGiantPageSize, Page, PageSize, Size2MiB, Size4KiB},
     PrivilegeLevel, VirtAddr,
 };
-use core::{arch::asm, cmp, convert::TryFrom, fmt};
+use core::{arch::asm, cmp, convert::TryFrom, fmt, ops::Range};
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
@@ -136,7 +133,7 @@ pub unsafe fn flush_pcid(command: InvPcidCommand) {
 ///
 /// // Broadcast flushing some pages to all logical processors.
 /// let start: Page = Page::from_start_address(VirtAddr::new(0xf000_0000)).unwrap();
-/// let pages = Page::range(start, start + 3);
+/// let pages = start..start + 3;
 /// invlpgb.build().pages(pages).include_global().flush();
 ///
 /// // Wait for all logical processors to respond.
@@ -228,7 +225,7 @@ where
     S: NotGiantPageSize,
 {
     invlpgb: &'a Invlpgb,
-    page_range: Option<PageRange<S>>,
+    page_range: Option<Range<Page<S>>>,
     pcid: Option<Pcid>,
     asid: Option<u16>,
     include_global: bool,
@@ -244,7 +241,7 @@ where
     ///
     /// If the range doesn't fit within `invlpgb_count_max`, `invlpgb` is
     /// executed multiple times.
-    pub fn pages<T>(self, page_range: PageRange<T>) -> InvlpgbFlushBuilder<'a, T>
+    pub fn pages<T>(self, page_range: Range<Page<T>>) -> InvlpgbFlushBuilder<'a, T>
     where
         T: NotGiantPageSize,
     {
@@ -312,7 +309,7 @@ where
 
     /// Execute the flush.
     pub fn flush(&self) {
-        if let Some(mut pages) = self.page_range {
+        if let Some(mut pages) = self.page_range.clone() {
             while !pages.is_empty() {
                 // Calculate out how many pages we still need to flush.
                 let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).0;

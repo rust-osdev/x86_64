@@ -1,5 +1,7 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
+use core::ops::RangeInclusive;
+
 pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
 #[cfg(target_pointer_width = "64")]
 pub use self::offset_page_table::OffsetPageTable;
@@ -8,7 +10,6 @@ pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use crate::structures::paging::{
     frame_alloc::{FrameAllocator, FrameDeallocator},
-    page::PageRangeInclusive,
     page_table::PageTableFlags,
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
@@ -512,10 +513,7 @@ pub trait CleanUp {
     /// # }};
     /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
     /// // clean up all page tables in the lower half of the address space
-    /// let lower_half = Page::range_inclusive(
-    ///     Page::containing_address(VirtAddr::new(0)),
-    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
-    /// );
+    /// let lower_half = Page::containing_address(VirtAddr::new(0))..=Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff));
     /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }
     /// ```
@@ -527,7 +525,7 @@ pub trait CleanUp {
     /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
     unsafe fn clean_up_addr_range<D>(
         &mut self,
-        range: PageRangeInclusive,
+        range: RangeInclusive<Page>,
         frame_deallocator: &mut D,
     ) where
         D: FrameDeallocator<Size4KiB>;

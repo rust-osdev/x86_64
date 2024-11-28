@@ -5,7 +5,7 @@ use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Range, RangeInclusive, Sub, SubAssign};
 
 /// A physical memory frame.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -68,20 +68,6 @@ impl<S: PageSize> PhysFrame<S> {
     pub fn size(self) -> u64 {
         S::SIZE
     }
-
-    /// Returns a range of frames, exclusive `end`.
-    #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
-        PhysFrameRange { start, end }
-    }
-
-    /// Returns a range of frames, inclusive `end`.
-    #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
-        PhysFrameRangeInclusive { start, end }
-    }
 }
 
 impl<S: PageSize> fmt::Debug for PhysFrame<S> {
@@ -132,119 +118,52 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     }
 }
 
-/// An range of physical memory frames, exclusive the upper bound.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
-pub struct PhysFrameRange<S: PageSize = Size4KiB> {
-    /// The start of the range, inclusive.
-    pub start: PhysFrame<S>,
-    /// The end of the range, exclusive.
-    pub end: PhysFrame<S>,
+/// Helper trait to get the number of frames in the range.
+#[allow(clippy::len_without_is_empty)]
+pub trait PhysFrameRangeLen {
+    /// Returns the number of frames in the range.
+    fn len(&self) -> u64;
 }
 
-impl<S: PageSize> PhysFrameRange<S> {
-    /// Returns whether the range contains no frames.
+impl<S: PageSize> PhysFrameRangeLen for Range<PhysFrame<S>> {
     #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.start >= self.end
-    }
-
-    /// Returns the number of frames in the range.
-    #[inline]
-    pub fn len(&self) -> u64 {
+    fn len(&self) -> u64 {
         if !self.is_empty() {
             self.end - self.start
         } else {
             0
         }
     }
-
-    /// Returns the size in bytes of all frames within the range.
-    #[inline]
-    pub fn size(&self) -> u64 {
-        S::SIZE * self.len()
-    }
 }
 
-impl<S: PageSize> Iterator for PhysFrameRange<S> {
-    type Item = PhysFrame<S>;
-
+impl<S: PageSize> PhysFrameRangeLen for RangeInclusive<PhysFrame<S>> {
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            let frame = self.start;
-            self.start += 1;
-            Some(frame)
-        } else {
-            None
-        }
-    }
-}
-
-impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PhysFrameRange")
-            .field("start", &self.start)
-            .field("end", &self.end)
-            .finish()
-    }
-}
-
-/// An range of physical memory frames, inclusive the upper bound.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
-pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
-    /// The start of the range, inclusive.
-    pub start: PhysFrame<S>,
-    /// The start of the range, inclusive.
-    pub end: PhysFrame<S>,
-}
-
-impl<S: PageSize> PhysFrameRangeInclusive<S> {
-    /// Returns whether the range contains no frames.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.start > self.end
-    }
-
-    /// Returns the number of frames in the range.
-    #[inline]
-    pub fn len(&self) -> u64 {
+    fn len(&self) -> u64 {
         if !self.is_empty() {
-            self.end - self.start + 1
+            *self.end() - *self.start() + 1
         } else {
             0
         }
     }
+}
 
+/// Helper trait to get the size in bytes of all frames within the range.
+pub trait PhysFrameRangeSize {
     /// Returns the size in bytes of all frames within the range.
+    fn size(&self) -> u64;
+}
+
+impl<S: PageSize> PhysFrameRangeSize for Range<PhysFrame<S>> {
     #[inline]
-    pub fn size(&self) -> u64 {
+    fn size(&self) -> u64 {
         S::SIZE * self.len()
     }
 }
 
-impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
-    type Item = PhysFrame<S>;
-
+impl<S: PageSize> PhysFrameRangeSize for RangeInclusive<PhysFrame<S>> {
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let frame = self.start;
-            self.start += 1;
-            Some(frame)
-        } else {
-            None
-        }
-    }
-}
-
-impl<S: PageSize> fmt::Debug for PhysFrameRangeInclusive<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PhysFrameRangeInclusive")
-            .field("start", &self.start)
-            .field("end", &self.end)
-            .finish()
+    fn size(&self) -> u64 {
+        S::SIZE * self.len()
     }
 }
 
@@ -257,10 +176,10 @@ mod tests {
         let start = PhysFrame::<Size4KiB>::containing_address(start_addr);
         let end = start + 50;
 
-        let range = PhysFrameRange { start, end };
+        let range = start..end;
         assert_eq!(range.len(), 50);
 
-        let range_inclusive = PhysFrameRangeInclusive { start, end };
+        let range_inclusive = start..=end;
         assert_eq!(range_inclusive.len(), 51);
     }
 }

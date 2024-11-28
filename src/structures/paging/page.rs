@@ -8,7 +8,7 @@ use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Range, RangeInclusive, Sub, SubAssign};
 
 /// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
 pub trait PageSize: Copy + Eq + PartialOrd + Ord + Sealed {
@@ -142,20 +142,6 @@ impl<S: PageSize> Page<S> {
     #[rustversion::attr(since(1.61), const)]
     pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
         self.start_address().page_table_index(level)
-    }
-
-    /// Returns a range of pages, exclusive `end`.
-    #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range(start: Self, end: Self) -> PageRange<S> {
-        PageRange { start, end }
-    }
-
-    /// Returns a range of pages, inclusive `end`.
-    #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
-        PageRangeInclusive { start, end }
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
@@ -324,139 +310,66 @@ impl<S: PageSize> Step for Page<S> {
     }
 }
 
-/// A range of pages with exclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
-pub struct PageRange<S: PageSize = Size4KiB> {
-    /// The start of the range, inclusive.
-    pub start: Page<S>,
-    /// The end of the range, exclusive.
-    pub end: Page<S>,
+/// Helper trait for converting a range of 2MiB or 1GiB pages to a range of 4KiB pages.
+pub trait PageRange<S: PageSize> {
+    /// Converts the range of 2MiB or 1GiB pages to a range of 4KiB pages.
+    fn as_4kib_page_range(&self) -> Range<Page<Size4KiB>>;
 }
 
-impl<S: PageSize> PageRange<S> {
-    /// Returns wether this range contains no pages.
+impl<S: PageSize> PageRange<S> for Range<Page<S>> {
     #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.start >= self.end
+    fn as_4kib_page_range(&self) -> Range<Page<Size4KiB>> {
+        Page::containing_address(self.start.start_address())
+            ..Page::containing_address(self.end.start_address())
     }
+}
 
+/// Helper trait to get the number of pages in the range.
+#[allow(clippy::len_without_is_empty)]
+pub trait PageRangeLen {
     /// Returns the number of pages in the range.
+    fn len(&self) -> u64;
+}
+
+impl<S: PageSize> PageRangeLen for Range<Page<S>> {
     #[inline]
-    pub fn len(&self) -> u64 {
+    fn len(&self) -> u64 {
         if !self.is_empty() {
             self.end - self.start
         } else {
             0
         }
     }
-
-    /// Returns the size in bytes of all pages within the range.
-    #[inline]
-    pub fn size(&self) -> u64 {
-        S::SIZE * self.len()
-    }
 }
 
-impl<S: PageSize> Iterator for PageRange<S> {
-    type Item = Page<S>;
-
+impl<S: PageSize> PageRangeLen for RangeInclusive<Page<S>> {
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            let page = self.start;
-            self.start += 1;
-            Some(page)
-        } else {
-            None
-        }
-    }
-}
-
-impl PageRange<Size2MiB> {
-    /// Converts the range of 2MiB pages to a range of 4KiB pages.
-    #[inline]
-    pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
-        PageRange {
-            start: Page::containing_address(self.start.start_address()),
-            end: Page::containing_address(self.end.start_address()),
-        }
-    }
-}
-
-impl<S: PageSize> fmt::Debug for PageRange<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PageRange")
-            .field("start", &self.start)
-            .field("end", &self.end)
-            .finish()
-    }
-}
-
-/// A range of pages with inclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
-pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
-    /// The start of the range, inclusive.
-    pub start: Page<S>,
-    /// The end of the range, inclusive.
-    pub end: Page<S>,
-}
-
-impl<S: PageSize> PageRangeInclusive<S> {
-    /// Returns whether this range contains no pages.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.start > self.end
-    }
-
-    /// Returns the number of frames in the range.
-    #[inline]
-    pub fn len(&self) -> u64 {
+    fn len(&self) -> u64 {
         if !self.is_empty() {
-            self.end - self.start + 1
+            *self.end() - *self.start() + 1
         } else {
             0
         }
     }
+}
 
-    /// Returns the size in bytes of all frames within the range.
+/// Helper trait to get the size in bytes of all pages within the range.
+pub trait PageRangeSize {
+    /// Returns the size in bytes of all pages within the range.
+    fn size(&self) -> u64;
+}
+
+impl<S: PageSize> PageRangeSize for Range<Page<S>> {
     #[inline]
-    pub fn size(&self) -> u64 {
+    fn size(&self) -> u64 {
         S::SIZE * self.len()
     }
 }
 
-impl<S: PageSize> Iterator for PageRangeInclusive<S> {
-    type Item = Page<S>;
-
+impl<S: PageSize> PageRangeSize for RangeInclusive<Page<S>> {
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let page = self.start;
-
-            // If the end of the inclusive range is the maximum page possible for size S,
-            // incrementing start until it is greater than the end will cause an integer overflow.
-            // So instead, in that case we decrement end rather than incrementing start.
-            let max_page_addr = VirtAddr::new(u64::MAX) - (S::SIZE - 1);
-            if self.start.start_address() < max_page_addr {
-                self.start += 1;
-            } else {
-                self.end -= 1;
-            }
-            Some(page)
-        } else {
-            None
-        }
-    }
-}
-
-impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PageRangeInclusive")
-            .field("start", &self.start)
-            .field("end", &self.end)
-            .finish()
+    fn size(&self) -> u64 {
+        S::SIZE * self.len()
     }
 }
 
@@ -492,7 +405,7 @@ mod tests {
         let start: Page = Page::containing_address(start_addr);
         let end = start + number;
 
-        let mut range = Page::range(start, end);
+        let mut range = start..end;
         for i in 0..number {
             assert_eq!(
                 range.next(),
@@ -501,7 +414,7 @@ mod tests {
         }
         assert_eq!(range.next(), None);
 
-        let mut range_inclusive = Page::range_inclusive(start, end);
+        let mut range_inclusive = start..=end;
         for i in 0..=number {
             assert_eq!(
                 range_inclusive.next(),
@@ -520,7 +433,7 @@ mod tests {
         let start: Page = Page::containing_address(start_addr);
         let end = start + number;
 
-        let mut range_inclusive = Page::range_inclusive(start, end);
+        let mut range_inclusive = start..=end;
         for i in 0..=number {
             assert_eq!(
                 range_inclusive.next(),
@@ -536,10 +449,10 @@ mod tests {
         let start = Page::<Size4KiB>::containing_address(start_addr);
         let end = start + 50;
 
-        let range = PageRange { start, end };
+        let range = start..end;
         assert_eq!(range.len(), 50);
 
-        let range_inclusive = PageRangeInclusive { start, end };
+        let range_inclusive = start..=end;
         assert_eq!(range_inclusive.len(), 51);
     }
 
