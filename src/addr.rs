@@ -239,26 +239,32 @@ impl VirtAddr {
         PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
     }
 
-    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    /// Returns the number of *successor* steps required to get from `start` to `end`.
+    ///
+    /// This is simlar to [Step::steps_between] but can not overflow.
+    /// Returns `None` if `end > start`
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
+    pub fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
         let mut steps = end.0.checked_sub(start.0)?;
 
         // Mask away extra bits that appear while jumping the gap.
         steps &= 0xffff_ffff_ffff;
 
-        usize::try_from(steps).ok()
+        Some(steps)
     }
 
-    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    #[inline]
-    pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
-        let offset = u64::try_from(count).ok()?;
-        if offset > ADDRESS_SPACE_SIZE {
+    /// Returns the value that would be obtainted by taking the *successor* of
+    /// `self` `count` times.
+    ///
+    /// If this would overflow the range of valid addresses, returns `None`.
+    ///
+    /// See [core::iter::Step::forward_checked].
+    pub fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
+        if count > ADDRESS_SPACE_SIZE {
             return None;
         }
 
-        let mut addr = start.0.checked_add(offset)?;
+        let mut addr = start.0.checked_add(count)?;
 
         match addr.get_bits(47..) {
             0x1 => {
@@ -360,13 +366,22 @@ impl Sub<VirtAddr> for VirtAddr {
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
     #[inline]
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        Self::steps_between_impl(start, end)
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        use core::usize;
+
+        let Some(steps) = VirtAddr::steps_between_u64(start, end) else {
+            return (0, None);
+        };
+
+        match usize::try_from(steps) {
+            Ok(steps) => (steps, Some(steps)),
+            Err(_) => (usize::MAX, None),
+        }
     }
 
     #[inline]
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        Self::forward_checked_impl(start, count)
+        Self::forward_checked_u64(start, count as u64)
     }
 
     #[inline]
@@ -721,43 +736,49 @@ mod tests {
     #[test]
     #[cfg(feature = "step_trait")]
     fn virtaddr_steps_between() {
-        assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(0)), Some(0));
-        assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(1)), Some(1));
-        assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), None);
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0)),
+            (0, Some(0))
+        );
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(1)),
+            (1, Some(1))
+        );
+        assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), (0, None));
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0x7fff_ffff_ffff),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            Some(1)
+            (1, Some(1))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0x7fff_ffff_ffff)
             ),
-            None
+            (0, None)
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            Some(0)
+            (0, Some(0))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0xffff_8000_0000_0001)
             ),
-            Some(1)
+            (1, Some(1))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0001),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            None
+            (0, None)
         );
     }
 

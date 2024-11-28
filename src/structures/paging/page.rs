@@ -158,18 +158,27 @@ impl<S: PageSize> Page<S> {
         PageRangeInclusive { start, end }
     }
 
-    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    /// Returns the number of *successor* steps required to get from `start` to `end`.
+    ///
+    /// This is simlar to [Step::steps_between] but can not overflow.
+    /// Returns `None` if `end > start`
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
-        VirtAddr::steps_between_impl(&start.start_address, &end.start_address)
-            .map(|steps| steps / S::SIZE as usize)
+    pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
+        let steps = VirtAddr::steps_between_u64(&start.start_address, &end.start_address)?;
+
+        Some(steps / S::SIZE)
     }
 
-    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    /// Returns the value that would be obtainted by taking the *successor* of
+    /// `self` `count` times.
+    ///
+    /// If this would overflow the range of valid addresses, returns `None`.
+    ///
+    /// See [core::iter::Step::forward_checked].
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
-        let count = count.checked_mul(S::SIZE as usize)?;
-        let start_address = VirtAddr::forward_checked_impl(start.start_address, count)?;
+    pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
+        let count = count.checked_mul(S::SIZE)?;
+        let start_address = VirtAddr::forward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -293,12 +302,22 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 
 #[cfg(feature = "step_trait")]
 impl<S: PageSize> Step for Page<S> {
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
-        Self::steps_between_impl(start, end)
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        use core::convert::TryFrom;
+        use core::usize;
+
+        let Some(steps) = Self::steps_between_u64(start, end) else {
+            return (0, None);
+        };
+
+        match usize::try_from(steps) {
+            Ok(steps) => (steps, Some(steps)),
+            Err(_) => (usize::MAX, None),
+        }
     }
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        Self::forward_checked_impl(start, count)
+        Self::forward_checked_u64(start, count as u64)
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
