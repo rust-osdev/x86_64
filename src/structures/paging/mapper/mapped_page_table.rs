@@ -150,7 +150,7 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     }
 }
 
-impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
+impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -290,7 +290,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'a, P> {
     }
 }
 
-impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
+impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -451,7 +451,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'a, P> {
     }
 }
 
-impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
+impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
@@ -629,7 +629,7 @@ impl<'a, P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'a, P> {
     }
 }
 
-impl<'a, P: PageTableFrameMapping> Translate for MappedPageTable<'a, P> {
+impl<P: PageTableFrameMapping> Translate for MappedPageTable<'_, P> {
     #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr) -> TranslateResult {
         let p4 = &self.level_4_table;
@@ -693,7 +693,7 @@ impl<'a, P: PageTableFrameMapping> Translate for MappedPageTable<'a, P> {
     }
 }
 
-impl<'a, P: PageTableFrameMapping> CleanUp for MappedPageTable<'a, P> {
+impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
     #[inline]
     unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)
     where

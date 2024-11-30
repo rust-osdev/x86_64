@@ -23,17 +23,17 @@ pub trait PageSize: Copy + Eq + PartialOrd + Ord + Sealed {
 pub trait NotGiantPageSize: PageSize {}
 
 /// A standard 4KiB page.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Size4KiB {}
 
 /// A “huge” 2MiB page.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Size2MiB {}
 
 /// A “giant” 1GiB page.
 ///
 /// (Only available on newer x86_64 CPUs.)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Size1GiB {}
 
 impl PageSize for Size4KiB {
@@ -160,16 +160,27 @@ impl<S: PageSize> Page<S> {
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
-        VirtAddr::steps_between_impl(&start.start_address, &end.start_address)
-            .map(|steps| steps / S::SIZE as usize)
+    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        use core::convert::TryFrom;
+
+        if let Some(steps) =
+            VirtAddr::steps_between_u64(&start.start_address(), &end.start_address())
+        {
+            let steps = steps / S::SIZE;
+            let steps = usize::try_from(steps).ok();
+            (steps.unwrap_or(usize::MAX), steps)
+        } else {
+            (0, None)
+        }
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
-        let count = count.checked_mul(S::SIZE as usize)?;
-        let start_address = VirtAddr::forward_checked_impl(start.start_address, count)?;
+        use core::convert::TryFrom;
+
+        let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
+        let start_address = VirtAddr::forward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -293,7 +304,7 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 
 #[cfg(feature = "step_trait")]
 impl<S: PageSize> Step for Page<S> {
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
 
@@ -302,8 +313,10 @@ impl<S: PageSize> Step for Page<S> {
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
-        let count = count.checked_mul(S::SIZE as usize)?;
-        let start_address = Step::backward_checked(start.start_address, count)?;
+        use core::convert::TryFrom;
+
+        let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
+        let start_address = VirtAddr::backward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -326,6 +339,22 @@ impl<S: PageSize> PageRange<S> {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.start >= self.end
+    }
+
+    /// Returns the number of pages in the range.
+    #[inline]
+    pub fn len(&self) -> u64 {
+        if !self.is_empty() {
+            self.end - self.start
+        } else {
+            0
+        }
+    }
+
+    /// Returns the size in bytes of all pages within the range.
+    #[inline]
+    pub fn size(&self) -> u64 {
+        S::SIZE * self.len()
     }
 }
 
@@ -380,6 +409,22 @@ impl<S: PageSize> PageRangeInclusive<S> {
     pub fn is_empty(&self) -> bool {
         self.start > self.end
     }
+
+    /// Returns the number of frames in the range.
+    #[inline]
+    pub fn len(&self) -> u64 {
+        if !self.is_empty() {
+            self.end - self.start + 1
+        } else {
+            0
+        }
+    }
+
+    /// Returns the size in bytes of all frames within the range.
+    #[inline]
+    pub fn size(&self) -> u64 {
+        S::SIZE * self.len()
+    }
 }
 
 impl<S: PageSize> Iterator for PageRangeInclusive<S> {
@@ -429,6 +474,15 @@ impl fmt::Display for AddressNotAligned {
 mod tests {
     use super::*;
 
+    fn test_is_hash<T: core::hash::Hash>() {}
+
+    #[test]
+    pub fn test_page_is_hash() {
+        test_is_hash::<Page<Size4KiB>>();
+        test_is_hash::<Page<Size2MiB>>();
+        test_is_hash::<Page<Size1GiB>>();
+    }
+
     #[test]
     pub fn test_page_ranges() {
         let page_size = Size4KiB::SIZE;
@@ -474,5 +528,124 @@ mod tests {
             );
         }
         assert_eq!(range_inclusive.next(), None);
+    }
+
+    #[test]
+    pub fn test_page_range_len() {
+        let start_addr = VirtAddr::new(0xdead_beaf);
+        let start = Page::<Size4KiB>::containing_address(start_addr);
+        let end = start + 50;
+
+        let range = PageRange { start, end };
+        assert_eq!(range.len(), 50);
+
+        let range_inclusive = PageRangeInclusive { start, end };
+        assert_eq!(range_inclusive.len(), 51);
+    }
+
+    #[test]
+    #[cfg(feature = "step_trait")]
+    fn page_step_forward() {
+        let test_cases = [
+            (0, 0, Some(0)),
+            (0, 1, Some(0x1000)),
+            (0x1000, 1, Some(0x2000)),
+            (0x7fff_ffff_f000, 1, Some(0xffff_8000_0000_0000)),
+            (0xffff_8000_0000_0000, 1, Some(0xffff_8000_0000_1000)),
+            (0xffff_ffff_ffff_f000, 1, None),
+            #[cfg(target_pointer_width = "64")]
+            (0x7fff_ffff_f000, 0x1_2345_6789, Some(0xffff_9234_5678_8000)),
+            #[cfg(target_pointer_width = "64")]
+            (0x7fff_ffff_f000, 0x8_0000_0000, Some(0xffff_ffff_ffff_f000)),
+            #[cfg(target_pointer_width = "64")]
+            (0x7fff_fff0_0000, 0x8_0000_00ff, Some(0xffff_ffff_ffff_f000)),
+            #[cfg(target_pointer_width = "64")]
+            (0x7fff_fff0_0000, 0x8_0000_0100, None),
+            #[cfg(target_pointer_width = "64")]
+            (0x7fff_ffff_f000, 0x8_0000_0001, None),
+            // Make sure that we handle `steps * PAGE_SIZE > u32::MAX`
+            // correctly on 32-bit targets.
+            (0, 0x10_0000, Some(0x1_0000_0000)),
+        ];
+        for (start, count, result) in test_cases {
+            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new(start)).unwrap();
+            let result = result
+                .map(|result| Page::<Size4KiB>::from_start_address(VirtAddr::new(result)).unwrap());
+            assert_eq!(Step::forward_checked(start, count), result);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "step_trait")]
+    fn page_step_backwards() {
+        let test_cases = [
+            (0, 0, Some(0)),
+            (0, 1, None),
+            (0x1000, 1, Some(0)),
+            (0xffff_8000_0000_0000, 1, Some(0x7fff_ffff_f000)),
+            (0xffff_8000_0000_1000, 1, Some(0xffff_8000_0000_0000)),
+            #[cfg(target_pointer_width = "64")]
+            (0xffff_9234_5678_8000, 0x1_2345_6789, Some(0x7fff_ffff_f000)),
+            #[cfg(target_pointer_width = "64")]
+            (0xffff_8000_0000_0000, 0x8_0000_0000, Some(0)),
+            #[cfg(target_pointer_width = "64")]
+            (0xffff_8000_0000_0000, 0x7_ffff_ff01, Some(0xff000)),
+            #[cfg(target_pointer_width = "64")]
+            (0xffff_8000_0000_0000, 0x8_0000_0001, None),
+            // Make sure that we handle `steps * PAGE_SIZE > u32::MAX`
+            // correctly on 32-bit targets.
+            (0x1_0000_0000, 0x10_0000, Some(0)),
+        ];
+        for (start, count, result) in test_cases {
+            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new(start)).unwrap();
+            let result = result
+                .map(|result| Page::<Size4KiB>::from_start_address(VirtAddr::new(result)).unwrap());
+            assert_eq!(Step::backward_checked(start, count), result);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "step_trait")]
+    fn page_steps_between() {
+        let test_cases = [
+            (0, 0, 0, Some(0)),
+            (0, 0x1000, 1, Some(1)),
+            (0x1000, 0, 0, None),
+            (0x1000, 0x1000, 0, Some(0)),
+            (0x7fff_ffff_f000, 0xffff_8000_0000_0000, 1, Some(1)),
+            (0xffff_8000_0000_0000, 0x7fff_ffff_f000, 0, None),
+            (0xffff_8000_0000_0000, 0xffff_8000_0000_0000, 0, Some(0)),
+            (0xffff_8000_0000_0000, 0xffff_8000_0000_1000, 1, Some(1)),
+            (0xffff_8000_0000_1000, 0xffff_8000_0000_0000, 0, None),
+            (0xffff_8000_0000_1000, 0xffff_8000_0000_1000, 0, Some(0)),
+            // Make sure that we handle `steps * PAGE_SIZE > u32::MAX` correctly on 32-bit
+            // targets.
+            (
+                0x0000_0000_0000,
+                0x0001_0000_0000,
+                0x10_0000,
+                Some(0x10_0000),
+            ),
+            // The returned bounds are different when `steps` doesn't fit in
+            // into `usize`. On 64-bit targets, `0x1_0000_0000` fits into
+            // `usize`, so we can return exact lower and upper bounds. On
+            // 32-bit targets, `0x1_0000_0000` doesn't fit into `usize`, so we
+            // only return an lower bound of `usize::MAX` and don't return an
+            // upper bound.
+            #[cfg(target_pointer_width = "64")]
+            (
+                0x0000_0000_0000,
+                0x1000_0000_0000,
+                0x1_0000_0000,
+                Some(0x1_0000_0000),
+            ),
+            #[cfg(not(target_pointer_width = "64"))]
+            (0x0000_0000_0000, 0x1000_0000_0000, usize::MAX, None),
+        ];
+        for (start, end, lower, upper) in test_cases {
+            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new(start)).unwrap();
+            let end = Page::from_start_address(VirtAddr::new(end)).unwrap();
+            assert_eq!(Step::steps_between(&start, &end), (lower, upper));
+        }
     }
 }

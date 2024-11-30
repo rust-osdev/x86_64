@@ -30,7 +30,7 @@ pub fn flush_all() {
 
 /// The Invalidate PCID Command to execute.
 #[derive(Debug)]
-pub enum InvPicdCommand {
+pub enum InvPcidCommand {
     /// The logical processor invalidates mappings—except global translations—for the linear address and PCID specified.
     Address(VirtAddr, Pcid),
 
@@ -44,13 +44,18 @@ pub enum InvPicdCommand {
     AllExceptGlobal,
 }
 
+// TODO: Remove this in the next breaking release.
+#[deprecated = "please use `InvPcidCommand` instead"]
+#[doc(hidden)]
+pub type InvPicdCommand = InvPcidCommand;
+
 /// The INVPCID descriptor comprises 128 bits and consists of a PCID and a linear address.
 /// For INVPCID type 0, the processor uses the full 64 bits of the linear address even outside 64-bit mode; the linear address is not used for other INVPCID types.
 #[repr(C)]
 #[derive(Debug)]
 struct InvpcidDescriptor {
-    address: u64,
     pcid: u64,
+    address: u64,
 }
 
 /// Structure of a PCID. A PCID has to be <= 4096 for x86_64.
@@ -93,25 +98,25 @@ impl fmt::Display for PcidTooBig {
 ///
 /// This function is unsafe as it requires CPUID.(EAX=07H, ECX=0H):EBX.INVPCID to be 1.
 #[inline]
-pub unsafe fn flush_pcid(command: InvPicdCommand) {
+pub unsafe fn flush_pcid(command: InvPcidCommand) {
     let mut desc = InvpcidDescriptor {
-        address: 0,
         pcid: 0,
+        address: 0,
     };
 
     let kind: u64;
     match command {
-        InvPicdCommand::Address(addr, pcid) => {
+        InvPcidCommand::Address(addr, pcid) => {
             kind = 0;
             desc.pcid = pcid.value().into();
             desc.address = addr.as_u64()
         }
-        InvPicdCommand::Single(pcid) => {
+        InvPcidCommand::Single(pcid) => {
             kind = 1;
             desc.pcid = pcid.0.into()
         }
-        InvPicdCommand::All => kind = 2,
-        InvPicdCommand::AllExceptGlobal => kind = 3,
+        InvPcidCommand::All => kind = 2,
+        InvPcidCommand::AllExceptGlobal => kind = 3,
     }
 
     unsafe {
@@ -310,14 +315,14 @@ where
         if let Some(mut pages) = self.page_range {
             while !pages.is_empty() {
                 // Calculate out how many pages we still need to flush.
-                let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).unwrap();
+                let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).0;
 
                 // Make sure that we never jump the gap in the address space when flushing.
                 let second_half_start =
                     Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
                 let count = if pages.start < second_half_start {
                     let count_to_second_half =
-                        Page::steps_between_impl(&pages.start, &second_half_start).unwrap();
+                        Page::steps_between_impl(&pages.start, &second_half_start).0;
                     cmp::min(count, count_to_second_half)
                 } else {
                     count

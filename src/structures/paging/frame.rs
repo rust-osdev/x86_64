@@ -21,8 +21,9 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {
-        if !address.is_aligned(S::SIZE) {
+        if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
 
@@ -46,9 +47,10 @@ impl<S: PageSize> PhysFrame<S> {
 
     /// Returns the frame that contains the given physical address.
     #[inline]
+    #[rustversion::attr(since(1.61), const)]
     pub fn containing_address(address: PhysAddr) -> Self {
         PhysFrame {
-            start_address: address.align_down(S::SIZE),
+            start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
         }
     }
@@ -146,6 +148,22 @@ impl<S: PageSize> PhysFrameRange<S> {
     pub fn is_empty(&self) -> bool {
         self.start >= self.end
     }
+
+    /// Returns the number of frames in the range.
+    #[inline]
+    pub fn len(&self) -> u64 {
+        if !self.is_empty() {
+            self.end - self.start
+        } else {
+            0
+        }
+    }
+
+    /// Returns the size in bytes of all frames within the range.
+    #[inline]
+    pub fn size(&self) -> u64 {
+        S::SIZE * self.len()
+    }
 }
 
 impl<S: PageSize> Iterator for PhysFrameRange<S> {
@@ -188,6 +206,22 @@ impl<S: PageSize> PhysFrameRangeInclusive<S> {
     pub fn is_empty(&self) -> bool {
         self.start > self.end
     }
+
+    /// Returns the number of frames in the range.
+    #[inline]
+    pub fn len(&self) -> u64 {
+        if !self.is_empty() {
+            self.end - self.start + 1
+        } else {
+            0
+        }
+    }
+
+    /// Returns the size in bytes of all frames within the range.
+    #[inline]
+    pub fn size(&self) -> u64 {
+        S::SIZE * self.len()
+    }
 }
 
 impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
@@ -211,5 +245,22 @@ impl<S: PageSize> fmt::Debug for PhysFrameRangeInclusive<S> {
             .field("start", &self.start)
             .field("end", &self.end)
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    pub fn test_frame_range_len() {
+        let start_addr = PhysAddr::new(0xdead_beaf);
+        let start = PhysFrame::<Size4KiB>::containing_address(start_addr);
+        let end = start + 50;
+
+        let range = PhysFrameRange { start, end };
+        assert_eq!(range.len(), 50);
+
+        let range_inclusive = PhysFrameRangeInclusive { start, end };
+        assert_eq!(range_inclusive.len(), 51);
     }
 }

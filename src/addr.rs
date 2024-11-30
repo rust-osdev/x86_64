@@ -240,25 +240,43 @@ impl VirtAddr {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(feature = "step_trait")]
+    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        if let Some(steps) = Self::steps_between_u64(start, end) {
+            let steps = usize::try_from(steps).ok();
+            (steps.unwrap_or(usize::MAX), steps)
+        } else {
+            (0, None)
+        }
+    }
+
+    /// An implementation of steps_between that returns u64. Note that this
+    /// function always returns the exact bound, so it doesn't need to return a
+    /// lower and upper bound like steps_between does.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
-    pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> Option<usize> {
+    pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
         let mut steps = end.0.checked_sub(start.0)?;
 
         // Mask away extra bits that appear while jumping the gap.
         steps &= 0xffff_ffff_ffff;
 
-        usize::try_from(steps).ok()
+        Some(steps)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[inline]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
-        let offset = u64::try_from(count).ok()?;
-        if offset > ADDRESS_SPACE_SIZE {
+        Self::forward_checked_u64(start, u64::try_from(count).ok()?)
+    }
+
+    /// An implementation of forward_checked that takes u64 instead of usize.
+    #[inline]
+    pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
+        if count > ADDRESS_SPACE_SIZE {
             return None;
         }
 
-        let mut addr = start.0.checked_add(offset)?;
+        let mut addr = start.0.checked_add(count)?;
 
         match addr.get_bits(47..) {
             0x1 => {
@@ -267,6 +285,31 @@ impl VirtAddr {
             }
             0x2 => {
                 // Address overflow
+                return None;
+            }
+            _ => {}
+        }
+
+        Some(unsafe { Self::new_unsafe(addr) })
+    }
+
+    /// An implementation of backward_checked that takes u64 instead of usize.
+    #[cfg(feature = "step_trait")]
+    #[inline]
+    pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {
+        if count > ADDRESS_SPACE_SIZE {
+            return None;
+        }
+
+        let mut addr = start.0.checked_sub(count)?;
+
+        match addr.get_bits(47..) {
+            0x1fffe => {
+                // Jump the gap by sign extending the 47th bit.
+                addr.set_bits(47.., 0);
+            }
+            0x1fffd => {
+                // Address underflow
                 return None;
             }
             _ => {}
@@ -360,7 +403,7 @@ impl Sub<VirtAddr> for VirtAddr {
 #[cfg(feature = "step_trait")]
 impl Step for VirtAddr {
     #[inline]
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
 
@@ -371,26 +414,7 @@ impl Step for VirtAddr {
 
     #[inline]
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
-        let offset = u64::try_from(count).ok()?;
-        if offset > ADDRESS_SPACE_SIZE {
-            return None;
-        }
-
-        let mut addr = start.0.checked_sub(offset)?;
-
-        match addr.get_bits(47..) {
-            0x1fffe => {
-                // Jump the gap by sign extending the 47th bit.
-                addr.set_bits(47.., 0);
-            }
-            0x1fffd => {
-                // Address underflow
-                return None;
-            }
-            _ => {}
-        }
-
-        Some(unsafe { Self::new_unsafe(addr) })
+        Self::backward_checked_u64(start, u64::try_from(count).ok()?)
     }
 }
 
@@ -495,7 +519,15 @@ impl PhysAddr {
     where
         U: Into<u64>,
     {
-        PhysAddr(align_down(self.0, align.into()))
+        self.align_down_u64(align.into())
+    }
+
+    /// Aligns the physical address downwards to the given alignment.
+    ///
+    /// See the `align_down` function for more information.
+    #[inline]
+    pub(crate) const fn align_down_u64(self, align: u64) -> Self {
+        PhysAddr(align_down(self.0, align))
     }
 
     /// Checks whether the physical address has the demanded alignment.
@@ -504,7 +536,13 @@ impl PhysAddr {
     where
         U: Into<u64>,
     {
-        self.align_down(align) == self
+        self.is_aligned_u64(align.into())
+    }
+
+    /// Checks whether the physical address has the demanded alignment.
+    #[inline]
+    pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {
+        self.align_down_u64(align).as_u64() == self.as_u64()
     }
 }
 
@@ -650,22 +688,27 @@ mod tests {
             Step::forward_checked(VirtAddr(0xffff_ffff_ffff_ffff), 1),
             None
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward(VirtAddr(0x7fff_ffff_ffff), 0x1234_5678_9abd),
             VirtAddr(0xffff_9234_5678_9abc)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward(VirtAddr(0x7fff_ffff_ffff), 0x8000_0000_0000),
             VirtAddr(0xffff_ffff_ffff_ffff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward(VirtAddr(0x7fff_ffff_ff00), 0x8000_0000_00ff),
             VirtAddr(0xffff_ffff_ffff_ffff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward_checked(VirtAddr(0x7fff_ffff_ff00), 0x8000_0000_0100),
             None
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::forward_checked(VirtAddr(0x7fff_ffff_ffff), 0x8000_0000_0001),
             None
@@ -686,18 +729,22 @@ mod tests {
             Step::backward(VirtAddr(0xffff_8000_0000_0001), 1),
             VirtAddr(0xffff_8000_0000_0000)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward(VirtAddr(0xffff_9234_5678_9abc), 0x1234_5678_9abd),
             VirtAddr(0x7fff_ffff_ffff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward(VirtAddr(0xffff_8000_0000_0000), 0x8000_0000_0000),
             VirtAddr(0)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward(VirtAddr(0xffff_8000_0000_0000), 0x7fff_ffff_ff01),
             VirtAddr(0xff)
         );
+        #[cfg(target_pointer_width = "64")]
         assert_eq!(
             Step::backward_checked(VirtAddr(0xffff_8000_0000_0000), 0x8000_0000_0001),
             None
@@ -707,43 +754,64 @@ mod tests {
     #[test]
     #[cfg(feature = "step_trait")]
     fn virtaddr_steps_between() {
-        assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(0)), Some(0));
-        assert_eq!(Step::steps_between(&VirtAddr(0), &VirtAddr(1)), Some(1));
-        assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), None);
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0)),
+            (0, Some(0))
+        );
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(1)),
+            (1, Some(1))
+        );
+        assert_eq!(Step::steps_between(&VirtAddr(1), &VirtAddr(0)), (0, None));
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0x7fff_ffff_ffff),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            Some(1)
+            (1, Some(1))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0x7fff_ffff_ffff)
             ),
-            None
+            (0, None)
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            Some(0)
+            (0, Some(0))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0000),
                 &VirtAddr(0xffff_8000_0000_0001)
             ),
-            Some(1)
+            (1, Some(1))
         );
         assert_eq!(
             Step::steps_between(
                 &VirtAddr(0xffff_8000_0000_0001),
                 &VirtAddr(0xffff_8000_0000_0000)
             ),
-            None
+            (0, None)
+        );
+        // Make sure that we handle `steps > u32::MAX` correctly on 32-bit
+        // targets. On 64-bit targets, `0x1_0000_0000` fits into `usize`, so we
+        // can return exact lower and upper bounds. On 32-bit targets,
+        // `0x1_0000_0000` doesn't fit into `usize`, so we only return an lower
+        // bound of `usize::MAX` and don't return an upper bound.
+        #[cfg(target_pointer_width = "64")]
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0x1_0000_0000)),
+            (0x1_0000_0000, Some(0x1_0000_0000))
+        );
+        #[cfg(not(target_pointer_width = "64"))]
+        assert_eq!(
+            Step::steps_between(&VirtAddr(0), &VirtAddr(0x1_0000_0000)),
+            (usize::MAX, None)
         );
     }
 
@@ -795,10 +863,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_pointer_width = "64")]
     fn test_from_ptr_array() {
         let slice = &[1, 2, 3, 4, 5];
         // Make sure that from_ptr(slice) is the address of the first element
-        assert_eq!(VirtAddr::from_ptr(slice), VirtAddr::from_ptr(&slice[0]));
+        assert_eq!(
+            VirtAddr::from_ptr(slice.as_slice()),
+            VirtAddr::from_ptr(&slice[0])
+        );
     }
 }
 
@@ -937,7 +1009,7 @@ mod proofs {
         };
 
         // ...then `steps_between` succeeds as well.
-        assert!(Step::steps_between(&start, &end) == Some(count));
+        assert!(Step::steps_between(&start, &end) == (count, Some(count)));
     }
 
     // This harness proves that for all inputs for which `steps_between`
@@ -954,7 +1026,7 @@ mod proofs {
         };
 
         // If `steps_between` succeeds...
-        let Some(count) = Step::steps_between(&start, &end) else {
+        let Some(count) = Step::steps_between(&start, &end).1 else {
             return;
         };
 
