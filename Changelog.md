@@ -1,5 +1,11 @@
 # Unreleased
 
+# 0.14.13 – 2024-11-30
+
+## Fixes
+
+- [fix signature of Step::steps_between implementations](https://github.com/rust-osdev/x86_64/pull/520)
+
 # 0.14.12 – 2023-02-09
 
 ## New Features

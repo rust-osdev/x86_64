@@ -298,14 +298,14 @@ where
         if let Some(mut pages) = self.page_range {
             while !pages.is_empty() {
                 // Calculate out how many pages we still need to flush.
-                let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).unwrap();
+                let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).0;
 
                 // Make sure that we never jump the gap in the address space when flushing.
                 let second_half_start =
                     Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
                 let count = if pages.start < second_half_start {
                     let count_to_second_half =
-                        Page::steps_between_impl(&pages.start, &second_half_start).unwrap();
+                        Page::steps_between_impl(&pages.start, &second_half_start).0;
                     cmp::min(count, count_to_second_half)
                 } else {
                     count
