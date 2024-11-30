@@ -1,8 +1,44 @@
 # Unreleased
 
+# 0.15.2 – 2024-11-30
+
+This release is compatible with Rust nightlies starting with `nightly-2024-11-23` (this only applies when the `nightly` feature is used).
+
 ## New Features
 
+- [add `GlobalDescriptorTable::limit`](https://github.com/rust-osdev/x86_64/pull/413)
+- [constify PhysFrame functions](https://github.com/rust-osdev/x86_64/pull/489)
 - [add `size` and `len` for `PageRange`, `PhysFrameRange`, `PageRangeInclusive` and `PhysFrameRangeInclusive`](https://github.com/rust-osdev/x86_64/pull/491)
+- [TryFrom implementation for ExceptionVector](https://github.com/rust-osdev/x86_64/pull/506)
+
+## Fixes
+
+- [Only enable instructions on `x86_64`](https://github.com/rust-osdev/x86_64/pull/483)
+- [Ensure that Page actually implements Hash](https://github.com/rust-osdev/x86_64/pull/490)
+- [fix field order for INVPCID descriptor](https://github.com/rust-osdev/x86_64/pull/508)
+- [fix typo in "InvPicdCommand"](https://github.com/rust-osdev/x86_64/pull/509)
+- [fix signature of Step::steps_between implementations](https://github.com/rust-osdev/x86_64/pull/513)
+
+## Other Improvements
+
+- [docs: add aliases for `in{,b,w,l}` and `out{,b,w,l}`](https://github.com/rust-osdev/x86_64/pull/474)
+- [ci: migrate away from unmaintained actions](https://github.com/rust-osdev/x86_64/pull/478)
+- [chore: migrate from legacy `rust-toolchain` to `rust-toolchain.toml`](https://github.com/rust-osdev/x86_64/pull/479)
+- [test: replace `x86_64-bare-metal.json` with `x86_64-unknown-none`](https://github.com/rust-osdev/x86_64/pull/477)
+- [docs: fix and detect warnings](https://github.com/rust-osdev/x86_64/pull/475)
+- [CI: Set `-Crelocation-model=static` in `RUSTFLAGS` for bootloader test job](https://github.com/rust-osdev/x86_64/pull/480)
+- [silence warning about cast](https://github.com/rust-osdev/x86_64/pull/482)
+- [fix cfg related warnings](https://github.com/rust-osdev/x86_64/pull/485)
+- [fix warnings](https://github.com/rust-osdev/x86_64/pull/488)
+- [don't use label starting with 1](https://github.com/rust-osdev/x86_64/pull/492)
+- [fix testing](https://github.com/rust-osdev/x86_64/pull/495)
+- [remove `#![feature(asm_const)]`](https://github.com/rust-osdev/x86_64/pull/496)
+- [Remove stabilized const_mut_refs feature](https://github.com/rust-osdev/x86_64/pull/501)
+- [Fix clippy warnings](https://github.com/rust-osdev/x86_64/pull/502)
+- [fix CI job for building on MSRV](https://github.com/rust-osdev/x86_64/pull/510)
+- [gate HandlerFunc behind target_arch = "x86{\_64}"](https://github.com/rust-osdev/x86_64/pull/507)
+- [Typo fix in TaskStateSegment comment](https://github.com/rust-osdev/x86_64/pull/504)
+- [Minor clarification DescriptorTablePointer::limit comment](https://github.com/rust-osdev/x86_64/pull/503)
 
 # 0.15.1 – 2024-03-19
 
