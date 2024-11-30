@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - "master"
+      - "x86_64-0.14.x"
     tags:
       - "*"
   schedule:

@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - "master"
+      - "x86_64-0.14.x"
 
 permissions:
   contents: read
