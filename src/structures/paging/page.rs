@@ -4,6 +4,7 @@ use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
+use core::cmp::Ordering;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -324,6 +325,75 @@ impl<S: PageSize> PageRange<S> for Range<Page<S>> {
     }
 }
 
+#[derive(Debug)]
+struct PageIteratorData<S: PageSize> {
+    next: Page<S>,
+    last_inclusive: Page<S>,
+}
+
+/// An iterator for iterating over a range of `Page`s without the `Step` trait.
+#[derive(Debug)]
+pub struct PageIterator<S: PageSize> {
+    data: Option<PageIteratorData<S>>,
+}
+
+impl<S: PageSize> Iterator for PageIterator<S> {
+    type Item = Page<S>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.data
+            .take()
+            .and_then(|mut data| match data.next.cmp(&data.last_inclusive) {
+                Ordering::Less => {
+                    let page = data.next;
+                    data.next += 1;
+                    self.data = Some(data);
+                    Some(page)
+                }
+                Ordering::Equal => {
+                    let page = data.next;
+                    Some(page)
+                }
+                Ordering::Greater => None,
+            })
+    }
+}
+
+/// Helper trait to iterate over a Range of `Page`s without the `Step` trait.
+pub trait IterPages<S: PageSize> {
+    /// Get an iterator of `Page`s without the `Step` trait.
+    fn iter_pages(&self) -> PageIterator<S>;
+}
+
+impl<S: PageSize> IterPages<S> for Range<Page<S>> {
+    #[inline]
+    fn iter_pages(&self) -> PageIterator<S> {
+        PageIterator {
+            data: if self.end > self.start {
+                Some(PageIteratorData {
+                    next: self.start,
+                    last_inclusive: self.end - 1,
+                })
+            } else {
+                None
+            },
+        }
+    }
+}
+
+impl<S: PageSize> IterPages<S> for RangeInclusive<Page<S>> {
+    #[inline]
+    fn iter_pages(&self) -> PageIterator<S> {
+        PageIterator {
+            data: Some(PageIteratorData {
+                next: *self.start(),
+                last_inclusive: *self.end(),
+            }),
+        }
+    }
+}
+
 /// Helper trait to get the number of pages in the range.
 #[allow(clippy::len_without_is_empty)]
 pub trait PageRangeLen {
@@ -560,5 +630,45 @@ mod tests {
             let end = Page::from_start_address(VirtAddr::new(end)).unwrap();
             assert_eq!(Step::steps_between(&start, &end), (lower, upper));
         }
+    }
+
+    #[test]
+    fn iter_pages_empty() {
+        let mut iter = (Page::<Size4KiB>::from_start_address(VirtAddr::zero()).unwrap()
+            ..Page::from_start_address(VirtAddr::zero()).unwrap())
+            .iter_pages();
+        assert_eq!(iter.next(), None);
+        // Make sure it can be called again and still returns `None`
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn iter_pages_non_empty() {
+        let start = Page::<Size4KiB>::from_start_address(VirtAddr::zero()).unwrap();
+        let mut iter = (start..start + 2).iter_pages();
+        assert_eq!(iter.next(), Some(start));
+        assert_eq!(iter.next(), Some(start + 1));
+        assert_eq!(iter.next(), None);
+        // Make sure it can be called again and still returns `None`
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn iter_pages_inclusive_empty() {
+        let start = Page::<Size4KiB>::from_start_address(VirtAddr::zero()).unwrap() + 1;
+        let mut iter = (start..=start - 1).iter_pages();
+        assert_eq!(iter.next(), None);
+        // Make sure it can be called again and still returns `None`
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn iter_pages_inclusive_non_empty() {
+        let start = Page::<Size4KiB>::from_start_address(VirtAddr::zero()).unwrap();
+        let mut iter = (start..=start).iter_pages();
+        assert_eq!(iter.next(), Some(start));
+        assert_eq!(iter.next(), None);
+        // Make sure it can be called again and still returns `None`
+        assert_eq!(iter.next(), None);
     }
 }
