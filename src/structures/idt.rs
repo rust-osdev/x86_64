@@ -24,6 +24,7 @@ use crate::registers::rflags::RFlags;
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
 use bitflags::bitflags;
+use core::convert::TryFrom;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Bound::{Excluded, Included, Unbounded};
@@ -153,9 +154,9 @@ pub struct InterruptDescriptorTable {
     ///   is enabled.
     /// - Execution of any legacy SSE instruction when `CR4.OSFXSR` is cleared to 0.
     /// - Execution of any SSE instruction (uses `YMM`/`XMM` registers), or 64-bit media
-    /// instruction (uses `MMXTM` registers) when `CR0.EM` = 1.
+    ///   instruction (uses `MMXTM` registers) when `CR0.EM` = 1.
     /// - Execution of any SSE floating-point instruction (uses `YMM`/`XMM` registers) that
-    /// causes a numeric exception when `CR4.OSXMMEXCPT` = 0.
+    ///   causes a numeric exception when `CR4.OSXMMEXCPT` = 0.
     /// - Use of the `DR4` or `DR5` debug registers when `CR4.DE` = 1.
     /// - Execution of `RSM` when not in `SMM` mode.
     ///
@@ -503,7 +504,7 @@ impl InterruptDescriptorTable {
     ///
     /// - `self` is never destroyed.
     /// - `self` always stays at the same memory location. It is recommended to wrap it in
-    /// a `Box`.
+    ///   a `Box`.
     ///
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
@@ -712,52 +713,82 @@ impl<T> PartialEq for Entry<T> {
 /// A handler function for an interrupt or an exception without error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct HandlerFunc(());
 
 /// A handler function for an exception that pushes an error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct HandlerFuncWithErrCode(());
 
 /// A page fault handler function that pushes a page fault error code.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type PageFaultHandlerFunc =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
 
 /// A handler function that must not return, e.g. for a machine check exception.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFunc(());
 
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 ///
 /// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(feature = "abi_x86_interrupt")]
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+))]
 pub type DivergingHandlerFuncWithErrCode =
     extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(feature = "abi_x86_interrupt"))]
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    feature = "abi_x86_interrupt"
+)))]
 #[derive(Copy, Clone, Debug)]
 pub struct DivergingHandlerFuncWithErrCode(());
 
@@ -853,7 +884,10 @@ pub unsafe trait HandlerFuncType {
 
 macro_rules! impl_handler_func_type {
     ($f:ty) => {
-        #[cfg(feature = "abi_x86_interrupt")]
+        #[cfg(all(
+            any(target_arch = "x86", target_arch = "x86_64"),
+            feature = "abi_x86_interrupt"
+        ))]
         unsafe impl HandlerFuncType for $f {
             #[inline]
             fn to_virt_addr(self) -> VirtAddr {
@@ -1328,6 +1362,52 @@ pub enum ExceptionVector {
     Security = 0x1E,
 }
 
+/// Exception vector number is invalid
+#[derive(Debug)]
+pub struct InvalidExceptionVectorNumber(u8);
+
+impl fmt::Display for InvalidExceptionVectorNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} is not a valid exception vector", self.0)
+    }
+}
+
+impl TryFrom<u8> for ExceptionVector {
+    type Error = InvalidExceptionVectorNumber;
+
+    /// Tries to convert the exception vector number to [`ExceptionVector`]
+    ///
+    /// Fails if exception vector number is Coprocessor Segment Overrun, reserved or not exception vector number
+    fn try_from(exception_vector_number: u8) -> Result<Self, Self::Error> {
+        match exception_vector_number {
+            0x00 => Ok(Self::Division),
+            0x01 => Ok(Self::Debug),
+            0x02 => Ok(Self::NonMaskableInterrupt),
+            0x03 => Ok(Self::Breakpoint),
+            0x04 => Ok(Self::Overflow),
+            0x05 => Ok(Self::BoundRange),
+            0x06 => Ok(Self::InvalidOpcode),
+            0x07 => Ok(Self::DeviceNotAvailable),
+            0x08 => Ok(Self::Double),
+            0x0A => Ok(Self::InvalidTss),
+            0x0B => Ok(Self::SegmentNotPresent),
+            0x0C => Ok(Self::Stack),
+            0x0D => Ok(Self::GeneralProtection),
+            0x0E => Ok(Self::Page),
+            0x10 => Ok(Self::X87FloatingPoint),
+            0x11 => Ok(Self::AlignmentCheck),
+            0x12 => Ok(Self::MachineCheck),
+            0x13 => Ok(Self::SimdFloatingPoint),
+            0x14 => Ok(Self::Virtualization),
+            0x15 => Ok(Self::ControlProtection),
+            0x1C => Ok(Self::HypervisorInjection),
+            0x1D => Ok(Self::VmmCommunication),
+            0x1E => Ok(Self::Security),
+            _ => Err(InvalidExceptionVectorNumber(exception_vector_number)),
+        }
+    }
+}
+
 #[cfg(all(
     feature = "instructions",
     feature = "abi_x86_interrupt",
@@ -1642,7 +1722,7 @@ mod test {
 
     #[test]
     fn entry_derive_test() {
-        fn foo(_: impl Clone + Copy + PartialEq + fmt::Debug) {}
+        fn foo(_: impl Copy + PartialEq + fmt::Debug) {}
 
         foo(Entry::<HandlerFuncWithErrCode> {
             pointer_low: 0,
@@ -1667,9 +1747,7 @@ mod test {
         });
 
         unsafe {
-            frame
-                .as_mut()
-                .update(|f| f.instruction_pointer = f.instruction_pointer + 2u64);
+            frame.as_mut().update(|f| f.instruction_pointer += 2u64);
         }
     }
 }

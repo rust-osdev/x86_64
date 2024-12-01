@@ -357,11 +357,11 @@ mod x86_64 {
         ///
         /// # Returns
         /// - Field 1 (SYSRET): The CS selector is set to this field + 16. SS.Sel is set to
-        /// this field + 8. Because SYSRET always returns to CPL 3, the
-        /// RPL bits 1:0 should be initialized to 11b.
+        ///   this field + 8. Because SYSRET always returns to CPL 3, the
+        ///   RPL bits 1:0 should be initialized to 11b.
         /// - Field 2 (SYSCALL): This field is copied directly into CS.Sel. SS.Sel is set to
-        ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
-        /// 33:32 should be initialized to 00b.
+        ///   this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
+        ///   33:32 should be initialized to 00b.
         #[inline]
         pub fn read_raw() -> (u16, u16) {
             let msr_value = unsafe { Self::MSR.read() };
@@ -398,11 +398,11 @@ mod x86_64 {
         ///
         /// # Parameters
         /// - sysret: The CS selector is set to this field + 16. SS.Sel is set to
-        /// this field + 8. Because SYSRET always returns to CPL 3, the
-        /// RPL bits 1:0 should be initialized to 11b.
+        ///   this field + 8. Because SYSRET always returns to CPL 3, the
+        ///   RPL bits 1:0 should be initialized to 11b.
         /// - syscall: This field is copied directly into CS.Sel. SS.Sel is set to
-        ///  this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
-        /// 33:32 should be initialized to 00b.
+        ///   this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
+        ///   33:32 should be initialized to 00b.
         ///
         /// # Safety
         ///

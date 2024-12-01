@@ -193,7 +193,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     ///
     /// Panics if the GDT doesn't have enough free entries.
     #[inline]
-    #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
+    #[rustversion::attr(since(1.83), const)]
     pub fn append(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
             Descriptor::UserSegment(value) => {
@@ -246,7 +246,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     }
 
     #[inline]
-    #[cfg_attr(feature = "const_fn", rustversion::attr(all(), const))]
+    #[rustversion::attr(since(1.83), const)]
     fn push(&mut self, value: u64) -> usize {
         let index = self.len;
         self.table[index] = Entry::new(value);
