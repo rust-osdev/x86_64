@@ -1002,8 +1002,8 @@ impl EntryOptions {
         self
     }
 
-    fn stack_index(&self) -> u16 {
-        self.bits.get_bits(0..3) - 1
+    fn stack_index(&self) -> Option<u16> {
+        self.bits.get_bits(0..3).checked_sub(1)
     }
 }
 
@@ -1718,6 +1718,11 @@ mod test {
                 assert!(entry_present(&idt, i));
             }
         }
+    }
+
+    #[test]
+    fn idt_fmt_debug() {
+        dbg!(InterruptDescriptorTable::new());
     }
 
     #[test]
