@@ -361,6 +361,63 @@ mod x86_64 {
                 asm!("mov cr3, {}", in(reg) value, options(nostack, preserves_flags));
             }
         }
+
+        /// Update the P4 table address in the CR3 register.
+        ///
+        /// ## Safety
+        ///
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        #[inline]
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut PhysFrame, &mut Cr3Flags),
+        {
+            let (mut frame, mut flags) = Self::read();
+            f(&mut frame, &mut flags);
+            unsafe {
+                Self::write(frame, flags);
+            }
+        }
+
+        /// Updates the P4 table address in the CR3 register.
+        ///
+        /// ## Safety
+        ///
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        /// [`Cr4Flags::PCID`] must be set before calling this method.
+        #[inline]
+        pub unsafe fn update_pcid<F>(f: F)
+        where
+            F: FnOnce(&mut PhysFrame, &mut Pcid),
+        {
+            let (mut frame, mut pcid) = Self::read_pcid();
+            f(&mut frame, &mut pcid);
+            unsafe {
+                Self::write_pcid(frame, pcid);
+            }
+        }
+
+        /// Updates the P4 table address in the CR3 register without flushing existing TLB entries for
+        /// the PCID.
+        ///
+        /// ## Safety
+        ///
+        /// Changing the level 4 page table is unsafe, because it's possible to violate memory safety by
+        /// changing the page mapping.
+        /// [`Cr4Flags::PCID`] must be set before calling this method.
+        #[inline]
+        pub unsafe fn update_pcid_no_flush<F>(f: F)
+        where
+            F: FnOnce(&mut PhysFrame, &mut Pcid),
+        {
+            let (mut frame, mut pcid) = Self::read_pcid();
+            f(&mut frame, &mut pcid);
+            unsafe {
+                Self::write_pcid_no_flush(frame, pcid);
+            }
+        }
     }
 
     impl Cr4 {

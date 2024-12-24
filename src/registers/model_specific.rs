@@ -525,6 +525,24 @@ mod x86_64 {
             let mut msr = Self::MSR;
             unsafe { msr.write(value.bits()) };
         }
+
+        /// Update the SFMask register.
+        ///
+        /// The SFMASK register is used to specify which RFLAGS bits
+        /// are cleared during a SYSCALL. In long mode, SFMASK is used
+        /// to specify which RFLAGS bits are cleared when SYSCALL is
+        /// executed. If a bit in SFMASK is set to 1, the corresponding
+        /// bit in RFLAGS is cleared to 0. If a bit in SFMASK is cleared
+        /// to 0, the corresponding rFLAGS bit is not modified.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut RFlags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            Self::write(flags);
+        }
     }
 
     impl UCet {
@@ -560,6 +578,17 @@ mod x86_64 {
         pub fn write(flags: CetFlags, legacy_bitmap: Page) {
             Self::write_raw(flags.bits() | legacy_bitmap.start_address().as_u64());
         }
+
+        /// Updates IA32_U_CET.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut CetFlags, &mut Page),
+        {
+            let (mut flags, mut legacy_bitmap) = Self::read();
+            f(&mut flags, &mut legacy_bitmap);
+            Self::write(flags, legacy_bitmap);
+        }
     }
 
     impl SCet {
@@ -594,6 +623,17 @@ mod x86_64 {
         #[inline]
         pub fn write(flags: CetFlags, legacy_bitmap: Page) {
             Self::write_raw(flags.bits() | legacy_bitmap.start_address().as_u64());
+        }
+
+        /// Updates IA32_S_CET.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut CetFlags, &mut Page),
+        {
+            let (mut flags, mut legacy_bitmap) = Self::read();
+            f(&mut flags, &mut legacy_bitmap);
+            Self::write(flags, legacy_bitmap);
         }
     }
 }
