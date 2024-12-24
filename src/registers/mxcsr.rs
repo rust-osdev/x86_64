@@ -83,6 +83,17 @@ mod x86_64 {
         }
     }
 
+    /// Update MXCSR.
+    #[inline]
+    pub fn update<F>(f: F)
+    where
+        F: FnOnce(&mut MxCsr),
+    {
+        let mut mxcsr = self::read();
+        f(&mut mxcsr);
+        self::write(mxcsr);
+    }
+
     #[cfg(test)]
     mod test {
         use crate::registers::mxcsr::*;

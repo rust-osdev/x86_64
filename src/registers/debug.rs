@@ -499,5 +499,18 @@ mod x86_64 {
                 asm!("mov dr7, {}", in(reg) value, options(nomem, nostack, preserves_flags));
             }
         }
+
+        /// Update the DR7 value.
+        ///
+        /// Preserves the value of reserved fields.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut Dr7Value),
+        {
+            let mut value = Self::read();
+            f(&mut value);
+            Self::write(value);
+        }
     }
 }

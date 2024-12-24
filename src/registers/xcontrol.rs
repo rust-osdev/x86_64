@@ -145,5 +145,26 @@ mod x86_64 {
                 );
             }
         }
+
+        /// Update XCR0 flags.
+        ///
+        /// Preserves the value of reserved fields.
+        /// Panics if invalid combinations of [`XCr0Flags`] are set.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to
+        /// enable features that are not supported by the architecture.
+        #[inline]
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut XCr0Flags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            unsafe {
+                Self::write(flags);
+            }
+        }
     }
 }

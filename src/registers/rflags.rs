@@ -126,6 +126,25 @@ mod x86_64 {
         }
     }
 
+    /// Updates the RFLAGS register, preserves reserved bits.
+    ///
+    /// ## Safety
+    ///
+    /// Unsafe because undefined becavior can occur if certain flags are modified. For example,
+    /// the `DF` flag must be unset in all Rust code. Also, modifying `CF`, `PF`, or any other
+    /// flags also used by Rust/LLVM can result in undefined behavior too.
+    #[inline]
+    pub unsafe fn update<F>(f: F)
+    where
+        F: FnOnce(&mut RFlags),
+    {
+        let mut flags = self::read();
+        f(&mut flags);
+        unsafe {
+            self::write(flags);
+        }
+    }
+
     #[cfg(test)]
     mod test {
         use crate::registers::rflags::read;
