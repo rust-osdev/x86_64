@@ -85,7 +85,7 @@ mod x86_64 {
         /// ## Safety
         ///
         /// This function is unsafe because it's possible to
-        /// enable features that are not supported by the architecture
+        /// enable features that are not supported by the architecture.
         #[inline]
         pub unsafe fn write(flags: XCr0Flags) {
             let old_value = Self::read_raw();
