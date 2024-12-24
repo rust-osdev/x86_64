@@ -307,8 +307,13 @@ mod x86_64 {
         ///
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`FS::write_base`] can be used instead.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that this write operation has no unsafe side
+        /// effects, as the segment base address might be in use.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub unsafe fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -328,8 +333,13 @@ mod x86_64 {
         ///
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`GS::write_base`] can be used instead.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that this write operation has no unsafe side
+        /// effects, as the segment base address might be in use.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub unsafe fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -343,8 +353,12 @@ mod x86_64 {
         }
 
         /// Write a given virtual address to the KernelGsBase register.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that a future call to [`GS::swap`] has no unsafe side effects.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub unsafe fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
