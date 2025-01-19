@@ -727,7 +727,7 @@ mod x86_64 {
         /// All affected pages must be flushed from the TLB. Processor caches may also need to be
         /// flushed. Additionally, all pages that map to a given frame must have the same memory
         /// type.
-        /// 
+        ///
         /// The PAT must be supported on the CPU, otherwise a general protection exception will
         /// occur. Support can be detected using the `cpuid` instruction.
         #[inline]
