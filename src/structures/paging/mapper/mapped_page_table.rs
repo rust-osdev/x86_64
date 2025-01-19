@@ -421,6 +421,8 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
 
         let frame = p1_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         p1_entry.set_unused();
@@ -837,6 +839,8 @@ impl From<FrameError> for PageTableWalkError {
     #[inline]
     fn from(err: FrameError) -> Self {
         match err {
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
             FrameError::FrameNotPresent => PageTableWalkError::NotMapped,
         }
     }

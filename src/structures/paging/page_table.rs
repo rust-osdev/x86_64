@@ -15,6 +15,9 @@ use bitflags::bitflags;
 pub enum FrameError {
     /// The entry does not have the `PRESENT` flag set, so it isn't currently mapped to a frame.
     FrameNotPresent,
+    #[deprecated = "`HugeFrame` is no longer returned by the `frame` method, as it can now return huge pages"]
+    /// The entry does have the `HUGE_PAGE` flag set.
+    HugeFrame,
 }
 
 /// A 64-bit page table entry.

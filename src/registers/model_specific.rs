@@ -120,15 +120,15 @@ impl Pat {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0x277);
     /// The default PAT configuration following a power up or reset of the processor.
-    pub const DEFAULT: [PatFlags; 8] = [
-        PatFlags::WRITE_BACK,
-        PatFlags::WRITE_THROUGH,
-        PatFlags::UNCACHED,
-        PatFlags::UNCACHEABLE,
-        PatFlags::WRITE_BACK,
-        PatFlags::WRITE_THROUGH,
-        PatFlags::UNCACHED,
-        PatFlags::UNCACHEABLE,
+    pub const DEFAULT: [PatMemoryType; 8] = [
+        PatMemoryType::WriteBack,
+        PatMemoryType::WriteThrough,
+        PatMemoryType::Uncached,
+        PatMemoryType::Uncacheable,
+        PatMemoryType::WriteBack,
+        PatMemoryType::WriteThrough,
+        PatMemoryType::Uncached,
+        PatMemoryType::Uncacheable,
     ];
 }
 
@@ -182,48 +182,39 @@ bitflags! {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
-/// Flags for the [PAT](Pat).
-pub struct PatFlags(u8);
-impl PatFlags {
+/// Memory types used in the [PAT](Pat).
+#[repr(u8)]
+pub enum PatMemoryType {
     /// Disables caching.
-    pub const UNCACHEABLE: Self = Self(0x00);
+    Uncacheable = 0x00,
     /// Uses a write combining cache policy.
-    pub const WRITE_COMBINING: Self = Self(0x01);
+    WriteCombining = 0x01,
     /// Uses a write through cache policy.
-    pub const WRITE_THROUGH: Self = Self(0x04);
+    WriteThrough = 0x04,
     /// Uses a write protected cache policy.
-    pub const WRITE_PROTECTED: Self = Self(0x05);
+    WriteProtected = 0x05,
     /// Uses a write back cache policy.
-    pub const WRITE_BACK: Self = Self(0x06);
+    WriteBack = 0x06,
     /// Same as uncacheable, but can be overridden by MTRRs.
-    pub const UNCACHED: Self = Self(0x07);
-
+    Uncached = 0x07,
+}
+impl PatMemoryType {
     /// Converts from bits, returning `None` if the value is invalid.
     pub const fn from_bits(bits: u8) -> Option<Self> {
-        match Self(bits) {
-            Self::UNCACHEABLE
-            | Self::WRITE_COMBINING
-            | Self::WRITE_THROUGH
-            | Self::WRITE_PROTECTED
-            | Self::WRITE_BACK
-            | Self::UNCACHED => Some(Self(bits)),
+        match bits {
+            0x00 => Some(Self::Uncacheable),
+            0x01 => Some(Self::WriteCombining),
+            0x04 => Some(Self::WriteThrough),
+            0x05 => Some(Self::WriteProtected),
+            0x06 => Some(Self::WriteBack),
+            0x07 => Some(Self::Uncached),
             _ => None,
         }
     }
 
-    /// Converts from bits without checking if the value is valid.
-    ///
-    /// # Safety
-    ///
-    /// `bits` must correspond to a valid memory type, otherwise a general protection exception will
-    /// occur if it is written to the PAT.
-    pub const unsafe fn from_bits_unchecked(bits: u8) -> Self {
-        Self(bits)
-    }
-
     /// Gets the underlying bits.
     pub const fn bits(self) -> u8 {
-        self.0
+        self as u8
     }
 }
 
@@ -706,34 +697,32 @@ mod x86_64 {
     impl Pat {
         /// Reads IA32_PAT.
         ///
-        /// # Safety
-        ///
         /// The PAT must be supported on the CPU, otherwise a general protection exception will
         /// occur. Support can be detected using the `cpuid` instruction.
         #[inline]
-        pub unsafe fn read() -> [PatFlags; 8] {
+        pub fn read() -> [PatMemoryType; 8] {
             let bits = unsafe { Self::MSR.read() };
-            let mut flags = [PatFlags::UNCACHEABLE; 8];
+            let mut flags = [PatMemoryType::Uncacheable; 8];
             for (i, flag) in flags.iter_mut().enumerate() {
-                *flag = PatFlags((bits >> (8 * i)) as u8);
+                *flag = PatMemoryType::from_bits((bits >> (8 * i)) as u8).unwrap();
             }
             flags
         }
 
         /// Writes IA32_PAT.
         ///
+        /// The PAT must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        ///
         /// # Safety
         ///
         /// All affected pages must be flushed from the TLB. Processor caches may also need to be
         /// flushed. Additionally, all pages that map to a given frame must have the same memory
         /// type.
-        ///
-        /// The PAT must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
         #[inline]
-        pub unsafe fn write(flags: [PatFlags; 8]) {
+        pub unsafe fn write(table: [PatMemoryType; 8]) {
             let mut bits = 0u64;
-            for (i, flag) in flags.iter().enumerate() {
+            for (i, flag) in table.iter().enumerate() {
                 bits |= (flag.bits() as u64) << (8 * i);
             }
             let mut msr = Self::MSR;

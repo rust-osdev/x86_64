@@ -327,6 +327,8 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
         }
         p4_entry.frame::<Size4KiB>().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
@@ -448,6 +450,8 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         }
         p4_entry.frame::<Size4KiB>().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
@@ -457,6 +461,8 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         }
         p3_entry.frame::<Size4KiB>().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
@@ -607,6 +613,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         }
         p4_entry.frame::<Size4KiB>().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
@@ -616,6 +624,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         }
         p3_entry.frame::<Size4KiB>().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
@@ -625,6 +635,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         }
         p2_entry.frame::<Size4KiB>().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p1 = unsafe { &mut *(p1_ptr(page, self.recursive_index)) };
@@ -632,6 +644,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
         let frame = p1_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         p1_entry.set_unused();
