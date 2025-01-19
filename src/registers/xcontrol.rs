@@ -73,7 +73,7 @@ mod x86_64 {
                     out("rax") low, out("rdx") high,
                     options(nomem, nostack, preserves_flags),
                 );
-                (high as u64) << 32 | (low as u64)
+                ((high as u64) << 32) | (low as u64)
             }
         }
 
