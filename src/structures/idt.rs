@@ -844,8 +844,8 @@ impl<F> Entry<F> {
     #[inline]
     pub fn handler_addr(&self) -> VirtAddr {
         let addr = self.pointer_low as u64
-            | (self.pointer_middle as u64) << 16
-            | (self.pointer_high as u64) << 32;
+            | ((self.pointer_middle as u64) << 16)
+            | ((self.pointer_high as u64) << 32);
         // addr is a valid VirtAddr, as the pointer members are either all zero,
         // or have been set by set_handler_addr (which takes a VirtAddr).
         VirtAddr::new_truncate(addr)

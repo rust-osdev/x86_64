@@ -76,7 +76,7 @@ impl SegmentSelector {
     ///  * `rpl`: the requested privilege level
     #[inline]
     pub const fn new(index: u16, rpl: PrivilegeLevel) -> SegmentSelector {
-        SegmentSelector(index << 3 | (rpl as u16))
+        SegmentSelector((index << 3) | (rpl as u16))
     }
 
     /// Can be used as a selector into a non-existent segment and assigned to segment registers,
