@@ -325,7 +325,7 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
         if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
-        p4_entry.frame::<Size4KiB>().map_err(|err| match err {
+        p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             #[allow(deprecated)]
             FrameError::HugeFrame => unreachable!(),
@@ -448,7 +448,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
-        p4_entry.frame::<Size4KiB>().map_err(|err| match err {
+        p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             #[allow(deprecated)]
             FrameError::HugeFrame => unreachable!(),
@@ -459,7 +459,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
-        p3_entry.frame::<Size4KiB>().map_err(|err| match err {
+        p3_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             #[allow(deprecated)]
             FrameError::HugeFrame => unreachable!(),
@@ -611,7 +611,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
-        p4_entry.frame::<Size4KiB>().map_err(|err| match err {
+        p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             #[allow(deprecated)]
             FrameError::HugeFrame => unreachable!(),
@@ -622,7 +622,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
-        p3_entry.frame::<Size4KiB>().map_err(|err| match err {
+        p3_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             #[allow(deprecated)]
             FrameError::HugeFrame => unreachable!(),
@@ -633,7 +633,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
-        p2_entry.frame::<Size4KiB>().map_err(|err| match err {
+        p2_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
             #[allow(deprecated)]
             FrameError::HugeFrame => unreachable!(),

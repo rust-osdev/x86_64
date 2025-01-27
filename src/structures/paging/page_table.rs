@@ -15,7 +15,7 @@ use bitflags::bitflags;
 pub enum FrameError {
     /// The entry does not have the `PRESENT` flag set, so it isn't currently mapped to a frame.
     FrameNotPresent,
-    #[deprecated = "`HugeFrame` is no longer returned by the `frame` method, as it can now return huge pages"]
+    #[deprecated = "`HugeFrame` is no longer returned by the `frame` method"]
     /// The entry does have the `HUGE_PAGE` flag set.
     HugeFrame,
 }
@@ -64,7 +64,7 @@ impl PageTableEntry {
     ///
     /// - `FrameError::FrameNotPresent` if the entry doesn't have the `PRESENT` flag set.
     #[inline]
-    pub fn frame<S: PageSize>(&self) -> Result<PhysFrame<S>, FrameError> {
+    pub fn frame(&self) -> Result<PhysFrame, FrameError> {
         if self.flags().contains(PageTableFlags::PRESENT) {
             Ok(PhysFrame::containing_address(self.addr()))
         } else {

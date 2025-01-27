@@ -123,12 +123,12 @@ impl Pat {
     pub const DEFAULT: [PatMemoryType; 8] = [
         PatMemoryType::WriteBack,
         PatMemoryType::WriteThrough,
-        PatMemoryType::Uncached,
         PatMemoryType::Uncacheable,
+        PatMemoryType::StrongUncacheable,
         PatMemoryType::WriteBack,
         PatMemoryType::WriteThrough,
-        PatMemoryType::Uncached,
         PatMemoryType::Uncacheable,
+        PatMemoryType::StrongUncacheable,
     ];
 }
 
@@ -185,29 +185,29 @@ bitflags! {
 /// Memory types used in the [PAT](Pat).
 #[repr(u8)]
 pub enum PatMemoryType {
-    /// Disables caching.
-    Uncacheable = 0x00,
-    /// Uses a write combining cache policy.
+    /// Uncacheable (UC).
+    StrongUncacheable = 0x00,
+    /// Uses a write combining (WC) cache policy.
     WriteCombining = 0x01,
-    /// Uses a write through cache policy.
+    /// Uses a write through (WT) cache policy.
     WriteThrough = 0x04,
-    /// Uses a write protected cache policy.
+    /// Uses a write protected (WP) cache policy.
     WriteProtected = 0x05,
-    /// Uses a write back cache policy.
+    /// Uses a write back (WB) cache policy.
     WriteBack = 0x06,
-    /// Same as uncacheable, but can be overridden by MTRRs.
-    Uncached = 0x07,
+    /// Same as strong uncacheable, but can be overridden to be write combining by MTRRs (UC-).
+    Uncacheable = 0x07,
 }
 impl PatMemoryType {
     /// Converts from bits, returning `None` if the value is invalid.
     pub const fn from_bits(bits: u8) -> Option<Self> {
         match bits {
-            0x00 => Some(Self::Uncacheable),
+            0x00 => Some(Self::StrongUncacheable),
             0x01 => Some(Self::WriteCombining),
             0x04 => Some(Self::WriteThrough),
             0x05 => Some(Self::WriteProtected),
             0x06 => Some(Self::WriteBack),
-            0x07 => Some(Self::Uncached),
+            0x07 => Some(Self::Uncacheable),
             _ => None,
         }
     }
@@ -701,12 +701,9 @@ mod x86_64 {
         /// occur. Support can be detected using the `cpuid` instruction.
         #[inline]
         pub fn read() -> [PatMemoryType; 8] {
-            let bits = unsafe { Self::MSR.read() };
-            let mut flags = [PatMemoryType::Uncacheable; 8];
-            for (i, flag) in flags.iter_mut().enumerate() {
-                *flag = PatMemoryType::from_bits((bits >> (8 * i)) as u8).unwrap();
-            }
-            flags
+            unsafe { Self::MSR.read() }
+                .to_ne_bytes()
+                .map(|bits| PatMemoryType::from_bits(bits).unwrap())
         }
 
         /// Writes IA32_PAT.
@@ -721,10 +718,7 @@ mod x86_64 {
         /// type.
         #[inline]
         pub unsafe fn write(table: [PatMemoryType; 8]) {
-            let mut bits = 0u64;
-            for (i, flag) in table.iter().enumerate() {
-                bits |= (flag.bits() as u64) << (8 * i);
-            }
+            let bits = u64::from_ne_bytes(table.map(PatMemoryType::bits));
             let mut msr = Self::MSR;
             unsafe {
                 msr.write(bits);
