@@ -21,12 +21,8 @@ jobs:
       - name: "Checkout Repository"
         uses: actions/checkout@v4
 
-      # TODO: Remove when Python 3.11 is the default on the Gihtub Actions image
-      - name: "Install Python 3.11"
-        run: sudo apt-get -y install python3.11
-
       - name: "Run release script"
-        run: "python3.11 scripts/ci-release.py"
+        run: "python scripts/ci-release.py"
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
