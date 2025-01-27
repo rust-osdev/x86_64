@@ -71,6 +71,10 @@ pub struct SCet;
 #[derive(Debug)]
 pub struct Pat;
 
+/// IA32_APIC_BASE: status and location of the local APIC
+#[derive(Debug)]
+pub struct Apic;
+
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0080);
@@ -130,6 +134,11 @@ impl Pat {
         PatMemoryType::Uncacheable,
         PatMemoryType::StrongUncacheable,
     ];
+}
+
+impl Apic {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0x1B);
 }
 
 bitflags! {
@@ -215,6 +224,31 @@ impl PatMemoryType {
     /// Gets the underlying bits.
     pub const fn bits(self) -> u8 {
         self as u8
+    }
+}
+
+bitflags! {
+    /// Flags for the Advanced Programmable Interrupt Controler Base Register.
+    #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
+    pub struct ApicFlags: u64 {
+        // bits 0 - 7 are reserved.
+        /// Indicates whether the current processor is the bootstrap processor
+        const BSP = 1 << 8;
+        // bits 9 - 10 are reserved.
+        /// Enables or disables the local Apic
+        const LAPIC_ENABLE = 1 << 11;
+        /// Specifies the base address of the APIC registers. This 24-bit value is extended by 12 bits at the low end to form the base address.
+        const APIC_BASE = 0b111111111111111111111111 << 12;
+         // bits 36-63 reserved
+    }
+}
+
+impl ApicFlags {
+    /// Returns the physical address of the apic registers
+    #[inline]
+    pub fn address(&self) -> u64 {
+        self.bits() & 0b11111111111111111111000000000000
     }
 }
 
@@ -723,6 +757,77 @@ mod x86_64 {
             unsafe {
                 msr.write(bits);
             }
+        }
+    }
+
+    impl Apic {
+        /// Reads the IA32_APIC_BASE.
+        ///
+        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        #[inline]
+        pub fn read() -> ApicFlags {
+            ApicFlags::from_bits_truncate(Self::read_raw())
+        }
+
+        /// Reads the raw IA32_APIC_BASE.
+        ///
+        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        #[inline]
+        pub fn read_raw() -> u64 {
+            unsafe { Self::MSR.read() }
+        }
+
+        /// Writes the IA32_APIC_BASE preserving reserved values.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        #[inline]
+        pub fn write(flags: ApicFlags) {
+            let old_value = Self::read_raw();
+            let reserved = old_value & !(ApicFlags::all().bits());
+            let new_value = reserved | flags.bits();
+
+            unsafe {
+                Self::write_raw(new_value);
+            }
+        }
+
+        /// Writes the IA32_APIC_BASE flags.
+        ///
+        /// Does not preserve any bits, including reserved fields.
+        ///
+        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to set reserved bits to `1`.
+        #[inline]
+        pub unsafe fn write_raw(flags: u64) {
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(flags);
+            }
+        }
+
+        /// Update IA32_APIC_BASE flags.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut ApicFlags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            Self::write(flags);
         }
     }
 }
