@@ -322,9 +322,13 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
 
+        if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
         p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
@@ -441,16 +445,24 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
     ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
+        if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
         p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
+        if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
         p3_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
@@ -596,23 +608,35 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
     ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
+        if p4_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
         p4_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p3 = unsafe { &mut *(p3_ptr(page, self.recursive_index)) };
         let p3_entry = &p3[page.p3_index()];
+        if p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
         p3_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p2 = unsafe { &mut *(p2_ptr(page, self.recursive_index)) };
         let p2_entry = &p2[page.p2_index()];
+        if p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(UnmapError::ParentEntryHugePage);
+        }
         p2_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         let p1 = unsafe { &mut *(p1_ptr(page, self.recursive_index)) };
@@ -620,7 +644,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
         let frame = p1_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            #[allow(deprecated)]
+            FrameError::HugeFrame => unreachable!(),
         })?;
 
         p1_entry.set_unused();
@@ -818,9 +843,6 @@ impl Translate for RecursivePageTable<'_> {
         if p1_entry.is_unused() {
             return TranslateResult::NotMapped;
         }
-        if p1_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
-            panic!("level 1 entry has huge page bit set")
-        }
 
         let frame = match PhysFrame::from_start_address(p1_entry.addr()) {
             Ok(frame) => frame,
@@ -890,6 +912,9 @@ impl CleanUp for RecursivePageTable<'_> {
                         !(level == PageTableLevel::Four && *i == recursive_index.into())
                     })
                 {
+                    if entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+                        continue;
+                    }
                     if let Ok(frame) = entry.frame() {
                         let start = VirtAddr::forward_checked_impl(
                             table_addr,
