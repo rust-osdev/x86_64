@@ -773,7 +773,7 @@ mod x86_64 {
         pub fn read_raw() -> (PhysFrame, u64) {
             let raw = unsafe { Self::MSR.read() };
             // extract bits 32 - 51 (incl.)
-            let addr = PhysAddr::new((raw >> 32) & 0xFFFFF);
+            let addr = PhysAddr::new(raw & 0x_000F_FFFF_FFFF_F000);
             let frame = PhysFrame::containing_address(addr);
             (frame, raw)
         }
