@@ -235,7 +235,10 @@ bitflags! {
         // bits 0 - 7 are reserved.
         /// Indicates whether the current processor is the bootstrap processor
         const BSP = 1 << 8;
-        // bits 9 - 10 are reserved.
+        // bit 9 is reserved.
+        /// Places the local APIC in the x2APIC mode. Processor support for x2APIC feature can be
+        /// detected using the `cpuid` instruction. (CPUID.(EAX=1):ECX.21)
+        const X2APIC_ENABLE = 1 << 10;
         /// Enables or disables the local Apic
         const LAPIC_ENABLE = 1 << 11;
         /// Specifies the base address of the APIC registers. This 24-bit value is extended by 12 bits at the low end to form the base address.
