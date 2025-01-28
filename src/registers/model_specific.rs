@@ -72,8 +72,10 @@ pub struct SCet;
 pub struct Pat;
 
 /// IA32_APIC_BASE: status and location of the local APIC
+///
+/// IA32_APIC_BASE must be supported on the CPU, otherwise, a general protection exception will occur. Support can be detected using the `cpuid` instruction.
 #[derive(Debug)]
-pub struct Apic;
+pub struct ApicBase;
 
 impl Efer {
     /// The underlying model specific register.
@@ -136,7 +138,7 @@ impl Pat {
     ];
 }
 
-impl Apic {
+impl ApicBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0x1B);
 }
@@ -231,7 +233,7 @@ bitflags! {
     /// Flags for the Advanced Programmable Interrupt Controler Base Register.
     #[repr(transparent)]
     #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
-    pub struct ApicFlags: u64 {
+    pub struct ApicBaseFlags: u64 {
         // bits 0 - 7 are reserved.
         /// Indicates whether the current processor is the bootstrap processor
         const BSP = 1 << 8;
@@ -754,44 +756,35 @@ mod x86_64 {
         }
     }
 
-    impl Apic {
-        /// Reads the IA32_APIC_BASE.
-        ///
-        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
+    impl ApicBase {
+        /// Reads the IA32_APIC_BASE MSR.
         #[inline]
-        pub fn read() -> (PhysFrame, ApicFlags) {
+        pub fn read() -> (PhysFrame, ApicBaseFlags) {
             let (frame, flags) = Self::read_raw();
-            (frame, ApicFlags::from_bits_truncate(flags))
+            (frame, ApicBaseFlags::from_bits_truncate(flags))
         }
 
-        /// Reads the raw IA32_APIC_BASE.
-        ///
-        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
+        /// Reads the raw IA32_APIC_BASE MSR.
         #[inline]
         pub fn read_raw() -> (PhysFrame, u64) {
             let raw = unsafe { Self::MSR.read() };
-            // extract bits 32 - 51 (incl.)
-            let addr = PhysAddr::new(raw & 0x_000F_FFFF_FFFF_F000);
+            // extract bits 12 - 51 (incl.)
+            let addr = PhysAddr::new_truncate(raw);
             let frame = PhysFrame::containing_address(addr);
             (frame, raw)
         }
 
-        /// Writes the IA32_APIC_BASE preserving reserved values.
+        /// Writes the IA32_APIC_BASE MSR preserving reserved values.
         ///
         /// Preserves the value of reserved fields.
-        ///
-        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
         ///
         /// ## Safety
         ///
         /// Unsafe because changing the APIC base address allows hijacking a page of physical memory space in ways that would violate Rust's memory rules.
         #[inline]
-        pub unsafe fn write(frame: PhysFrame, flags: ApicFlags) {
+        pub unsafe fn write(frame: PhysFrame, flags: ApicBaseFlags) {
             let (_, old_flags) = Self::read_raw();
-            let reserved = old_flags & !(ApicFlags::all().bits());
+            let reserved = old_flags & !(ApicBaseFlags::all().bits());
             let new_flags = reserved | flags.bits();
 
             unsafe {
@@ -799,12 +792,9 @@ mod x86_64 {
             }
         }
 
-        /// Writes the IA32_APIC_BASE flags.
+        /// Writes the IA32_APIC_BASE MSR flags.
         ///
         /// Does not preserve any bits, including reserved fields.
-        ///
-        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
         ///
         /// ## Safety
         ///
