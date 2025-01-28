@@ -241,17 +241,6 @@ bitflags! {
         const X2APIC_ENABLE = 1 << 10;
         /// Enables or disables the local Apic
         const LAPIC_ENABLE = 1 << 11;
-        /// Specifies the base address of the APIC registers. This 24-bit value is extended by 12 bits at the low end to form the base address.
-        const APIC_BASE = 0b111111111111111111111111 << 12;
-         // bits 36-63 reserved
-    }
-}
-
-impl ApicFlags {
-    /// Returns the physical address of the apic registers
-    #[inline]
-    pub fn address(&self) -> u64 {
-        self.bits() & 0b11111111111111111111000000000000
     }
 }
 
@@ -262,7 +251,9 @@ mod x86_64 {
     use crate::registers::rflags::RFlags;
     use crate::structures::gdt::SegmentSelector;
     use crate::structures::paging::Page;
+    use crate::structures::paging::PhysFrame;
     use crate::structures::paging::Size4KiB;
+    use crate::PhysAddr;
     use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
@@ -769,8 +760,9 @@ mod x86_64 {
         /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
         /// occur. Support can be detected using the `cpuid` instruction.
         #[inline]
-        pub fn read() -> ApicFlags {
-            ApicFlags::from_bits_truncate(Self::read_raw())
+        pub fn read() -> (PhysFrame, ApicFlags) {
+            let (frame, flags) = Self::read_raw();
+            (frame, ApicFlags::from_bits_truncate(flags))
         }
 
         /// Reads the raw IA32_APIC_BASE.
@@ -778,8 +770,12 @@ mod x86_64 {
         /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
         /// occur. Support can be detected using the `cpuid` instruction.
         #[inline]
-        pub fn read_raw() -> u64 {
-            unsafe { Self::MSR.read() }
+        pub fn read_raw() -> (PhysFrame, u64) {
+            let raw = unsafe { Self::MSR.read() };
+            // extract bits 32 - 51 (incl.)
+            let addr = PhysAddr::new((raw >> 32) & 0xFFFFF);
+            let frame = PhysFrame::containing_address(addr);
+            (frame, raw)
         }
 
         /// Writes the IA32_APIC_BASE preserving reserved values.
@@ -788,14 +784,18 @@ mod x86_64 {
         ///
         /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
         /// occur. Support can be detected using the `cpuid` instruction.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because changing the APIC base address allows hijacking a page of physical memory space in ways that would violate Rust's memory rules.
         #[inline]
-        pub fn write(flags: ApicFlags) {
-            let old_value = Self::read_raw();
-            let reserved = old_value & !(ApicFlags::all().bits());
-            let new_value = reserved | flags.bits();
+        pub unsafe fn write(frame: PhysFrame, flags: ApicFlags) {
+            let (_, old_flags) = Self::read_raw();
+            let reserved = old_flags & !(ApicFlags::all().bits());
+            let new_flags = reserved | flags.bits();
 
             unsafe {
-                Self::write_raw(new_value);
+                Self::write_raw(frame, new_flags);
             }
         }
 
@@ -808,29 +808,14 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// Unsafe because it's possible to set reserved bits to `1`.
+        /// Unsafe because it's possible to set reserved bits to `1` and changing the APIC base address allows hijacking a page of physical memory space in ways that would violate Rust's memory rules.
         #[inline]
-        pub unsafe fn write_raw(flags: u64) {
+        pub unsafe fn write_raw(frame: PhysFrame, flags: u64) {
+            let addr = frame.start_address();
             let mut msr = Self::MSR;
             unsafe {
-                msr.write(flags);
+                msr.write(flags | addr.as_u64());
             }
-        }
-
-        /// Update IA32_APIC_BASE flags.
-        ///
-        /// Preserves the value of reserved fields.
-        ///
-        /// The APIC_BASE must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
-        #[inline]
-        pub fn update<F>(f: F)
-        where
-            F: FnOnce(&mut ApicFlags),
-        {
-            let mut flags = Self::read();
-            f(&mut flags);
-            Self::write(flags);
         }
     }
 }
