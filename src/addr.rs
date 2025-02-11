@@ -366,7 +366,7 @@ impl Add<u64> for VirtAddr {
     type Output = Self;
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
-        VirtAddr::new(self.0 + rhs)
+        VirtAddr::new(self.0.checked_add(rhs).unwrap())
     }
 }
 
@@ -593,7 +593,7 @@ impl Add<u64> for PhysAddr {
     type Output = Self;
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
-        PhysAddr::new(self.0 + rhs)
+        PhysAddr::new(self.0.checked_add(rhs).unwrap())
     }
 }
 
@@ -662,6 +662,30 @@ pub const fn align_up(addr: u64, align: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[should_panic]
+    pub fn add_overflow_virtaddr() {
+        let _ = VirtAddr::new(0xffff_ffff_ffff_ffff) + 1;
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn add_overflow_physaddr() {
+        let _ = PhysAddr::new(0x000f_ffff_ffff_ffff) + 1;
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn sub_underflow_virtaddr() {
+        let _ = VirtAddr::new(0) - 1;
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn sub_overflow_physaddr() {
+        let _ = PhysAddr::new(0) - 1;
+    }
 
     #[test]
     pub fn virtaddr_new_truncate() {
