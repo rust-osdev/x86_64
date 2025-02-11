@@ -672,7 +672,7 @@ mod tests {
     #[test]
     #[should_panic]
     pub fn add_overflow_physaddr() {
-        let _ = PhysAddr::new(0x000f_ffff_ffff_ffff) + 1;
+        let _ = PhysAddr::new(0x000f_ffff_ffff_ffff) + 0xffff_0000_0000_0000;
     }
 
     #[test]
