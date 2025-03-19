@@ -1,7 +1,10 @@
 //! Provides a type for the task state segment structure.
 
 use crate::VirtAddr;
-use core::mem::size_of;
+use core::{
+    fmt::{self, Display},
+    mem::size_of,
+};
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
@@ -81,6 +84,34 @@ pub enum InvalidIoMap {
         /// The actual `iomap_base` set in the `TaskStateSegment` struct.
         got: u16,
     },
+}
+
+impl Display for InvalidIoMap {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            InvalidIoMap::IoMapBeforeTss => {
+                write!(f, "the IO permissions bitmap is before the TSS")
+            }
+            InvalidIoMap::TooFarFromTss { distance } => write!(
+                f,
+                "the IO permissions bitmap is too far from the TSS (distance {distance})"
+            ),
+            InvalidIoMap::InvalidTerminatingByte { byte } => write!(
+                f,
+                "The final byte of the IO permissions bitmap was not 0xff ({byte}"
+            ),
+            InvalidIoMap::TooLong { len } => {
+                write!(
+                    f,
+                    "The IO permissions bitmap exceeds the maximum length ({len} > 8193)"
+                )
+            }
+            InvalidIoMap::InvalidBase { expected, got } => write!(
+                f,
+                "the `iomap_base` in the `TaskStateSegment` struct was not what was expected (expected {expected}, got {got})"
+            ),
+        }
+    }
 }
 
 #[cfg(test)]
