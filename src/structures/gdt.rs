@@ -444,6 +444,27 @@ impl Descriptor {
     }
 
     /// Creates a TSS system descriptor for the given TSS, setting up the IO permissions bitmap.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::structures::gdt::Descriptor;
+    /// use x86_64::structures::tss::TaskStateSegment;
+    ///
+    /// /// A helper that places some I/O map bytes behind a TSS.
+    /// #[repr(C)]
+    /// struct TssWithIOMap {
+    ///     tss: TaskStateSegment,
+    ///     iomap: [u8; 5],
+    /// }
+    ///
+    /// static TSS: TssWithIOMap = TssWithIOMap {
+    ///     tss: TaskStateSegment::new(),
+    ///     iomap: [0xff, 0xff, 0x00, 0x80, 0xff],
+    /// };
+    ///
+    /// let tss = Descriptor::tss_segment_with_iomap(&TSS.tss, &TSS.iomap).unwrap();
+    /// ```
     pub fn tss_segment_with_iomap(
         tss: &'static TaskStateSegment,
         iomap: &'static [u8],
