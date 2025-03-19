@@ -497,7 +497,7 @@ impl Descriptor {
         low.set_bits(16..40, ptr.get_bits(0..24));
         low.set_bits(56..64, ptr.get_bits(24..32));
         // limit (the `-1` is needed since the bound is inclusive)
-        let iomap_limit = unsafe { (*tss).iomap_base } as u64 + iomap_size as u64;
+        let iomap_limit = u64::from(unsafe { (*tss).iomap_base }) + u64::from(iomap_size);
         low.set_bits(
             0..16,
             cmp::max(mem::size_of::<TaskStateSegment>() as u64, iomap_limit) - 1,
