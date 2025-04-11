@@ -9,6 +9,8 @@ pub mod idt;
 pub mod paging;
 pub mod port;
 pub mod tss;
+#[cfg(feature = "amd_sev")]
+pub mod amd_sev;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.

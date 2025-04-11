@@ -26,8 +26,10 @@ volatile = "0.4.4"
 rustversion = "1.0.5"
 
 [features]
-default = ["nightly", "instructions"]
+default = ["nightly", "instructions", "amd_sev"]
 instructions = []
+amd_sev = ["dynamic_flags"]
+dynamic_flags = []
 nightly = ["const_fn", "step_trait", "abi_x86_interrupt", "asm_const"]
 abi_x86_interrupt = []
 # deprecated, no longer needed
