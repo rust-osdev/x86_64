@@ -364,6 +364,18 @@ impl fmt::Pointer for VirtAddr {
 
 impl Add<u64> for VirtAddr {
     type Output = Self;
+
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Add an offset to a virtual address.
+    ///
+    /// This function performs normal arithmetic addition and doesn't jump the
+    /// address gap. If you're looking for a successor operation that jumps the
+    /// address gap, use [`Step::forward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
         VirtAddr::try_new(
@@ -376,6 +388,17 @@ impl Add<u64> for VirtAddr {
 }
 
 impl AddAssign<u64> for VirtAddr {
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Add an offset to a virtual address.
+    ///
+    /// This function performs normal arithmetic addition and doesn't jump the
+    /// address gap. If you're looking for a successor operation that jumps the
+    /// address gap, use [`Step::forward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
@@ -384,6 +407,18 @@ impl AddAssign<u64> for VirtAddr {
 
 impl Sub<u64> for VirtAddr {
     type Output = Self;
+
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Subtract an offset from a virtual address.
+    ///
+    /// This function performs normal arithmetic subtraction and doesn't jump
+    /// the address gap. If you're looking for a predecessor operation that
+    /// jumps the address gap, use [`Step::backward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
         VirtAddr::try_new(
@@ -396,6 +431,17 @@ impl Sub<u64> for VirtAddr {
 }
 
 impl SubAssign<u64> for VirtAddr {
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Subtract an offset from a virtual address.
+    ///
+    /// This function performs normal arithmetic subtraction and doesn't jump
+    /// the address gap. If you're looking for a predecessor operation that
+    /// jumps the address gap, use [`Step::backward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
@@ -404,6 +450,12 @@ impl SubAssign<u64> for VirtAddr {
 
 impl Sub<VirtAddr> for VirtAddr {
     type Output = u64;
+
+    /// Returns the difference between two addresses.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow.
     #[inline]
     fn sub(self, rhs: VirtAddr) -> Self::Output {
         self.as_u64()
