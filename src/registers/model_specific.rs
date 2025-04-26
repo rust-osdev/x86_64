@@ -67,10 +67,6 @@ pub struct UCet;
 #[derive(Debug)]
 pub struct SCet;
 
-/// IA32_PAT: Page Attribute Table.
-#[derive(Debug)]
-pub struct Pat;
-
 /// IA32_APIC_BASE: status and location of the local APIC
 ///
 /// IA32_APIC_BASE must be supported on the CPU, otherwise, a general protection exception will occur. Support can be detected using the `cpuid` instruction.
@@ -120,22 +116,6 @@ impl UCet {
 impl SCet {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0x6A2);
-}
-
-impl Pat {
-    /// The underlying model specific register.
-    pub const MSR: Msr = Msr(0x277);
-    /// The default PAT configuration following a power up or reset of the processor.
-    pub const DEFAULT: [PatMemoryType; 8] = [
-        PatMemoryType::WriteBack,
-        PatMemoryType::WriteThrough,
-        PatMemoryType::Uncacheable,
-        PatMemoryType::StrongUncacheable,
-        PatMemoryType::WriteBack,
-        PatMemoryType::WriteThrough,
-        PatMemoryType::Uncacheable,
-        PatMemoryType::StrongUncacheable,
-    ];
 }
 
 impl ApicBase {
@@ -189,43 +169,6 @@ bitflags! {
         const IBT_SUPPRESS_ENABLE = 1 << 10;
         /// Is IBT waiting for a branch to return? (read-only, TRACKER)
         const IBT_TRACKED = 1 << 11;
-    }
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
-/// Memory types used in the [PAT](Pat).
-#[repr(u8)]
-pub enum PatMemoryType {
-    /// Uncacheable (UC).
-    StrongUncacheable = 0x00,
-    /// Uses a write combining (WC) cache policy.
-    WriteCombining = 0x01,
-    /// Uses a write through (WT) cache policy.
-    WriteThrough = 0x04,
-    /// Uses a write protected (WP) cache policy.
-    WriteProtected = 0x05,
-    /// Uses a write back (WB) cache policy.
-    WriteBack = 0x06,
-    /// Same as strong uncacheable, but can be overridden to be write combining by MTRRs (UC-).
-    Uncacheable = 0x07,
-}
-impl PatMemoryType {
-    /// Converts from bits, returning `None` if the value is invalid.
-    pub const fn from_bits(bits: u8) -> Option<Self> {
-        match bits {
-            0x00 => Some(Self::StrongUncacheable),
-            0x01 => Some(Self::WriteCombining),
-            0x04 => Some(Self::WriteThrough),
-            0x05 => Some(Self::WriteProtected),
-            0x06 => Some(Self::WriteBack),
-            0x07 => Some(Self::Uncacheable),
-            _ => None,
-        }
-    }
-
-    /// Gets the underlying bits.
-    pub const fn bits(self) -> u8 {
-        self as u8
     }
 }
 
@@ -721,38 +664,6 @@ mod x86_64 {
             let (mut flags, mut legacy_bitmap) = Self::read();
             f(&mut flags, &mut legacy_bitmap);
             Self::write(flags, legacy_bitmap);
-        }
-    }
-
-    impl Pat {
-        /// Reads IA32_PAT.
-        ///
-        /// The PAT must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
-        #[inline]
-        pub fn read() -> [PatMemoryType; 8] {
-            unsafe { Self::MSR.read() }
-                .to_ne_bytes()
-                .map(|bits| PatMemoryType::from_bits(bits).unwrap())
-        }
-
-        /// Writes IA32_PAT.
-        ///
-        /// The PAT must be supported on the CPU, otherwise a general protection exception will
-        /// occur. Support can be detected using the `cpuid` instruction.
-        ///
-        /// # Safety
-        ///
-        /// All affected pages must be flushed from the TLB. Processor caches may also need to be
-        /// flushed. Additionally, all pages that map to a given frame must have the same memory
-        /// type.
-        #[inline]
-        pub unsafe fn write(table: [PatMemoryType; 8]) {
-            let bits = u64::from_ne_bytes(table.map(PatMemoryType::bits));
-            let mut msr = Self::MSR;
-            unsafe {
-                msr.write(bits);
-            }
         }
     }
 

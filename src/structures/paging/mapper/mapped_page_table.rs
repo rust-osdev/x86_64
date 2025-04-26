@@ -421,8 +421,7 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
 
         let frame = p1_entry.frame().map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            #[allow(deprecated)]
-            FrameError::HugeFrame => unreachable!(),
+            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
         })?;
 
         p1_entry.set_unused();
@@ -712,9 +711,6 @@ impl<P: PageTableFrameMapping> PageTableWalker<P> {
         &self,
         entry: &'b PageTableEntry,
     ) -> Result<&'b PageTable, PageTableWalkError> {
-        if entry.flags().contains(PageTableFlags::HUGE_PAGE) {
-            return Err(PageTableWalkError::MappedToHugePage);
-        }
         let page_table_ptr = self
             .page_table_frame_mapping
             .frame_to_pointer(entry.frame()?);
@@ -733,9 +729,6 @@ impl<P: PageTableFrameMapping> PageTableWalker<P> {
         &self,
         entry: &'b mut PageTableEntry,
     ) -> Result<&'b mut PageTable, PageTableWalkError> {
-        if entry.flags().contains(PageTableFlags::HUGE_PAGE) {
-            return Err(PageTableWalkError::MappedToHugePage);
-        }
         let page_table_ptr = self
             .page_table_frame_mapping
             .frame_to_pointer(entry.frame()?);
@@ -839,8 +832,7 @@ impl From<FrameError> for PageTableWalkError {
     #[inline]
     fn from(err: FrameError) -> Self {
         match err {
-            #[allow(deprecated)]
-            FrameError::HugeFrame => unreachable!(),
+            FrameError::HugeFrame => PageTableWalkError::MappedToHugePage,
             FrameError::FrameNotPresent => PageTableWalkError::NotMapped,
         }
     }
