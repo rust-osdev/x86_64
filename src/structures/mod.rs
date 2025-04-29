@@ -6,7 +6,7 @@ pub mod gdt;
 
 pub mod idt;
 
-#[cfg(feature = "amd_sev")]
+#[cfg(feature = "memory_encryption")]
 pub mod mem_encrypt;
 pub mod paging;
 pub mod port;

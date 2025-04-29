@@ -1,3 +1,10 @@
+//! Provides glue to support memory encryption features of some CPUs.
+//!
+//! Memory encryption typically relies on using a physical address bit in the page table entry to
+//! mark a page as encrypted. This module provides a function that, given a c-bit, updates the
+//! dynamic page-table flags structure to ensure that the flag is treated properly and not
+//! returned as part of the physical address.
+
 use core::sync::atomic::{AtomicU64, Ordering};
 
 use crate::structures::paging::page_table::PHYSICAL_ADDRESS_MASK;

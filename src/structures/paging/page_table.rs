@@ -2,12 +2,13 @@
 
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
+use bitflags::bitflags;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
+#[cfg(feature = "dynamic_flags")]
 use core::sync::atomic::{AtomicU64, Ordering};
-use bitflags::bitflags;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -49,19 +50,13 @@ impl PageTableEntry {
         self.entry = 0;
     }
 
-    /// Returns the flags of this entry.
-    #[inline]
-    pub fn flags(&self) -> PageTableFlags {
-        PageTableFlags::from_address_truncated(self.entry)
-    }
-
     /// Returns the physical frame mapped by this entry.
     ///
     /// Returns the following errors:
     ///
     /// - `FrameError::FrameNotPresent` if the entry doesn't have the `PRESENT` flag set.
     /// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the
-    ///    `addr` function must be used)
+    ///   `addr` function must be used)
     #[inline]
     pub fn frame(&self) -> Result<PhysFrame, FrameError> {
         if !self.flags().contains(PageTableFlags::PRESENT) {
@@ -76,14 +71,14 @@ impl PageTableEntry {
     /// Sets the flags of this entry.
     #[inline]
     pub fn set_flags(&mut self, flags: PageTableFlags) {
-        self.entry = self.addr().as_u64() | flags.bits_dynamic();
+        self.entry = self.addr().as_u64() | flags.bits();
     }
 
     /// Map the entry to the specified physical address with the specified flags.
     #[inline]
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
         assert!(addr.is_aligned(Size4KiB::SIZE));
-        self.entry = (addr.as_u64()) | flags.bits_dynamic();
+        self.entry = (addr.as_u64()) | flags.bits();
     }
 
     /// Map the entry to the specified physical frame with the specified flags.
@@ -101,6 +96,14 @@ impl PageTableEntry {
     pub fn addr(&self) -> PhysAddr {
         PhysAddr::new(self.entry & PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
     }
+
+    /// Returns the flags of this entry.
+    #[inline]
+    pub fn flags(&self) -> PageTableFlags {
+        PageTableFlags::from_bits_retain(
+            self.entry & !PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed),
+        )
+    }
 }
 
 #[cfg(not(feature = "dynamic_flags"))]
@@ -109,6 +112,12 @@ impl PageTableEntry {
     #[inline]
     pub fn addr(&self) -> PhysAddr {
         PhysAddr::new(self.entry & 0x000f_ffff_ffff_f000u64)
+    }
+
+    /// Returns the flags of this entry.
+    #[inline]
+    pub fn flags(&self) -> PageTableFlags {
+        PageTableFlags::from_bits_truncate(self.entry)
     }
 }
 
@@ -190,28 +199,6 @@ bitflags! {
         /// Can be only used when the no-execute page protection feature is enabled in the EFER
         /// register.
         const NO_EXECUTE =      1 << 63;
-    }
-}
-
-#[cfg(feature = "dynamic_flags")]
-impl PageTableFlags {
-    pub fn from_address_truncated(address: u64) -> PageTableFlags {
-        PageTableFlags::from_bits_retain(address & !PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
-    }
-
-    pub fn bits_dynamic(&self) -> u64 {
-        self.bits() & !PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
-    }
-}
-
-#[cfg(not(feature = "dynamic_flags"))]
-impl PageTableFlags {
-    pub const fn from_address_truncated(address: u64) -> PageTableFlags {
-        PageTableFlags::from_bits_truncate(address)
-    }
-
-    pub const fn bits_dynamic(&self) -> u64 {
-        self.bits()
     }
 }
 
