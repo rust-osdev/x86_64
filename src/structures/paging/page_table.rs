@@ -1,12 +1,12 @@
 //! Abstractions for page tables and page table entries.
 
+use super::{PageSize, PhysFrame, Size4KiB};
+use crate::addr::PhysAddr;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
-use super::{PageSize, PhysFrame, Size4KiB};
-use crate::addr::PhysAddr;
-
+use core::sync::atomic::{AtomicU64, Ordering};
 use bitflags::bitflags;
 
 /// The error returned by the `PageTableEntry::frame` method.
@@ -21,7 +21,7 @@ pub enum FrameError {
 
 /// The mask used to remove flags from a page table entry to obtain the physical address
 #[cfg(feature = "dynamic_flags")]
-pub(crate) static PHYSICAL_ADDRESS_MASK: u64 = 0x000f_ffff_ffff_f000u64;
+pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_f000u64);
 
 /// A 64-bit page table entry.
 #[derive(Clone)]
@@ -51,7 +51,7 @@ impl PageTableEntry {
 
     /// Returns the flags of this entry.
     #[inline]
-    pub const fn flags(&self) -> PageTableFlags {
+    pub fn flags(&self) -> PageTableFlags {
         PageTableFlags::from_address_truncated(self.entry)
     }
 
@@ -99,7 +99,7 @@ impl PageTableEntry {
     /// Returns the physical address mapped by this entry, might be zero.
     #[inline]
     pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & PHYSICAL_ADDRESS_MASK)
+        PhysAddr::new(self.entry & PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
     }
 }
 
@@ -111,7 +111,6 @@ impl PageTableEntry {
         PhysAddr::new(self.entry & 0x000f_ffff_ffff_f000u64)
     }
 }
-
 
 impl Default for PageTableEntry {
     #[inline]
@@ -191,25 +190,19 @@ bitflags! {
         /// Can be only used when the no-execute page protection feature is enabled in the EFER
         /// register.
         const NO_EXECUTE =      1 << 63;
-
-        // Consider other as defined
-        #[cfg(feature = "dynamic_flags")]
-        const _ = !0;
     }
 }
-
 
 #[cfg(feature = "dynamic_flags")]
 impl PageTableFlags {
-    pub const fn from_address_truncated(address: u64) -> PageTableFlags {
-        PageTableFlags::from_bits_retain(address & !PHYSICAL_ADDRESS_MASK)
+    pub fn from_address_truncated(address: u64) -> PageTableFlags {
+        PageTableFlags::from_bits_retain(address & !PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
     }
 
-    pub const fn bits_dynamic(&self) -> u64 {
-        self.bits() & !PHYSICAL_ADDRESS_MASK
+    pub fn bits_dynamic(&self) -> u64 {
+        self.bits() & !PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
     }
 }
-
 
 #[cfg(not(feature = "dynamic_flags"))]
 impl PageTableFlags {
@@ -221,7 +214,6 @@ impl PageTableFlags {
         self.bits()
     }
 }
-
 
 /// The number of entries in a page table.
 const ENTRY_COUNT: usize = 512;
