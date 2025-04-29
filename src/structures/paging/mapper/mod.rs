@@ -441,6 +441,12 @@ impl<S: PageSize> MapperFlush<S> {
     /// Don't flush the TLB and silence the “must be used” warning.
     #[inline]
     pub fn ignore(self) {}
+
+    /// Returns the page to be flushed.
+    #[inline]
+    pub fn page(&self) -> Page<S> {
+        self.0
+    }
 }
 
 /// This type represents a change of a page table requiring a complete TLB flush

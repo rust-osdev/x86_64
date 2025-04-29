@@ -364,13 +364,41 @@ impl fmt::Pointer for VirtAddr {
 
 impl Add<u64> for VirtAddr {
     type Output = Self;
+
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Add an offset to a virtual address.
+    ///
+    /// This function performs normal arithmetic addition and doesn't jump the
+    /// address gap. If you're looking for a successor operation that jumps the
+    /// address gap, use [`Step::forward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
-        VirtAddr::new(self.0 + rhs)
+        VirtAddr::try_new(
+            self.0
+                .checked_add(rhs)
+                .expect("attempt to add with overflow"),
+        )
+        .expect("attempt to add resulted in non-canonical virtual address")
     }
 }
 
 impl AddAssign<u64> for VirtAddr {
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Add an offset to a virtual address.
+    ///
+    /// This function performs normal arithmetic addition and doesn't jump the
+    /// address gap. If you're looking for a successor operation that jumps the
+    /// address gap, use [`Step::forward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
@@ -379,13 +407,41 @@ impl AddAssign<u64> for VirtAddr {
 
 impl Sub<u64> for VirtAddr {
     type Output = Self;
+
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Subtract an offset from a virtual address.
+    ///
+    /// This function performs normal arithmetic subtraction and doesn't jump
+    /// the address gap. If you're looking for a predecessor operation that
+    /// jumps the address gap, use [`Step::backward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
-        VirtAddr::new(self.0.checked_sub(rhs).unwrap())
+        VirtAddr::try_new(
+            self.0
+                .checked_sub(rhs)
+                .expect("attempt to subtract with overflow"),
+        )
+        .expect("attempt to subtract resulted in non-canonical virtual address")
     }
 }
 
 impl SubAssign<u64> for VirtAddr {
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Subtract an offset from a virtual address.
+    ///
+    /// This function performs normal arithmetic subtraction and doesn't jump
+    /// the address gap. If you're looking for a predecessor operation that
+    /// jumps the address gap, use [`Step::backward`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow or if the result is not a
+    /// canonical address.
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
@@ -394,9 +450,17 @@ impl SubAssign<u64> for VirtAddr {
 
 impl Sub<VirtAddr> for VirtAddr {
     type Output = u64;
+
+    /// Returns the difference between two addresses.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic on overflow.
     #[inline]
     fn sub(self, rhs: VirtAddr) -> Self::Output {
-        self.as_u64().checked_sub(rhs.as_u64()).unwrap()
+        self.as_u64()
+            .checked_sub(rhs.as_u64())
+            .expect("attempt to subtract with overflow")
     }
 }
 
@@ -593,7 +657,7 @@ impl Add<u64> for PhysAddr {
     type Output = Self;
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
-        PhysAddr::new(self.0 + rhs)
+        PhysAddr::new(self.0.checked_add(rhs).unwrap())
     }
 }
 
@@ -662,6 +726,30 @@ pub const fn align_up(addr: u64, align: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[should_panic]
+    pub fn add_overflow_virtaddr() {
+        let _ = VirtAddr::new(0xffff_ffff_ffff_ffff) + 1;
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn add_overflow_physaddr() {
+        let _ = PhysAddr::new(0x000f_ffff_ffff_ffff) + 0xffff_0000_0000_0000;
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn sub_underflow_virtaddr() {
+        let _ = VirtAddr::new(0) - 1;
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn sub_overflow_physaddr() {
+        let _ = PhysAddr::new(0) - 1;
+    }
 
     #[test]
     pub fn virtaddr_new_truncate() {

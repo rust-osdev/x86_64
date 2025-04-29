@@ -67,6 +67,12 @@ pub struct UCet;
 #[derive(Debug)]
 pub struct SCet;
 
+/// IA32_APIC_BASE: status and location of the local APIC
+///
+/// IA32_APIC_BASE must be supported on the CPU, otherwise, a general protection exception will occur. Support can be detected using the `cpuid` instruction.
+#[derive(Debug)]
+pub struct ApicBase;
+
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0080);
@@ -110,6 +116,11 @@ impl UCet {
 impl SCet {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0x6A2);
+}
+
+impl ApicBase {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0x1B);
 }
 
 bitflags! {
@@ -161,6 +172,23 @@ bitflags! {
     }
 }
 
+bitflags! {
+    /// Flags for the Advanced Programmable Interrupt Controler Base Register.
+    #[repr(transparent)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
+    pub struct ApicBaseFlags: u64 {
+        // bits 0 - 7 are reserved.
+        /// Indicates whether the current processor is the bootstrap processor
+        const BSP = 1 << 8;
+        // bit 9 is reserved.
+        /// Places the local APIC in the x2APIC mode. Processor support for x2APIC feature can be
+        /// detected using the `cpuid` instruction. (CPUID.(EAX=1):ECX.21)
+        const X2APIC_ENABLE = 1 << 10;
+        /// Enables or disables the local Apic
+        const LAPIC_ENABLE = 1 << 11;
+    }
+}
+
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
@@ -168,7 +196,9 @@ mod x86_64 {
     use crate::registers::rflags::RFlags;
     use crate::structures::gdt::SegmentSelector;
     use crate::structures::paging::Page;
+    use crate::structures::paging::PhysFrame;
     use crate::structures::paging::Size4KiB;
+    use crate::PhysAddr;
     use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
@@ -539,6 +569,24 @@ mod x86_64 {
             let mut msr = Self::MSR;
             unsafe { msr.write(value.bits()) };
         }
+
+        /// Update the SFMask register.
+        ///
+        /// The SFMASK register is used to specify which RFLAGS bits
+        /// are cleared during a SYSCALL. In long mode, SFMASK is used
+        /// to specify which RFLAGS bits are cleared when SYSCALL is
+        /// executed. If a bit in SFMASK is set to 1, the corresponding
+        /// bit in RFLAGS is cleared to 0. If a bit in SFMASK is cleared
+        /// to 0, the corresponding rFLAGS bit is not modified.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut RFlags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            Self::write(flags);
+        }
     }
 
     impl UCet {
@@ -574,6 +622,17 @@ mod x86_64 {
         pub fn write(flags: CetFlags, legacy_bitmap: Page) {
             Self::write_raw(flags.bits() | legacy_bitmap.start_address().as_u64());
         }
+
+        /// Updates IA32_U_CET.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut CetFlags, &mut Page),
+        {
+            let (mut flags, mut legacy_bitmap) = Self::read();
+            f(&mut flags, &mut legacy_bitmap);
+            Self::write(flags, legacy_bitmap);
+        }
     }
 
     impl SCet {
@@ -608,6 +667,70 @@ mod x86_64 {
         #[inline]
         pub fn write(flags: CetFlags, legacy_bitmap: Page) {
             Self::write_raw(flags.bits() | legacy_bitmap.start_address().as_u64());
+        }
+
+        /// Updates IA32_S_CET.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut CetFlags, &mut Page),
+        {
+            let (mut flags, mut legacy_bitmap) = Self::read();
+            f(&mut flags, &mut legacy_bitmap);
+            Self::write(flags, legacy_bitmap);
+        }
+    }
+
+    impl ApicBase {
+        /// Reads the IA32_APIC_BASE MSR.
+        #[inline]
+        pub fn read() -> (PhysFrame, ApicBaseFlags) {
+            let (frame, flags) = Self::read_raw();
+            (frame, ApicBaseFlags::from_bits_truncate(flags))
+        }
+
+        /// Reads the raw IA32_APIC_BASE MSR.
+        #[inline]
+        pub fn read_raw() -> (PhysFrame, u64) {
+            let raw = unsafe { Self::MSR.read() };
+            // extract bits 12 - 51 (incl.)
+            let addr = PhysAddr::new_truncate(raw);
+            let frame = PhysFrame::containing_address(addr);
+            (frame, raw)
+        }
+
+        /// Writes the IA32_APIC_BASE MSR preserving reserved values.
+        ///
+        /// Preserves the value of reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because changing the APIC base address allows hijacking a page of physical memory space in ways that would violate Rust's memory rules.
+        #[inline]
+        pub unsafe fn write(frame: PhysFrame, flags: ApicBaseFlags) {
+            let (_, old_flags) = Self::read_raw();
+            let reserved = old_flags & !(ApicBaseFlags::all().bits());
+            let new_flags = reserved | flags.bits();
+
+            unsafe {
+                Self::write_raw(frame, new_flags);
+            }
+        }
+
+        /// Writes the IA32_APIC_BASE MSR flags.
+        ///
+        /// Does not preserve any bits, including reserved fields.
+        ///
+        /// ## Safety
+        ///
+        /// Unsafe because it's possible to set reserved bits to `1` and changing the APIC base address allows hijacking a page of physical memory space in ways that would violate Rust's memory rules.
+        #[inline]
+        pub unsafe fn write_raw(frame: PhysFrame, flags: u64) {
+            let addr = frame.start_address();
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(flags | addr.as_u64());
+            }
         }
     }
 }

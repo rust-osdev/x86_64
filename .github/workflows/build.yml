@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, macos-12, macos-latest, windows-latest]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 15
@@ -88,9 +88,6 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 15
-
-    env:
-      RUSTFLAGS: -Crelocation-model=static -Dwarnings
 
     steps:
       - name: "Checkout Repository"
@@ -137,9 +134,11 @@ jobs:
         run: qemu-system-x86_64 --version
 
       - name: "Run Test Framework"
-        run: cargo test
+        run: cargo test --target x86_64-unknown-none
         shell: bash
         working-directory: "testing"
+        env:
+          RUSTFLAGS: -Crelocation-model=static -Dwarnings
 
   check_formatting:
     name: "Check Formatting"
@@ -177,7 +176,7 @@ jobs:
         run: cargo +stable semver-checks check-release
 
   kani:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2

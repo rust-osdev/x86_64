@@ -73,7 +73,7 @@ mod x86_64 {
                     out("rax") low, out("rdx") high,
                     options(nomem, nostack, preserves_flags),
                 );
-                (high as u64) << 32 | (low as u64)
+                ((high as u64) << 32) | (low as u64)
             }
         }
 
@@ -85,7 +85,7 @@ mod x86_64 {
         /// ## Safety
         ///
         /// This function is unsafe because it's possible to
-        /// enable features that are not supported by the architecture
+        /// enable features that are not supported by the architecture.
         #[inline]
         pub unsafe fn write(flags: XCr0Flags) {
             let old_value = Self::read_raw();
@@ -143,6 +143,27 @@ mod x86_64 {
                     in("rax") low, in("rdx") high,
                     options(nomem, nostack, preserves_flags),
                 );
+            }
+        }
+
+        /// Update XCR0 flags.
+        ///
+        /// Preserves the value of reserved fields.
+        /// Panics if invalid combinations of [`XCr0Flags`] are set.
+        ///
+        /// ## Safety
+        ///
+        /// This function is unsafe because it's possible to
+        /// enable features that are not supported by the architecture.
+        #[inline]
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut XCr0Flags),
+        {
+            let mut flags = Self::read();
+            f(&mut flags);
+            unsafe {
+                Self::write(flags);
             }
         }
     }
