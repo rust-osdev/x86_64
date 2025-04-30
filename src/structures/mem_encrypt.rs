@@ -17,6 +17,8 @@ pub(crate) static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);
 /// than encrypted)
 static ENC_BIT_REVERSED: AtomicBool = AtomicBool::new(false);
 
+/// Defines the configuration for memory encryption
+#[derive(Debug)]
 pub enum MemoryEncryptionConfiguration {
     /// Defines that a memory page should be accessed encrypted if this bit of its physical address
     /// is set in the page table entry.
@@ -33,6 +35,10 @@ pub enum MemoryEncryptionConfiguration {
 
 /// Enable memory encryption by defining the physical address bit that is used to mark a page
 /// encrypted (or shared) in a page table entry
+///
+/// # Safety
+/// Caller must make sure that any existing page table entry is discarded or adapted to take this
+/// bit into consideration
 pub unsafe fn enable_memory_encryption(configuration: MemoryEncryptionConfiguration) {
     let (bit_position, reversed) = match configuration {
         MemoryEncryptionConfiguration::EncryptBit(pos) => (pos as u64, false),
