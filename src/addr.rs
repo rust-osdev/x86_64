@@ -1,14 +1,17 @@
 //! Physical and virtual addresses manipulation
 
+#[cfg(feature = "memory_encryption")]
+use crate::structures::mem_encrypt::ENC_BIT_MASK;
+use crate::structures::paging::page_table::PageTableLevel;
+use crate::structures::paging::{PageOffset, PageTableIndex};
+use bit_field::BitField;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-
-use crate::structures::paging::page_table::PageTableLevel;
-use crate::structures::paging::{PageOffset, PageTableIndex};
-use bit_field::BitField;
+#[cfg(feature = "memory_encryption")]
+use core::sync::atomic::Ordering;
 
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
@@ -439,19 +442,15 @@ impl PhysAddr {
     /// ## Panics
     ///
     /// This function panics if a bit in the range 52 to 64 is set.
+    /// If the `memory_encryption` feature is available and has been enabled, this function also
+    /// panics fails if the encryption bit is manually set in the address.
     #[inline]
-    pub const fn new(addr: u64) -> Self {
+    pub fn new(addr: u64) -> Self {
         // TODO: Replace with .ok().expect(msg) when that works on stable.
         match Self::try_new(addr) {
             Ok(p) => p,
             Err(_) => panic!("physical addresses must not have any bits in the range 52 to 64 set"),
         }
-    }
-
-    /// Creates a new physical address, throwing bits 52..64 away.
-    #[inline]
-    pub const fn new_truncate(addr: u64) -> PhysAddr {
-        PhysAddr(addr % (1 << 52))
     }
 
     /// Creates a new physical address, without any checks.
@@ -467,8 +466,10 @@ impl PhysAddr {
     /// Tries to create a new physical address.
     ///
     /// Fails if any bits in the range 52 to 64 are set.
+    /// If the `memory_encryption` feature is available and has been enabled, this also fails if the
+    /// encryption bit is manually set in the address.
     #[inline]
-    pub const fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {
+    pub fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {
         let p = Self::new_truncate(addr);
         if p.0 == addr {
             Ok(p)
@@ -543,6 +544,24 @@ impl PhysAddr {
     #[inline]
     pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {
         self.align_down_u64(align).as_u64() == self.as_u64()
+    }
+}
+
+#[cfg(feature = "memory_encryption")]
+impl PhysAddr {
+    /// Creates a new physical address, throwing bits 52..64 and the encryption bit away.
+    #[inline]
+    pub fn new_truncate(addr: u64) -> PhysAddr {
+        PhysAddr((addr % (1 << 52)) & !ENC_BIT_MASK.load(Ordering::Relaxed))
+    }
+}
+
+#[cfg(not(feature = "memory_encryption"))]
+impl PhysAddr {
+    /// Creates a new physical address, throwing bits 52..64 away.
+    #[inline]
+    pub const fn new_truncate(addr: u64) -> PhysAddr {
+        PhysAddr(addr % (1 << 52))
     }
 }
 

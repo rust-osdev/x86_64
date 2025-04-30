@@ -11,7 +11,7 @@ use crate::structures::paging::page_table::PHYSICAL_ADDRESS_MASK;
 use crate::structures::paging::PageTableFlags;
 
 /// Position of the encryption (C/S) bit in the physical address
-static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);
+pub(crate) static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);
 
 /// Is the encryption bit reversed (i.e. its presence denote that the page is _decrypted_ rather
 /// than encrypted)
