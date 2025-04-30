@@ -7,7 +7,7 @@ use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
-#[cfg(feature = "dynamic_flags")]
+#[cfg(feature = "memory_encryption")]
 use core::sync::atomic::{AtomicU64, Ordering};
 
 /// The error returned by the `PageTableEntry::frame` method.
@@ -21,7 +21,7 @@ pub enum FrameError {
 }
 
 /// The mask used to remove flags from a page table entry to obtain the physical address
-#[cfg(feature = "dynamic_flags")]
+#[cfg(feature = "memory_encryption")]
 pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_f000u64);
 
 /// A 64-bit page table entry.
@@ -101,7 +101,7 @@ impl PageTableEntry {
     }
 }
 
-#[cfg(feature = "dynamic_flags")]
+#[cfg(feature = "memory_encryption")]
 impl PageTableEntry {
     #[inline(always)]
     fn physical_address_mask() -> u64 {
@@ -109,7 +109,7 @@ impl PageTableEntry {
     }
 }
 
-#[cfg(not(feature = "dynamic_flags"))]
+#[cfg(not(feature = "memory_encryption"))]
 impl PageTableEntry {
     #[inline(always)]
     #[rustversion::attr(since(1.61), const)]
