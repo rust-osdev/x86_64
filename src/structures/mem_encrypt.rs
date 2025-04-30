@@ -5,41 +5,75 @@
 //! dynamic page-table flags structure to ensure that the flag is treated properly and not
 //! returned as part of the physical address.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use crate::structures::paging::page_table::PHYSICAL_ADDRESS_MASK;
 use crate::structures::paging::PageTableFlags;
 
-static C_BIT_MASK: AtomicU64 = AtomicU64::new(0);
+/// Position of the encryption (C/S) bit in the physical address
+static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);
+
+/// Is the encryption bit reversed (i.e. its presence denote that the page is _decrypted_ rather
+/// than encrypted)
+static ENC_BIT_REVERSED: AtomicBool = AtomicBool::new(false);
+
+pub enum MemoryEncryptionConfiguration {
+    /// Defines that a memory page should be accessed encrypted if this bit of its physical address
+    /// is set in the page table entry.
+    ///
+    /// Use this for AMD Secure Memory Encryption (AMD-SME) and Secure Encrypted Virtualization (SEV)
+    EncryptBit(u8),
+
+    /// Defines that a memory page should be accessed decrypted if this bit of its physical address
+    /// is set in the page table entry.
+    ///
+    /// Use this for Intel Trust Domain Extension (Intel TDX)
+    ShareBit(u8),
+}
 
 /// Enable memory encryption by defining the physical address bit that is used to mark a page
-/// encrypted in a page table entry
-pub fn define_encryption_bit(bit_position: u64) {
+/// encrypted (or shared) in a page table entry
+pub unsafe fn enable_memory_encryption(configuration: MemoryEncryptionConfiguration) {
+    let (bit_position, reversed) = match configuration {
+        MemoryEncryptionConfiguration::EncryptBit(pos) => (pos as u64, false),
+        MemoryEncryptionConfiguration::ShareBit(pos) => (pos as u64, true),
+    };
+
     let c_bit_mask = 1u64 << bit_position;
 
-    PHYSICAL_ADDRESS_MASK.fetch_and(!c_bit_mask, Ordering::AcqRel);
-    C_BIT_MASK.store(c_bit_mask, Ordering::Relaxed);
+    PHYSICAL_ADDRESS_MASK.fetch_and(!c_bit_mask, Ordering::Relaxed);
+    ENC_BIT_MASK.store(c_bit_mask, Ordering::Relaxed);
+    ENC_BIT_REVERSED.store(reversed, Ordering::Release);
 }
 
 impl PageTableFlags {
     #[inline]
-    fn c_bit_mask() -> PageTableFlags {
-        let bit_mask = C_BIT_MASK.load(Ordering::Relaxed);
-        assert_ne!(bit_mask, 0, "C-bit is not set");
-        PageTableFlags::from_bits_retain(bit_mask)
+    fn c_bit_flag() -> Option<PageTableFlags> {
+        let bit_mask = ENC_BIT_MASK.load(Ordering::Relaxed);
+
+        if bit_mask > 0 {
+            Some(PageTableFlags::from_bits_retain(bit_mask))
+        } else {
+            None
+        }
     }
 
-    /// Sets the encryption bit on the page table entry.
+    /// Marks the page for encryption in the page table entry.
     ///
-    /// Requires memory encryption to be enabled, or this will panic.
+    /// # Panics
+    ///
+    /// Panics if memory encryption has not been previously configured by calling [`enable_memory_encryption`]
     pub fn set_encrypted(&mut self, encrypted: bool) {
-        self.set(Self::c_bit_mask(), encrypted);
+        let flag = Self::c_bit_flag().expect("memory encryption is not enabled");
+        self.set(flag, encrypted ^ ENC_BIT_REVERSED.load(Ordering::Relaxed));
     }
 
-    /// Checks if the encryption bit is set on the page table entry.
-    ///
-    /// Requires memory encryption to be enabled, or this will panic.
+    /// Checks if memory encryption is enabled on the page
     pub fn is_encrypted(&self) -> bool {
-        self.contains(Self::c_bit_mask())
+        if let Some(c_bit_flag) = Self::c_bit_flag() {
+            self.contains(c_bit_flag) ^ ENC_BIT_REVERSED.load(Ordering::Relaxed)
+        } else {
+            false
+        }
     }
 }
