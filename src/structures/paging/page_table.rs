@@ -28,7 +28,7 @@ pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_
 #[derive(Clone)]
 #[repr(transparent)]
 pub struct PageTableEntry {
-    pub(crate) entry: u64,
+    entry: u64,
 }
 
 impl PageTableEntry {
@@ -50,6 +50,18 @@ impl PageTableEntry {
         self.entry = 0;
     }
 
+    /// Returns the flags of this entry.
+    #[inline]
+    pub fn flags(&self) -> PageTableFlags {
+        PageTableFlags::from_bits_retain(self.entry & !Self::physical_address_mask())
+    }
+
+    /// Returns the physical address mapped by this entry, might be zero.
+    #[inline]
+    pub fn addr(&self) -> PhysAddr {
+        PhysAddr::new(self.entry & Self::physical_address_mask())
+    }
+
     /// Returns the physical frame mapped by this entry.
     ///
     /// Returns the following errors:
@@ -68,12 +80,6 @@ impl PageTableEntry {
         }
     }
 
-    /// Sets the flags of this entry.
-    #[inline]
-    pub fn set_flags(&mut self, flags: PageTableFlags) {
-        self.entry = self.addr().as_u64() | flags.bits();
-    }
-
     /// Map the entry to the specified physical address with the specified flags.
     #[inline]
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
@@ -87,37 +93,28 @@ impl PageTableEntry {
         assert!(!flags.contains(PageTableFlags::HUGE_PAGE));
         self.set_addr(frame.start_address(), flags)
     }
+
+    /// Sets the flags of this entry.
+    #[inline]
+    pub fn set_flags(&mut self, flags: PageTableFlags) {
+        self.entry = self.addr().as_u64() | flags.bits();
+    }
 }
 
 #[cfg(feature = "dynamic_flags")]
 impl PageTableEntry {
-    /// Returns the physical address mapped by this entry, might be zero.
-    #[inline]
-    pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
-    }
-
-    /// Returns the flags of this entry.
-    #[inline]
-    pub fn flags(&self) -> PageTableFlags {
-        PageTableFlags::from_bits_retain(
-            self.entry & !PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed),
-        )
+    #[inline(always)]
+    fn physical_address_mask() -> u64 {
+        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
     }
 }
 
 #[cfg(not(feature = "dynamic_flags"))]
 impl PageTableEntry {
-    /// Returns the physical address mapped by this entry, might be zero.
-    #[inline]
-    pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & 0x000f_ffff_ffff_f000u64)
-    }
-
-    /// Returns the flags of this entry.
-    #[inline]
-    pub fn flags(&self) -> PageTableFlags {
-        PageTableFlags::from_bits_truncate(self.entry)
+    #[inline(always)]
+    #[rustversion::attr(since(1.61), const)]
+    fn physical_address_mask() -> u64 {
+        0x000f_ffff_ffff_f000u64
     }
 }
 
