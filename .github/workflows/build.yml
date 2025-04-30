@@ -34,11 +34,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - run: cargo build --no-default-features --features instructions
+      - run: cargo build --no-default-features --features instructions,memory_encryption
       - run: cargo build --no-default-features
-      - run: cargo doc --no-default-features --features instructions
+      - run: cargo doc --no-default-features --features instructions,memory_encryption
       - run: cargo doc --no-default-features
-      - run: cargo test --no-default-features --features instructions
+      - run: cargo test --no-default-features --features instructions,memory_encryption
       - run: cargo test --no-default-features
 
   test:
