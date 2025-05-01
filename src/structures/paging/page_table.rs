@@ -3,6 +3,7 @@
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 use bitflags::bitflags;
+use const_fn::const_fn;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -52,7 +53,8 @@ impl PageTableEntry {
 
     /// Returns the flags of this entry.
     #[inline]
-    pub fn flags(&self) -> PageTableFlags {
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn flags(&self) -> PageTableFlags {
         PageTableFlags::from_bits_retain(self.entry & !Self::physical_address_mask())
     }
 

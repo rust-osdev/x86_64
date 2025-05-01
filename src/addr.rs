@@ -5,6 +5,7 @@ use crate::structures::mem_encrypt::ENC_BIT_MASK;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
+use const_fn::const_fn;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -445,7 +446,8 @@ impl PhysAddr {
     /// If the `memory_encryption` feature is available and has been enabled, this function also
     /// panics fails if the encryption bit is manually set in the address.
     #[inline]
-    pub fn new(addr: u64) -> Self {
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn new(addr: u64) -> Self {
         // TODO: Replace with .ok().expect(msg) when that works on stable.
         match Self::try_new(addr) {
             Ok(p) => p,
@@ -469,7 +471,8 @@ impl PhysAddr {
     /// If the `memory_encryption` feature is available and has been enabled, this also fails if the
     /// encryption bit is manually set in the address.
     #[inline]
-    pub fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {
         let p = Self::new_truncate(addr);
         if p.0 == addr {
             Ok(p)
