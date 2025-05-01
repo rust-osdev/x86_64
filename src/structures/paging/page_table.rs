@@ -1,8 +1,5 @@
 //! Abstractions for page tables and page table entries.
 
-use super::{PageSize, PhysFrame, Size4KiB};
-use crate::addr::PhysAddr;
-use bitflags::bitflags;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -10,6 +7,11 @@ use core::ops::{Index, IndexMut};
 #[cfg(feature = "memory_encryption")]
 use core::sync::atomic::{AtomicU64, Ordering};
 use dep_const_fn::const_fn;
+
+use super::{PageSize, PhysFrame, Size4KiB};
+use crate::addr::PhysAddr;
+
+use bitflags::bitflags;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]

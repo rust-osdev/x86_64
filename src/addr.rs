@@ -1,10 +1,5 @@
 //! Physical and virtual addresses manipulation
 
-#[cfg(feature = "memory_encryption")]
-use crate::structures::mem_encrypt::ENC_BIT_MASK;
-use crate::structures::paging::page_table::PageTableLevel;
-use crate::structures::paging::{PageOffset, PageTableIndex};
-use bit_field::BitField;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -13,6 +8,13 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 #[cfg(feature = "memory_encryption")]
 use core::sync::atomic::Ordering;
 use dep_const_fn::const_fn;
+
+#[cfg(feature = "memory_encryption")]
+use crate::structures::mem_encrypt::ENC_BIT_MASK;
+use crate::structures::paging::page_table::PageTableLevel;
+use crate::structures::paging::{PageOffset, PageTableIndex};
+
+use bit_field::BitField;
 
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
