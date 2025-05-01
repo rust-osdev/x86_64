@@ -101,21 +101,17 @@ impl PageTableEntry {
     pub fn set_flags(&mut self, flags: PageTableFlags) {
         self.entry = self.addr().as_u64() | flags.bits();
     }
-}
 
-#[cfg(feature = "memory_encryption")]
-impl PageTableEntry {
     #[inline(always)]
-    fn physical_address_mask() -> u64 {
-        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
-    }
-}
-
-#[cfg(not(feature = "memory_encryption"))]
-impl PageTableEntry {
-    #[inline(always)]
+    #[cfg(not(feature = "memory_encryption"))]
     const fn physical_address_mask() -> u64 {
         0x000f_ffff_ffff_f000u64
+    }
+
+    #[inline(always)]
+    #[cfg(feature = "memory_encryption")]
+    fn physical_address_mask() -> u64 {
+        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
     }
 }
 
