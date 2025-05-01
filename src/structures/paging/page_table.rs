@@ -3,7 +3,7 @@
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 use bitflags::bitflags;
-use const_fn::const_fn;
+use dep_const_fn::const_fn;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;

@@ -5,7 +5,7 @@ use crate::structures::mem_encrypt::ENC_BIT_MASK;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
-use const_fn::const_fn;
+use dep_const_fn::const_fn;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
