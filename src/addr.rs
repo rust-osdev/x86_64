@@ -5,7 +5,6 @@ use crate::structures::mem_encrypt::ENC_BIT_MASK;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 use bit_field::BitField;
-use dep_const_fn::const_fn;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -13,6 +12,7 @@ use core::iter::Step;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 #[cfg(feature = "memory_encryption")]
 use core::sync::atomic::Ordering;
+use dep_const_fn::const_fn;
 
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 

@@ -3,13 +3,13 @@
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
 use bitflags::bitflags;
-use dep_const_fn::const_fn;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
 #[cfg(feature = "memory_encryption")]
 use core::sync::atomic::{AtomicU64, Ordering};
+use dep_const_fn::const_fn;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
