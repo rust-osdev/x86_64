@@ -177,7 +177,7 @@ jobs:
           cache-targets: false
       - run: cargo install cargo-semver-checks --locked
       - name: Check semver
-        run: cargo +stable semver-checks check-release
+        run: cargo +stable semver-checks check-release --default-features --features  const_fn,asm_const,step_trait,doc_auto_cfg
 
   kani:
     runs-on: ubuntu-20.04
