@@ -112,8 +112,7 @@ impl PageTableEntry {
 #[cfg(not(feature = "memory_encryption"))]
 impl PageTableEntry {
     #[inline(always)]
-    #[rustversion::attr(since(1.61), const)]
-    fn physical_address_mask() -> u64 {
+    const fn physical_address_mask() -> u64 {
         0x000f_ffff_ffff_f000u64
     }
 }
