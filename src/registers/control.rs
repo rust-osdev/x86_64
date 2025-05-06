@@ -159,6 +159,73 @@ bitflags! {
     }
 }
 
+/// Contains the task priority.
+#[derive(Debug)]
+pub struct Cr8;
+
+/// A priority class for an interrupt. Loading CR8 with a priority class blocks
+/// all interrupts of that class or lower. Note that 0 is not a priority class,
+/// if CR8 contains 0, all interrupts are enabled regardless of their priority
+/// class.
+#[derive(Debug)]
+pub enum PriorityClass {
+    // 0 is not a valid priority class, 1 is the first valid class
+    /// Priority class 1
+    PriorityClass1 = 1,
+    /// Priority class 2
+    PriorityClass2,
+    /// Priority class 3
+    PriorityClass3,
+    /// Priority class 4
+    PriorityClass4,
+    /// Priority class 5
+    PriorityClass5,
+    /// Priority class 6
+    PriorityClass6,
+    /// Priority class 7
+    PriorityClass7,
+    /// Priority class 8
+    PriorityClass8,
+    /// Priority class 9
+    PriorityClass9,
+    /// Priority class 10
+    PriorityClass10,
+    /// Priority class 11
+    PriorityClass11,
+    /// Priority class 12
+    PriorityClass12,
+    /// Priority class 13
+    PriorityClass13,
+    /// Priority class 14
+    PriorityClass14,
+    /// Priority class 15
+    PriorityClass15,
+}
+
+impl PriorityClass {
+    /// Convert a number into a priority class
+    pub const fn new(priority_class: u8) -> Option<Self> {
+        Some(match priority_class {
+            1 => Self::PriorityClass1,
+            2 => Self::PriorityClass2,
+            3 => Self::PriorityClass3,
+            4 => Self::PriorityClass4,
+            5 => Self::PriorityClass5,
+            6 => Self::PriorityClass6,
+            7 => Self::PriorityClass7,
+            8 => Self::PriorityClass8,
+            9 => Self::PriorityClass9,
+            10 => Self::PriorityClass10,
+            11 => Self::PriorityClass11,
+            12 => Self::PriorityClass12,
+            13 => Self::PriorityClass13,
+            14 => Self::PriorityClass14,
+            15 => Self::PriorityClass15,
+            _ => return None,
+        })
+    }
+}
+
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
@@ -494,6 +561,52 @@ mod x86_64 {
             unsafe {
                 Self::write(flags);
             }
+        }
+    }
+
+    impl Cr8 {
+        /// Read the current priority class in CR8.
+        #[inline]
+        pub fn read() -> Option<PriorityClass> {
+            PriorityClass::new(Self::read_raw() as u8)
+        }
+
+        /// Read the current raw CR8 value.
+        #[inline]
+        pub fn read_raw() -> u64 {
+            let value: u64;
+
+            unsafe {
+                asm!("mov {}, cr8", out(reg) value, options(nomem, nostack, preserves_flags));
+            }
+
+            value
+        }
+
+        /// Write the priority class to CR8.
+        #[inline]
+        pub fn write(priority_class: Option<PriorityClass>) {
+            let value = priority_class.map_or(0, |pc| pc as u64);
+            Self::write_raw(value);
+        }
+
+        /// Write to CR8.
+        #[inline]
+        pub fn write_raw(value: u64) {
+            unsafe {
+                asm!("mov cr8, {}", in(reg) value, options(nomem, nostack, preserves_flags));
+            }
+        }
+
+        /// Updates the priority class in CR8.
+        #[inline]
+        pub fn update<F>(f: F)
+        where
+            F: FnOnce(&mut Option<PriorityClass>),
+        {
+            let mut priority_class = Self::read();
+            f(&mut priority_class);
+            Self::write(priority_class);
         }
     }
 }
