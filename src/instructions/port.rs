@@ -155,7 +155,8 @@ impl<T: PortRead, A: PortReadAccess> PortGeneric<T, A> {
     #[doc(alias = "inw")]
     #[doc(alias = "inl")]
     #[inline]
-    pub unsafe fn read(&mut self) -> T {
+    #[must_use]
+    pub unsafe fn read(&self) -> T {
         unsafe { T::read_from_port(self.port) }
     }
 }
@@ -172,7 +173,7 @@ impl<T: PortWrite, A: PortWriteAccess> PortGeneric<T, A> {
     #[doc(alias = "outw")]
     #[doc(alias = "outl")]
     #[inline]
-    pub unsafe fn write(&mut self, value: T) {
+    pub unsafe fn write(&self, value: T) {
         unsafe { T::write_to_port(self.port, value) }
     }
 }
@@ -203,3 +204,26 @@ impl<T, A> PartialEq for PortGeneric<T, A> {
 }
 
 impl<T, A> Eq for PortGeneric<T, A> {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[deny(const_item_mutation)]
+    #[allow(dead_code)]
+    #[allow(clippy::assertions_on_constants)]
+    fn deny_const_item_mutation_compile_test() {
+        assert!(false, "compile test only");
+
+        const DATA_PORT: PortGeneric<u8, ReadWriteAccess> = Port::<u8>::new(0x0060);
+        const COMMAND_REGISTER: PortGeneric<u8, WriteOnlyAccess> = PortWriteOnly::<u8>::new(0x0064);
+        const STATUS_REGISTER: PortGeneric<u8, ReadOnlyAccess> = PortReadOnly::<u8>::new(0x0064);
+
+        unsafe {
+            let _ = DATA_PORT.read();
+            DATA_PORT.write(0x42);
+            COMMAND_REGISTER.write(0x42);
+            let _ = STATUS_REGISTER.read();
+        }
+    }
+}
