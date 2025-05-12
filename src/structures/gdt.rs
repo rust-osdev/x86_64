@@ -1,11 +1,11 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
 pub use crate::registers::segmentation::SegmentSelector;
-use crate::structures::tss::TaskStateSegment;
+use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
 use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
-use core::fmt;
+use core::{cmp, fmt, mem};
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
@@ -439,8 +439,77 @@ impl Descriptor {
     /// being used.
     #[inline]
     pub unsafe fn tss_segment_unchecked(tss: *const TaskStateSegment) -> Descriptor {
+        // SAFETY: if iomap_size is zero, there are no requirements to uphold.
+        unsafe { Self::tss_segment_raw(tss, 0) }
+    }
+
+    /// Creates a TSS system descriptor for the given TSS, setting up the IO permissions bitmap.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use x86_64::structures::gdt::Descriptor;
+    /// use x86_64::structures::tss::TaskStateSegment;
+    ///
+    /// /// A helper that places some I/O map bytes behind a TSS.
+    /// #[repr(C)]
+    /// struct TssWithIOMap {
+    ///     tss: TaskStateSegment,
+    ///     iomap: [u8; 5],
+    /// }
+    ///
+    /// static TSS: TssWithIOMap = TssWithIOMap {
+    ///     tss: TaskStateSegment::new(),
+    ///     iomap: [0xff, 0xff, 0x00, 0x80, 0xff],
+    /// };
+    ///
+    /// let tss = Descriptor::tss_segment_with_iomap(&TSS.tss, &TSS.iomap).unwrap();
+    /// ```
+    pub fn tss_segment_with_iomap(
+        tss: &'static TaskStateSegment,
+        iomap: &'static [u8],
+    ) -> Result<Descriptor, InvalidIoMap> {
+        if iomap.len() > 8193 {
+            return Err(InvalidIoMap::TooLong { len: iomap.len() });
+        }
+
+        let iomap_addr = iomap.as_ptr() as usize;
+        let tss_addr = tss as *const _ as usize;
+
+        if tss_addr > iomap_addr {
+            return Err(InvalidIoMap::IoMapBeforeTss);
+        }
+
+        let base = iomap_addr - tss_addr;
+        if base > 0xdfff {
+            return Err(InvalidIoMap::TooFarFromTss { distance: base });
+        }
+
+        let last_byte = *iomap.last().unwrap_or(&0xff);
+        if last_byte != 0xff {
+            return Err(InvalidIoMap::InvalidTerminatingByte { byte: last_byte });
+        }
+
+        if tss.iomap_base != base as u16 {
+            return Err(InvalidIoMap::InvalidBase {
+                expected: base as u16,
+                got: tss.iomap_base,
+            });
+        }
+
+        // SAFETY: all invariants checked above
+        Ok(unsafe { Self::tss_segment_raw(tss, iomap.len() as u16) })
+    }
+
+    /// Creates a TSS system descriptor for the given TSS, setting up the IO permissions bitmap.
+    ///
+    /// # Safety
+    ///
+    /// There must be a valid IO map at `(tss as *const u8).offset(tss.iomap_base)`
+    /// of length `iomap_size`, with the terminating `0xFF` byte. Additionally, `iomap_base` must
+    /// not exceed `0xDFFF`.
+    unsafe fn tss_segment_raw(tss: *const TaskStateSegment, iomap_size: u16) -> Descriptor {
         use self::DescriptorFlags as Flags;
-        use core::mem::size_of;
 
         let ptr = tss as u64;
 
@@ -448,8 +517,12 @@ impl Descriptor {
         // base
         low.set_bits(16..40, ptr.get_bits(0..24));
         low.set_bits(56..64, ptr.get_bits(24..32));
-        // limit (the `-1` in needed since the bound is inclusive)
-        low.set_bits(0..16, (size_of::<TaskStateSegment>() - 1) as u64);
+        // limit (the `-1` is needed since the bound is inclusive)
+        let iomap_limit = u64::from(unsafe { (*tss).iomap_base }) + u64::from(iomap_size);
+        low.set_bits(
+            0..16,
+            cmp::max(mem::size_of::<TaskStateSegment>() as u64, iomap_limit) - 1,
+        );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
 
