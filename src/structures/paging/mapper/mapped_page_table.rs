@@ -484,9 +484,9 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
 
         let p1_entry = &mut p1[page.p1_index()];
 
-        let frame = p1_entry.frame().map_err(|err| match err {
+        let frame = p1_entry.frame(true).map_err(|err| match err {
             FrameError::FrameNotPresent => UnmapError::PageNotMapped,
-            FrameError::HugeFrame => UnmapError::ParentEntryHugePage,
+            FrameError::HugeFrame => unreachable!(),
         })?;
         let flags = p1_entry.flags();
 
@@ -508,9 +508,9 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
 
         let p1_entry = &mut p1[page.p1_index()];
 
-        let frame = match p1_entry.frame() {
+        let frame = match p1_entry.frame(true) {
             Ok(frame) => frame,
-            Err(FrameError::HugeFrame) => return Err(UnmapError::ParentEntryHugePage),
+            Err(FrameError::HugeFrame) => unreachable!(),
             Err(FrameError::FrameNotPresent) => {
                 let cloned = p1_entry.clone();
                 p1_entry.set_unused();
@@ -763,7 +763,7 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
                                 Page::range_inclusive(start, end),
                                 frame_deallocator,
                             ) {
-                                let frame = entry.frame().unwrap();
+                                let frame = entry.frame(false).unwrap();
                                 entry.set_unused();
                                 frame_deallocator.deallocate_frame(frame);
                             }
@@ -812,7 +812,7 @@ impl<P: PageTableFrameMapping> PageTableWalker<P> {
     ) -> Result<&'b PageTable, PageTableWalkError> {
         let page_table_ptr = self
             .page_table_frame_mapping
-            .frame_to_pointer(entry.frame()?);
+            .frame_to_pointer(entry.frame(false)?);
         let page_table: &PageTable = unsafe { &*page_table_ptr };
 
         Ok(page_table)
@@ -830,7 +830,7 @@ impl<P: PageTableFrameMapping> PageTableWalker<P> {
     ) -> Result<&'b mut PageTable, PageTableWalkError> {
         let page_table_ptr = self
             .page_table_frame_mapping
-            .frame_to_pointer(entry.frame()?);
+            .frame_to_pointer(entry.frame(false)?);
         let page_table: &mut PageTable = unsafe { &mut *page_table_ptr };
 
         Ok(page_table)
