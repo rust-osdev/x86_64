@@ -8,6 +8,8 @@ pub mod random;
 pub mod segmentation;
 pub mod tables;
 pub mod tlb;
+#[cfg(feature = "inline_asm")]
+pub mod tls;
 
 use core::arch::asm;
 
