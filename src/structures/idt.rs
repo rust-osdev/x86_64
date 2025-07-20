@@ -216,7 +216,7 @@ pub struct InterruptDescriptorTable {
     /// and the program cannot be restarted.
     ///
     /// The vector number of the `#DF` exception is 8.
-    pub double_fault: Entry<DivergingHandlerFuncWithErrCode>,
+    pub double_fault: Entry<HandlerFuncWithErrCode>,
 
     /// This interrupt vector is reserved. It is for a discontinued exception originally used
     /// by processors that supported external x87-instruction coprocessors. On those processors,
@@ -326,7 +326,7 @@ pub struct InterruptDescriptorTable {
     /// There is no reliable way to restart the program.
     ///
     /// The vector number of the `#MC` exception is 18.
-    pub machine_check: Entry<DivergingHandlerFunc>,
+    pub machine_check: Entry<HandlerFunc>,
 
     /// The SIMD Floating-Point Exception (`#XF`) is used to handle unmasked SSE
     /// floating-point exceptions. The SSE floating-point exceptions reported by
@@ -759,39 +759,6 @@ pub type PageFaultHandlerFunc =
 #[derive(Copy, Clone, Debug)]
 pub struct PageFaultHandlerFunc(());
 
-/// A handler function that must not return, e.g. for a machine check exception.
-///
-/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    feature = "abi_x86_interrupt"
-))]
-pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
-/// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    feature = "abi_x86_interrupt"
-)))]
-#[derive(Copy, Clone, Debug)]
-pub struct DivergingHandlerFunc(());
-
-/// A handler function with an error code that must not return, e.g. for a double fault exception.
-///
-/// This type alias is only usable with the `abi_x86_interrupt` feature enabled.
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    feature = "abi_x86_interrupt"
-))]
-pub type DivergingHandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
-/// This type is not usable without the `abi_x86_interrupt` feature.
-#[cfg(not(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    feature = "abi_x86_interrupt"
-)))]
-#[derive(Copy, Clone, Debug)]
-pub struct DivergingHandlerFuncWithErrCode(());
-
 /// A general handler function for an interrupt or an exception with the interrupt/exceptions's index and an optional error code.
 pub type GeneralHandlerFunc = fn(InterruptStackFrame, index: u8, error_code: Option<u64>);
 
@@ -906,8 +873,6 @@ macro_rules! impl_handler_func_type {
 impl_handler_func_type!(HandlerFunc);
 impl_handler_func_type!(HandlerFuncWithErrCode);
 impl_handler_func_type!(PageFaultHandlerFunc);
-impl_handler_func_type!(DivergingHandlerFunc);
-impl_handler_func_type!(DivergingHandlerFuncWithErrCode);
 
 /// Represents the 4 non-offset bytes of an IDT entry.
 #[repr(C)]
@@ -1513,7 +1478,7 @@ macro_rules! set_general_handler_entry {
         extern "x86-interrupt" fn handler(
             frame: $crate::structures::idt::InterruptStackFrame,
             error_code: u64,
-        ) -> ! {
+        ) {
             $handler(frame, $idx.into(), Some(error_code));
             panic!("General handler returned on double fault");
         }
@@ -1576,7 +1541,7 @@ macro_rules! set_general_handler_entry {
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 0, 1, 0) => {{
         extern "x86-interrupt" fn handler(
             frame: $crate::structures::idt::InterruptStackFrame,
-        ) -> ! {
+        ) {
             $handler(frame, $idx.into(), None);
             panic!("General handler returned on machine check exception");
         }
