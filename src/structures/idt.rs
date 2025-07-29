@@ -216,7 +216,7 @@ pub struct InterruptDescriptorTable {
     /// and the program cannot be restarted.
     ///
     /// The vector number of the `#DF` exception is 8.
-    pub double_fault: Entry<DivergingHandlerFuncWithErrCode>,
+    pub double_fault: Entry<HandlerFuncWithErrCode>,
 
     /// This interrupt vector is reserved. It is for a discontinued exception originally used
     /// by processors that supported external x87-instruction coprocessors. On those processors,
@@ -326,7 +326,7 @@ pub struct InterruptDescriptorTable {
     /// There is no reliable way to restart the program.
     ///
     /// The vector number of the `#MC` exception is 18.
-    pub machine_check: Entry<DivergingHandlerFunc>,
+    pub machine_check: Entry<HandlerFunc>,
 
     /// The SIMD Floating-Point Exception (`#XF`) is used to handle unmasked SSE
     /// floating-point exceptions. The SSE floating-point exceptions reported by
@@ -592,6 +592,7 @@ impl Index<u8> for InterruptDescriptorTable {
             7 => &self.device_not_available,
             9 => &self.coprocessor_segment_overrun,
             16 => &self.x87_floating_point,
+            18 => &self.machine_check,
             19 => &self.simd_floating_point,
             20 => &self.virtualization,
             28 => &self.hv_injection_exception,
@@ -600,7 +601,6 @@ impl Index<u8> for InterruptDescriptorTable {
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 21 | i @ 29 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
-            i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
         }
     }
 }
@@ -622,6 +622,7 @@ impl IndexMut<u8> for InterruptDescriptorTable {
             7 => &mut self.device_not_available,
             9 => &mut self.coprocessor_segment_overrun,
             16 => &mut self.x87_floating_point,
+            18 => &mut self.machine_check,
             19 => &mut self.simd_floating_point,
             20 => &mut self.virtualization,
             28 => &mut self.hv_injection_exception,
@@ -630,7 +631,6 @@ impl IndexMut<u8> for InterruptDescriptorTable {
             i @ 8 | i @ 10..=14 | i @ 17 | i @ 21 | i @ 29 | i @ 30 => {
                 panic!("entry {} is an exception with error code", i)
             }
-            i @ 18 => panic!("entry {} is an diverging exception (must not return)", i),
         }
     }
 }
@@ -1513,9 +1513,8 @@ macro_rules! set_general_handler_entry {
         extern "x86-interrupt" fn handler(
             frame: $crate::structures::idt::InterruptStackFrame,
             error_code: u64,
-        ) -> ! {
+        ) {
             $handler(frame, $idx.into(), Some(error_code));
-            panic!("General handler returned on double fault");
         }
         $idt.double_fault.set_handler_fn(handler);
     }};
@@ -1576,9 +1575,8 @@ macro_rules! set_general_handler_entry {
     ($idt:expr, $handler:ident, $idx:ident, 0, 0, 0, 1, 0, 0, 1, 0) => {{
         extern "x86-interrupt" fn handler(
             frame: $crate::structures::idt::InterruptStackFrame,
-        ) -> ! {
+        ) {
             $handler(frame, $idx.into(), None);
-            panic!("General handler returned on machine check exception");
         }
         $idt.machine_check.set_handler_fn(handler);
     }};
