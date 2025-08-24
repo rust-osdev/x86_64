@@ -1198,6 +1198,10 @@ bitflags! {
         /// access.
         const SHADOW_STACK = 1 << 6;
 
+        /// If this flag is set, it indicates that the page fault occured during HLAT paging
+        /// (Intel-only).
+        const HLAT = 1 << 7;
+
         /// If this flag is set, it indicates that the page fault was caused by SGX access-control
         /// requirements (Intel-only).
         const SGX = 1 << 15;
