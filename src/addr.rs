@@ -711,6 +711,25 @@ impl Sub<PhysAddr> for PhysAddr {
     }
 }
 
+#[cfg(feature = "step_trait")]
+impl Step for PhysAddr {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        Step::steps_between(&start.as_u64(), &end.as_u64())
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        PhysAddr::try_new(Step::forward_checked(start.as_u64(), count)?).ok()
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let addr = Step::backward_checked(start.as_u64(), count)?;
+        Some(unsafe {
+            // SAFETY: There is no lower bound for valid addresses.
+            PhysAddr::new_unsafe(addr)
+        })
+    }
+}
+
 /// Align address downwards.
 ///
 /// Returns the greatest `x` with alignment `align` so that `x <= addr`.
