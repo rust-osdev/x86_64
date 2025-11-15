@@ -3,7 +3,11 @@
 use super::page::AddressNotAligned;
 use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
+#[cfg(feature = "step_trait")]
+use core::convert::TryFrom;
 use core::fmt;
+#[cfg(feature = "step_trait")]
+use core::iter::Step;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -129,6 +133,47 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     #[inline]
     fn sub(self, rhs: PhysFrame<S>) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
+    }
+}
+
+#[cfg(feature = "step_trait")]
+impl<S> Step for PhysFrame<S>
+where
+    S: PageSize,
+{
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        let start = start.start_address().as_u64() / S::SIZE;
+        let end = end.start_address().as_u64() / S::SIZE;
+        Step::steps_between(&start, &end)
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        let count = u64::try_from(count).ok()?;
+        let count = count.checked_mul(S::SIZE)?;
+        let addr = start.start_address.as_u64().checked_add(count)?;
+        let addr = PhysAddr::try_new(addr).ok()?;
+        Some(unsafe {
+            // SAFETY: `start` is a multiple of `S::SIZE` and we added
+            // multiples of `S::SIZE`, so `addr` is still a multiple of
+            // `S::SIZE`.
+            PhysFrame::from_start_address_unchecked(addr)
+        })
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let count = u64::try_from(count).ok()?;
+        let count = count.checked_mul(S::SIZE)?;
+        let addr = start.start_address.as_u64().checked_sub(count)?;
+        let addr = unsafe {
+            // SAFETY: There is no lower bound for valid addresses.
+            PhysAddr::new_unsafe(addr)
+        };
+        Some(unsafe {
+            // SAFETY: `start` is a multiple of `S::SIZE` and we subtracted
+            // multiples of `S::SIZE`, so `addr` is still a multiple of
+            // `S::SIZE`.
+            PhysFrame::from_start_address_unchecked(addr)
+        })
     }
 }
 
