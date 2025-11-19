@@ -66,6 +66,8 @@ impl Smap {
 
     /// Disable SMAP access checks by setting [`RFlags::ALIGNMENT_CHECK`] using
     /// the `stac` instruction.
+    ///
+    /// This will do nothing if `SMAP` access checks are already disabled.
     #[doc(alias = "stac")]
     #[inline]
     pub fn disable(&self) {
@@ -78,6 +80,8 @@ impl Smap {
 
     /// Enable SMAP access checks by clearing [`RFlags::ALIGNMENT_CHECK`] using
     /// the `clac` instruction.
+    ///
+    /// This will do nothing if `SMAP` access checks are already enabled.
     #[doc(alias = "clac")]
     #[inline]
     pub fn enable(&self) {
