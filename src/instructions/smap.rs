@@ -60,7 +60,7 @@ impl Smap {
     /// function does not check CR4 because doing so is much slower than just
     /// checking the AC flag.
     #[inline]
-    pub fn is_enabled(&self) -> bool {
+    pub fn is_enabled(self) -> bool {
         !rflags::read().contains(RFlags::ALIGNMENT_CHECK)
     }
 
@@ -70,7 +70,7 @@ impl Smap {
     /// This will do nothing if `SMAP` access checks are already disabled.
     #[doc(alias = "stac")]
     #[inline]
-    pub fn disable(&self) {
+    pub fn disable(self) {
         // Technically this modifies the AC flag, but the Rust compiler doesn't
         // care about that, so it's fine to use preserves_flags.
         unsafe {
@@ -84,7 +84,7 @@ impl Smap {
     /// This will do nothing if `SMAP` access checks are already enabled.
     #[doc(alias = "clac")]
     #[inline]
-    pub fn enable(&self) {
+    pub fn enable(self) {
         // Technically this modifies the AC flag, but the Rust compiler doesn't
         // care about that, so it's fine to use preserves_flags.
         unsafe {
@@ -96,7 +96,7 @@ impl Smap {
     ///
     /// This function disables SMAP before calling the closure and restores the
     /// SMAP state afterwards.
-    pub fn without_smap<F, R>(&self, f: F) -> R
+    pub fn without_smap<F, R>(self, f: F) -> R
     where
         F: FnOnce() -> R,
     {
