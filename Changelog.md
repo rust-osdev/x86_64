@@ -7,6 +7,7 @@
 - [Add `MapperFlush` method to get page](https://github.com/rust-osdev/x86_64/pull/525)
 - [add `update()` to `Cr3`, `Dr7`, `SFMask`, `UCet`, `SCet`, `mxcsr`, `rflags`, and `XCr0`](https://github.com/rust-osdev/x86_64/pull/527)
 - [add IA32_APIC_BASE support](https://github.com/rust-osdev/x86_64/pull/532)
+- [add memory encryption support](https://github.com/rust-osdev/x86_64/pull/542)
 - [implement functions for accessing CR8](https://github.com/rust-osdev/x86_64/pull/547)
 - [add forwarding `impl PageTableFrameMapping for &P`](https://github.com/rust-osdev/x86_64/pull/556)
 - [add PageFaultErrorCode::HLAT](https://github.com/rust-osdev/x86_64/pull/564)
