@@ -32,10 +32,12 @@ instructions = []
 memory_encryption = []
 nightly = ["const_fn", "step_trait", "abi_x86_interrupt", "asm_const"]
 abi_x86_interrupt = []
-# deprecated, no longer needed
-const_fn = []
 asm_const = []
 step_trait = []
+doc_cfg = []
+
+# These are deprecated and no longer needed:
+const_fn = []
 doc_auto_cfg = []
 
 [package.metadata.docs.rs]
