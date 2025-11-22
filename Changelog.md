@@ -1,5 +1,15 @@
 # Unreleased
 
+# 0.15.4 – 2025-11-22
+
+## New Features
+
+- [add SMAP helpers](https://github.com/rust-osdev/x86_64/pull/566)
+
+## Fixes
+
+- [fix docs.rs build](https://github.com/rust-osdev/x86_64/pull/569)
+
 # 0.15.3 – 2025-11-19
 
 ## New Features
