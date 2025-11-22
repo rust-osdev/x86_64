@@ -3,7 +3,11 @@
 use super::page::AddressNotAligned;
 use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
+#[cfg(feature = "step_trait")]
+use core::convert::TryFrom;
 use core::fmt;
+#[cfg(feature = "step_trait")]
+use core::iter::Step;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -129,6 +133,47 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     #[inline]
     fn sub(self, rhs: PhysFrame<S>) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
+    }
+}
+
+#[cfg(feature = "step_trait")]
+impl<S> Step for PhysFrame<S>
+where
+    S: PageSize,
+{
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        let start = start.start_address().as_u64() / S::SIZE;
+        let end = end.start_address().as_u64() / S::SIZE;
+        Step::steps_between(&start, &end)
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        let count = u64::try_from(count).ok()?;
+        let count = count.checked_mul(S::SIZE)?;
+        let addr = start.start_address.as_u64().checked_add(count)?;
+        let addr = PhysAddr::try_new(addr).ok()?;
+        Some(unsafe {
+            // SAFETY: `start` is a multiple of `S::SIZE` and we added
+            // multiples of `S::SIZE`, so `addr` is still a multiple of
+            // `S::SIZE`.
+            PhysFrame::from_start_address_unchecked(addr)
+        })
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let count = u64::try_from(count).ok()?;
+        let count = count.checked_mul(S::SIZE)?;
+        let addr = start.start_address.as_u64().checked_sub(count)?;
+        let addr = unsafe {
+            // SAFETY: There is no lower bound for valid addresses.
+            PhysAddr::new_unsafe(addr)
+        };
+        Some(unsafe {
+            // SAFETY: `start` is a multiple of `S::SIZE` and we subtracted
+            // multiples of `S::SIZE`, so `addr` is still a multiple of
+            // `S::SIZE`.
+            PhysFrame::from_start_address_unchecked(addr)
+        })
     }
 }
 
@@ -262,5 +307,123 @@ mod tests {
 
         let range_inclusive = PhysFrameRangeInclusive { start, end };
         assert_eq!(range_inclusive.len(), 51);
+    }
+}
+
+#[cfg(kani)]
+mod proofs {
+    use super::*;
+
+    // This harness proves that steps_between will return the same value
+    // returned by PhysAddr's Step implementation scaled by Size4KiB::Size.
+    #[kani::proof]
+    fn steps_between() {
+        let start_raw: u64 = kani::any();
+        let Ok(start) = PhysAddr::try_new(start_raw) else {
+            return;
+        };
+        let Ok(start_frame) = PhysFrame::<Size4KiB>::from_start_address(start) else {
+            return;
+        };
+
+        let start_end: u64 = kani::any();
+        let Ok(end) = PhysAddr::try_new(start_end) else {
+            return;
+        };
+        let Ok(end_frame) = PhysFrame::<Size4KiB>::from_start_address(end) else {
+            return;
+        };
+
+        let (addr_min, addr_max) = PhysAddr::steps_between(&start, &end);
+        let (frame_min, frame_max) = PhysFrame::steps_between(&start_frame, &end_frame);
+        assert_eq!(addr_min / (Size4KiB::SIZE as usize), frame_min);
+        assert_eq!(
+            addr_max.map(|max| max / (Size4KiB::SIZE as usize)),
+            frame_max
+        );
+    }
+
+    // This harness proves that forward_checked will return the same value
+    // returned by PhysAddr's forward_checked implementation if the count has
+    // scaled by Size4KiB::Size.
+    #[kani::proof]
+    fn forward() {
+        let start_raw: u64 = kani::any();
+        let Ok(start) = PhysAddr::try_new(start_raw) else {
+            return;
+        };
+        let Ok(start_frame) = PhysFrame::<Size4KiB>::from_start_address(start) else {
+            return;
+        };
+
+        let count: usize = kani::any();
+        let Some(scaled_count) = count.checked_mul(Size4KiB::SIZE as usize) else {
+            return;
+        };
+
+        let end_addr = PhysAddr::forward_checked(start, scaled_count);
+        let end_frame = PhysFrame::forward_checked(start_frame, count);
+        assert_eq!(end_addr, end_frame.map(PhysFrame::start_address));
+    }
+
+    // This harness proves that forward_checked will always return `None` if
+    // the count cannot be scaled by Size4KiB::SIZE.
+    #[kani::proof]
+    fn forward_limit() {
+        let start_raw: u64 = kani::any();
+        let Ok(start) = PhysAddr::try_new(start_raw) else {
+            return;
+        };
+        let Ok(start_frame) = PhysFrame::<Size4KiB>::from_start_address(start) else {
+            return;
+        };
+
+        let count: usize = kani::any();
+        kani::assume(count.checked_mul(Size4KiB::SIZE as usize).is_none());
+
+        let end_frame = PhysFrame::forward_checked(start_frame, count);
+        assert_eq!(end_frame, None);
+    }
+
+    // This harness proves that backward_checked will return the same value
+    // returned by PhysAddr's backward_checked implementation if the count has
+    // scaled by Size4KiB::Size.
+    #[kani::proof]
+    fn backward() {
+        let start_raw: u64 = kani::any();
+        let Ok(start) = PhysAddr::try_new(start_raw) else {
+            return;
+        };
+        let Ok(start_frame) = PhysFrame::<Size4KiB>::from_start_address(start) else {
+            return;
+        };
+
+        let count: usize = kani::any();
+        let Some(scaled_count) = count.checked_mul(Size4KiB::SIZE as usize) else {
+            return;
+        };
+
+        let end_addr = PhysAddr::backward_checked(start, scaled_count);
+        let end_frame = PhysFrame::backward_checked(start_frame, count);
+        assert_eq!(end_addr, end_frame.map(PhysFrame::start_address));
+    }
+
+    // This harness proves that backward_checked will always return `None` if
+    // the count cannot be scaled by Size4KiB::SIZE.
+    #[kani::proof]
+    fn backward_limit() {
+        let start_raw: u64 = kani::any();
+        let Ok(start) = PhysAddr::try_new(start_raw) else {
+            return;
+        };
+        let Ok(start_frame) = PhysFrame::<Size4KiB>::from_start_address(start) else {
+            return;
+        };
+
+        let count: usize = kani::any();
+        kani::assume(count.checked_mul(Size4KiB::SIZE as usize).is_none());
+
+        let end_frame = PhysFrame::backward_checked(start_frame, count);
+        assert_eq!(end_frame, None);
     }
 }
