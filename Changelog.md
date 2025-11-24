@@ -1,5 +1,20 @@
 # Unreleased
 
+# 0.15.4 – 2025-11-24
+
+## New Features
+
+- [add SMAP helpers](https://github.com/rust-osdev/x86_64/pull/566)
+- [add ability to add iomap to TSS](https://github.com/rust-osdev/x86_64/pull/194)
+
+## Fixes
+
+- [fix docs.rs build](https://github.com/rust-osdev/x86_64/pull/569)
+
+## Other Improvements
+
+- [Bump actions/checkout from 5 to 6](https://github.com/rust-osdev/x86_64/pull/571)
+
 # 0.15.3 – 2025-11-19
 
 ## New Features
