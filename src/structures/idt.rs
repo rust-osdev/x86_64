@@ -1014,6 +1014,7 @@ impl EntryOptions {
 /// This wrapper type ensures that no accidental modification of the interrupt stack frame
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
+#[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct InterruptStackFrame(InterruptStackFrameValue);
 
