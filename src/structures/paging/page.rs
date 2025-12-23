@@ -371,6 +371,15 @@ impl<S: PageSize> Iterator for PageRange<S> {
             None
         }
     }
+
+    #[inline]
+    fn count(self) -> usize {
+        if !self.is_empty() {
+            ((self.end.start_address() - self.start.start_address()) / S::SIZE) as usize
+        } else {
+            0
+        }
+    }
 }
 
 impl PageRange<Size2MiB> {

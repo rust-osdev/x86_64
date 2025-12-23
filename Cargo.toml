@@ -34,6 +34,7 @@ nightly = ["const_fn", "step_trait", "abi_x86_interrupt", "asm_const"]
 abi_x86_interrupt = []
 asm_const = []
 step_trait = []
+experimental = []
 doc_cfg = []
 
 # These are deprecated and no longer needed:
