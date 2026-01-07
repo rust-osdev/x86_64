@@ -10,6 +10,8 @@
 - [make range types `!Copy`](https://github.com/rust-osdev/x86_64/pull/581)
   - To migrate, use `.clone()` if necessary.
 - [make page types `repr(transparent)` and range types `repr(Rust)`](https://github.com/rust-osdev/x86_64/pull/584)
+- [add `MappedPageTable::display`](https://github.com/rust-osdev/x86_64/pull/574)
+  - The mappings of a `MappedPageTable` can now be displayed.
 
 # 0.15.4 – 2025-11-24
 

@@ -1,6 +1,8 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
-pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
+pub use self::mapped_page_table::{
+    Display as MappedPageTableDisplay, MappedPageTable, PageTableFrameMapping,
+};
 #[cfg(target_pointer_width = "64")]
 pub use self::mapped_page_table::{OffsetPageTable, PhysOffset};
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
