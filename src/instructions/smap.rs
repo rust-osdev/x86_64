@@ -35,6 +35,7 @@ impl Smap {
     /// CR4.
     pub fn new() -> Option<Self> {
         // Check if the CPU supports `stac` and `clac`.
+        #[allow(unused_unsafe)]
         let cpuid = unsafe { core::arch::x86_64::__cpuid(7) };
         if cpuid.ebx.get_bit(20) {
             Some(Self(()))

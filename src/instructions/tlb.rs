@@ -160,6 +160,7 @@ impl Invlpgb {
         assert_eq!(cs.rpl(), PrivilegeLevel::Ring0);
 
         // Check if the `INVLPGB` and `TLBSYNC` instruction are supported.
+        #[allow(unused_unsafe)]
         let cpuid = unsafe { core::arch::x86_64::__cpuid(0x8000_0008) };
         if !cpuid.ebx.get_bit(3) {
             return None;
@@ -169,6 +170,7 @@ impl Invlpgb {
         let invlpgb_count_max = cpuid.edx.get_bits(0..=15) as u16;
 
         // Figure out the number of supported ASIDs.
+        #[allow(unused_unsafe)]
         let cpuid = unsafe { core::arch::x86_64::__cpuid(0x8000_000a) };
         let nasid = cpuid.ebx;
 
