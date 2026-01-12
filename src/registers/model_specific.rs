@@ -56,6 +56,7 @@ pub struct Star;
 pub struct LStar;
 
 /// Syscall Register: SFMASK
+#[doc(alias = "FMask")]
 #[derive(Debug)]
 pub struct SFMask;
 

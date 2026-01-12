@@ -2,7 +2,7 @@
 
 use crate::structures::paging::{mapper::*, page_table::PageTable};
 
-/// A Mapper implementation that requires that the complete physically memory is mapped at some
+/// A Mapper implementation that requires that the complete physical memory is mapped at some
 /// offset in the virtual address space.
 #[derive(Debug)]
 pub struct OffsetPageTable<'a> {

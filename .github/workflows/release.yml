@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: "Checkout Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "Run release script"
         run: "python scripts/ci-release.py"
