@@ -4,6 +4,9 @@
 
 - [add `Mapper::clear` to clear any page table entry regardless of the present flag](https://github.com/rust-osdev/x86_64/pull/484)
 - [`Mapper::unmap` now also returns the flags of the page ](https://github.com/rust-osdev/x86_64/pull/484)
+- [make `OffsetPageTable` a type alias](https://github.com/rust-osdev/x86_64/pull/576)
+  - To migrate, replace `OffsetPageTable::new` with `OffsetPageTable::from_phys_offset` or `MappedPageTable::from_phys_offset`.
+  - `OffsetPageTable`'s `PageTableFrameMapping` implementation is now public as `PhysOffset`.
 
 # 0.15.4 – 2025-11-24
 
