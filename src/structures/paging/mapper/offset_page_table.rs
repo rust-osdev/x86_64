@@ -27,9 +27,7 @@ impl<'a> OffsetPageTable<'a> {
     /// by writing to an illegal memory location.
     #[inline]
     pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: VirtAddr) -> Self {
-        let phys_offset = PhysOffset {
-            offset: phys_offset,
-        };
+        let phys_offset = PhysOffset { phys_offset };
         Self {
             inner: unsafe { MappedPageTable::new(level_4_table, phys_offset) },
         }
@@ -47,18 +45,18 @@ impl<'a> OffsetPageTable<'a> {
 
     /// Returns the offset used for converting virtual to physical addresses.
     pub fn phys_offset(&self) -> VirtAddr {
-        self.inner.page_table_frame_mapping().offset
+        self.inner.page_table_frame_mapping().phys_offset
     }
 }
 
 #[derive(Debug)]
 struct PhysOffset {
-    offset: VirtAddr,
+    phys_offset: VirtAddr,
 }
 
 unsafe impl PageTableFrameMapping for PhysOffset {
     fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {
-        let virt = self.offset + frame.start_address().as_u64();
+        let virt = self.phys_offset + frame.start_address().as_u64();
         virt.as_mut_ptr()
     }
 }
