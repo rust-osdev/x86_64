@@ -5,10 +5,16 @@ use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
+#[cfg(feature = "memory_encryption")]
+use core::sync::atomic::Ordering;
 
+#[cfg(feature = "memory_encryption")]
+use crate::structures::mem_encrypt::ENC_BIT_MASK;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
+
 use bit_field::BitField;
+use dep_const_fn::const_fn;
 
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
@@ -503,7 +509,10 @@ impl PhysAddr {
     /// ## Panics
     ///
     /// This function panics if a bit in the range 52 to 64 is set.
+    // If the `memory_encryption` feature has been enabled and an encryption bit has been
+    // configured, this also panics if the encryption bit is manually set in the address.
     #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn new(addr: u64) -> Self {
         // TODO: Replace with .ok().expect(msg) when that works on stable.
         match Self::try_new(addr) {
@@ -513,9 +522,17 @@ impl PhysAddr {
     }
 
     /// Creates a new physical address, throwing bits 52..64 away.
+    #[cfg(not(feature = "memory_encryption"))]
     #[inline]
     pub const fn new_truncate(addr: u64) -> PhysAddr {
         PhysAddr(addr % (1 << 52))
+    }
+
+    /// Creates a new physical address, throwing bits 52..64 and the encryption bit away.
+    #[cfg(feature = "memory_encryption")]
+    #[inline]
+    pub fn new_truncate(addr: u64) -> PhysAddr {
+        PhysAddr((addr % (1 << 52)) & !ENC_BIT_MASK.load(Ordering::Relaxed))
     }
 
     /// Creates a new physical address, without any checks.
@@ -531,7 +548,10 @@ impl PhysAddr {
     /// Tries to create a new physical address.
     ///
     /// Fails if any bits in the range 52 to 64 are set.
+    /// If the `memory_encryption` feature has been enabled and an encryption bit has been
+    /// configured, this also fails if the encryption bit is manually set in the address.
     #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {
         let p = Self::new_truncate(addr);
         if p.0 == addr {

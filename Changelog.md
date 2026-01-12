@@ -5,6 +5,49 @@
 - [add `Mapper::clear` to clear any page table entry regardless of the present flag](https://github.com/rust-osdev/x86_64/pull/484)
 - [`Mapper::unmap` now also returns the flags of the page ](https://github.com/rust-osdev/x86_64/pull/484)
 
+# 0.15.4 – 2025-11-24
+
+## New Features
+
+- [add SMAP helpers](https://github.com/rust-osdev/x86_64/pull/566)
+- [add ability to add iomap to TSS](https://github.com/rust-osdev/x86_64/pull/194)
+
+## Fixes
+
+- [fix docs.rs build](https://github.com/rust-osdev/x86_64/pull/569)
+
+## Other Improvements
+
+- [Bump actions/checkout from 5 to 6](https://github.com/rust-osdev/x86_64/pull/571)
+
+# 0.15.3 – 2025-11-19
+
+## New Features
+
+- [Add `MapperFlush` method to get page](https://github.com/rust-osdev/x86_64/pull/525)
+- [add `update()` to `Cr3`, `Dr7`, `SFMask`, `UCet`, `SCet`, `mxcsr`, `rflags`, and `XCr0`](https://github.com/rust-osdev/x86_64/pull/527)
+- [add IA32_APIC_BASE support](https://github.com/rust-osdev/x86_64/pull/532)
+- [add memory encryption support](https://github.com/rust-osdev/x86_64/pull/542)
+- [implement functions for accessing CR8](https://github.com/rust-osdev/x86_64/pull/547)
+- [add forwarding `impl PageTableFrameMapping for &P`](https://github.com/rust-osdev/x86_64/pull/556)
+- [add PageFaultErrorCode::HLAT](https://github.com/rust-osdev/x86_64/pull/564)
+
+## Fixes
+
+- [fix panic in `impl fmt::Debug for EntryOptions`](https://github.com/rust-osdev/x86_64/pull/522)
+- [Ensure that addition and subtraction of addresses panics on overflow/underflow](https://github.com/rust-osdev/x86_64/pull/535)
+- [fix typo](https://github.com/rust-osdev/x86_64/pull/555)
+
+## Other Improvements
+
+- [fix warnings & remove broken CI job](https://github.com/rust-osdev/x86_64/pull/530)
+- [use default python again](https://github.com/rust-osdev/x86_64/pull/533)
+- [don't pass -Crelocation-model=static to host targets](https://github.com/rust-osdev/x86_64/pull/536)
+- [fix kani build job](https://github.com/rust-osdev/x86_64/pull/544)
+- [improve `VirtAddr` `Add` & `Sub` impls](https://github.com/rust-osdev/x86_64/pull/543)
+- [Add "FMask" alias for SFMask](https://github.com/rust-osdev/x86_64/pull/552)
+- [Bump actions/checkout from 4 to 5](https://github.com/rust-osdev/x86_64/pull/563)
+
 # 0.15.2 – 2024-11-30
 
 This release is compatible with Rust nightlies starting with `nightly-2024-11-23` (this only applies when the `nightly` feature is used).

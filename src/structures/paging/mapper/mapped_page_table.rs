@@ -980,3 +980,10 @@ pub unsafe trait PageTableFrameMapping {
     /// Translate the given physical frame to a virtual page table pointer.
     fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;
 }
+
+unsafe impl<P: PageTableFrameMapping + ?Sized> PageTableFrameMapping for &P {
+    #[inline]
+    fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {
+        (**self).frame_to_pointer(frame)
+    }
+}

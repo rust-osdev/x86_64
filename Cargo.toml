@@ -15,7 +15,7 @@ license = "MIT/Apache-2.0"
 name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.15.2"
+version = "0.15.4"
 edition = "2018"
 rust-version = "1.59" # Needed to support inline asm and default const generics
 
@@ -24,16 +24,20 @@ bit_field = "0.10.1"
 bitflags = "2.3.2"
 volatile = "0.4.4"
 rustversion = "1.0.5"
+dep_const_fn = { package = "const_fn", version = "0.4.11" }
 
 [features]
 default = ["nightly", "instructions"]
 instructions = []
+memory_encryption = []
 nightly = ["const_fn", "step_trait", "abi_x86_interrupt", "asm_const"]
 abi_x86_interrupt = []
-# deprecated, no longer needed
-const_fn = []
 asm_const = []
 step_trait = []
+doc_cfg = []
+
+# These are deprecated and no longer needed:
+const_fn = []
 doc_auto_cfg = []
 
 [package.metadata.docs.rs]
