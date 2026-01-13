@@ -2,7 +2,7 @@
 
 pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
 #[cfg(target_pointer_width = "64")]
-pub use self::offset_page_table::{OffsetPageTable, PhysOffset};
+pub use self::mapped_page_table::{OffsetPageTable, PhysOffset};
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
@@ -15,7 +15,6 @@ use crate::structures::paging::{
 use crate::{PhysAddr, VirtAddr};
 
 mod mapped_page_table;
-mod offset_page_table;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod recursive_page_table;
 

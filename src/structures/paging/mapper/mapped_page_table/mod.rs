@@ -1,3 +1,7 @@
+mod offset_page_table;
+
+#[cfg(target_pointer_width = "64")]
+pub use self::offset_page_table::{OffsetPageTable, PhysOffset};
 use crate::structures::paging::{
     mapper::*,
     page::AddressNotAligned,
