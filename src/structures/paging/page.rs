@@ -335,7 +335,7 @@ pub struct PageRange<S: PageSize = Size4KiB> {
 }
 
 impl<S: PageSize> PageRange<S> {
-    /// Returns wether this range contains no pages.
+    /// Returns whether this range contains no pages.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.start >= self.end

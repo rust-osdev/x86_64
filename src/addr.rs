@@ -84,7 +84,7 @@ impl VirtAddr {
 
     /// Tries to create a new canonical virtual address.
     ///
-    /// This function checks wether the given address is canonical
+    /// This function checks whether the given address is canonical
     /// and returns an error otherwise. An address is canonical
     /// if bits 48 to 64 are a correct sign
     /// extension (i.e. copies of bit 47).

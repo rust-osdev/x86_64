@@ -145,7 +145,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     ///
     /// This method allows for creation of a GDT with malformed or invalid
     /// entries. However, it is safe because loading a GDT with invalid
-    /// entires doesn't do anything until those entries are used. For example,
+    /// entries doesn't do anything until those entries are used. For example,
     /// [`CS::set_reg`] and [`load_tss`](crate::instructions::tables::load_tss)
     /// are both unsafe for this reason.
     ///

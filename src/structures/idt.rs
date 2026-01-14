@@ -892,7 +892,7 @@ macro_rules! impl_handler_func_type {
             #[inline]
             fn to_virt_addr(self) -> VirtAddr {
                 // Casting a function pointer to u64 is fine, if the pointer
-                // width doesn't exeed 64 bits.
+                // width doesn't exceed 64 bits.
                 #[cfg_attr(
                     any(target_pointer_width = "32", target_pointer_width = "64"),
                     allow(clippy::fn_to_numeric_cast)
@@ -1198,7 +1198,7 @@ bitflags! {
         /// access.
         const SHADOW_STACK = 1 << 6;
 
-        /// If this flag is set, it indicates that the page fault occured during HLAT paging
+        /// If this flag is set, it indicates that the page fault occurred during HLAT paging
         /// (Intel-only).
         const HLAT = 1 << 7;
 
