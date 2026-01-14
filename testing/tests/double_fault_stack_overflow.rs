@@ -21,7 +21,7 @@ pub extern "C" fn _start() -> ! {
     stack_overflow();
 
     serial_println!("[failed]");
-    serial_println!("    No exception occured");
+    serial_println!("    No exception occurred");
     exit_qemu(QemuExitCode::Failed);
 
     loop {}

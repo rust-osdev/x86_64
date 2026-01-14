@@ -174,7 +174,7 @@ bitflags! {
 }
 
 bitflags! {
-    /// Flags for the Advanced Programmable Interrupt Controler Base Register.
+    /// Flags for the Advanced Programmable Interrupt Controller Base Register.
     #[repr(transparent)]
     #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct ApicBaseFlags: u64 {
