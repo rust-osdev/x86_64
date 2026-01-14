@@ -49,10 +49,11 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
     pub fn page_table_frame_mapping(&self) -> &P {
         &self.page_table_walker.page_table_frame_mapping
     }
+}
 
-    /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
-    /// https://github.com/rust-lang/rfcs/pull/2585.
-    fn map_to_1gib<A>(
+impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
+    #[inline]
+    unsafe fn map_to_with_table_flags<A>(
         &mut self,
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
@@ -76,94 +77,6 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
         p3[page.p3_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
-    }
-
-    /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
-    /// https://github.com/rust-lang/rfcs/pull/2585.
-    fn map_to_2mib<A>(
-        &mut self,
-        page: Page<Size2MiB>,
-        frame: PhysFrame<Size2MiB>,
-        flags: PageTableFlags,
-        parent_table_flags: PageTableFlags,
-        allocator: &mut A,
-    ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
-    where
-        A: FrameAllocator<Size4KiB> + ?Sized,
-    {
-        let p4 = &mut self.level_4_table;
-        let p3 = self.page_table_walker.create_next_table(
-            &mut p4[page.p4_index()],
-            parent_table_flags,
-            allocator,
-        )?;
-        let p2 = self.page_table_walker.create_next_table(
-            &mut p3[page.p3_index()],
-            parent_table_flags,
-            allocator,
-        )?;
-
-        if !p2[page.p2_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped(frame));
-        }
-        p2[page.p2_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
-
-        Ok(MapperFlush::new(page))
-    }
-
-    /// Helper function for implementing Mapper. Safe to limit the scope of unsafe, see
-    /// https://github.com/rust-lang/rfcs/pull/2585.
-    fn map_to_4kib<A>(
-        &mut self,
-        page: Page<Size4KiB>,
-        frame: PhysFrame<Size4KiB>,
-        flags: PageTableFlags,
-        parent_table_flags: PageTableFlags,
-        allocator: &mut A,
-    ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
-    where
-        A: FrameAllocator<Size4KiB> + ?Sized,
-    {
-        let p4 = &mut self.level_4_table;
-        let p3 = self.page_table_walker.create_next_table(
-            &mut p4[page.p4_index()],
-            parent_table_flags,
-            allocator,
-        )?;
-        let p2 = self.page_table_walker.create_next_table(
-            &mut p3[page.p3_index()],
-            parent_table_flags,
-            allocator,
-        )?;
-        let p1 = self.page_table_walker.create_next_table(
-            &mut p2[page.p2_index()],
-            parent_table_flags,
-            allocator,
-        )?;
-
-        if !p1[page.p1_index()].is_unused() {
-            return Err(MapToError::PageAlreadyMapped(frame));
-        }
-        p1[page.p1_index()].set_frame(frame, flags);
-
-        Ok(MapperFlush::new(page))
-    }
-}
-
-impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
-    #[inline]
-    unsafe fn map_to_with_table_flags<A>(
-        &mut self,
-        page: Page<Size1GiB>,
-        frame: PhysFrame<Size1GiB>,
-        flags: PageTableFlags,
-        parent_table_flags: PageTableFlags,
-        allocator: &mut A,
-    ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
-    where
-        A: FrameAllocator<Size4KiB> + ?Sized,
-    {
-        self.map_to_1gib(page, frame, flags, parent_table_flags, allocator)
     }
 
     fn unmap(
@@ -271,7 +184,24 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
-        self.map_to_2mib(page, frame, flags, parent_table_flags, allocator)
+        let p4 = &mut self.level_4_table;
+        let p3 = self.page_table_walker.create_next_table(
+            &mut p4[page.p4_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+        let p2 = self.page_table_walker.create_next_table(
+            &mut p3[page.p3_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+
+        if !p2[page.p2_index()].is_unused() {
+            return Err(MapToError::PageAlreadyMapped(frame));
+        }
+        p2[page.p2_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
+
+        Ok(MapperFlush::new(page))
     }
 
     fn unmap(
@@ -399,7 +329,29 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
-        self.map_to_4kib(page, frame, flags, parent_table_flags, allocator)
+        let p4 = &mut self.level_4_table;
+        let p3 = self.page_table_walker.create_next_table(
+            &mut p4[page.p4_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+        let p2 = self.page_table_walker.create_next_table(
+            &mut p3[page.p3_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+        let p1 = self.page_table_walker.create_next_table(
+            &mut p2[page.p2_index()],
+            parent_table_flags,
+            allocator,
+        )?;
+
+        if !p1[page.p1_index()].is_unused() {
+            return Err(MapToError::PageAlreadyMapped(frame));
+        }
+        p1[page.p1_index()].set_frame(frame, flags);
+
+        Ok(MapperFlush::new(page))
     }
 
     fn unmap(
