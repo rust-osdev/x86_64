@@ -7,6 +7,8 @@
 - [make `OffsetPageTable` a type alias](https://github.com/rust-osdev/x86_64/pull/576)
   - To migrate, replace `OffsetPageTable::new` with `OffsetPageTable::from_phys_offset` or `MappedPageTable::from_phys_offset`.
   - `OffsetPageTable`'s `PageTableFrameMapping` implementation is now public as `PhysOffset`.
+- [make range types `!Copy`](https://github.com/rust-osdev/x86_64/pull/581)
+  - To migrate, use `.clone()` if necessary.
 
 # 0.15.4 – 2025-11-24
 
