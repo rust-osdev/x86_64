@@ -325,7 +325,7 @@ impl<S: PageSize> Step for Page<S> {
 }
 
 /// A range of pages with exclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct PageRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
@@ -394,7 +394,7 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 }
 
 /// A range of pages with inclusive upper bound.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
