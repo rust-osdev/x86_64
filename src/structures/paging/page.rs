@@ -63,7 +63,7 @@ impl Sealed for super::Size1GiB {}
 
 /// A virtual memory page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct Page<S: PageSize = Size4KiB> {
     start_address: VirtAddr,
     size: PhantomData<S>,

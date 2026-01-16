@@ -9,7 +9,7 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A physical memory frame.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
     // TODO: Make private when our minimum supported stable Rust version is 1.61
     pub(crate) start_address: PhysAddr,
