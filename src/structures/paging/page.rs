@@ -62,8 +62,12 @@ impl PageSize for Size1GiB {
 impl Sealed for super::Size1GiB {}
 
 /// A virtual memory page.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct Page<S: PageSize = Size4KiB> {
     start_address: VirtAddr,
     size: PhantomData<S>,
@@ -326,7 +330,6 @@ impl<S: PageSize> Step for Page<S> {
 
 /// A range of pages with exclusive upper bound.
 #[derive(Clone, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PageRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: Page<S>,
@@ -395,7 +398,6 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 
 /// A range of pages with inclusive upper bound.
 #[derive(Clone, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: Page<S>,

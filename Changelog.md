@@ -9,6 +9,7 @@
   - `OffsetPageTable`'s `PageTableFrameMapping` implementation is now public as `PhysOffset`.
 - [make range types `!Copy`](https://github.com/rust-osdev/x86_64/pull/581)
   - To migrate, use `.clone()` if necessary.
+- [make page types `repr(transparent)` and range types `repr(Rust)`](https://github.com/rust-osdev/x86_64/pull/584)
 
 # 0.15.4 – 2025-11-24
 
