@@ -410,7 +410,7 @@ impl<S: PageSize> PageRangeInclusive<S> {
         self.start > self.end
     }
 
-    /// Returns the number of frames in the range.
+    /// Returns the number of pages in the range.
     #[inline]
     pub fn len(&self) -> u64 {
         if !self.is_empty() {
@@ -420,7 +420,7 @@ impl<S: PageSize> PageRangeInclusive<S> {
         }
     }
 
-    /// Returns the size in bytes of all frames within the range.
+    /// Returns the size in bytes of all pages within the range.
     #[inline]
     pub fn size(&self) -> u64 {
         S::SIZE * self.len()
