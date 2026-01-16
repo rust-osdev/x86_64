@@ -67,20 +67,27 @@ unsafe impl PageTableFrameMapping for PhysOffset {
 
 impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         unsafe {
-            self.inner
-                .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+            self.inner.map_to_with_table_flags(
+                page,
+                frame,
+                flags,
+                parent_table_flags,
+                allocator,
+                context,
+            )
         }
     }
 
@@ -136,20 +143,27 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
 
 impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         unsafe {
-            self.inner
-                .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+            self.inner.map_to_with_table_flags(
+                page,
+                frame,
+                flags,
+                parent_table_flags,
+                allocator,
+                context,
+            )
         }
     }
 
@@ -205,20 +219,27 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
 
 impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         unsafe {
-            self.inner
-                .map_to_with_table_flags(page, frame, flags, parent_table_flags, allocator)
+            self.inner.map_to_with_table_flags(
+                page,
+                frame,
+                flags,
+                parent_table_flags,
+                allocator,
+                context,
+            )
         }
     }
 

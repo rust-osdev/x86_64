@@ -53,22 +53,24 @@ impl<'a, P: PageTableFrameMapping> MappedPageTable<'a, P> {
 
 impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
     #[inline]
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<Size1GiB>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<Size1GiB>, MapToError<Size1GiB>>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
             &mut p4[page.p4_index()],
             parent_table_flags,
             allocator,
+            context,
         )?;
 
         if !p3[page.p3_index()].is_unused() {
@@ -173,27 +175,30 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
 
 impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
     #[inline]
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<Size2MiB>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<Size2MiB>, MapToError<Size2MiB>>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
             &mut p4[page.p4_index()],
             parent_table_flags,
             allocator,
+            context,
         )?;
         let p2 = self.page_table_walker.create_next_table(
             &mut p3[page.p3_index()],
             parent_table_flags,
             allocator,
+            context,
         )?;
 
         if !p2[page.p2_index()].is_unused() {
@@ -318,32 +323,36 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
 
 impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
     #[inline]
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<Size4KiB>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<Size4KiB>, MapToError<Size4KiB>>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
             &mut p4[page.p4_index()],
             parent_table_flags,
             allocator,
+            context,
         )?;
         let p2 = self.page_table_walker.create_next_table(
             &mut p3[page.p3_index()],
             parent_table_flags,
             allocator,
+            context,
         )?;
         let p1 = self.page_table_walker.create_next_table(
             &mut p2[page.p2_index()],
             parent_table_flags,
             allocator,
+            context,
         )?;
 
         if !p1[page.p1_index()].is_unused() {
@@ -698,19 +707,20 @@ impl<P: PageTableFrameMapping> PageTableWalker<P> {
     /// Returns `MapToError::FrameAllocationFailed` if the entry is unused and the allocator
     /// returned `None`. Returns `MapToError::ParentEntryHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
-    fn create_next_table<'b, A>(
+    fn create_next_table<'b, A, C>(
         &self,
         entry: &'b mut PageTableEntry,
         insert_flags: PageTableFlags,
         allocator: &mut A,
+        context: &mut C,
     ) -> Result<&'b mut PageTable, PageTableCreateError>
     where
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         let created;
 
         if entry.is_unused() {
-            if let Some(frame) = allocator.allocate_frame() {
+            if let Some(frame) = allocator.allocate_frame(context) {
                 entry.set_frame(frame, insert_flags);
                 created = true;
             } else {

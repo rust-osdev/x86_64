@@ -9,9 +9,9 @@ use crate::structures::paging::{PageSize, PhysFrame};
 /// The implementer of this trait must guarantee that the `allocate_frame`
 /// method returns only unique unused frames. Otherwise, undefined behavior
 /// may result from two callers modifying or deallocating the same frame.
-pub unsafe trait FrameAllocator<S: PageSize> {
+pub unsafe trait FrameAllocator<S: PageSize, C: Sized> {
     /// Allocate a frame of the appropriate size and return it if possible.
-    fn allocate_frame(&mut self) -> Option<PhysFrame<S>>;
+    fn allocate_frame(&mut self, ctx: &C) -> Option<PhysFrame<S>>;
 }
 
 /// A trait for types that can deallocate a frame of memory.

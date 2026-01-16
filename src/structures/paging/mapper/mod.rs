@@ -176,16 +176,17 @@ pub trait Mapper<S: PageSize> {
     /// # }
     /// ```
     #[inline]
-    unsafe fn map_to<A>(
+    unsafe fn map_to<A, C>(
         &mut self,
         page: Page<S>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
     {
         let parent_table_flags = flags
             & (PageTableFlags::PRESENT
@@ -193,7 +194,14 @@ pub trait Mapper<S: PageSize> {
                 | PageTableFlags::USER_ACCESSIBLE);
 
         unsafe {
-            self.map_to_with_table_flags(page, frame, flags, parent_table_flags, frame_allocator)
+            self.map_to_with_table_flags(
+                page,
+                frame,
+                flags,
+                parent_table_flags,
+                frame_allocator,
+                context,
+            )
         }
     }
 
@@ -267,17 +275,18 @@ pub trait Mapper<S: PageSize> {
     ///           .flush();
     /// # }
     /// ```
-    unsafe fn map_to_with_table_flags<A>(
+    unsafe fn map_to_with_table_flags<A, C>(
         &mut self,
         page: Page<S>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         frame_allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
-        A: FrameAllocator<Size4KiB> + ?Sized;
+        A: FrameAllocator<Size4KiB, C> + ?Sized;
 
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
@@ -359,20 +368,21 @@ pub trait Mapper<S: PageSize> {
     /// This is a convenience function that invokes [`Mapper::map_to`] internally, so
     /// all safety requirements of it also apply for this function.
     #[inline]
-    unsafe fn identity_map<A>(
+    unsafe fn identity_map<A, C>(
         &mut self,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
+        context: &mut C,
     ) -> Result<MapperFlush<S>, MapToError<S>>
     where
         Self: Sized,
-        A: FrameAllocator<Size4KiB> + ?Sized,
+        A: FrameAllocator<Size4KiB, C> + ?Sized,
         S: PageSize,
         Self: Mapper<S>,
     {
         let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
-        unsafe { self.map_to(page, frame, flags, frame_allocator) }
+        unsafe { self.map_to(page, frame, flags, frame_allocator, context) }
     }
 }
 
