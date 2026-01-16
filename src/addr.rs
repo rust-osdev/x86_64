@@ -711,6 +711,25 @@ impl Sub<PhysAddr> for PhysAddr {
     }
 }
 
+#[cfg(feature = "step_trait")]
+impl Step for PhysAddr {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
+        Step::steps_between(&start.as_u64(), &end.as_u64())
+    }
+
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        PhysAddr::try_new(Step::forward_checked(start.as_u64(), count)?).ok()
+    }
+
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        let addr = Step::backward_checked(start.as_u64(), count)?;
+        Some(unsafe {
+            // SAFETY: There is no lower bound for valid addresses.
+            PhysAddr::new_unsafe(addr)
+        })
+    }
+}
+
 /// Align address downwards.
 ///
 /// Returns the greatest `x` with alignment `align` so that `x <= addr`.
@@ -986,159 +1005,318 @@ mod tests {
 mod proofs {
     use super::*;
 
-    // The next two proof harnesses prove the correctness of the `forward`
-    // implementation of VirtAddr.
+    mod virt_addr {
+        use super::*;
 
-    // This harness proves that our implementation can correctly take 0 or 1
-    // step starting from any address.
-    #[kani::proof]
-    fn forward_base_case() {
-        let start_raw: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start_raw) else {
-            return;
-        };
+        // The next two proof harnesses prove the correctness of the `forward`
+        // implementation of VirtAddr.
 
-        // Adding 0 to any address should always yield the same address.
-        let same = Step::forward(start, 0);
-        assert!(start == same);
+        // This harness proves that our implementation can correctly take 0 or 1
+        // step starting from any address.
+        #[kani::proof]
+        fn forward_base_case() {
+            let start_raw: u64 = kani::any();
+            let Ok(start) = VirtAddr::try_new(start_raw) else {
+                return;
+            };
 
-        // Manually calculate the expected address after stepping once.
-        let expected = match start_raw {
-            // Adding 1 to addresses in this range don't require gap jumps, so
-            // we can just add 1.
-            0x0000_0000_0000_0000..=0x0000_7fff_ffff_fffe => Some(start_raw + 1),
-            // Adding 1 to this address jumps the gap.
-            0x0000_7fff_ffff_ffff => Some(0xffff_8000_0000_0000),
-            // The range of non-canonical addresses.
-            0x0000_8000_0000_0000..=0xffff_7fff_ffff_ffff => unreachable!(),
-            // Adding 1 to addresses in this range don't require gap jumps, so
-            // we can just add 1.
-            0xffff_8000_0000_0000..=0xffff_ffff_ffff_fffe => Some(start_raw + 1),
-            // Adding 1 to this address causes an overflow.
-            0xffff_ffff_ffff_ffff => None,
-        };
-        if let Some(expected) = expected {
-            // Verify that `expected` is a valid address.
-            assert!(VirtAddr::try_new(expected).is_ok());
+            // Adding 0 to any address should always yield the same address.
+            let same = Step::forward(start, 0);
+            assert!(start == same);
+
+            // Manually calculate the expected address after stepping once.
+            let expected = match start_raw {
+                // Adding 1 to addresses in this range don't require gap jumps, so
+                // we can just add 1.
+                0x0000_0000_0000_0000..=0x0000_7fff_ffff_fffe => Some(start_raw + 1),
+                // Adding 1 to this address jumps the gap.
+                0x0000_7fff_ffff_ffff => Some(0xffff_8000_0000_0000),
+                // The range of non-canonical addresses.
+                0x0000_8000_0000_0000..=0xffff_7fff_ffff_ffff => unreachable!(),
+                // Adding 1 to addresses in this range don't require gap jumps, so
+                // we can just add 1.
+                0xffff_8000_0000_0000..=0xffff_ffff_ffff_fffe => Some(start_raw + 1),
+                // Adding 1 to this address causes an overflow.
+                0xffff_ffff_ffff_ffff => None,
+            };
+            if let Some(expected) = expected {
+                // Verify that `expected` is a valid address.
+                assert!(VirtAddr::try_new(expected).is_ok());
+            }
+            // Verify `forward_checked`.
+            let next = Step::forward_checked(start, 1);
+            assert!(next.map(VirtAddr::as_u64) == expected);
         }
-        // Verify `forward_checked`.
-        let next = Step::forward_checked(start, 1);
-        assert!(next.map(VirtAddr::as_u64) == expected);
+
+        // This harness proves that the result of taking two small steps is the
+        // same as taking one combined large step.
+        #[kani::proof]
+        fn forward_induction_step() {
+            let start_raw: u64 = kani::any();
+            let Ok(start) = VirtAddr::try_new(start_raw) else {
+                return;
+            };
+
+            let count1: usize = kani::any();
+            let count2: usize = kani::any();
+            // If we can take two small steps...
+            let Some(next1) = Step::forward_checked(start, count1) else {
+                return;
+            };
+            let Some(next2) = Step::forward_checked(next1, count2) else {
+                return;
+            };
+
+            // ...then we can also take one combined large step.
+            let count_both = count1 + count2;
+            let next_both = Step::forward(start, count_both);
+            assert!(next2 == next_both);
+        }
+
+        // The next two proof harnesses prove the correctness of the `backward`
+        // implementation of VirtAddr using the `forward` implementation which
+        // we've already proven to be correct.
+        // They do this by proving the symmetry between those two functions.
+
+        // This harness proves the correctness of the implementation of `backward`
+        // for all inputs for which `forward_checked` succeeds.
+        #[kani::proof]
+        fn forward_implies_backward() {
+            let start_raw: u64 = kani::any();
+            let Ok(start) = VirtAddr::try_new(start_raw) else {
+                return;
+            };
+            let count: usize = kani::any();
+
+            // If `forward_checked` succeeds...
+            let Some(end) = Step::forward_checked(start, count) else {
+                return;
+            };
+
+            // ...then `backward` succeeds as well.
+            let start2 = Step::backward(end, count);
+            assert!(start == start2);
+        }
+
+        // This harness proves that for all inputs for which `backward_checked`
+        // succeeds, `forward` succeeds as well.
+        #[kani::proof]
+        fn backward_implies_forward() {
+            let end_raw: u64 = kani::any();
+            let Ok(end) = VirtAddr::try_new(end_raw) else {
+                return;
+            };
+            let count: usize = kani::any();
+
+            // If `backward_checked` succeeds...
+            let Some(start) = Step::backward_checked(end, count) else {
+                return;
+            };
+
+            // ...then `forward` succeeds as well.
+            let end2 = Step::forward(start, count);
+            assert!(end == end2);
+        }
+
+        // The next two proof harnesses prove the correctness of the
+        // `steps_between` implementation of VirtAddr using the `forward`
+        // implementation which we've already proven to be correct.
+        // They do this by proving the symmetry between those two functions.
+
+        // This harness proves the correctness of the implementation of
+        // `steps_between` for all inputs for which `forward_checked` succeeds.
+        #[kani::proof]
+        fn forward_implies_steps_between() {
+            let start: u64 = kani::any();
+            let Ok(start) = VirtAddr::try_new(start) else {
+                return;
+            };
+            let count: usize = kani::any();
+
+            // If `forward_checked` succeeds...
+            let Some(end) = Step::forward_checked(start, count) else {
+                return;
+            };
+
+            // ...then `steps_between` succeeds as well.
+            assert!(Step::steps_between(&start, &end) == (count, Some(count)));
+        }
+
+        // This harness proves that for all inputs for which `steps_between`
+        // succeeds, `forward` succeeds as well.
+        #[kani::proof]
+        fn steps_between_implies_forward() {
+            let start: u64 = kani::any();
+            let Ok(start) = VirtAddr::try_new(start) else {
+                return;
+            };
+            let end: u64 = kani::any();
+            let Ok(end) = VirtAddr::try_new(end) else {
+                return;
+            };
+
+            // If `steps_between` succeeds...
+            let Some(count) = Step::steps_between(&start, &end).1 else {
+                return;
+            };
+
+            // ...then `forward` succeeds as well.
+            assert!(Step::forward(start, count) == end);
+        }
     }
 
-    // This harness proves that the result of taking two small steps is the
-    // same as taking one combined large step.
-    #[kani::proof]
-    fn forward_induction_step() {
-        let start_raw: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start_raw) else {
-            return;
-        };
+    mod phys_addr {
+        use super::*;
 
-        let count1: usize = kani::any();
-        let count2: usize = kani::any();
-        // If we can take two small steps...
-        let Some(next1) = Step::forward_checked(start, count1) else {
-            return;
-        };
-        let Some(next2) = Step::forward_checked(next1, count2) else {
-            return;
-        };
+        // The next two proof harnesses prove the correctness of the `forward`
+        // implementation of PhysAddr.
 
-        // ...then we can also take one combined large step.
-        let count_both = count1 + count2;
-        let next_both = Step::forward(start, count_both);
-        assert!(next2 == next_both);
-    }
+        // This harness proves that our implementation can correctly take 0 or 1
+        // step starting from any address.
+        #[kani::proof]
+        fn forward_base_case() {
+            let start_raw: u64 = kani::any();
+            let Ok(start) = PhysAddr::try_new(start_raw) else {
+                return;
+            };
 
-    // The next two proof harnesses prove the correctness of the `backward`
-    // implementation of VirtAddr using the `forward` implementation which
-    // we've already proven to be correct.
-    // They do this by proving the symmetry between those two functions.
+            // Adding 0 to any address should always yield the same address.
+            let same = Step::forward(start, 0);
+            assert!(start == same);
 
-    // This harness proves the correctness of the implementation of `backward`
-    // for all inputs for which `forward_checked` succeeds.
-    #[kani::proof]
-    fn forward_implies_backward() {
-        let start_raw: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start_raw) else {
-            return;
-        };
-        let count: usize = kani::any();
+            // Manually calculate the expected address after stepping once.
+            let expected = match start_raw {
+                // Adding 1 to addresses in this range will result in a valid
+                // address.
+                0x0000_0000_0000_0000..=0xf_ffff_ffff_fffe => Some(start_raw + 1),
+                // Adding 1 to this address causes an overflow.
+                0xf_ffff_ffff_ffff => None,
+                // Bigger addresses do not exist.
+                _ => unreachable!(),
+            };
+            if let Some(expected) = expected {
+                // Verify that `expected` is a valid address.
+                assert!(PhysAddr::try_new(expected).is_ok());
+            }
+            // Verify `forward_checked`.
+            let next = Step::forward_checked(start, 1);
+            assert!(next.map(PhysAddr::as_u64) == expected);
+        }
 
-        // If `forward_checked` succeeds...
-        let Some(end) = Step::forward_checked(start, count) else {
-            return;
-        };
+        // This harness proves that the result of taking two small steps is the
+        // same as taking one combined large step.
+        #[kani::proof]
+        fn forward_induction_step() {
+            let start_raw: u64 = kani::any();
+            let Ok(start) = PhysAddr::try_new(start_raw) else {
+                return;
+            };
 
-        // ...then `backward` succeeds as well.
-        let start2 = Step::backward(end, count);
-        assert!(start == start2);
-    }
+            let count1: usize = kani::any();
+            let count2: usize = kani::any();
+            // If we can take two small steps...
+            let Some(next1) = Step::forward_checked(start, count1) else {
+                return;
+            };
+            let Some(next2) = Step::forward_checked(next1, count2) else {
+                return;
+            };
 
-    // This harness proves that for all inputs for which `backward_checked`
-    // succeeds, `forward` succeeds as well.
-    #[kani::proof]
-    fn backward_implies_forward() {
-        let end_raw: u64 = kani::any();
-        let Ok(end) = VirtAddr::try_new(end_raw) else {
-            return;
-        };
-        let count: usize = kani::any();
+            // ...then we can also take one combined large step.
+            let count_both = count1 + count2;
+            let next_both = Step::forward(start, count_both);
+            assert!(next2 == next_both);
+        }
 
-        // If `backward_checked` succeeds...
-        let Some(start) = Step::backward_checked(end, count) else {
-            return;
-        };
+        // The next two proof harnesses prove the correctness of the `backward`
+        // implementation of PhysAddr using the `forward` implementation which
+        // we've already proven to be correct.
+        // They do this by proving the symmetry between those two functions.
 
-        // ...then `forward` succeeds as well.
-        let end2 = Step::forward(start, count);
-        assert!(end == end2);
-    }
+        // This harness proves the correctness of the implementation of `backward`
+        // for all inputs for which `forward_checked` succeeds.
+        #[kani::proof]
+        fn forward_implies_backward() {
+            let start_raw: u64 = kani::any();
+            let Ok(start) = PhysAddr::try_new(start_raw) else {
+                return;
+            };
+            let count: usize = kani::any();
 
-    // The next two proof harnesses prove the correctness of the
-    // `steps_between` implementation of VirtAddr using the `forward`
-    // implementation which we've already proven to be correct.
-    // They do this by proving the symmetry between those two functions.
+            // If `forward_checked` succeeds...
+            let Some(end) = Step::forward_checked(start, count) else {
+                return;
+            };
 
-    // This harness proves the correctness of the implementation of
-    // `steps_between` for all inputs for which `forward_checked` succeeds.
-    #[kani::proof]
-    fn forward_implies_steps_between() {
-        let start: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start) else {
-            return;
-        };
-        let count: usize = kani::any();
+            // ...then `backward` succeeds as well.
+            let start2 = Step::backward(end, count);
+            assert!(start == start2);
+        }
 
-        // If `forward_checked` succeeds...
-        let Some(end) = Step::forward_checked(start, count) else {
-            return;
-        };
+        // This harness proves that for all inputs for which `backward_checked`
+        // succeeds, `forward` succeeds as well.
+        #[kani::proof]
+        fn backward_implies_forward() {
+            let end_raw: u64 = kani::any();
+            let Ok(end) = PhysAddr::try_new(end_raw) else {
+                return;
+            };
+            let count: usize = kani::any();
 
-        // ...then `steps_between` succeeds as well.
-        assert!(Step::steps_between(&start, &end) == (count, Some(count)));
-    }
+            // If `backward_checked` succeeds...
+            let Some(start) = Step::backward_checked(end, count) else {
+                return;
+            };
 
-    // This harness proves that for all inputs for which `steps_between`
-    // succeeds, `forward` succeeds as well.
-    #[kani::proof]
-    fn steps_between_implies_forward() {
-        let start: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start) else {
-            return;
-        };
-        let end: u64 = kani::any();
-        let Ok(end) = VirtAddr::try_new(end) else {
-            return;
-        };
+            // ...then `forward` succeeds as well.
+            let end2 = Step::forward(start, count);
+            assert!(end == end2);
+        }
 
-        // If `steps_between` succeeds...
-        let Some(count) = Step::steps_between(&start, &end).1 else {
-            return;
-        };
+        // The next two proof harnesses prove the correctness of the
+        // `steps_between` implementation of PhysAddr using the `forward`
+        // implementation which we've already proven to be correct.
+        // They do this by proving the symmetry between those two functions.
 
-        // ...then `forward` succeeds as well.
-        assert!(Step::forward(start, count) == end);
+        // This harness proves the correctness of the implementation of
+        // `steps_between` for all inputs for which `forward_checked` succeeds.
+        #[kani::proof]
+        fn forward_implies_steps_between() {
+            let start: u64 = kani::any();
+            let Ok(start) = PhysAddr::try_new(start) else {
+                return;
+            };
+            let count: usize = kani::any();
+
+            // If `forward_checked` succeeds...
+            let Some(end) = Step::forward_checked(start, count) else {
+                return;
+            };
+
+            // ...then `steps_between` succeeds as well.
+            assert!(Step::steps_between(&start, &end) == (count, Some(count)));
+        }
+
+        // This harness proves that for all inputs for which `steps_between`
+        // succeeds, `forward` succeeds as well.
+        #[kani::proof]
+        fn steps_between_implies_forward() {
+            let start: u64 = kani::any();
+            let Ok(start) = PhysAddr::try_new(start) else {
+                return;
+            };
+            let end: u64 = kani::any();
+            let Ok(end) = PhysAddr::try_new(end) else {
+                return;
+            };
+
+            // If `steps_between` succeeds...
+            let Some(count) = Step::steps_between(&start, &end).1 else {
+                return;
+            };
+
+            // ...then `forward` succeeds as well.
+            assert!(Step::forward(start, count) == end);
+        }
     }
 }
