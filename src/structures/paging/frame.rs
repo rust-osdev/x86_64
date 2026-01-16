@@ -134,7 +134,6 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 
 /// An range of physical memory frames, exclusive the upper bound.
 #[derive(Clone, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PhysFrameRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
@@ -192,7 +191,6 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
 
 /// An range of physical memory frames, inclusive the upper bound.
 #[derive(Clone, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
