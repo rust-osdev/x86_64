@@ -8,6 +8,10 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A physical memory frame.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {

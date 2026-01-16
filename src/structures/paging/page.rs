@@ -62,6 +62,10 @@ impl PageSize for Size1GiB {
 impl Sealed for super::Size1GiB {}
 
 /// A virtual memory page.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Page<S: PageSize = Size4KiB> {
