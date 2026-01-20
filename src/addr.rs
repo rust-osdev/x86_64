@@ -1,6 +1,7 @@
 //! Physical and virtual addresses manipulation
 
 use core::convert::TryFrom;
+use core::convert::TryInto;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -488,6 +489,108 @@ impl Step for VirtAddr {
     }
 }
 
+impl TryFrom<u64> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: u64) -> Result<Self, Self::Error> {
+        Self::try_new(addr)
+    }
+}
+
+// if `target_pointer_width > 64`, we would need a different error type
+#[cfg(any(
+    target_pointer_width = "16",
+    target_pointer_width = "32",
+    target_pointer_width = "64"
+))]
+impl TryFrom<usize> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: usize) -> Result<Self, Self::Error> {
+        Self::try_new(addr.try_into().unwrap())
+    }
+}
+
+// if `target_pointer_width > 64`, we would need a different error type
+// (and `as` would truncate)
+#[cfg(any(
+    target_pointer_width = "16",
+    target_pointer_width = "32",
+    target_pointer_width = "64"
+))]
+impl<T> TryFrom<*const T> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: *const T) -> Result<Self, Self::Error> {
+        Self::try_new(addr as u64)
+    }
+}
+
+// if `target_pointer_width > 64`, we would need a different error type
+// (and `as` would truncate)
+#[cfg(any(
+    target_pointer_width = "16",
+    target_pointer_width = "32",
+    target_pointer_width = "64"
+))]
+impl<T> TryFrom<*mut T> for VirtAddr {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: *mut T) -> Result<Self, Self::Error> {
+        Self::try_new(addr as u64)
+    }
+}
+
+impl From<u32> for VirtAddr {
+    #[inline]
+    fn from(addr: u32) -> Self {
+        Self::new(addr.into())
+    }
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+impl<T> From<&T> for VirtAddr {
+    #[inline]
+    fn from(addr: &T) -> Self {
+        Self::new(addr as *const _ as u64)
+    }
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+impl<T> From<&mut T> for VirtAddr {
+    #[inline]
+    fn from(addr: &mut T) -> Self {
+        Self::new(addr as *mut _ as u64)
+    }
+}
+
+impl From<VirtAddr> for u64 {
+    #[inline]
+    fn from(addr: VirtAddr) -> Self {
+        addr.0
+    }
+}
+
+#[cfg(target_pointer_width = "64")]
+impl<T> From<VirtAddr> for *const T {
+    #[inline]
+    fn from(addr: VirtAddr) -> Self {
+        addr.0 as *const T
+    }
+}
+
+#[cfg(target_pointer_width = "64")]
+impl<T> From<VirtAddr> for *mut T {
+    #[inline]
+    fn from(addr: VirtAddr) -> Self {
+        addr.0 as *mut T
+    }
+}
+
 /// A passed `u64` was not a valid physical address.
 ///
 /// This means that bits 52 to 64 were not all null.
@@ -708,6 +811,29 @@ impl Sub<PhysAddr> for PhysAddr {
     #[inline]
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
+    }
+}
+
+impl TryFrom<u64> for PhysAddr {
+    type Error = PhysAddrNotValid;
+
+    #[inline]
+    fn try_from(addr: u64) -> Result<Self, Self::Error> {
+        Self::try_new(addr)
+    }
+}
+
+impl From<u32> for PhysAddr {
+    #[inline]
+    fn from(addr: u32) -> Self {
+        Self::new(addr.into())
+    }
+}
+
+impl From<PhysAddr> for u64 {
+    #[inline]
+    fn from(addr: PhysAddr) -> Self {
+        addr.0
     }
 }
 
