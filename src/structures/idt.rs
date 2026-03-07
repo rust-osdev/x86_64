@@ -20,6 +20,7 @@
 //!
 //! These types are defined for the compatibility with the Nightly Rust build.
 
+use crate::addr::VirtValidity;
 use crate::registers::rflags::RFlags;
 use crate::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
@@ -1015,16 +1016,16 @@ impl EntryOptions {
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
 #[repr(transparent)]
-pub struct InterruptStackFrame(InterruptStackFrameValue);
+pub struct InterruptStackFrame<V: VirtValidity>(InterruptStackFrameValue<V>);
 
-impl InterruptStackFrame {
+impl<V: VirtValidity> InterruptStackFrame<V> {
     /// Creates a new interrupt stack frame with the given values.
     #[inline]
     pub fn new(
-        instruction_pointer: VirtAddr,
+        instruction_pointer: VirtAddr<V>,
         code_segment: SegmentSelector,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr,
+        stack_pointer: VirtAddr<V>,
         stack_segment: SegmentSelector,
     ) -> Self {
         Self(InterruptStackFrameValue::new(
@@ -1051,13 +1052,13 @@ impl InterruptStackFrame {
     /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
     /// officially supported by LLVM's x86 interrupt calling convention.
     #[inline]
-    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
+    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue<V>> {
         Volatile::new(&mut self.0)
     }
 }
 
-impl Deref for InterruptStackFrame {
-    type Target = InterruptStackFrameValue;
+impl<V: VirtValidity> Deref for InterruptStackFrame<V> {
+    type Target = InterruptStackFrameValue<V>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -1065,7 +1066,7 @@ impl Deref for InterruptStackFrame {
     }
 }
 
-impl fmt::Debug for InterruptStackFrame {
+impl<V: VirtValidity> fmt::Debug for InterruptStackFrame<V> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
@@ -1075,33 +1076,33 @@ impl fmt::Debug for InterruptStackFrame {
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct InterruptStackFrameValue {
+pub struct InterruptStackFrameValue<V> {
     /// This value points to the instruction that should be executed when the interrupt
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
     /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
-    pub instruction_pointer: VirtAddr,
+    pub instruction_pointer: VirtAddr<V>,
     /// The code segment selector at the time of the interrupt.
     pub code_segment: SegmentSelector,
     _reserved1: [u8; 6],
     /// The flags register before the interrupt handler was invoked.
     pub cpu_flags: RFlags,
     /// The stack pointer at the time of the interrupt.
-    pub stack_pointer: VirtAddr,
+    pub stack_pointer: VirtAddr<V>,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
     pub stack_segment: SegmentSelector,
     _reserved2: [u8; 6],
 }
 
-impl InterruptStackFrameValue {
+impl<V: VirtValidity> InterruptStackFrameValue<V> {
     /// Creates a new interrupt stack frame with the given values.
     #[inline]
     pub fn new(
-        instruction_pointer: VirtAddr,
+        instruction_pointer: VirtAddr<V>,
         code_segment: SegmentSelector,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr,
+        stack_pointer: VirtAddr<V>,
         stack_segment: SegmentSelector,
     ) -> Self {
         Self {
@@ -1148,7 +1149,7 @@ impl InterruptStackFrameValue {
     }
 }
 
-impl fmt::Debug for InterruptStackFrameValue {
+impl<V: VirtValidity> fmt::Debug for InterruptStackFrameValue<V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut s = f.debug_struct("InterruptStackFrame");
         s.field("instruction_pointer", &self.instruction_pointer);

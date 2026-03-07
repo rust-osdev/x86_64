@@ -1,7 +1,12 @@
-use crate::structures::paging::{
-    mapper::*,
-    page::AddressNotAligned,
-    page_table::{FrameError, PageTable, PageTableEntry, PageTableLevel},
+use core::marker::PhantomData;
+
+use crate::{
+    addr::VirtValidity,
+    structures::paging::{
+        mapper::*,
+        page::AddressNotAligned,
+        page_table::{FrameError, PageTable, PageTableEntry, PageTableLevel},
+    },
 };
 
 /// A Mapper implementation that relies on a PhysAddr to VirtAddr conversion function.
