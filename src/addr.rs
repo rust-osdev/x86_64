@@ -539,8 +539,9 @@ impl PhysAddr {
     /// ## Panics
     ///
     /// This function panics if a bit in the range 52 to 64 is set.
-    // If the `memory_encryption` feature has been enabled and an encryption bit has been
-    // configured, this also panics if the encryption bit is manually set in the address.
+    ///
+    /// If the `memory_encryption` feature has been enabled and an encryption bit has been
+    /// configured, this also panics if the encryption bit is manually set in the address.
     #[inline]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn new(addr: u64) -> Self {

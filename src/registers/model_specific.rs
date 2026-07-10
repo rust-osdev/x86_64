@@ -428,9 +428,12 @@ mod x86_64 {
         /// not valid for long mode.
         ///
         /// # Parameters
-        /// - sysret: The CS selector is set to this field + 16. SS.Sel is set to
-        ///   this field + 8. Because SYSRET always returns to CPL 3, the
-        ///   RPL bits 1:0 should be initialized to 11b.
+        ///
+        /// - sysret: For SYSRETQ (64-bit), the CS selector is set to this
+        ///   field + 16. For SYSRET (32-bit), the CS selector is set to this
+        ///   field. SS.Sel is set to this field + 8. Because SYSRETQ/SYSRET
+        ///   always returns to CPL 3, the RPL bits 1:0 should be initialized
+        ///   to 11b.
         /// - syscall: This field is copied directly into CS.Sel. SS.Sel is set to
         ///   this field + 8. Because SYSCALL always switches to CPL 0, the RPL bits
         ///   33:32 should be initialized to 00b.
@@ -451,11 +454,16 @@ mod x86_64 {
         }
 
         /// Write the Ring 0 and Ring 3 segment bases.
+        ///
         /// The remaining fields are ignored because they are
         /// not valid for long mode.
+        ///
         /// This function will fail if the segment selectors are
         /// not in the correct offset of each other or if the
         /// segment selectors do not have correct privileges.
+        ///
+        /// Note that `cs_sysret` should contain the segment to be used for
+        /// SYSRETQ (64-bit), not SYSRET (32-bit).
         #[inline]
         pub fn write(
             cs_sysret: SegmentSelector,

@@ -46,6 +46,76 @@ impl<S: PageSize> PhysFrame<S> {
         }
     }
 
+    /// Returns the frame by a physical frame number.
+    ///
+    /// ```
+    /// use x86_64::{PhysAddr, structures::paging::{PhysFrame, Size4KiB}};
+    ///
+    /// assert_eq!(PhysFrame::<Size4KiB>::from_pfn(0x123), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0x123000)));
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the resulting address is not valid.
+    #[inline]
+    #[rustversion::attr(
+        since(1.61),
+        dep_const_fn::const_fn(cfg(not(feature = "memory_encryption")))
+    )]
+    pub fn from_pfn(pfn: u64) -> Self {
+        match Self::try_from_pfn(pfn) {
+            Ok(frame) => frame,
+            Err(_) => panic!("PFNs must not have any bits in the range 40 to 64 set"),
+        }
+    }
+
+    /// Returns the frame by a physical frame number.
+    ///
+    /// ```
+    /// use x86_64::{PhysAddr, structures::paging::{PhysFrame, Size4KiB}};
+    ///
+    /// assert_eq!(PhysFrame::<Size4KiB>::try_from_pfn(0x123), Ok(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0x123000))));
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// This function will return an error if the resulting address is not valid.
+    #[inline]
+    #[rustversion::attr(
+        since(1.61),
+        dep_const_fn::const_fn(cfg(not(feature = "memory_encryption")))
+    )]
+    pub fn try_from_pfn(pfn: u64) -> Result<Self, PfnNotValid> {
+        let addr_raw = if let Some(addr_raw) = pfn.checked_mul(S::SIZE) {
+            addr_raw
+        } else {
+            return Err(PfnNotValid(pfn));
+        };
+        let addr = if let Ok(addr) = PhysAddr::try_new(addr_raw) {
+            addr
+        } else {
+            return Err(PfnNotValid(pfn));
+        };
+        Ok(PhysFrame {
+            start_address: addr,
+            size: PhantomData,
+        })
+    }
+
+    /// Returns the frame by a physical frame number.
+    ///
+    /// # Safety
+    ///
+    /// The resulting address must be valid.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub unsafe fn from_pfn_unchecked(pfn: u64) -> Self {
+        PhysFrame {
+            start_address: unsafe { PhysAddr::new_unsafe(pfn * S::SIZE) },
+            size: PhantomData,
+        }
+    }
+
     /// Returns the frame that contains the given physical address.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
@@ -68,6 +138,27 @@ impl<S: PageSize> PhysFrame<S> {
     #[rustversion::attr(since(1.61), const)]
     pub fn size(self) -> u64 {
         S::SIZE
+    }
+
+    /// Returns the PFN of the current frame.
+    ///
+    /// The PFN is defined to be the address divided by the page size.
+    ///
+    /// ```
+    /// use x86_64::{PhysAddr, structures::paging::{PhysFrame, Size1GiB, Size2MiB, Size4KiB}};
+    ///
+    /// assert_eq!(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0x123000)).pfn(), 0x123);
+    ///
+    /// // Note that this means that the PFN for the same address will be
+    /// // different for different page sizes.
+    /// assert_eq!(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0xC000_0000)).pfn(), 0xC0000);
+    /// assert_eq!(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0xC000_0000)).pfn(), 0x600);
+    /// assert_eq!(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0xC000_0000)).pfn(), 0x3);
+    /// ```
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn pfn(self) -> u64 {
+        self.start_address.as_u64() / S::SIZE
     }
 
     /// Returns a range of frames, exclusive `end`.
@@ -252,6 +343,24 @@ impl<S: PageSize> fmt::Debug for PhysFrameRange<S> {
         f.debug_struct("PhysFrameRange")
             .field("start", &self.start)
             .field("end", &self.end)
+            .finish()
+    }
+}
+
+/// A passed `u64` was not a valid physical address.
+///
+/// This means that bits 40 to 64 were not all null.
+///
+/// Contains the invalid PFN.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct PfnNotValid(pub u64);
+
+// Implementation of display
+impl fmt::Display for PfnNotValid {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("PhysAddrNotValid")
+            .field(&format_args!("{:#x}", self.0))
             .finish()
     }
 }
