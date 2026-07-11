@@ -1,5 +1,30 @@
 # Unreleased
 
+# 0.15.5 – 2026-07-11
+
+This release is compatible with Rust nightlies starting with `nightly-2026-07-10` (this only applies when the `nightly` feature is used).
+
+## New Features
+
+- [implement DoubleEndedIterator for ranges + implement more iterator methods](https://github.com/rust-osdev/x86_64/pull/589)
+- [feat: Added the "from_pfn" in PhysFrame](https://github.com/rust-osdev/x86_64/pull/593)
+
+## Fixes
+
+- [fix(instructions): allow unused_unsafe for cpuid](https://github.com/rust-osdev/x86_64/pull/575)
+- [fix(mapper): inline internal map_to\_\* functions](https://github.com/rust-osdev/x86_64/pull/578)
+- [docs: fix typos](https://github.com/rust-osdev/x86_64/pull/579)
+- [docs(page): fix typos](https://github.com/rust-osdev/x86_64/pull/582)
+- [don't enable abi_x86_interrupt if not needed](https://github.com/rust-osdev/x86_64/pull/585)
+- [insert NOP after STI](https://github.com/rust-osdev/x86_64/pull/588)
+- [add missing {forward,backward}\_overflowing impls](https://github.com/rust-osdev/x86_64/pull/595)
+
+## Other Improvements
+
+- [Bump actions/cache from 4 to 5](https://github.com/rust-osdev/x86_64/pull/573)
+- [ci: add typos job](https://github.com/rust-osdev/x86_64/pull/580)
+- [Bump actions/checkout from 6 to 7](https://github.com/rust-osdev/x86_64/pull/590)
+
 # 0.15.4 – 2025-11-24
 
 ## New Features
