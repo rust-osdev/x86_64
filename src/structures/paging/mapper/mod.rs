@@ -20,7 +20,7 @@ mod mapped_page_table;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod recursive_page_table;
 
-/// An empty convencience trait that requires the `Mapper` trait for all page sizes.
+/// An empty convenience trait that requires the `Mapper` trait for all page sizes.
 pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}
 
 impl<T> MapperAllSizes for T where T: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}
@@ -368,7 +368,7 @@ pub trait Mapper<S: PageSize> {
     ///
     /// ## Safety
     ///
-    /// This is a convencience function that invokes [`Mapper::map_to`] internally, so
+    /// This is a convenience function that invokes [`Mapper::map_to`] internally, so
     /// all safety requirements of it also apply for this function.
     #[inline]
     unsafe fn identity_map<A>(

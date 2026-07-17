@@ -13,12 +13,16 @@ pub fn are_enabled() -> bool {
 /// Enable interrupts.
 ///
 /// This is a wrapper around the `sti` instruction.
+///
+/// This function executes `sti; nop` to ensure that the interrupt shadow
+/// caused by the `sti` instruction doesn't last beyond this function.
+/// Use [`enable_and_hlt`] to execute `hlt` in `sti`'s interrupt shadow.
 #[inline]
 pub fn enable() {
     // Omit `nomem` to imitate a lock release. Otherwise, the compiler
     // is free to move reads and writes through this asm block.
     unsafe {
-        asm!("sti", options(preserves_flags, nostack));
+        asm!("sti", "nop", options(preserves_flags, nostack));
     }
 }
 
