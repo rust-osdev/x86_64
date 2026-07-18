@@ -2,7 +2,13 @@
 //! and access to various system registers.
 
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(feature = "abi_x86_interrupt", feature(abi_x86_interrupt))]
+#![cfg_attr(
+    all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        feature = "abi_x86_interrupt"
+    ),
+    feature(abi_x86_interrupt)
+)]
 #![cfg_attr(feature = "step_trait", feature(step_trait))]
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 #![warn(missing_docs)]

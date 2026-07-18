@@ -21,7 +21,7 @@ use crate::registers::rflags::{self, RFlags};
 
 /// A helper type that provides SMAP related methods.
 ///
-/// This type can only be instatiated if SMAP is supported by the CPU.
+/// This type can only be instantiated if SMAP is supported by the CPU.
 #[derive(Debug, Clone, Copy)]
 pub struct Smap(());
 

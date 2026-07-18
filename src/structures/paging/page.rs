@@ -4,6 +4,7 @@ use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
+use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
@@ -163,14 +164,15 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
+        VirtAddr::steps_between_u64(&start.start_address(), &end.start_address())
+            .map(|steps| steps / S::SIZE)
+    }
+
+    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
-        use core::convert::TryFrom;
-
-        if let Some(steps) =
-            VirtAddr::steps_between_u64(&start.start_address(), &end.start_address())
-        {
-            let steps = steps / S::SIZE;
+        if let Some(steps) = Self::steps_between_u64(start, end) {
             let steps = usize::try_from(steps).ok();
             (steps.unwrap_or(usize::MAX), steps)
         } else {
@@ -181,8 +183,6 @@ impl<S: PageSize> Page<S> {
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
-        use core::convert::TryFrom;
-
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
         let start_address = VirtAddr::forward_checked_u64(start.start_address, count)?;
         Some(Self {
@@ -326,6 +326,28 @@ impl<S: PageSize> Step for Page<S> {
             size: PhantomData,
         })
     }
+
+    // Kani's bundled toolchain predates these methods being added to `Step`.
+    // Exclude them there so the crate still compiles under `cargo kani`.
+    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
+    #[cfg(not(kani))]
+    fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        match Self::forward_checked(start, count) {
+            Some(next) => (next, false),
+            None => (start, true),
+        }
+    }
+
+    // Kani's bundled toolchain predates these methods being added to `Step`.
+    // Exclude them there so the crate still compiles under `cargo kani`.
+    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
+    #[cfg(not(kani))]
+    fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        match Self::backward_checked(start, count) {
+            Some(next) => (next, false),
+            None => (start, true),
+        }
+    }
 }
 
 /// A range of pages with exclusive upper bound.
@@ -338,7 +360,7 @@ pub struct PageRange<S: PageSize = Size4KiB> {
 }
 
 impl<S: PageSize> PageRange<S> {
-    /// Returns wether this range contains no pages.
+    /// Returns whether this range contains no pages.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.start >= self.end
@@ -373,6 +395,93 @@ impl<S: PageSize> Iterator for PageRange<S> {
         } else {
             None
         }
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        if self.is_empty() {
+            return None;
+        }
+
+        // Convert to `u64`. If the value doesn't fit just use `u64::MAX`.
+        // `self.len()` is guaranteed to be smaller than the real value and
+        // `u64::MAX` anyway, so it doesn't make a difference.
+        let n = u64::try_from(n).unwrap_or(u64::MAX);
+
+        // Handling `n >= self.len()` is a bit more complicated because we
+        // can't just add `n` to `self.start`. Handle this by doing two steps,
+        // `self.len()-1` and `1`. This should return `None` (or panic).
+        if n >= self.len() {
+            self.nth(self.len() as usize - 1)?;
+            return self.next();
+        }
+
+        // Figure out how many steps there are until the address range gap.
+        let second_half_start = Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
+        let steps_until_gap = Page::steps_between_u64(&self.start, &second_half_start)
+            .filter(|steps| *steps <= n && *steps > 0);
+        if let Some(steps_until_gap) = steps_until_gap {
+            // Jump just *before* the address range gap.
+            self.start += steps_until_gap - 1;
+            // Advancing one more time should panic.
+            self.next()?;
+            unreachable!("the previous call to `next` should have panicked")
+        }
+
+        self.start += n;
+        self.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        usize::try_from(len)
+            .map(|len| (len, Some(len)))
+            .unwrap_or((usize::MAX, None))
+    }
+}
+
+impl<S: PageSize> DoubleEndedIterator for PageRange<S> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start < self.end {
+            self.end -= 1;
+            Some(self.end)
+        } else {
+            None
+        }
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        if self.is_empty() {
+            return None;
+        }
+
+        // Convert to `u64`. If the value doesn't fit just use `u64::MAX`.
+        // `self.len()` is guaranteed to be smaller than the real value and
+        // `u64::MAX` anyway, so it doesn't make a difference.
+        let n = u64::try_from(n).unwrap_or(u64::MAX);
+
+        // Handling `n >= self.len()` is a bit more complicated because we
+        // can't just subtract `n` from `self.end`. Handle this by doing two
+        // steps, `self.len()-1` and `1`. This should return `None` (or panic).
+        if n >= self.len() {
+            self.nth_back(self.len() as usize - 1);
+            return self.next_back();
+        }
+
+        // Figure out how many steps there are until the address range gap.
+        let first_half_end = Page::<S>::containing_address(VirtAddr::new(0x7fff_ffff_f000));
+        let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.end)
+            .filter(|steps| *steps <= n && *steps > 0);
+        if let Some(steps_until_gap) = steps_until_gap {
+            // Jump just *before* the address range gap.
+            self.end -= steps_until_gap - 1;
+            // Advancing one more time should panic.
+            self.next_back()?;
+            unreachable!("the previous call to `next_back` should have panicked")
+        }
+
+        self.end -= n;
+        self.next_back()
     }
 }
 
@@ -412,7 +521,7 @@ impl<S: PageSize> PageRangeInclusive<S> {
         self.start > self.end
     }
 
-    /// Returns the number of frames in the range.
+    /// Returns the number of pages in the range.
     #[inline]
     pub fn len(&self) -> u64 {
         if !self.is_empty() {
@@ -422,7 +531,7 @@ impl<S: PageSize> PageRangeInclusive<S> {
         }
     }
 
-    /// Returns the size in bytes of all frames within the range.
+    /// Returns the size in bytes of all pages within the range.
     #[inline]
     pub fn size(&self) -> u64 {
         S::SIZE * self.len()
@@ -451,6 +560,102 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
             None
         }
     }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        if self.is_empty() {
+            return None;
+        }
+
+        // Convert to `u64`. If the value doesn't fit just use `u64::MAX`.
+        // `self.len()` is guaranteed to be smaller than the real value and
+        // `u64::MAX` anyway, so it doesn't make a difference.
+        let n = u64::try_from(n).unwrap_or(u64::MAX);
+
+        // Handling `n >= self.len()` is a bit more complicated because we
+        // can't just add `n` to `self.start`. Handle this by doing two steps,
+        // `self.len()-1` and `1`. This should return `None` (or panic).
+        if n >= self.len() {
+            self.nth(self.len() as usize - 1)?;
+            return self.next();
+        }
+
+        // Figure out how many steps there are until the address range gap.
+        let second_half_start = Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
+        let steps_until_gap = Page::steps_between_u64(&self.start, &second_half_start)
+            .filter(|steps| *steps <= n && *steps > 0);
+        if let Some(steps_until_gap) = steps_until_gap {
+            // Jump just *before* the address range gap.
+            self.start += steps_until_gap - 1;
+            // Advancing one more time should panic.
+            self.next()?;
+            unreachable!("the previous call to `next` should have panicked")
+        }
+
+        self.start += n;
+        self.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        usize::try_from(len)
+            .map(|len| (len, Some(len)))
+            .unwrap_or((usize::MAX, None))
+    }
+}
+
+impl<S: PageSize> DoubleEndedIterator for PageRangeInclusive<S> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start <= self.end {
+            let page = self.end;
+
+            // If the start of the inclusive range is 0, decrementing end until
+            // it is smaller than the start will cause an integer underflow.
+            // So instead, in that case we increment start rather than decrementing end.
+            if self.end.start_address().as_u64() != 0 {
+                self.end -= 1;
+            } else {
+                self.start += 1;
+            }
+            Some(page)
+        } else {
+            None
+        }
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        if self.is_empty() {
+            return None;
+        }
+
+        // Convert to `u64`. If the value doesn't fit just use `u64::MAX`.
+        // `self.len()` is guaranteed to be smaller than the real value and
+        // `u64::MAX` anyway, so it doesn't make a difference.
+        let n = u64::try_from(n).unwrap_or(u64::MAX);
+
+        // Handling `n >= self.len()` is a bit more complicated because we
+        // can't just subtract `n` from `self.end`. Handle this by doing two
+        // steps, `self.len()-1` and `1`. This should return `None` (or panic).
+        if n >= self.len() {
+            self.nth_back(self.len() as usize - 1);
+            return self.next_back();
+        }
+
+        // Figure out how many steps there are until the address range gap.
+        let first_half_end = Page::<S>::containing_address(VirtAddr::new(0x7fff_ffff_f000));
+        let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.end)
+            .filter(|steps| *steps <= n && *steps > 0);
+        if let Some(steps_until_gap) = steps_until_gap {
+            // Jump just *before* the address range gap.
+            self.end -= steps_until_gap - 1;
+            // Advancing one more time should panic.
+            self.next_back()?;
+            unreachable!("the previous call to `next_back` should have panicked")
+        }
+
+        self.end -= n;
+        self.next_back()
+    }
 }
 
 impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
@@ -459,6 +664,13 @@ impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
             .field("start", &self.start)
             .field("end", &self.end)
             .finish()
+    }
+}
+
+#[cfg(kani)]
+impl<S: PageSize> kani::Arbitrary for Page<S> {
+    fn any() -> Self {
+        Self::containing_address(kani::any())
     }
 }
 
@@ -530,6 +742,82 @@ mod tests {
             );
         }
         assert_eq!(range_inclusive.next(), None);
+    }
+
+    #[test]
+    #[should_panic = "attempt to add resulted in non-canonical virtual address: VirtAddrNotValid(0x800000000000)"]
+    fn test_page_range_next_jumping_gap_panics() {
+        let start = 0x7fff_ffff_f000;
+        let end = 0xffff_8000_0000_0000;
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
+        let start = Page::<Size4KiB>::from_start_address(start).unwrap();
+        let end = Page::from_start_address(end).unwrap();
+        Page::range(start, end).next();
+    }
+
+    // TODO: This probably shouldn't panic, but we can't fix this without a breaking change.
+    #[test]
+    #[should_panic = "attempt to subtract resulted in non-canonical virtual address: VirtAddrNotValid(0xffff7ffffffff000)"]
+    fn test_page_range_next_back_jumping_gap_panics() {
+        let start = 0x7fff_ffff_f000;
+        let end = 0xffff_8000_0000_0000;
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
+        let start = Page::<Size4KiB>::from_start_address(start).unwrap();
+        let end = Page::from_start_address(end).unwrap();
+        Page::range(start, end).next_back();
+    }
+
+    #[test]
+    #[should_panic = "attempt to add resulted in non-canonical virtual address: VirtAddrNotValid(0x800000000000)"]
+    fn test_page_range_inclusive_next_not_jumping_gap_panics() {
+        let start = 0x7fff_ffff_f000;
+        let end = 0x7fff_ffff_f000;
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
+        let start = Page::<Size4KiB>::from_start_address(start).unwrap();
+        let end = Page::from_start_address(end).unwrap();
+        Page::range_inclusive(start, end).next();
+    }
+
+    #[test]
+    #[should_panic = "attempt to subtract resulted in non-canonical virtual address: VirtAddrNotValid(0xffff7ffffffff000)"]
+    fn test_page_range_inclusive_next_back_not_jumping_gap_panics() {
+        let start = 0x7fff_ffff_f000;
+        let end = 0xffff_8000_0000_0000;
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
+        let start = Page::<Size4KiB>::from_start_address(start).unwrap();
+        let end = Page::from_start_address(end).unwrap();
+        Page::range_inclusive(start, end).next_back();
+    }
+
+    // TODO: This probably shouldn't panic, but we can't fix this without a breaking change.
+    #[test]
+    #[should_panic = "attempt to add resulted in non-canonical virtual address: VirtAddrNotValid(0x800000000000)"]
+    fn test_page_range_inclusive_next_jumping_gap_panics() {
+        let start = 0x7fff_ffff_f000;
+        let end = 0x7fff_ffff_f000;
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
+        let start = Page::<Size4KiB>::from_start_address(start).unwrap();
+        let end = Page::from_start_address(end).unwrap();
+        Page::range_inclusive(start, end).next();
+        Page::range_inclusive(start, end).next();
+    }
+
+    #[test]
+    #[should_panic = "attempt to subtract resulted in non-canonical virtual address: VirtAddrNotValid(0xffff7ffffffff000)"]
+    fn test_page_range_inclusive_next_back_jumping_gap_panics() {
+        let start = 0xffff_8000_0000_0000;
+        let end = 0xffff_8000_0000_0000;
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
+        let start = Page::<Size4KiB>::from_start_address(start).unwrap();
+        let end = Page::from_start_address(end).unwrap();
+        Page::range_inclusive(start, end).next_back();
+        Page::range_inclusive(start, end).next_back();
     }
 
     #[test]
@@ -649,5 +937,382 @@ mod tests {
             let end = Page::from_start_address(VirtAddr::new(end)).unwrap();
             assert_eq!(Step::steps_between(&start, &end), (lower, upper));
         }
+    }
+
+    #[test]
+    #[cfg(feature = "step_trait")]
+    fn page_step_overflowing() {
+        let page = |addr| Page::<Size4KiB>::from_start_address(VirtAddr::new(addr)).unwrap();
+
+        assert_eq!(
+            Step::forward_overflowing(page(0x7fff_ffff_f000), 1),
+            (page(0xffff_8000_0000_0000), false)
+        );
+        assert_eq!(
+            Step::backward_overflowing(page(0xffff_8000_0000_0000), 1),
+            (page(0x7fff_ffff_f000), false)
+        );
+
+        assert!(Step::forward_overflowing(page(0xffff_ffff_ffff_f000), 1).1);
+        assert!(Step::backward_overflowing(page(0), 1).1);
+    }
+}
+
+#[cfg(kani)]
+mod proofs {
+    use super::*;
+
+    fn page_range_next_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page<Size4KiB>>();
+        let end = kani::any::<Page<Size4KiB>>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let should_panic = start.start_address().as_u64() != 0x7fff_ffff_e000
+            || start.start_address().as_u64() != 0x7fff_ffff_f000;
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `next` should panic.
+            let mut our_range = Page::range(start, end);
+            our_range.next();
+            our_range.next();
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range(start, end);
+        let mut native_range = start..end;
+        // The first assert checks that we're returning the correct value.
+        assert_eq!(our_range.next(), native_range.next());
+        // The second assert checks that we're updating the range state correctly.
+        assert_eq!(our_range.next(), native_range.next());
+    }
+
+    #[kani::proof]
+    fn page_range_next() {
+        page_range_next_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::should_panic]
+    fn page_range_next_panic() {
+        page_range_next_harness(true);
+    }
+
+    fn page_range_next_back_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page<Size4KiB>>();
+        let end = kani::any::<Page<Size4KiB>>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let should_panic = start.start_address().as_u64() != 0xffff_8000_0000_0000
+            || start.start_address().as_u64() != 0xffff_8000_0000_1000;
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `next_back` should panic.
+            let mut our_range = Page::range(start, end);
+            our_range.next_back();
+            our_range.next_back();
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range(start, end);
+        let mut native_range = start..end;
+        // The first assert checks that we're returning the correct value.
+        assert_eq!(our_range.next_back(), native_range.next_back());
+        // The second assert checks that we're updating the range state correctly.
+        assert_eq!(our_range.next_back(), native_range.next_back());
+    }
+
+    #[kani::proof]
+    fn page_range_next_back() {
+        page_range_next_back_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::should_panic]
+    fn page_range_next_back_panic() {
+        page_range_next_back_harness(true);
+    }
+
+    fn page_range_inclusive_next_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page<Size4KiB>>();
+        let end = kani::any::<Page<Size4KiB>>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let should_panic = start.start_address().as_u64() != 0x7fff_ffff_e000
+            || start.start_address().as_u64() != 0x7fff_ffff_f000;
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `next` should panic.
+            let mut our_range = Page::range_inclusive(start, end);
+            our_range.next();
+            our_range.next();
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range_inclusive(start, end);
+        let mut native_range = start..=end;
+        // The first assert checks that we're returning the correct value.
+        assert_eq!(our_range.next(), native_range.next());
+        // The second assert checks that we're updating the range state correctly.
+        assert_eq!(our_range.next(), native_range.next());
+    }
+
+    #[kani::proof]
+    fn page_range_inclusive_next() {
+        page_range_inclusive_next_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::should_panic]
+    fn page_range_inclusive_next_panic() {
+        page_range_inclusive_next_harness(true);
+    }
+
+    fn page_range_inclusive_next_back_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page<Size4KiB>>();
+        let end = kani::any::<Page<Size4KiB>>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let should_panic = start.start_address().as_u64() != 0xffff_8000_0000_0000
+            || start.start_address().as_u64() != 0xffff_8000_0000_1000;
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `next_back` should panic.
+            let mut our_range = Page::range_inclusive(start, end);
+            our_range.next_back();
+            our_range.next_back();
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range_inclusive(start, end);
+        let mut native_range = start..=end;
+        // The first assert checks that we're returning the correct value.
+        assert_eq!(our_range.next_back(), native_range.next_back());
+        // The second assert checks that we're updating the range state correctly.
+        assert_eq!(our_range.next_back(), native_range.next_back());
+    }
+
+    #[kani::proof]
+    fn page_range_inclusive_next_back() {
+        page_range_inclusive_next_back_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::should_panic]
+    fn page_range_inclusive_next_back_panic() {
+        page_range_inclusive_next_back_harness(true);
+    }
+
+    fn page_range_nth_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page>();
+        let end = kani::any::<Page>();
+        let m = kani::any::<u64>();
+        let n = kani::any::<u64>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let offset = m
+            .checked_add(n)
+            .and_then(|sum| sum.checked_add(2))
+            .and_then(|sum| sum.checked_mul(Size4KiB::SIZE));
+        let expected_end =
+            offset.and_then(|offset| start.start_address().as_u64().checked_add(offset));
+        let should_panic = expected_end.is_some_and(|expected_end| {
+            start.start_address().as_u64() <= 0x7fff_ffff_f000 && expected_end > 0x7fff_ffff_f000
+        }) || expected_end.is_none();
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `nth` should panic.
+            let mut our_range = Page::range(start, end);
+            our_range.nth(n as usize);
+            our_range.nth(m as usize);
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range(start, end);
+        let mut native_range = start..end;
+        assert_eq!(our_range.nth(m as usize), native_range.nth(m as usize));
+        assert_eq!(our_range.nth(n as usize), native_range.nth(n as usize));
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    fn page_range_nth() {
+        page_range_nth_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    #[kani::should_panic]
+    fn page_range_nth_panic() {
+        page_range_nth_harness(true);
+    }
+
+    fn page_range_nth_back_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page>();
+        let end = kani::any::<Page>();
+        let m = kani::any::<u64>();
+        let n = kani::any::<u64>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let offset = m
+            .checked_add(n)
+            .and_then(|sum| sum.checked_add(2))
+            .and_then(|sum| sum.checked_mul(Size4KiB::SIZE));
+        let expected_start =
+            offset.and_then(|offset| end.start_address().as_u64().checked_sub(offset));
+        let should_panic = expected_start.is_some_and(|expected_start| {
+            expected_start <= 0xffff_7fff_ffff_f000
+                && end.start_address().as_u64() > 0xffff_7fff_ffff_f000
+        }) || expected_start.is_none();
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `nth_back` should panic.
+            let mut our_range = Page::range(start, end);
+            our_range.nth_back(n as usize);
+            our_range.nth_back(m as usize);
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range(start, end);
+        let mut native_range = start..end;
+        assert_eq!(
+            our_range.nth_back(m as usize),
+            native_range.nth_back(m as usize)
+        );
+        assert_eq!(
+            our_range.nth_back(n as usize),
+            native_range.nth_back(n as usize)
+        );
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    fn page_range_nth_back() {
+        page_range_nth_back_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    #[kani::should_panic]
+    fn page_range_nth_back_panic() {
+        page_range_nth_back_harness(true);
+    }
+
+    fn page_range_inclusive_nth_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page>();
+        let end = kani::any::<Page>();
+        let m = kani::any::<u64>();
+        let n = kani::any::<u64>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let offset = m
+            .checked_add(n)
+            .and_then(|sum| sum.checked_add(2))
+            .and_then(|sum| sum.checked_mul(Size4KiB::SIZE));
+        let expected_end =
+            offset.and_then(|offset| start.start_address().as_u64().checked_add(offset));
+        let should_panic = expected_end.is_some_and(|expected_end| {
+            start.start_address().as_u64() <= 0x7fff_ffff_f000 && expected_end > 0x7fff_ffff_f000
+        }) || expected_end.is_none();
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `nth` should panic.
+            let mut our_range = Page::range_inclusive(start, end);
+            our_range.nth(n as usize);
+            our_range.nth(m as usize);
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range_inclusive(start, end);
+        let mut native_range = start..=end;
+        assert_eq!(our_range.nth(m as usize), native_range.nth(m as usize));
+        assert_eq!(our_range.nth(n as usize), native_range.nth(n as usize));
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    fn page_range_inclusive_nth() {
+        page_range_inclusive_nth_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    #[kani::should_panic]
+    fn page_range_inclusive_nth_panic() {
+        page_range_inclusive_nth_harness(true);
+    }
+
+    fn page_range_inclusive_nth_back_harness(should_panic_mode: bool) {
+        let start = kani::any::<Page>();
+        let end = kani::any::<Page>();
+        let m = kani::any::<u64>();
+        let n = kani::any::<u64>();
+
+        // If the code is expected to panic, only run it in `#[should_panic]`
+        // mode.
+        let offset = m
+            .checked_add(n)
+            .and_then(|sum| sum.checked_add(2))
+            .and_then(|sum| sum.checked_mul(Size4KiB::SIZE));
+        let expected_start =
+            offset.and_then(|offset| end.start_address().as_u64().checked_sub(offset));
+        let should_panic = expected_start.is_some_and(|expected_start| {
+            expected_start <= 0xffff_7fff_ffff_f000
+                && end.start_address().as_u64() > 0xffff_7fff_ffff_f000
+        }) || expected_start.is_none();
+        kani::assume(should_panic == should_panic_mode);
+
+        if should_panic {
+            // Calling `nth_back` should panic.
+            let mut our_range = Page::range_inclusive(start, end);
+            our_range.nth_back(n as usize);
+            our_range.nth_back(m as usize);
+            return;
+        }
+
+        // Otherwise the results should match what `Range` returns.
+        let mut our_range = Page::range_inclusive(start, end);
+        let mut native_range = start..=end;
+        assert_eq!(
+            our_range.nth_back(m as usize),
+            native_range.nth_back(m as usize)
+        );
+        assert_eq!(
+            our_range.nth_back(n as usize),
+            native_range.nth_back(n as usize)
+        );
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    fn page_range_inclusive_nth_back() {
+        page_range_inclusive_nth_back_harness(false);
+    }
+
+    #[kani::proof]
+    #[kani::unwind(1)]
+    #[kani::should_panic]
+    fn page_range_inclusive_nth_back_panic() {
+        page_range_inclusive_nth_back_harness(true);
     }
 }
