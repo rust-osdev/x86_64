@@ -1,5 +1,6 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+use crate::addr::VirtValidity;
 use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
@@ -65,12 +66,12 @@ impl Sealed for super::Size1GiB {}
 /// A virtual memory page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
-pub struct Page<S: PageSize = Size4KiB> {
-    start_address: VirtAddr,
+pub struct Page<V: VirtValidity, S: PageSize = Size4KiB> {
+    start_address: VirtAddr<V>,
     size: PhantomData<S>,
 }
 
-impl<S: PageSize> Page<S> {
+impl<S: PageSize, V: VirtValidity> Page<V, S> {
     /// The page size in bytes.
     pub const SIZE: u64 = S::SIZE;
 
@@ -79,7 +80,10 @@ impl<S: PageSize> Page<S> {
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
+    pub fn from_start_address(address: VirtAddr<V>) -> Result<Self, AddressNotAligned>
+    where
+        V: [const] VirtValidity,
+    {
         if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
@@ -93,7 +97,10 @@ impl<S: PageSize> Page<S> {
     /// The address must be correctly aligned.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+    pub unsafe fn from_start_address_unchecked(start_address: VirtAddr<V>) -> Self
+    where
+        V: [const] VirtValidity,
+    {
         Page {
             start_address,
             size: PhantomData,
@@ -103,7 +110,10 @@ impl<S: PageSize> Page<S> {
     /// Returns the page that contains the given virtual address.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn containing_address(address: VirtAddr) -> Self {
+    pub fn containing_address(address: VirtAddr<V>) -> Self
+    where
+        V: [const] VirtValidity,
+    {
         Page {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -113,7 +123,10 @@ impl<S: PageSize> Page<S> {
     /// Returns the start address of the page.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn start_address(self) -> VirtAddr {
+    pub fn start_address(self) -> VirtAddr<V>
+    where
+        V: [const] VirtValidity,
+    {
         self.start_address
     }
 
@@ -127,35 +140,44 @@ impl<S: PageSize> Page<S> {
     /// Returns the level 4 page table index of this page.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn p4_index(self) -> PageTableIndex {
+    pub fn p4_index(self) -> PageTableIndex
+    where
+        V: [const] VirtValidity,
+    {
         self.start_address().p4_index()
     }
 
     /// Returns the level 3 page table index of this page.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn p3_index(self) -> PageTableIndex {
+    pub fn p3_index(self) -> PageTableIndex
+    where
+        V: [const] VirtValidity,
+    {
         self.start_address().p3_index()
     }
 
     /// Returns the table index of this page at the specified level.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+    pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex
+    where
+        V: [const] VirtValidity,
+    {
         self.start_address().page_table_index(level)
     }
 
     /// Returns a range of pages, exclusive `end`.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn range(start: Self, end: Self) -> PageRange<S> {
+    pub fn range(start: Self, end: Self) -> PageRange<V, S> {
         PageRange { start, end }
     }
 
     /// Returns a range of pages, inclusive `end`.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<V, S> {
         PageRangeInclusive { start, end }
     }
 
@@ -188,23 +210,26 @@ impl<S: PageSize> Page<S> {
     }
 }
 
-impl<S: NotGiantPageSize> Page<S> {
+impl<S: NotGiantPageSize, V: VirtValidity> Page<V, S> {
     /// Returns the level 2 page table index of this page.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn p2_index(self) -> PageTableIndex {
+    pub fn p2_index(self) -> PageTableIndex
+    where
+        V: [const] VirtValidity,
+    {
         self.start_address().p2_index()
     }
 }
 
-impl Page<Size1GiB> {
+impl<V: VirtValidity> Page<V, Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn from_page_table_indices_1gib(
-        p4_index: PageTableIndex,
-        p3_index: PageTableIndex,
-    ) -> Self {
+    pub fn from_page_table_indices_1gib(p4_index: PageTableIndex, p3_index: PageTableIndex) -> Self
+    where
+        V: [const] VirtValidity,
+    {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
@@ -212,7 +237,7 @@ impl Page<Size1GiB> {
     }
 }
 
-impl Page<Size2MiB> {
+impl<V: VirtValidity> Page<V, Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
@@ -220,7 +245,10 @@ impl Page<Size2MiB> {
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
-    ) -> Self {
+    ) -> Self
+    where
+        V: [const] VirtValidity,
+    {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
@@ -229,7 +257,7 @@ impl Page<Size2MiB> {
     }
 }
 
-impl Page<Size4KiB> {
+impl<V: VirtValidity> Page<V, Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
@@ -238,7 +266,10 @@ impl Page<Size4KiB> {
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
         p1_index: PageTableIndex,
-    ) -> Self {
+    ) -> Self
+    where
+        V: [const] VirtValidity,
+    {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
@@ -254,7 +285,7 @@ impl Page<Size4KiB> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for Page<S> {
+impl<S: PageSize, V: VirtValidity> fmt::Debug for Page<V, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "Page[{}]({:#x})",
@@ -264,7 +295,7 @@ impl<S: PageSize> fmt::Debug for Page<S> {
     }
 }
 
-impl<S: PageSize> Add<u64> for Page<S> {
+impl<S: PageSize, V: VirtValidity> Add<u64> for Page<V, S> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
@@ -272,14 +303,14 @@ impl<S: PageSize> Add<u64> for Page<S> {
     }
 }
 
-impl<S: PageSize> AddAssign<u64> for Page<S> {
+impl<S: PageSize, V: VirtValidity> AddAssign<u64> for Page<V, S> {
     #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
 }
 
-impl<S: PageSize> Sub<u64> for Page<S> {
+impl<S: PageSize, V: VirtValidity> Sub<u64> for Page<V, S> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
@@ -287,14 +318,14 @@ impl<S: PageSize> Sub<u64> for Page<S> {
     }
 }
 
-impl<S: PageSize> SubAssign<u64> for Page<S> {
+impl<S: PageSize, V: VirtValidity> SubAssign<u64> for Page<V, S> {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
 }
 
-impl<S: PageSize> Sub<Self> for Page<S> {
+impl<S: PageSize, V: VirtValidity> Sub<Self> for Page<V, S> {
     type Output = u64;
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
@@ -303,7 +334,7 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 }
 
 #[cfg(feature = "step_trait")]
-impl<S: PageSize> Step for Page<S> {
+impl<S: PageSize, V: VirtValidity> Step for Page<V, S> {
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
@@ -349,14 +380,14 @@ impl<S: PageSize> Step for Page<S> {
 /// A range of pages with exclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
-pub struct PageRange<S: PageSize = Size4KiB> {
+pub struct PageRange<V: VirtValidity, S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
-    pub start: Page<S>,
+    pub start: Page<V, S>,
     /// The end of the range, exclusive.
-    pub end: Page<S>,
+    pub end: Page<V, S>,
 }
 
-impl<S: PageSize> PageRange<S> {
+impl<S: PageSize, V: VirtValidity> PageRange<V, S> {
     /// Returns whether this range contains no pages.
     #[inline]
     pub fn is_empty(&self) -> bool {
@@ -380,8 +411,8 @@ impl<S: PageSize> PageRange<S> {
     }
 }
 
-impl<S: PageSize> Iterator for PageRange<S> {
-    type Item = Page<S>;
+impl<S: PageSize, V: VirtValidity> Iterator for PageRange<V, S> {
+    type Item = Page<V, S>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -482,10 +513,10 @@ impl<S: PageSize> DoubleEndedIterator for PageRange<S> {
     }
 }
 
-impl PageRange<Size2MiB> {
+impl<V: VirtValidity> PageRange<V, Size2MiB> {
     /// Converts the range of 2MiB pages to a range of 4KiB pages.
     #[inline]
-    pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
+    pub fn as_4kib_page_range(self) -> PageRange<V, Size4KiB> {
         PageRange {
             start: Page::containing_address(self.start.start_address()),
             end: Page::containing_address(self.end.start_address()),
@@ -493,7 +524,7 @@ impl PageRange<Size2MiB> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PageRange<S> {
+impl<S: PageSize, V: VirtValidity> fmt::Debug for PageRange<V, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageRange")
             .field("start", &self.start)
@@ -505,14 +536,14 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 /// A range of pages with inclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
-pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
+pub struct PageRangeInclusive<V: VirtValidity, S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
-    pub start: Page<S>,
+    pub start: Page<V, S>,
     /// The end of the range, inclusive.
-    pub end: Page<S>,
+    pub end: Page<V, S>,
 }
 
-impl<S: PageSize> PageRangeInclusive<S> {
+impl<V: VirtValidity, S: PageSize> PageRangeInclusive<V, S> {
     /// Returns whether this range contains no pages.
     #[inline]
     pub fn is_empty(&self) -> bool {
@@ -536,8 +567,8 @@ impl<S: PageSize> PageRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> Iterator for PageRangeInclusive<S> {
-    type Item = Page<S>;
+impl<V: VirtValidity, S: PageSize> Iterator for PageRangeInclusive<V, S> {
+    type Item = Page<V, S>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -656,7 +687,7 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
+impl<S: PageSize, V: VirtValidity> fmt::Debug for PageRangeInclusive<V, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageRangeInclusive")
             .field("start", &self.start)

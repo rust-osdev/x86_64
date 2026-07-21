@@ -194,6 +194,7 @@ bitflags! {
 mod x86_64 {
     use super::*;
     use crate::addr::VirtAddr;
+    use crate::addr::VirtValidity;
     use crate::registers::rflags::RFlags;
     use crate::structures::gdt::SegmentSelector;
     use crate::structures::paging::Page;
@@ -330,7 +331,7 @@ mod x86_64 {
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`FS::read_base`] can be used instead.
         #[inline]
-        pub fn read() -> VirtAddr {
+        pub fn read<V: VirtValidity>() -> VirtAddr<V> {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
@@ -339,7 +340,7 @@ mod x86_64 {
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`FS::write_base`] can be used instead.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub fn write<V: VirtValidity>(address: VirtAddr<V>) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -351,7 +352,7 @@ mod x86_64 {
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`GS::read_base`] can be used instead.
         #[inline]
-        pub fn read() -> VirtAddr {
+        pub fn read<V: VirtValidity>() -> VirtAddr<V> {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
@@ -360,7 +361,7 @@ mod x86_64 {
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`GS::write_base`] can be used instead.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub fn write<V: VirtValidity>(address: VirtAddr<V>) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -369,13 +370,13 @@ mod x86_64 {
     impl KernelGsBase {
         /// Read the current KernelGsBase register.
         #[inline]
-        pub fn read() -> VirtAddr {
+        pub fn read<V: VirtValidity>() -> VirtAddr<V> {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the KernelGsBase register.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub fn write<V: VirtValidity>(address: VirtAddr<V>) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -526,14 +527,14 @@ mod x86_64 {
         /// Read the current LStar register.
         /// This holds the target RIP of a syscall.
         #[inline]
-        pub fn read() -> VirtAddr {
+        pub fn read<V: VirtValidity>() -> VirtAddr<V> {
             VirtAddr::new(unsafe { Self::MSR.read() })
         }
 
         /// Write a given virtual address to the LStar register.
         /// This holds the target RIP of a syscall.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub fn write<V: VirtValidity>(address: VirtAddr<V>) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
