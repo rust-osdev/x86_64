@@ -42,30 +42,51 @@ pub unsafe fn lidt(idt: &DescriptorTablePointer) {
     }
 }
 
+/// A raw descriptor-table register value.
+///
+/// Assembly writes plain integers here before the base is checked and wrapped in a semantic type.
+#[repr(C, packed(2))]
+struct RawDescriptorTablePointer {
+    limit: u16,
+    base: u64,
+}
+
+#[inline]
+fn read_raw_gdt() -> RawDescriptorTablePointer {
+    let mut pointer = RawDescriptorTablePointer { limit: 0, base: 0 };
+    unsafe {
+        asm!("sgdt [{}]", in(reg) &mut pointer, options(nostack, preserves_flags));
+    }
+    pointer
+}
+
+#[inline]
+fn read_raw_idt() -> RawDescriptorTablePointer {
+    let mut pointer = RawDescriptorTablePointer { limit: 0, base: 0 };
+    unsafe {
+        asm!("sidt [{}]", in(reg) &mut pointer, options(nostack, preserves_flags));
+    }
+    pointer
+}
+
 /// Get the address of the current GDT.
 #[inline]
 pub fn sgdt() -> DescriptorTablePointer {
-    let mut gdt: DescriptorTablePointer = DescriptorTablePointer {
-        limit: 0,
-        base: VirtAddr::new(0),
-    };
-    unsafe {
-        asm!("sgdt [{}]", in(reg) &mut gdt, options(nostack, preserves_flags));
+    let raw = read_raw_gdt();
+    DescriptorTablePointer {
+        limit: raw.limit,
+        base: VirtAddr::new(raw.base),
     }
-    gdt
 }
 
 /// Get the address of the current IDT.
 #[inline]
 pub fn sidt() -> DescriptorTablePointer {
-    let mut idt: DescriptorTablePointer = DescriptorTablePointer {
-        limit: 0,
-        base: VirtAddr::new(0),
-    };
-    unsafe {
-        asm!("sidt [{}]", in(reg) &mut idt, options(nostack, preserves_flags));
+    let raw = read_raw_idt();
+    DescriptorTablePointer {
+        limit: raw.limit,
+        base: VirtAddr::new(raw.base),
     }
-    idt
 }
 
 /// Load the task state register using the `ltr` instruction.

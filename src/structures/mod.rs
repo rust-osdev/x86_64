@@ -1,6 +1,6 @@
 //! Representations of various x86 specific structures and descriptor tables.
 
-use crate::VirtAddr;
+use crate::{RuntimeValidity, VirtAddr, VirtAddrValidity};
 
 pub mod gdt;
 
@@ -14,13 +14,34 @@ pub mod tss;
 
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.
-#[derive(Debug, Clone, Copy)]
 #[repr(C, packed(2))]
-pub struct DescriptorTablePointer {
+pub struct DescriptorTablePointer<V: VirtAddrValidity = RuntimeValidity> {
     /// Size of the DT in bytes - 1.
     pub limit: u16,
     /// Pointer to the memory region containing the DT.
-    pub base: VirtAddr,
+    pub base: VirtAddr<V>,
+}
+
+// These traits are implemented manually because Rust 1.59 has limited derive support for generic
+// packed structs. They can use derive once the MSRV is raised to Rust 1.69.
+impl<V: VirtAddrValidity> Copy for DescriptorTablePointer<V> {}
+
+impl<V: VirtAddrValidity> Clone for DescriptorTablePointer<V> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<V: VirtAddrValidity> core::fmt::Debug for DescriptorTablePointer<V> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let limit = self.limit;
+        let base = self.base;
+
+        f.debug_struct("DescriptorTablePointer")
+            .field("limit", &limit)
+            .field("base", &base)
+            .finish()
+    }
 }
 
 #[cfg(test)]
@@ -33,10 +54,19 @@ mod tests {
         // Per the SDM, a descriptor pointer has to be 2+8=10 bytes
         assert_eq!(size_of::<DescriptorTablePointer>(), 10);
         // Make sure that we can reference a pointer's limit
-        let p = DescriptorTablePointer {
+        let p: DescriptorTablePointer = DescriptorTablePointer {
             limit: 5,
             base: VirtAddr::zero(),
         };
         let _: &u16 = &p.limit;
+
+        assert_eq!(
+            size_of::<DescriptorTablePointer<crate::FixedValidity<57>>>(),
+            10
+        );
+        assert_eq!(
+            size_of::<DescriptorTablePointer<crate::RuntimeValidity>>(),
+            10
+        );
     }
 }

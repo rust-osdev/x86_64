@@ -15,7 +15,10 @@
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
+pub use crate::addr::{
+    align_down, align_up, FixedValidity, PhysAddr, RuntimeValidity, VirtAddr, VirtAddr48,
+    VirtAddr57, VirtAddrRT, VirtAddrValidity,
+};
 
 pub mod addr;
 pub mod instructions;
@@ -70,4 +73,9 @@ impl PrivilegeLevel {
 
 pub(crate) mod sealed {
     pub trait Sealed {}
+
+    pub trait VirtAddrValiditySealed: Copy + Ord + core::hash::Hash {
+        /// Returns the number of valid bits in the virtual address.
+        fn bits() -> usize;
+    }
 }

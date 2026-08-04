@@ -2,10 +2,10 @@
 
 pub use crate::registers::segmentation::SegmentSelector;
 use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
-use crate::PrivilegeLevel;
+use crate::{PrivilegeLevel, RuntimeValidity, VirtAddrValidity};
 use bit_field::BitField;
 use bitflags::bitflags;
-use core::{cmp, fmt, mem};
+use core::{cmp, fmt, marker::PhantomData, mem};
 // imports for intra-doc links
 #[cfg(doc)]
 use crate::registers::segmentation::{Segment, CS, SS};
@@ -105,29 +105,30 @@ impl fmt::Debug for Entry {
 /// ```
 
 #[derive(Debug, Clone)]
-pub struct GlobalDescriptorTable<const MAX: usize = 8> {
+pub struct GlobalDescriptorTable<const MAX: usize = 8, V = RuntimeValidity> {
     table: [Entry; MAX],
     len: usize,
+    validity: PhantomData<V>,
 }
 
-impl GlobalDescriptorTable {
+impl GlobalDescriptorTable<8, RuntimeValidity> {
     /// Creates an empty GDT with the default length of 8.
     pub const fn new() -> Self {
         Self::empty()
     }
 }
 
-impl Default for GlobalDescriptorTable {
+impl<const MAX: usize, V: VirtAddrValidity> Default for GlobalDescriptorTable<MAX, V> {
     #[inline]
     fn default() -> Self {
-        Self::new()
+        Self::empty_with_validity()
     }
 }
 
-impl<const MAX: usize> GlobalDescriptorTable<MAX> {
+impl<const MAX: usize, V> GlobalDescriptorTable<MAX, V> {
     /// Creates an empty GDT which can hold `MAX` number of [`Entry`]s.
     #[inline]
-    pub const fn empty() -> Self {
+    pub const fn empty_with_validity() -> Self {
         // TODO: Replace with compiler error when feature(generic_const_exprs) is stable.
         assert!(MAX > 0, "A GDT cannot have 0 entries");
         assert!(MAX <= (1 << 13), "A GDT can only have at most 2^13 entries");
@@ -138,6 +139,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         Self {
             table: [NULL; MAX],
             len: 1,
+            validity: PhantomData,
         }
     }
 
@@ -158,9 +160,9 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         allow(rustdoc::broken_intra_doc_links)
     )]
     #[inline]
-    pub const fn from_raw_entries(slice: &[u64]) -> Self {
+    pub const fn from_raw_entries_with_validity(slice: &[u64]) -> Self {
         let len = slice.len();
-        let mut table = Self::empty().table;
+        let mut table = Self::empty_with_validity().table;
         let mut idx = 0;
 
         assert!(len > 0, "cannot initialize GDT with empty slice");
@@ -175,7 +177,11 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
             idx += 1;
         }
 
-        Self { table, len }
+        Self {
+            table,
+            len,
+            validity: PhantomData,
+        }
     }
 
     /// Get a reference to the internal [`Entry`] table.
@@ -214,37 +220,6 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
         SegmentSelector::new(index as u16, entry.dpl())
     }
 
-    /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
-    /// segment registers; you **must** (re)load them yourself using [the appropriate
-    /// functions](crate::instructions::segmentation):
-    /// [`SS::set_reg()`] and [`CS::set_reg()`].
-    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-    #[inline]
-    pub fn load(&'static self) {
-        // SAFETY: static lifetime ensures no modification after loading.
-        unsafe { self.load_unsafe() };
-    }
-
-    /// Loads the GDT in the CPU using the `lgdt` instruction. This does **not** alter any of the
-    /// segment registers; you **must** (re)load them yourself using [the appropriate
-    /// functions](crate::instructions::segmentation):
-    /// [`SS::set_reg()`] and [`CS::set_reg()`].
-    ///
-    /// # Safety
-    ///
-    /// Unlike `load` this function will not impose a static lifetime constraint
-    /// this means its up to the user to ensure that there will be no modifications
-    /// after loading and that the GDT will live for as long as it's loaded.
-    ///
-    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-    #[inline]
-    pub unsafe fn load_unsafe(&self) {
-        use crate::instructions::tables::lgdt;
-        unsafe {
-            lgdt(&self.pointer());
-        }
-    }
-
     #[inline]
     #[rustversion::attr(since(1.83), const)]
     fn push(&mut self, value: u64) -> usize {
@@ -265,11 +240,52 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-    fn pointer(&self) -> super::DescriptorTablePointer {
+    fn pointer(&self) -> super::DescriptorTablePointer<V>
+    where
+        V: VirtAddrValidity,
+    {
         super::DescriptorTablePointer {
-            base: crate::VirtAddr::new(self.table.as_ptr() as u64),
+            base: crate::VirtAddr::<V>::new_with_validity(self.table.as_ptr() as u64),
             limit: self.limit(),
         }
+    }
+}
+
+impl<const MAX: usize> GlobalDescriptorTable<MAX, RuntimeValidity> {
+    /// Loads the GDT in the CPU using the `lgdt` instruction.
+    ///
+    /// The static lifetime ensures that the table is not destroyed while loaded.
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+    #[inline]
+    pub fn load(&'static self) {
+        unsafe { self.load_unsafe() };
+    }
+
+    /// Loads the GDT without imposing a static lifetime.
+    ///
+    /// # Safety
+    ///
+    /// The caller must keep the GDT alive and unmodified while it is loaded.
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+    #[inline]
+    pub unsafe fn load_unsafe(&self) {
+        unsafe { crate::instructions::tables::lgdt(&self.pointer()) };
+    }
+
+    /// Creates an empty runtime-valid GDT with the selected capacity.
+    ///
+    /// This method preserves the legacy `GlobalDescriptorTable::<MAX>::empty` API.
+    #[inline]
+    pub const fn empty() -> Self {
+        Self::empty_with_validity()
+    }
+
+    /// Forms a runtime-valid GDT from a slice of raw entries.
+    ///
+    /// This method preserves the legacy `from_raw_entries` API.
+    #[inline]
+    pub const fn from_raw_entries(slice: &[u64]) -> Self {
+        Self::from_raw_entries_with_validity(slice)
     }
 }
 
@@ -431,6 +447,16 @@ impl Descriptor {
         unsafe { Self::tss_segment_unchecked(tss) }
     }
 
+    /// Creates a TSS system descriptor with the selected validity type.
+    #[inline]
+    pub fn tss_segment_with_validity<V>(tss: &'static TaskStateSegment<V>) -> Descriptor
+    where
+        V: VirtAddrValidity,
+    {
+        // SAFETY: The pointer is derived from a &'static reference, which ensures its validity.
+        unsafe { Self::tss_segment_unchecked_with_validity(tss) }
+    }
+
     /// Similar to [`Descriptor::tss_segment`], but unsafe since it does not enforce a lifetime
     /// constraint on the provided TSS.
     ///
@@ -443,6 +469,22 @@ impl Descriptor {
         unsafe { Self::tss_segment_raw(tss, 0) }
     }
 
+    /// Creates a TSS descriptor with the selected validity type from a raw pointer.
+    ///
+    /// # Safety
+    /// The caller must ensure that the passed pointer is valid for as long as the descriptor is
+    /// being used.
+    #[inline]
+    pub unsafe fn tss_segment_unchecked_with_validity<V>(
+        tss: *const TaskStateSegment<V>,
+    ) -> Descriptor
+    where
+        V: VirtAddrValidity,
+    {
+        // SAFETY: if iomap_size is zero, there are no requirements to uphold.
+        unsafe { Self::tss_segment_raw(tss, 0) }
+    }
+
     /// Creates a TSS system descriptor for the given TSS, setting up the IO permissions bitmap.
     ///
     /// # Example
@@ -450,25 +492,38 @@ impl Descriptor {
     /// ```
     /// use x86_64::structures::gdt::Descriptor;
     /// use x86_64::structures::tss::TaskStateSegment;
+    /// use x86_64::FixedValidity;
     ///
     /// /// A helper that places some I/O map bytes behind a TSS.
     /// #[repr(C)]
     /// struct TssWithIOMap {
-    ///     tss: TaskStateSegment,
+    ///     tss: TaskStateSegment<FixedValidity<48>>,
     ///     iomap: [u8; 5],
     /// }
     ///
-    /// static TSS: TssWithIOMap = TssWithIOMap {
-    ///     tss: TaskStateSegment::new(),
+    /// let tss = Box::leak(Box::new(TssWithIOMap {
+    ///     tss: TaskStateSegment::new_with_validity(),
     ///     iomap: [0xff, 0xff, 0x00, 0x80, 0xff],
-    /// };
+    /// }));
     ///
-    /// let tss = Descriptor::tss_segment_with_iomap(&TSS.tss, &TSS.iomap).unwrap();
+    /// let descriptor =
+    ///     Descriptor::tss_segment_with_iomap_with_validity(&tss.tss, &tss.iomap).unwrap();
     /// ```
     pub fn tss_segment_with_iomap(
         tss: &'static TaskStateSegment,
         iomap: &'static [u8],
     ) -> Result<Descriptor, InvalidIoMap> {
+        Self::tss_segment_with_iomap_with_validity(tss, iomap)
+    }
+
+    /// Creates a TSS descriptor with an I/O bitmap and the selected validity type.
+    pub fn tss_segment_with_iomap_with_validity<V>(
+        tss: &'static TaskStateSegment<V>,
+        iomap: &'static [u8],
+    ) -> Result<Descriptor, InvalidIoMap>
+    where
+        V: VirtAddrValidity,
+    {
         if iomap.len() > 8193 {
             return Err(InvalidIoMap::TooLong { len: iomap.len() });
         }
@@ -508,10 +563,13 @@ impl Descriptor {
     /// There must be a valid IO map at `(tss as *const u8).offset(tss.iomap_base)`
     /// of length `iomap_size`, with the terminating `0xFF` byte. Additionally, `iomap_base` must
     /// not exceed `0xDFFF`.
-    unsafe fn tss_segment_raw(tss: *const TaskStateSegment, iomap_size: u16) -> Descriptor {
+    unsafe fn tss_segment_raw<V>(tss: *const TaskStateSegment<V>, iomap_size: u16) -> Descriptor
+    where
+        V: VirtAddrValidity,
+    {
         use self::DescriptorFlags as Flags;
 
-        let ptr = tss as u64;
+        let ptr = crate::VirtAddr::<V>::new_with_validity(tss as u64).as_u64();
 
         let mut low = Flags::PRESENT.bits();
         // base
@@ -521,7 +579,7 @@ impl Descriptor {
         let iomap_limit = u64::from(unsafe { (*tss).iomap_base }) + u64::from(iomap_size);
         low.set_bits(
             0..16,
-            cmp::max(mem::size_of::<TaskStateSegment>() as u64, iomap_limit) - 1,
+            cmp::max(mem::size_of::<TaskStateSegment<V>>() as u64, iomap_limit) - 1,
         );
         // type (0b1001 = available 64-bit tss)
         low.set_bits(40..44, 0b1001);
@@ -537,6 +595,23 @@ impl Descriptor {
 mod tests {
     use super::DescriptorFlags as Flags;
     use super::*;
+
+    #[test]
+    fn policy_does_not_change_gdt_layout() {
+        assert_eq!(mem::size_of::<GlobalDescriptorTable>(), 72);
+        assert_eq!(
+            mem::size_of::<GlobalDescriptorTable<8, crate::FixedValidity<57>>>(),
+            72
+        );
+        assert_eq!(
+            mem::size_of::<GlobalDescriptorTable<8, crate::RuntimeValidity>>(),
+            72
+        );
+        assert_eq!(
+            mem::align_of::<GlobalDescriptorTable<8, crate::RuntimeValidity>>(),
+            8
+        );
+    }
 
     #[test]
     #[rustfmt::skip]
@@ -563,11 +638,13 @@ mod tests {
         gdt
     }
 
-    static TSS: TaskStateSegment = TaskStateSegment::new();
+    fn tss() -> &'static TaskStateSegment<crate::FixedValidity<48>> {
+        Box::leak(Box::new(TaskStateSegment::new_with_validity()))
+    }
 
     fn make_full_gdt() -> GlobalDescriptorTable {
         let mut gdt = make_six_entry_gdt();
-        gdt.append(Descriptor::tss_segment(&TSS));
+        gdt.append(Descriptor::tss_segment_with_validity(tss()));
         assert_eq!(gdt.len, 8);
         gdt
     }
@@ -597,7 +674,7 @@ mod tests {
         let mut gdt = make_six_entry_gdt();
         gdt.append(Descriptor::user_data_segment());
         // We have one free slot, but the GDT requires two
-        gdt.append(Descriptor::tss_segment(&TSS));
+        gdt.append(Descriptor::tss_segment_with_validity(tss()));
     }
 
     #[test]
