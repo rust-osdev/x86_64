@@ -2,37 +2,29 @@
 
 ## New Features
 
-- Add sealed `FixedValidity<48>`, `FixedValidity<57>`, and `RuntimeValidity` policies for virtual
-  addresses.
-- Add the `VirtAddr48`, `VirtAddr57`, and `VirtAddrRT` aliases. `VirtAddr` and all validity-aware
-  aggregate types use runtime validity by default.
+- Add sealed `FixedValidity<48>` and `FixedValidity<57>` policies for virtual addresses. Add the
+  feature-gated `RuntimeValidity` policy.
+- Add the generic `VirtAddrGeneric<V>` type and the `VirtAddr48`, `VirtAddr57`, and `VirtAddrRT`
+  aliases.
+- Add `virt_addr_57` for enabling the `VirtAddr57` alias and `virt_addr_rt` for enabling the
+  `RuntimeValidity` policy and `VirtAddrRT` alias. Add `default_virt_addr_57` for selecting fixed
+  57-bit validity as the default.
 - Propagate virtual-address validity through pages, descriptor pointers, TSS, GDT, IDT, handler
   types, interrupt stack frames, TLB commands, and CET legacy bitmap pages.
-- Make hardware address APIs use runtime-valid addresses through their existing names. These APIs
-  are available only on `x86_64` with the `instructions` feature and require ring 0 when they read
-  `CR4.LA57`.
-- Add `is_valid_current` for explicitly checking an existing address against the active mode.
+- Add `is_valid_currently` for explicitly checking an existing address against the active mode.
 
 ## Compatibility Notes
 
-- `VirtAddr::new`, `try_new`, `new_truncate`, and `from_ptr` now construct runtime-valid addresses
-  and are not const. Fixed 48-bit and 57-bit construction uses `new_const`, `try_new_const`,
-  `new_truncate_const`, and `from_ptr_const`.
-- Checked default construction is unavailable without the `instructions` feature and on non-x86
-  targets. Storage-only operations such as `zero`, `new_unsafe`, formatting, and comparison remain
-  available.
-- Hardware APIs that previously returned or accepted `VirtAddr`, `Page`, or descriptor pointers
-  retain their names but their concrete function-pointer signatures now use runtime validity.
-- `Segment64` keeps its existing declaration, but its unparameterized `VirtAddr` methods now use
-  runtime validity. `HandlerFuncType`, handler aliases, and `InterruptStackFrame` likewise default
-  to runtime validity.
-- Installing a handler or encoding a default TSS descriptor checks the containing object's address
-  by reading `CR4.LA57`, so these operations require ring 0. Ring 3 callers can use an explicit
-  fixed validity policy when the address-space contract is fixed.
-- Unparameterized `Page` and page ranges are runtime-valid. The existing mapper stack still accepts
-  only `Page<_, FixedValidity<48>>`, so mapper call sites must use an explicit fixed page policy.
-- Aggregate type inference changes wherever a validity parameter was previously omitted, including
-  GDT, IDT, TSS, descriptor pointers, TLB commands, and CET legacy bitmap pages.
+- Without new features, `VirtAddr` remains an alias for a fixed 48-bit virtual address. Existing
+  constructors retain their names. Generic validity bounds require Rust 1.61 for these methods to
+  remain `const`, so they are non-const on Rust 1.59 and 1.60.
+- Enabling `virt_addr_57` makes the corresponding alias available. Enabling `virt_addr_rt` makes
+  both the runtime policy and its alias available. Enabling `default_virt_addr_57` also enables
+  `virt_addr_57` and changes `VirtAddr` and validity-aware aggregate defaults to fixed 57-bit
+  validity.
+- Runtime checked construction and address-producing operations are available only on `x86_64`
+  with the `instructions` feature and require ring 0 because they read `CR4.LA57`. Storage-only
+  operations such as `zero`, `new_unsafe`, formatting, and comparison remain available elsewhere.
 - Validity is checked when a value is created. Later address-space mode changes do not
   retroactively invalidate existing values.
 - The mapper stack remains limited to four-level page tables and explicitly accepts VA48 pages.

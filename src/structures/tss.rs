@@ -5,21 +5,21 @@ use core::{
     mem::size_of,
 };
 
-use crate::{RuntimeValidity, VirtAddr, VirtAddrValidity};
+use crate::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
 /// but is used for stack switching when an interrupt or exception occurs.
 #[repr(C, packed(4))]
-pub struct TaskStateSegment<V: VirtAddrValidity = RuntimeValidity> {
+pub struct TaskStateSegment<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
     /// The stack pointers used when a privilege level change occurs from a lower privilege level to a higher one.
-    pub privilege_stack_table: [VirtAddr<V>; 3],
+    pub privilege_stack_table: [VirtAddrGeneric<V>; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
     /// The stack pointers used when an entry in the Interrupt Descriptor Table has an IST value other than 0.
-    pub interrupt_stack_table: [VirtAddr<V>; 7],
+    pub interrupt_stack_table: [VirtAddrGeneric<V>; 7],
     reserved_3: u64,
     reserved_4: u16,
     /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base. It must not
@@ -38,8 +38,8 @@ impl<V: VirtAddrValidity> TaskStateSegment<V> {
     #[rustversion::attr(since(1.61), const)]
     pub fn new_with_validity() -> Self {
         TaskStateSegment {
-            privilege_stack_table: [VirtAddr::zero(); 3],
-            interrupt_stack_table: [VirtAddr::zero(); 7],
+            privilege_stack_table: [VirtAddrGeneric::zero(); 3],
+            interrupt_stack_table: [VirtAddrGeneric::zero(); 7],
             iomap_base: size_of::<Self>() as u16,
             reserved_1: 0,
             reserved_2: 0,
@@ -81,8 +81,8 @@ impl<V: VirtAddrValidity> fmt::Debug for TaskStateSegment<V> {
     }
 }
 
-impl TaskStateSegment<RuntimeValidity> {
-    /// Creates a new runtime-valid TSS.
+impl TaskStateSegment<DefaultVirtAddrValidity> {
+    /// Creates a new TSS with the default virtual-address validity.
     ///
     /// Stack addresses assigned later retain their creation-time validity guarantees.
     #[inline]
@@ -171,6 +171,7 @@ mod tests {
             size_of::<TaskStateSegment<crate::FixedValidity<57>>>(),
             0x68
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(size_of::<TaskStateSegment<crate::RuntimeValidity>>(), 0x68);
     }
 }

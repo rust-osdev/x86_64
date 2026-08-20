@@ -24,6 +24,7 @@ spin = "0.5.0"
 # Overwrite the x86_64 crate for both direct and indirect dependencies.
 [dependencies.x86_64]
 path = ".."
+features = ["virt_addr_57", "virt_addr_rt"]
 [patch.crates-io]
 x86_64 = { path = ".." }
 

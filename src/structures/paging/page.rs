@@ -4,7 +4,7 @@ use crate::addr::VirtAddrArithmeticValidity;
 use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
-use crate::{FixedValidity, RuntimeValidity, VirtAddr, VirtAddrValidity};
+use crate::{DefaultVirtAddrValidity, FixedValidity, VirtAddrGeneric, VirtAddrValidity};
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -66,8 +66,8 @@ impl Sealed for super::Size1GiB {}
 /// A virtual memory page.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
-pub struct Page<S: PageSize = Size4KiB, V: VirtAddrValidity = RuntimeValidity> {
-    start_address: VirtAddr<V>,
+pub struct Page<S: PageSize = Size4KiB, V: VirtAddrValidity = DefaultVirtAddrValidity> {
+    start_address: VirtAddrGeneric<V>,
     size: PhantomData<S>,
 }
 
@@ -80,7 +80,7 @@ impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn from_start_address(address: VirtAddr<V>) -> Result<Self, AddressNotAligned> {
+    pub fn from_start_address(address: VirtAddrGeneric<V>) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
@@ -97,7 +97,7 @@ impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     /// The address must be correctly aligned.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_start_address_unchecked(start_address: VirtAddr<V>) -> Self {
+    pub unsafe fn from_start_address_unchecked(start_address: VirtAddrGeneric<V>) -> Self {
         Page {
             start_address,
             size: PhantomData,
@@ -107,7 +107,7 @@ impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     /// Returns the start address of the page.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn start_address(self) -> VirtAddr<V> {
+    pub fn start_address(self) -> VirtAddrGeneric<V> {
         self.start_address
     }
 
@@ -154,6 +154,15 @@ impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     }
 }
 
+impl<S: PageSize> Page<S, DefaultVirtAddrValidity> {
+    /// Returns the page that contains the given default virtual address.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn containing_address(address: VirtAddrGeneric<DefaultVirtAddrValidity>) -> Self {
+        Self::containing_address_with_validity(address)
+    }
+}
+
 impl<S: PageSize, const BITS: usize> Page<S, FixedValidity<BITS>>
 where
     FixedValidity<BITS>: VirtAddrValidity,
@@ -161,7 +170,7 @@ where
     /// Returns the page that contains the given fixed-width virtual address.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn containing_address_const(address: VirtAddr<FixedValidity<BITS>>) -> Self {
+    pub fn containing_address_with_validity(address: VirtAddrGeneric<FixedValidity<BITS>>) -> Self {
         Page {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -169,11 +178,15 @@ where
     }
 }
 
-#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
 impl<S: PageSize> Page<S, crate::RuntimeValidity> {
     /// Returns the page that contains the given runtime-valid virtual address.
     #[inline]
-    pub fn containing_address(address: VirtAddr<crate::RuntimeValidity>) -> Self {
+    pub fn containing_address_current(address: VirtAddrGeneric<crate::RuntimeValidity>) -> Self {
         Page {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -184,7 +197,7 @@ impl<S: PageSize> Page<S, crate::RuntimeValidity> {
 impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
-        VirtAddr::<V>::steps_between_u64(&start.start_address(), &end.start_address())
+        VirtAddrGeneric::<V>::steps_between_u64(&start.start_address(), &end.start_address())
             .map(|steps| steps / S::SIZE)
     }
 
@@ -203,7 +216,7 @@ impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
-        let start_address = VirtAddr::<V>::forward_checked_u64(start.start_address, count)?;
+        let start_address = VirtAddrGeneric::<V>::forward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -231,7 +244,7 @@ impl Page<Size1GiB, FixedValidity<48>> {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
-        Page::containing_address_const(crate::VirtAddr48::new_truncate_const(addr))
+        Page::containing_address_with_validity(crate::VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -248,7 +261,7 @@ impl Page<Size2MiB, FixedValidity<48>> {
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
-        Page::containing_address_const(crate::VirtAddr48::new_truncate_const(addr))
+        Page::containing_address_with_validity(crate::VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -267,7 +280,7 @@ impl Page<Size4KiB, FixedValidity<48>> {
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
         addr |= p1_index.into_u64() << 12;
-        Page::containing_address_const(crate::VirtAddr48::new_truncate_const(addr))
+        Page::containing_address_with_validity(crate::VirtAddr48::new_truncate(addr))
     }
 
     /// Returns the level 1 page table index of this page.
@@ -340,7 +353,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Step for Page<S, V> {
         use core::convert::TryFrom;
 
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
-        let start_address = VirtAddr::<V>::backward_checked_u64(start.start_address, count)?;
+        let start_address = VirtAddrGeneric::<V>::backward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -373,7 +386,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Step for Page<S, V> {
 /// A range of pages with exclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
-pub struct PageRange<S: PageSize = Size4KiB, V: VirtAddrValidity = RuntimeValidity> {
+pub struct PageRange<S: PageSize = Size4KiB, V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// The start of the range, inclusive.
     pub start: Page<S, V>,
     /// The end of the range, exclusive.
@@ -438,7 +451,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRange<S, V> {
 
         // Figure out how many steps there are until the address range gap.
         let second_half_start = unsafe {
-            Page::<S, V>::from_start_address_unchecked(VirtAddr::<V>::upper_half_start())
+            Page::<S, V>::from_start_address_unchecked(VirtAddrGeneric::<V>::upper_half_start())
         };
         let steps_until_gap = Page::steps_between_u64(&self.start, &second_half_start)
             .filter(|steps| *steps <= n && *steps > 0);
@@ -493,8 +506,8 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> DoubleEndedIterator for PageRan
 
         // Figure out how many steps there are until the address range gap.
         let first_half_end = unsafe {
-            Page::<S, V>::from_start_address_unchecked(VirtAddr::<V>::new_unsafe(
-                VirtAddr::<V>::lower_half_end().as_u64() & !(S::SIZE - 1),
+            Page::<S, V>::from_start_address_unchecked(VirtAddrGeneric::<V>::new_unsafe(
+                VirtAddrGeneric::<V>::lower_half_end().as_u64() & !(S::SIZE - 1),
             ))
         };
         let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.end)
@@ -535,7 +548,8 @@ impl<S: PageSize, V: VirtAddrValidity> fmt::Debug for PageRange<S, V> {
 /// A range of pages with inclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
-pub struct PageRangeInclusive<S: PageSize = Size4KiB, V: VirtAddrValidity = RuntimeValidity> {
+pub struct PageRangeInclusive<S: PageSize = Size4KiB, V: VirtAddrValidity = DefaultVirtAddrValidity>
+{
     /// The start of the range, inclusive.
     pub start: Page<S, V>,
     /// The end of the range, inclusive.
@@ -577,7 +591,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRangeInclusive
             // If the end of the inclusive range is the maximum page possible for size S,
             // incrementing start until it is greater than the end will cause an integer overflow.
             // So instead, in that case we decrement end rather than incrementing start.
-            let max_page_addr = VirtAddr::<V>::max_value() - (S::SIZE - 1);
+            let max_page_addr = VirtAddrGeneric::<V>::max_value() - (S::SIZE - 1);
             if self.start.start_address() < max_page_addr {
                 self.start += 1;
             } else {
@@ -609,7 +623,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRangeInclusive
 
         // Figure out how many steps there are until the address range gap.
         let second_half_start = unsafe {
-            Page::<S, V>::from_start_address_unchecked(VirtAddr::<V>::upper_half_start())
+            Page::<S, V>::from_start_address_unchecked(VirtAddrGeneric::<V>::upper_half_start())
         };
         let steps_until_gap = Page::steps_between_u64(&self.start, &second_half_start)
             .filter(|steps| *steps <= n && *steps > 0);
@@ -673,8 +687,8 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> DoubleEndedIterator for PageRan
 
         // Figure out how many steps there are until the address range gap.
         let first_half_end = unsafe {
-            Page::<S, V>::from_start_address_unchecked(VirtAddr::<V>::new_unsafe(
-                VirtAddr::<V>::lower_half_end().as_u64() & !(S::SIZE - 1),
+            Page::<S, V>::from_start_address_unchecked(VirtAddrGeneric::<V>::new_unsafe(
+                VirtAddrGeneric::<V>::lower_half_end().as_u64() & !(S::SIZE - 1),
             ))
         };
         let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.end)
@@ -707,7 +721,7 @@ where
     FixedValidity<BITS>: VirtAddrValidity,
 {
     fn any() -> Self {
-        Self::containing_address(kani::any())
+        Self::containing_address_with_validity(kani::any())
     }
 }
 
@@ -733,26 +747,31 @@ mod tests {
 
     #[test]
     fn page_validity_defaults_and_explicit_policy() {
+        let _: super::Page<Size4KiB> =
+            super::Page::containing_address(crate::VirtAddr::new(0x1000));
         let _: super::Page<Size2MiB> = unsafe {
-            super::Page::from_start_address_unchecked(crate::VirtAddrRT::new_unsafe(0x20_0000))
+            super::Page::from_start_address_unchecked(crate::VirtAddr::new_unsafe(0x20_0000))
         };
 
-        let page57: super::Page<Size4KiB, crate::FixedValidity<57>> =
-            super::Page::containing_address_const(crate::VirtAddr57::new_const(
-                0x00ff_0000_0000_1000,
-            ));
-        assert_eq!(page57.start_address().as_u64(), 0x00ff_0000_0000_1000);
+        #[cfg(feature = "virt_addr_57")]
+        {
+            let page57: super::Page<Size4KiB, crate::FixedValidity<57>> =
+                super::Page::containing_address_with_validity(crate::VirtAddr57::new(
+                    0x00ff_0000_0000_1000,
+                ));
+            assert_eq!(page57.start_address().as_u64(), 0x00ff_0000_0000_1000);
+        }
     }
 
     #[test]
-    #[cfg(feature = "step_trait")]
+    #[cfg(all(feature = "step_trait", feature = "virt_addr_57"))]
     fn page57_step_uses_la57_gap() {
         let low_end = super::Page::<Size4KiB, crate::FixedValidity<57>>::from_start_address(
-            crate::VirtAddr57::new_const(0x00ff_ffff_ffff_f000),
+            crate::VirtAddr57::new(0x00ff_ffff_ffff_f000),
         )
         .unwrap();
         let upper_start = super::Page::<Size4KiB, crate::FixedValidity<57>>::from_start_address(
-            crate::VirtAddr57::new_const(0xff00_0000_0000_0000),
+            crate::VirtAddr57::new(0xff00_0000_0000_0000),
         )
         .unwrap();
 
@@ -785,15 +804,17 @@ mod tests {
         let page_size = Size4KiB::SIZE;
         let number = 1000;
 
-        let start_addr = VirtAddr::new_const(0xdead_beaf);
-        let start: Page = Page::containing_address_const(start_addr);
+        let start_addr = VirtAddr::new(0xdead_beaf);
+        let start: Page = Page::containing_address_with_validity(start_addr);
         let end = start + number;
 
         let mut range = Page::range(start, end);
         for i in 0..number {
             assert_eq!(
                 range.next(),
-                Some(Page::containing_address_const(start_addr + page_size * i))
+                Some(Page::containing_address_with_validity(
+                    start_addr + page_size * i,
+                ))
             );
         }
         assert_eq!(range.next(), None);
@@ -802,7 +823,9 @@ mod tests {
         for i in 0..=number {
             assert_eq!(
                 range_inclusive.next(),
-                Some(Page::containing_address_const(start_addr + page_size * i))
+                Some(Page::containing_address_with_validity(
+                    start_addr + page_size * i,
+                ))
             );
         }
         assert_eq!(range_inclusive.next(), None);
@@ -813,15 +836,17 @@ mod tests {
         let page_size = Size4KiB::SIZE;
         let number = 1000;
 
-        let start_addr = VirtAddr::new_const(u64::MAX).align_down(page_size) - number * page_size;
-        let start: Page = Page::containing_address_const(start_addr);
+        let start_addr = VirtAddr::new(u64::MAX).align_down(page_size) - number * page_size;
+        let start: Page = Page::containing_address_with_validity(start_addr);
         let end = start + number;
 
         let mut range_inclusive = Page::range_inclusive(start, end);
         for i in 0..=number {
             assert_eq!(
                 range_inclusive.next(),
-                Some(Page::containing_address_const(start_addr + page_size * i))
+                Some(Page::containing_address_with_validity(
+                    start_addr + page_size * i,
+                ))
             );
         }
         assert_eq!(range_inclusive.next(), None);
@@ -832,8 +857,8 @@ mod tests {
     fn test_page_range_next_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0xffff_8000_0000_0000;
-        let start = VirtAddr::new_const(start);
-        let end = VirtAddr::new_const(end);
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
         Page::range(start, end).next();
@@ -845,8 +870,8 @@ mod tests {
     fn test_page_range_next_back_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0xffff_8000_0000_0000;
-        let start = VirtAddr::new_const(start);
-        let end = VirtAddr::new_const(end);
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
         Page::range(start, end).next_back();
@@ -857,8 +882,8 @@ mod tests {
     fn test_page_range_inclusive_next_not_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0x7fff_ffff_f000;
-        let start = VirtAddr::new_const(start);
-        let end = VirtAddr::new_const(end);
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
         Page::range_inclusive(start, end).next();
@@ -869,8 +894,8 @@ mod tests {
     fn test_page_range_inclusive_next_back_not_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0xffff_8000_0000_0000;
-        let start = VirtAddr::new_const(start);
-        let end = VirtAddr::new_const(end);
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
         Page::range_inclusive(start, end).next_back();
@@ -882,8 +907,8 @@ mod tests {
     fn test_page_range_inclusive_next_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0x7fff_ffff_f000;
-        let start = VirtAddr::new_const(start);
-        let end = VirtAddr::new_const(end);
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
         Page::range_inclusive(start, end).next();
@@ -895,8 +920,8 @@ mod tests {
     fn test_page_range_inclusive_next_back_jumping_gap_panics() {
         let start = 0xffff_8000_0000_0000;
         let end = 0xffff_8000_0000_0000;
-        let start = VirtAddr::new_const(start);
-        let end = VirtAddr::new_const(end);
+        let start = VirtAddr::new(start);
+        let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
         Page::range_inclusive(start, end).next_back();
@@ -905,8 +930,8 @@ mod tests {
 
     #[test]
     pub fn test_page_range_len() {
-        let start_addr = VirtAddr::new_const(0xdead_beaf);
-        let start = Page::<Size4KiB>::containing_address_const(start_addr);
+        let start_addr = VirtAddr::new(0xdead_beaf);
+        let start = Page::<Size4KiB>::containing_address_with_validity(start_addr);
         let end = start + 50;
 
         let range = PageRange { start, end };
@@ -941,10 +966,9 @@ mod tests {
             (0, 0x10_0000, Some(0x1_0000_0000)),
         ];
         for (start, count, result) in test_cases {
-            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new_const(start)).unwrap();
-            let result = result.map(|result| {
-                Page::<Size4KiB>::from_start_address(VirtAddr::new_const(result)).unwrap()
-            });
+            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new(start)).unwrap();
+            let result = result
+                .map(|result| Page::<Size4KiB>::from_start_address(VirtAddr::new(result)).unwrap());
             assert_eq!(Step::forward_checked(start, count), result);
         }
     }
@@ -971,10 +995,9 @@ mod tests {
             (0x1_0000_0000, 0x10_0000, Some(0)),
         ];
         for (start, count, result) in test_cases {
-            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new_const(start)).unwrap();
-            let result = result.map(|result| {
-                Page::<Size4KiB>::from_start_address(VirtAddr::new_const(result)).unwrap()
-            });
+            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new(start)).unwrap();
+            let result = result
+                .map(|result| Page::<Size4KiB>::from_start_address(VirtAddr::new(result)).unwrap());
             assert_eq!(Step::backward_checked(start, count), result);
         }
     }
@@ -1018,8 +1041,8 @@ mod tests {
             (0x0000_0000_0000, 0x1000_0000_0000, usize::MAX, None),
         ];
         for (start, end, lower, upper) in test_cases {
-            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new_const(start)).unwrap();
-            let end = Page::from_start_address(VirtAddr::new_const(end)).unwrap();
+            let start = Page::<Size4KiB>::from_start_address(VirtAddr::new(start)).unwrap();
+            let end = Page::from_start_address(VirtAddr::new(end)).unwrap();
             assert_eq!(Step::steps_between(&start, &end), (lower, upper));
         }
     }
@@ -1027,7 +1050,7 @@ mod tests {
     #[test]
     #[cfg(feature = "step_trait")]
     fn page_step_overflowing() {
-        let page = |addr| Page::<Size4KiB>::from_start_address(VirtAddr::new_const(addr)).unwrap();
+        let page = |addr| Page::<Size4KiB>::from_start_address(VirtAddr::new(addr)).unwrap();
 
         assert_eq!(
             Step::forward_overflowing(page(0x7fff_ffff_f000), 1),

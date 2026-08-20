@@ -380,7 +380,7 @@ pub trait Mapper<S: PageSize> {
         Self: Mapper<S>,
     {
         let page =
-            Page::containing_address_const(VirtAddr48::new_const(frame.start_address().as_u64()));
+            Page::containing_address_with_validity(VirtAddr48::new(frame.start_address().as_u64()));
         unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
 }
@@ -412,6 +412,10 @@ impl<S: PageSize> MapperFlush<S> {
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub fn flush(self) {
+        #[cfg(not(feature = "default_virt_addr_57"))]
+        crate::instructions::tlb::flush(self.0.start_address());
+
+        #[cfg(feature = "default_virt_addr_57")]
         crate::instructions::tlb::flush(self.0.start_address().into());
     }
 
@@ -528,8 +532,8 @@ pub trait CleanUp {
     /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
     /// // clean up all page tables in the lower half of the address space
     /// let lower_half = Page::range_inclusive(
-    ///     Page::containing_address_const(VirtAddr48::new_const(0)),
-    ///     Page::containing_address_const(VirtAddr48::new_const(0x0000_7fff_ffff_ffff)),
+    ///     Page::containing_address_with_validity(VirtAddr48::new(0)),
+    ///     Page::containing_address_with_validity(VirtAddr48::new(0x0000_7fff_ffff_ffff)),
     /// );
     /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }

@@ -55,7 +55,8 @@ impl<'a> RecursivePageTable<'a> {
     /// and [in the `unsafe-code-guidelines ` repo](https://github.com/rust-lang/unsafe-code-guidelines/issues/420).
     #[inline]
     pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {
-        let page = Page::containing_address_const(VirtAddr48::new_const(table as *const _ as u64));
+        let page =
+            Page::containing_address_with_validity(VirtAddr48::new(table as *const _ as u64));
         let recursive_index = page.p4_index();
 
         if page.p3_index() != recursive_index
@@ -727,7 +728,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 impl Translate for RecursivePageTable<'_> {
     #[allow(clippy::inconsistent_digit_grouping)]
     fn translate(&self, addr: VirtAddr48) -> TranslateResult {
-        let page = Page::containing_address_const(addr);
+        let page = Page::containing_address_with_validity(addr);
 
         let p4 = &self.p4;
         let p4_entry = &p4[addr.p4_index()];
@@ -806,9 +807,8 @@ impl CleanUp for RecursivePageTable<'_> {
         unsafe {
             self.clean_up_addr_range(
                 PageRangeInclusive {
-                    start: Page::from_start_address(VirtAddr48::new_const(0)).unwrap(),
-                    end: Page::from_start_address(VirtAddr48::new_const(0xffff_ffff_ffff_f000))
-                        .unwrap(),
+                    start: Page::from_start_address(VirtAddr48::new(0)).unwrap(),
+                    end: Page::from_start_address(VirtAddr48::new(0xffff_ffff_ffff_f000)).unwrap(),
                 },
                 frame_deallocator,
             )
@@ -860,10 +860,14 @@ impl CleanUp for RecursivePageTable<'_> {
                         .unwrap();
                         let end = start + (offset_per_entry - 1);
                         let start =
-                            Page::<Size4KiB, FixedValidity<48>>::containing_address_const(start);
+                            Page::<Size4KiB, FixedValidity<48>>::containing_address_with_validity(
+                                start,
+                            );
                         let start = start.max(range.start);
                         let end =
-                            Page::<Size4KiB, FixedValidity<48>>::containing_address_const(end);
+                            Page::<Size4KiB, FixedValidity<48>>::containing_address_with_validity(
+                                end,
+                            );
                         let end = end.min(range.end);
                         let page_table =
                             [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);

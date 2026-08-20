@@ -8,7 +8,7 @@ use crate::{
         page::{NotGiantPageSize, PageRange},
         Page, PageSize, Size2MiB, Size4KiB,
     },
-    PrivilegeLevel, RuntimeValidity, VirtAddr, VirtAddrValidity,
+    DefaultVirtAddrValidity, PrivilegeLevel, VirtAddr, VirtAddrGeneric, VirtAddrValidity,
 };
 use core::{arch::asm, cmp, convert::TryFrom, fmt};
 
@@ -30,9 +30,9 @@ pub fn flush_all() {
 
 /// The Invalidate PCID Command to execute.
 #[derive(Debug)]
-pub enum InvPcidCommand<V: VirtAddrValidity = RuntimeValidity> {
+pub enum InvPcidCommand<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// The logical processor invalidates mappings—except global translations—for the linear address and PCID specified.
-    Address(VirtAddr<V>, Pcid),
+    Address(VirtAddrGeneric<V>, Pcid),
 
     /// The logical processor invalidates all mappings—except global translations—associated with the PCID.
     Single(Pcid),
@@ -47,7 +47,7 @@ pub enum InvPcidCommand<V: VirtAddrValidity = RuntimeValidity> {
 // TODO: Remove this in the next breaking release.
 #[deprecated = "please use `InvPcidCommand` instead"]
 #[doc(hidden)]
-pub type InvPicdCommand<V = RuntimeValidity> = InvPcidCommand<V>;
+pub type InvPicdCommand<V = DefaultVirtAddrValidity> = InvPcidCommand<V>;
 
 /// The INVPCID descriptor comprises 128 bits and consists of a PCID and a linear address.
 /// For INVPCID type 0, the processor uses the full 64 bits of the linear address even outside 64-bit mode; the linear address is not used for other INVPCID types.
@@ -230,7 +230,7 @@ impl Invlpgb {
 /// A builder struct to construct the parameters for the `invlpgb` instruction.
 #[derive(Debug, Clone)]
 #[must_use]
-pub struct InvlpgbFlushBuilder<'a, S = Size4KiB, V = RuntimeValidity>
+pub struct InvlpgbFlushBuilder<'a, S = Size4KiB, V = DefaultVirtAddrValidity>
 where
     S: NotGiantPageSize,
     V: VirtAddrValidity,
@@ -328,7 +328,9 @@ where
 
                 // Make sure that we never jump the gap in the address space when flushing.
                 let second_half_start = unsafe {
-                    Page::<S, V>::from_start_address_unchecked(VirtAddr::<V>::upper_half_start())
+                    Page::<S, V>::from_start_address_unchecked(
+                        VirtAddrGeneric::<V>::upper_half_start(),
+                    )
                 };
                 let count = if pages.start < second_half_start {
                     let count_to_second_half =

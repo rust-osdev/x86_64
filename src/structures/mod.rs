@@ -1,6 +1,6 @@
 //! Representations of various x86 specific structures and descriptor tables.
 
-use crate::{RuntimeValidity, VirtAddr, VirtAddrValidity};
+use crate::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 
 pub mod gdt;
 
@@ -15,11 +15,11 @@ pub mod tss;
 /// A struct describing a pointer to a descriptor table (GDT / IDT).
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.
 #[repr(C, packed(2))]
-pub struct DescriptorTablePointer<V: VirtAddrValidity = RuntimeValidity> {
+pub struct DescriptorTablePointer<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// Size of the DT in bytes - 1.
     pub limit: u16,
     /// Pointer to the memory region containing the DT.
-    pub base: VirtAddr<V>,
+    pub base: VirtAddrGeneric<V>,
 }
 
 // These traits are implemented manually because Rust 1.59 has limited derive support for generic
@@ -47,6 +47,7 @@ impl<V: VirtAddrValidity> core::fmt::Debug for DescriptorTablePointer<V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::VirtAddr;
     use std::mem::size_of;
 
     #[test]
@@ -60,10 +61,13 @@ mod tests {
         };
         let _: &u16 = &p.limit;
 
+        let _: DescriptorTablePointer<crate::DefaultVirtAddrValidity> = p;
+
         assert_eq!(
             size_of::<DescriptorTablePointer<crate::FixedValidity<57>>>(),
             10
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             size_of::<DescriptorTablePointer<crate::RuntimeValidity>>(),
             10

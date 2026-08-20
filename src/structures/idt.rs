@@ -21,7 +21,7 @@
 //! These types are defined for the compatibility with the Nightly Rust build.
 
 use crate::registers::rflags::RFlags;
-use crate::{PrivilegeLevel, RuntimeValidity, VirtAddr, VirtAddrValidity};
+use crate::{DefaultVirtAddrValidity, PrivilegeLevel, VirtAddrGeneric, VirtAddrValidity};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::convert::TryFrom;
@@ -54,7 +54,7 @@ use super::gdt::SegmentSelector;
 #[derive(Clone, Debug)]
 #[repr(C)]
 #[repr(align(16))]
-pub struct InterruptDescriptorTable<V: VirtAddrValidity = RuntimeValidity> {
+pub struct InterruptDescriptorTable<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// A divide error (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
     /// represented in the destination.
@@ -498,7 +498,7 @@ impl<V: VirtAddrValidity> InterruptDescriptorTable<V> {
     {
         use core::mem::size_of;
         crate::structures::DescriptorTablePointer {
-            base: VirtAddr::<V>::new_with_validity(self as *const _ as u64),
+            base: VirtAddrGeneric::<V>::new_with_validity(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
         }
     }
@@ -543,8 +543,8 @@ impl<V: VirtAddrValidity> InterruptDescriptorTable<V> {
     }
 }
 
-impl InterruptDescriptorTable<RuntimeValidity> {
-    /// Creates a new runtime-valid IDT filled with non-present entries.
+impl InterruptDescriptorTable<DefaultVirtAddrValidity> {
+    /// Creates a new IDT with the default virtual-address validity.
     ///
     /// Handler addresses assigned later retain their creation-time validity guarantees.
     #[inline]
@@ -690,7 +690,7 @@ impl_index_for_idt!(RangeFull);
 /// The generic parameter is some [`HandlerFuncType`], depending on the interrupt vector.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct Entry<F, V = RuntimeValidity> {
+pub struct Entry<F, V = DefaultVirtAddrValidity> {
     pointer_low: u16,
     options: EntryOptions,
     pointer_middle: u16,
@@ -725,14 +725,15 @@ impl<T, V: VirtAddrValidity> PartialEq for Entry<T, V> {
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type HandlerFunc<V = RuntimeValidity> = extern "x86-interrupt" fn(InterruptStackFrame<V>);
+pub type HandlerFunc<V = DefaultVirtAddrValidity> =
+    extern "x86-interrupt" fn(InterruptStackFrame<V>);
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct HandlerFunc<V: VirtAddrValidity = RuntimeValidity>(PhantomData<V>);
+pub struct HandlerFunc<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A handler function for an exception that pushes an error code.
 ///
@@ -741,7 +742,7 @@ pub struct HandlerFunc<V: VirtAddrValidity = RuntimeValidity>(PhantomData<V>);
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type HandlerFuncWithErrCode<V = RuntimeValidity> =
+pub type HandlerFuncWithErrCode<V = DefaultVirtAddrValidity> =
     extern "x86-interrupt" fn(InterruptStackFrame<V>, error_code: u64);
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
@@ -749,7 +750,7 @@ pub type HandlerFuncWithErrCode<V = RuntimeValidity> =
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct HandlerFuncWithErrCode<V: VirtAddrValidity = RuntimeValidity>(PhantomData<V>);
+pub struct HandlerFuncWithErrCode<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A page fault handler function that pushes a page fault error code.
 ///
@@ -758,7 +759,7 @@ pub struct HandlerFuncWithErrCode<V: VirtAddrValidity = RuntimeValidity>(Phantom
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type PageFaultHandlerFunc<V = RuntimeValidity> =
+pub type PageFaultHandlerFunc<V = DefaultVirtAddrValidity> =
     extern "x86-interrupt" fn(InterruptStackFrame<V>, error_code: PageFaultErrorCode);
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
@@ -766,7 +767,7 @@ pub type PageFaultHandlerFunc<V = RuntimeValidity> =
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct PageFaultHandlerFunc<V: VirtAddrValidity = RuntimeValidity>(PhantomData<V>);
+pub struct PageFaultHandlerFunc<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A handler function that must not return, e.g. for a machine check exception.
 ///
@@ -775,7 +776,7 @@ pub struct PageFaultHandlerFunc<V: VirtAddrValidity = RuntimeValidity>(PhantomDa
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type DivergingHandlerFunc<V = RuntimeValidity> =
+pub type DivergingHandlerFunc<V = DefaultVirtAddrValidity> =
     extern "x86-interrupt" fn(InterruptStackFrame<V>) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
@@ -783,7 +784,7 @@ pub type DivergingHandlerFunc<V = RuntimeValidity> =
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct DivergingHandlerFunc<V: VirtAddrValidity = RuntimeValidity>(PhantomData<V>);
+pub struct DivergingHandlerFunc<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 ///
@@ -792,7 +793,7 @@ pub struct DivergingHandlerFunc<V: VirtAddrValidity = RuntimeValidity>(PhantomDa
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type DivergingHandlerFuncWithErrCode<V = RuntimeValidity> =
+pub type DivergingHandlerFuncWithErrCode<V = DefaultVirtAddrValidity> =
     extern "x86-interrupt" fn(InterruptStackFrame<V>, error_code: u64) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
@@ -800,10 +801,12 @@ pub type DivergingHandlerFuncWithErrCode<V = RuntimeValidity> =
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct DivergingHandlerFuncWithErrCode<V: VirtAddrValidity = RuntimeValidity>(PhantomData<V>);
+pub struct DivergingHandlerFuncWithErrCode<V: VirtAddrValidity = DefaultVirtAddrValidity>(
+    PhantomData<V>,
+);
 
 /// A general handler function for an interrupt or an exception with the interrupt/exceptions's index and an optional error code.
-pub type GeneralHandlerFunc<V = RuntimeValidity> =
+pub type GeneralHandlerFunc<V = DefaultVirtAddrValidity> =
     fn(InterruptStackFrame<V>, index: u8, error_code: Option<u64>);
 
 impl<F, V> Entry<F, V> {
@@ -838,7 +841,7 @@ impl<F, V: VirtAddrValidity> Entry<F, V> {
     /// and the signature of such a function is correct for the entry type.
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
-    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr<V>) -> &mut EntryOptions {
+    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddrGeneric<V>) -> &mut EntryOptions {
         use crate::instructions::segmentation::{Segment, CS};
 
         let addr = addr.as_u64();
@@ -855,13 +858,13 @@ impl<F, V: VirtAddrValidity> Entry<F, V> {
 
     /// Returns the virtual address of this IDT entry's handler function.
     #[inline]
-    pub fn handler_addr(&self) -> VirtAddr<V> {
+    pub fn handler_addr(&self) -> VirtAddrGeneric<V> {
         let addr = self.pointer_low as u64
             | ((self.pointer_middle as u64) << 16)
             | ((self.pointer_high as u64) << 32);
         // addr is a valid VirtAddr, as the pointer members are either all zero,
         // or have been set by set_handler_addr (which takes a VirtAddr).
-        unsafe { VirtAddr::<V>::new_unsafe(addr) }
+        unsafe { VirtAddrGeneric::<V>::new_unsafe(addr) }
     }
 }
 
@@ -893,9 +896,9 @@ where
 /// # Safety
 ///
 /// Implementors have to ensure that `to_virt_addr` returns a valid address.
-pub unsafe trait HandlerFuncType<V: VirtAddrValidity = RuntimeValidity> {
+pub unsafe trait HandlerFuncType<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// Get the virtual address of the handler function.
-    fn to_virt_addr(self) -> VirtAddr<V>;
+    fn to_virt_addr(self) -> VirtAddrGeneric<V>;
 }
 
 macro_rules! impl_handler_func_type {
@@ -909,14 +912,14 @@ macro_rules! impl_handler_func_type {
             V: VirtAddrValidity,
         {
             #[inline]
-            fn to_virt_addr(self) -> VirtAddr<V> {
+            fn to_virt_addr(self) -> VirtAddrGeneric<V> {
                 // Casting a function pointer to u64 is fine, if the pointer
                 // width doesn't exceed 64 bits.
                 #[cfg_attr(
                     any(target_pointer_width = "32", target_pointer_width = "64"),
                     allow(clippy::fn_to_numeric_cast)
                 )]
-                VirtAddr::<V>::new_with_validity(self as u64)
+                VirtAddrGeneric::<V>::new_with_validity(self as u64)
             }
         }
     };
@@ -1034,16 +1037,18 @@ impl EntryOptions {
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
 #[repr(transparent)]
-pub struct InterruptStackFrame<V: VirtAddrValidity = RuntimeValidity>(InterruptStackFrameValue<V>);
+pub struct InterruptStackFrame<V: VirtAddrValidity = DefaultVirtAddrValidity>(
+    InterruptStackFrameValue<V>,
+);
 
 impl<V: VirtAddrValidity> InterruptStackFrame<V> {
     /// Creates a new interrupt stack frame with the given values.
     #[inline]
     pub fn new(
-        instruction_pointer: VirtAddr<V>,
+        instruction_pointer: VirtAddrGeneric<V>,
         code_segment: SegmentSelector,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr<V>,
+        stack_pointer: VirtAddrGeneric<V>,
         stack_segment: SegmentSelector,
     ) -> Self {
         Self(InterruptStackFrameValue::new(
@@ -1094,20 +1099,20 @@ impl<V: VirtAddrValidity> fmt::Debug for InterruptStackFrame<V> {
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct InterruptStackFrameValue<V: VirtAddrValidity = RuntimeValidity> {
+pub struct InterruptStackFrameValue<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// This value points to the instruction that should be executed when the interrupt
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
     /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
-    pub instruction_pointer: VirtAddr<V>,
+    pub instruction_pointer: VirtAddrGeneric<V>,
     /// The code segment selector at the time of the interrupt.
     pub code_segment: SegmentSelector,
     _reserved1: [u8; 6],
     /// The flags register before the interrupt handler was invoked.
     pub cpu_flags: RFlags,
     /// The stack pointer at the time of the interrupt.
-    pub stack_pointer: VirtAddr<V>,
+    pub stack_pointer: VirtAddrGeneric<V>,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
     pub stack_segment: SegmentSelector,
     _reserved2: [u8; 6],
@@ -1117,10 +1122,10 @@ impl<V: VirtAddrValidity> InterruptStackFrameValue<V> {
     /// Creates a new interrupt stack frame with the given values.
     #[inline]
     pub fn new(
-        instruction_pointer: VirtAddr<V>,
+        instruction_pointer: VirtAddrGeneric<V>,
         code_segment: SegmentSelector,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr<V>,
+        stack_pointer: VirtAddrGeneric<V>,
         stack_segment: SegmentSelector,
     ) -> Self {
         Self {
@@ -1689,6 +1694,7 @@ mod test {
             size_of::<Entry<HandlerFunc<crate::FixedValidity<57>>, crate::FixedValidity<57>>>(),
             16
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             size_of::<Entry<HandlerFunc<crate::RuntimeValidity>, crate::RuntimeValidity>>(),
             16
@@ -1698,6 +1704,7 @@ mod test {
             size_of::<InterruptDescriptorTable<crate::FixedValidity<57>>>(),
             256 * 16
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             size_of::<InterruptDescriptorTable<crate::RuntimeValidity>>(),
             256 * 16
@@ -1707,12 +1714,14 @@ mod test {
             size_of::<InterruptStackFrame<crate::FixedValidity<57>>>(),
             40
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(size_of::<InterruptStackFrame<crate::RuntimeValidity>>(), 40);
         assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
         assert_eq!(
             size_of::<InterruptStackFrameValue<crate::FixedValidity<57>>>(),
             40
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             size_of::<InterruptStackFrameValue<crate::RuntimeValidity>>(),
             40
@@ -1723,28 +1732,35 @@ mod test {
     fn explicit_policy_idt_and_frames_construct() {
         let _: InterruptDescriptorTable<crate::FixedValidity<57>> =
             InterruptDescriptorTable::new_with_validity();
-        let _: InterruptDescriptorTable<crate::RuntimeValidity> =
-            InterruptDescriptorTable::new_with_validity();
 
-        let address57 = crate::VirtAddr57::new_const(0x0000_8000_0000_0000);
-        let frame57 = InterruptStackFrame::new(
-            address57,
-            SegmentSelector(0),
-            RFlags::empty(),
-            address57,
-            SegmentSelector(0),
-        );
-        assert_eq!(frame57.instruction_pointer, address57);
+        #[cfg(feature = "virt_addr_57")]
+        {
+            let address57 = crate::VirtAddr57::new(0x0000_8000_0000_0000);
+            let frame57 = InterruptStackFrame::new(
+                address57,
+                SegmentSelector(0),
+                RFlags::empty(),
+                address57,
+                SegmentSelector(0),
+            );
+            assert_eq!(frame57.instruction_pointer, address57);
+        }
 
-        let address_rt = unsafe { crate::VirtAddrRT::new_unsafe(0x1234) };
-        let frame_rt = InterruptStackFrame::new(
-            address_rt,
-            SegmentSelector(0),
-            RFlags::empty(),
-            address_rt,
-            SegmentSelector(0),
-        );
-        assert_eq!(frame_rt.stack_pointer, address_rt);
+        #[cfg(feature = "virt_addr_rt")]
+        {
+            let _: InterruptDescriptorTable<crate::RuntimeValidity> =
+                InterruptDescriptorTable::new_with_validity();
+
+            let address_rt = unsafe { crate::VirtAddrRT::new_unsafe(0x1234) };
+            let frame_rt = InterruptStackFrame::new(
+                address_rt,
+                SegmentSelector(0),
+                RFlags::empty(),
+                address_rt,
+                SegmentSelector(0),
+            );
+            assert_eq!(frame_rt.stack_pointer, address_rt);
+        }
     }
 
     #[cfg(all(
@@ -1824,10 +1840,10 @@ mod test {
     fn isr_frame_manipulation() {
         let mut frame: InterruptStackFrame<crate::FixedValidity<48>> =
             InterruptStackFrame(InterruptStackFrameValue {
-                instruction_pointer: crate::VirtAddr48::new_const(0x1000),
+                instruction_pointer: crate::VirtAddr48::new(0x1000),
                 code_segment: SegmentSelector(0),
                 cpu_flags: RFlags::empty(),
-                stack_pointer: crate::VirtAddr48::new_const(0x2000),
+                stack_pointer: crate::VirtAddr48::new(0x2000),
                 stack_segment: SegmentSelector(0),
                 _reserved1: Default::default(),
                 _reserved2: Default::default(),

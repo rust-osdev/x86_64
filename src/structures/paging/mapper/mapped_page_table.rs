@@ -564,9 +564,8 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
         unsafe {
             self.clean_up_addr_range(
                 PageRangeInclusive {
-                    start: Page::from_start_address(VirtAddr48::new_const(0)).unwrap(),
-                    end: Page::from_start_address(VirtAddr48::new_const(0xffff_ffff_ffff_f000))
-                        .unwrap(),
+                    start: Page::from_start_address(VirtAddr48::new(0)).unwrap(),
+                    end: Page::from_start_address(VirtAddr48::new(0xffff_ffff_ffff_f000)).unwrap(),
                 },
                 frame_deallocator,
             )
@@ -615,10 +614,14 @@ impl<P: PageTableFrameMapping> CleanUp for MappedPageTable<'_, P> {
                         .unwrap();
                         let end = start + (offset_per_entry - 1);
                         let start =
-                            Page::<Size4KiB, FixedValidity<48>>::containing_address_const(start);
+                            Page::<Size4KiB, FixedValidity<48>>::containing_address_with_validity(
+                                start,
+                            );
                         let start = start.max(range.start);
                         let end =
-                            Page::<Size4KiB, FixedValidity<48>>::containing_address_const(end);
+                            Page::<Size4KiB, FixedValidity<48>>::containing_address_with_validity(
+                                end,
+                            );
                         let end = end.min(range.end);
                         unsafe {
                             if clean_up(

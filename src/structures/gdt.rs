@@ -2,7 +2,7 @@
 
 pub use crate::registers::segmentation::SegmentSelector;
 use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
-use crate::{PrivilegeLevel, RuntimeValidity, VirtAddrValidity};
+use crate::{DefaultVirtAddrValidity, PrivilegeLevel, VirtAddrValidity};
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::{cmp, fmt, marker::PhantomData, mem};
@@ -105,13 +105,13 @@ impl fmt::Debug for Entry {
 /// ```
 
 #[derive(Debug, Clone)]
-pub struct GlobalDescriptorTable<const MAX: usize = 8, V = RuntimeValidity> {
+pub struct GlobalDescriptorTable<const MAX: usize = 8, V = DefaultVirtAddrValidity> {
     table: [Entry; MAX],
     len: usize,
     validity: PhantomData<V>,
 }
 
-impl GlobalDescriptorTable<8, RuntimeValidity> {
+impl GlobalDescriptorTable<8, DefaultVirtAddrValidity> {
     /// Creates an empty GDT with the default length of 8.
     pub const fn new() -> Self {
         Self::empty()
@@ -245,13 +245,13 @@ impl<const MAX: usize, V> GlobalDescriptorTable<MAX, V> {
         V: VirtAddrValidity,
     {
         super::DescriptorTablePointer {
-            base: crate::VirtAddr::<V>::new_with_validity(self.table.as_ptr() as u64),
+            base: crate::VirtAddrGeneric::<V>::new_with_validity(self.table.as_ptr() as u64),
             limit: self.limit(),
         }
     }
 }
 
-impl<const MAX: usize> GlobalDescriptorTable<MAX, RuntimeValidity> {
+impl<const MAX: usize> GlobalDescriptorTable<MAX, DefaultVirtAddrValidity> {
     /// Loads the GDT in the CPU using the `lgdt` instruction.
     ///
     /// The static lifetime ensures that the table is not destroyed while loaded.
@@ -272,7 +272,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX, RuntimeValidity> {
         unsafe { crate::instructions::tables::lgdt(&self.pointer()) };
     }
 
-    /// Creates an empty runtime-valid GDT with the selected capacity.
+    /// Creates an empty GDT with the selected default virtual-address validity.
     ///
     /// This method preserves the legacy `GlobalDescriptorTable::<MAX>::empty` API.
     #[inline]
@@ -280,7 +280,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX, RuntimeValidity> {
         Self::empty_with_validity()
     }
 
-    /// Forms a runtime-valid GDT from a slice of raw entries.
+    /// Forms a GDT with the default virtual-address validity from a slice of raw entries.
     ///
     /// This method preserves the legacy `from_raw_entries` API.
     #[inline]
@@ -569,7 +569,7 @@ impl Descriptor {
     {
         use self::DescriptorFlags as Flags;
 
-        let ptr = crate::VirtAddr::<V>::new_with_validity(tss as u64).as_u64();
+        let ptr = crate::VirtAddrGeneric::<V>::new_with_validity(tss as u64).as_u64();
 
         let mut low = Flags::PRESENT.bits();
         // base
@@ -603,10 +603,12 @@ mod tests {
             mem::size_of::<GlobalDescriptorTable<8, crate::FixedValidity<57>>>(),
             72
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             mem::size_of::<GlobalDescriptorTable<8, crate::RuntimeValidity>>(),
             72
         );
+        #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             mem::align_of::<GlobalDescriptorTable<8, crate::RuntimeValidity>>(),
             8

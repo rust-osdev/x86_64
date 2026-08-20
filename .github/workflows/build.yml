@@ -42,6 +42,8 @@ jobs:
       - run: cargo doc --no-default-features
       - run: cargo test --no-default-features --features instructions
       - run: cargo test --no-default-features --features memory_encryption
+      - run: cargo test --no-default-features --features virt_addr_57,virt_addr_rt
+      - run: cargo test --no-default-features --features default_virt_addr_57,virt_addr_rt
       - run: cargo test --no-default-features
 
   test:

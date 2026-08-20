@@ -15,10 +15,14 @@
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
+#[cfg(feature = "virt_addr_57")]
+pub use crate::addr::VirtAddr57;
 pub use crate::addr::{
-    align_down, align_up, FixedValidity, PhysAddr, RuntimeValidity, VirtAddr, VirtAddr48,
-    VirtAddr57, VirtAddrRT, VirtAddrValidity,
+    align_down, align_up, DefaultVirtAddrValidity, FixedValidity, PhysAddr, VirtAddr, VirtAddr48,
+    VirtAddrGeneric, VirtAddrValidity,
 };
+#[cfg(feature = "virt_addr_rt")]
+pub use crate::addr::{RuntimeValidity, VirtAddrRT};
 
 pub mod addr;
 pub mod instructions;
