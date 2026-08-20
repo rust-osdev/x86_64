@@ -599,6 +599,7 @@ mod tests {
     #[test]
     fn policy_does_not_change_gdt_layout() {
         assert_eq!(mem::size_of::<GlobalDescriptorTable>(), 72);
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             mem::size_of::<GlobalDescriptorTable<8, crate::FixedValidity<57>>>(),
             72

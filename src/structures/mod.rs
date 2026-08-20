@@ -63,6 +63,7 @@ mod tests {
 
         let _: DescriptorTablePointer<crate::DefaultVirtAddrValidity> = p;
 
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             size_of::<DescriptorTablePointer<crate::FixedValidity<57>>>(),
             10

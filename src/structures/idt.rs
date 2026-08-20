@@ -1690,6 +1690,7 @@ mod test {
     fn size_test() {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             size_of::<Entry<HandlerFunc<crate::FixedValidity<57>>, crate::FixedValidity<57>>>(),
             16
@@ -1700,6 +1701,7 @@ mod test {
             16
         );
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             size_of::<InterruptDescriptorTable<crate::FixedValidity<57>>>(),
             256 * 16
@@ -1710,6 +1712,7 @@ mod test {
             256 * 16
         );
         assert_eq!(size_of::<InterruptStackFrame>(), 40);
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             size_of::<InterruptStackFrame<crate::FixedValidity<57>>>(),
             40
@@ -1717,6 +1720,7 @@ mod test {
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(size_of::<InterruptStackFrame<crate::RuntimeValidity>>(), 40);
         assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             size_of::<InterruptStackFrameValue<crate::FixedValidity<57>>>(),
             40
@@ -1730,6 +1734,7 @@ mod test {
 
     #[test]
     fn explicit_policy_idt_and_frames_construct() {
+        #[cfg(feature = "virt_addr_57")]
         let _: InterruptDescriptorTable<crate::FixedValidity<57>> =
             InterruptDescriptorTable::new_with_validity();
 

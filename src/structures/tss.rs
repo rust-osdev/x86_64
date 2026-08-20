@@ -167,6 +167,7 @@ mod tests {
         // Per the SDM, the minimum size of a TSS is 0x68 bytes, giving a
         // minimum limit of 0x67.
         assert_eq!(size_of::<TaskStateSegment>(), 0x68);
+        #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             size_of::<TaskStateSegment<crate::FixedValidity<57>>>(),
             0x68

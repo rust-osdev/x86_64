@@ -22,7 +22,7 @@ use dep_const_fn::const_fn;
 /// supported:
 ///
 /// - [`FixedValidity<48>`]: 48-bit fixed width.
-/// - [`FixedValidity<57>`]: 57-bit fixed width.
+/// - [`FixedValidity<57>`]: 57-bit fixed width (requires the `virt_addr_57` feature).
 /// - `RuntimeValidity`: Runtime validity (requires the `virt_addr_rt` feature).
 ///
 /// This trait is used by [`VirtAddrGeneric`] to construct different virtual-address types.
@@ -42,11 +42,24 @@ use dep_const_fn::const_fn;
 ///
 /// let _ = x86_64::VirtAddrGeneric::<CustomValidity>::zero();
 /// ```
+#[cfg_attr(
+    not(feature = "virt_addr_57"),
+    doc = r#"
+`FixedValidity<57>` requires the `virt_addr_57` feature:
+
+```compile_fail
+use x86_64::{FixedValidity, VirtAddrGeneric};
+
+let _ = VirtAddrGeneric::<FixedValidity<57>>::zero();
+```
+"#
+)]
 pub trait VirtAddrValidity: crate::sealed::VirtAddrValiditySealed {}
 
 /// A fixed-width virtual-address validity policy.
 ///
-/// Only `FixedValidity<48>` and `FixedValidity<57>` are supported.
+/// `FixedValidity<48>` is always supported. `FixedValidity<57>` is supported with the
+/// `virt_addr_57` feature.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FixedValidity<const BITS: usize>;
 
@@ -76,6 +89,7 @@ let _ = address + 1u64;
 pub struct RuntimeValidity;
 
 impl VirtAddrValidity for FixedValidity<48> {}
+#[cfg(feature = "virt_addr_57")]
 impl VirtAddrValidity for FixedValidity<57> {}
 #[cfg(feature = "virt_addr_rt")]
 impl VirtAddrValidity for RuntimeValidity {}
