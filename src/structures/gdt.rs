@@ -1,8 +1,9 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrValidity};
 pub use crate::registers::segmentation::SegmentSelector;
 use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
-use crate::{DefaultVirtAddrValidity, PrivilegeLevel, VirtAddrValidity};
+use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::{cmp, fmt, marker::PhantomData, mem};
@@ -245,7 +246,7 @@ impl<const MAX: usize, V> GlobalDescriptorTable<MAX, V> {
         V: VirtAddrValidity,
     {
         super::DescriptorTablePointer {
-            base: crate::VirtAddrGeneric::<V>::new_with_validity(self.table.as_ptr() as u64),
+            base: crate::addr::VirtAddrGeneric::<V>::new_with_validity(self.table.as_ptr() as u64),
             limit: self.limit(),
         }
     }
@@ -492,7 +493,7 @@ impl Descriptor {
     /// ```
     /// use x86_64::structures::gdt::Descriptor;
     /// use x86_64::structures::tss::TaskStateSegment;
-    /// use x86_64::FixedValidity;
+    /// use x86_64::addr::FixedValidity;
     ///
     /// /// A helper that places some I/O map bytes behind a TSS.
     /// #[repr(C)]
@@ -569,7 +570,7 @@ impl Descriptor {
     {
         use self::DescriptorFlags as Flags;
 
-        let ptr = crate::VirtAddrGeneric::<V>::new_with_validity(tss as u64).as_u64();
+        let ptr = crate::addr::VirtAddrGeneric::<V>::new_with_validity(tss as u64).as_u64();
 
         let mut low = Flags::PRESENT.bits();
         // base
@@ -601,17 +602,17 @@ mod tests {
         assert_eq!(mem::size_of::<GlobalDescriptorTable>(), 72);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            mem::size_of::<GlobalDescriptorTable<8, crate::FixedValidity<57>>>(),
+            mem::size_of::<GlobalDescriptorTable<8, crate::addr::FixedValidity<57>>>(),
             72
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
-            mem::size_of::<GlobalDescriptorTable<8, crate::RuntimeValidity>>(),
+            mem::size_of::<GlobalDescriptorTable<8, crate::addr::RuntimeValidity>>(),
             72
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
-            mem::align_of::<GlobalDescriptorTable<8, crate::RuntimeValidity>>(),
+            mem::align_of::<GlobalDescriptorTable<8, crate::addr::RuntimeValidity>>(),
             8
         );
     }
@@ -641,7 +642,7 @@ mod tests {
         gdt
     }
 
-    fn tss() -> &'static TaskStateSegment<crate::FixedValidity<48>> {
+    fn tss() -> &'static TaskStateSegment<crate::addr::FixedValidity<48>> {
         Box::leak(Box::new(TaskStateSegment::new_with_validity()))
     }
 

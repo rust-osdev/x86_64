@@ -5,7 +5,7 @@ use core::{
     mem::size_of,
 };
 
-use crate::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
@@ -169,10 +169,13 @@ mod tests {
         assert_eq!(size_of::<TaskStateSegment>(), 0x68);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            size_of::<TaskStateSegment<crate::FixedValidity<57>>>(),
+            size_of::<TaskStateSegment<crate::addr::FixedValidity<57>>>(),
             0x68
         );
         #[cfg(feature = "virt_addr_rt")]
-        assert_eq!(size_of::<TaskStateSegment<crate::RuntimeValidity>>(), 0x68);
+        assert_eq!(
+            size_of::<TaskStateSegment<crate::addr::RuntimeValidity>>(),
+            0x68
+        );
     }
 }

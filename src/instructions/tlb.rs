@@ -2,13 +2,14 @@
 
 use bit_field::BitField;
 
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 use crate::{
     instructions::segmentation::{Segment, CS},
     structures::paging::{
         page::{NotGiantPageSize, PageRange},
         Page, PageSize, Size2MiB, Size4KiB,
     },
-    DefaultVirtAddrValidity, PrivilegeLevel, VirtAddr, VirtAddrGeneric, VirtAddrValidity,
+    PrivilegeLevel, VirtAddr,
 };
 use core::{arch::asm, cmp, convert::TryFrom, fmt};
 

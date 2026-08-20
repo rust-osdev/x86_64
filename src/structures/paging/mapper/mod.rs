@@ -6,13 +6,14 @@ pub use self::offset_page_table::OffsetPageTable;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
+use crate::addr::{FixedValidity, VirtAddr48};
 use crate::structures::paging::{
     frame_alloc::{FrameAllocator, FrameDeallocator},
     page::PageRangeInclusive,
     page_table::PageTableFlags,
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
-use crate::{FixedValidity, PhysAddr, VirtAddr48};
+use crate::PhysAddr;
 
 mod mapped_page_table;
 mod offset_page_table;
@@ -159,7 +160,7 @@ pub trait Mapper<S: PageSize> {
     /// #    Mapper, Page, PhysFrame, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
-    /// # use x86_64::FixedValidity;
+    /// # use x86_64::addr::FixedValidity;
     /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
     /// #         page: Page<Size4KiB, FixedValidity<48>>, frame: PhysFrame) {
@@ -249,7 +250,7 @@ pub trait Mapper<S: PageSize> {
     /// #    Mapper, PhysFrame, Page, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
-    /// # use x86_64::FixedValidity;
+    /// # use x86_64::addr::FixedValidity;
     /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
     /// #         page: Page<Size4KiB, FixedValidity<48>>, frame: PhysFrame) {
@@ -526,7 +527,7 @@ pub trait CleanUp {
     /// Remove all empty P1-P3 tables in a certain range
     /// ```
     /// # use core::ops::RangeInclusive;
-    /// # use x86_64::{VirtAddr48, structures::paging::{
+    /// # use x86_64::{addr::VirtAddr48, structures::paging::{
     /// #    FrameDeallocator, Size4KiB, mapper::CleanUp, page::Page,
     /// # }};
     /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {

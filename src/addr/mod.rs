@@ -2,24 +2,12 @@
 
 use core::convert::TryFrom;
 use core::fmt;
+use core::hash::Hash;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-use core::sync::atomic::AtomicU8;
-#[cfg(any(
-    feature = "memory_encryption",
-    all(
-        feature = "instructions",
-        feature = "virt_addr_rt",
-        target_arch = "x86_64"
-    )
-))]
+#[cfg(feature = "memory_encryption")]
 use core::sync::atomic::Ordering;
 
 #[cfg(feature = "memory_encryption")]
@@ -29,135 +17,14 @@ use crate::structures::paging::{PageOffset, PageTableIndex};
 
 use dep_const_fn::const_fn;
 
-/// A policy for virtual-address validity.
-///
-/// This trait is sealed and cannot be implemented outside this crate. Three validities are
-/// supported:
-///
-/// - [`FixedValidity<48>`]: 48-bit fixed width.
-/// - [`FixedValidity<57>`]: 57-bit fixed width (requires the `virt_addr_57` feature).
-/// - `RuntimeValidity`: Runtime validity (requires the `virt_addr_rt` feature).
-///
-/// This trait is used by [`VirtAddrGeneric`] to construct different virtual-address types.
-///
-/// # Examples
-///
-/// ```
-/// use x86_64::{FixedValidity, VirtAddrGeneric};
-///
-/// let addr = VirtAddrGeneric::<FixedValidity<48>>::new(0x1000);
-/// ```
-///
-/// The set of validity policies is closed:
-///
-/// ```compile_fail
-/// struct CustomValidity;
-///
-/// let _ = x86_64::VirtAddrGeneric::<CustomValidity>::zero();
-/// ```
-#[cfg_attr(
-    not(feature = "virt_addr_57"),
-    doc = r#"
-`FixedValidity<57>` requires the `virt_addr_57` feature:
-
-```compile_fail
-use x86_64::{FixedValidity, VirtAddrGeneric};
-
-let _ = VirtAddrGeneric::<FixedValidity<57>>::zero();
-```
-"#
-)]
-pub trait VirtAddrValidity: crate::sealed::VirtAddrValiditySealed {}
-
-/// A fixed-width virtual-address validity policy.
-///
-/// `FixedValidity<48>` is always supported. `FixedValidity<57>` is supported with the
-/// `virt_addr_57` feature.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FixedValidity<const BITS: usize>;
-
-/// The runtime virtual-address validity policy.
-///
-/// This policy checks the currently active address-space mode using a global cache of
-/// `CR4.LA57`. The first operation that needs the active mode initializes the cache. The policy
-/// type itself is available with the `virt_addr_rt` feature on all targets. Operations that do not
-/// consult the active mode are available wherever the policy is available. Checked construction,
-/// canonicalization, and address-producing arithmetic additionally require the `instructions`
-/// feature and an `x86_64` target, and they must execute in Ring 0.
 #[cfg(feature = "virt_addr_rt")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_rt")))]
-#[cfg_attr(
-    not(all(feature = "instructions", target_arch = "x86_64")),
-    doc = r#"
-Address-producing arithmetic is unavailable when the current address-space mode cannot be read:
-
-```compile_fail
-use x86_64::{RuntimeValidity, VirtAddrGeneric};
-
-let address = VirtAddrGeneric::<RuntimeValidity>::zero();
-let _ = address + 1u64;
-```
-"#
-)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct RuntimeValidity;
-
-impl VirtAddrValidity for FixedValidity<48> {}
-#[cfg(feature = "virt_addr_57")]
-impl VirtAddrValidity for FixedValidity<57> {}
-#[cfg(feature = "virt_addr_rt")]
-impl VirtAddrValidity for RuntimeValidity {}
-
-/// A [`VirtAddrValidity`] for which arithmetic operations are supported.
-///
-/// Enabled fixed validity policies always support arithmetic. `RuntimeValidity` supports
-/// arithmetic when the `instructions` feature is enabled and the target is `x86_64`.
-pub(crate) trait VirtAddrArithmeticValidity: VirtAddrValidity {}
-
-impl<const BITS: usize> VirtAddrArithmeticValidity for FixedValidity<BITS> where
-    FixedValidity<BITS>: VirtAddrValidity
-{
-}
-
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-impl VirtAddrArithmeticValidity for RuntimeValidity {}
-
-impl<const BITS: usize> crate::sealed::VirtAddrValiditySealed for FixedValidity<BITS> {
-    #[inline]
-    fn bits() -> usize {
-        BITS
-    }
-}
+mod rt;
+mod validity;
 
 #[cfg(feature = "virt_addr_rt")]
-impl crate::sealed::VirtAddrValiditySealed for RuntimeValidity {
-    #[inline]
-    fn bits() -> usize {
-        #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-        {
-            current_virtual_address_bits()
-        }
-
-        #[cfg(not(all(feature = "instructions", target_arch = "x86_64")))]
-        {
-            // All callers of this function are expected to be disabled on non-x86_64 targets or
-            // when the instructions feature is disabled.
-            unreachable!(
-                "runtime virtual-address width requires x86_64 and the instructions feature"
-            )
-        }
-    }
-}
-
-/// Returns the number of valid bits for the given validity policy.
-#[inline]
-fn validity_bits<V: VirtAddrValidity>() -> usize {
-    <V as crate::sealed::VirtAddrValiditySealed>::bits()
-}
+pub use rt::{RuntimeValidity, VirtAddrRT};
+pub(crate) use validity::ArithmeticValidity;
+pub use validity::{FixedValidity, VirtAddrValidity};
 
 /// Canonicalizes the given address with the given number of bits.
 #[inline]
@@ -187,83 +54,6 @@ fn try_new_with_bits<V: VirtAddrValidity>(
 #[rustversion::attr(since(1.61), const)]
 fn new_truncate_with_bits<V: VirtAddrValidity>(addr: u64, bits: usize) -> VirtAddrGeneric<V> {
     VirtAddrGeneric(canonicalize_with_bits(addr, bits), PhantomData)
-}
-
-/// The cached virtual-address width for the active address-space mode.
-///
-/// Zero indicates that the cache has not been initialized yet.
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-static CURRENT_VIRTUAL_ADDRESS_BITS: AtomicU8 = AtomicU8::new(0);
-
-/// Returns a lazily initialized virtual-address width from the given cache.
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-#[inline]
-fn cached_virtual_address_bits(cache: &AtomicU8, read_current_bits: impl FnOnce() -> u8) -> usize {
-    let cached = cache.load(Ordering::Relaxed);
-    if cached != 0 {
-        return usize::from(cached);
-    }
-
-    let current = read_current_bits();
-    debug_assert!(current == 48 || current == 57);
-    usize::from(
-        match cache.compare_exchange(0, current, Ordering::Relaxed, Ordering::Relaxed) {
-            Ok(_) => current,
-            Err(initialized) => initialized,
-        },
-    )
-}
-
-/// Replaces the virtual-address width in the given cache.
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-#[inline]
-fn update_cached_virtual_address_bits(cache: &AtomicU8, read_current_bits: impl FnOnce() -> u8) {
-    let current = read_current_bits();
-    debug_assert!(current == 48 || current == 57);
-    cache.store(current, Ordering::Relaxed);
-}
-
-/// Reads the virtual-address width for the currently active address-space mode.
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-#[inline]
-fn read_current_virtual_address_bits() -> u8 {
-    use crate::registers::control::{Cr4, Cr4Flags};
-
-    if Cr4::read().contains(Cr4Flags::L5_PAGING) {
-        57
-    } else {
-        48
-    }
-}
-
-/// Returns the cached virtual-address width for the active address-space mode.
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-#[inline]
-fn current_virtual_address_bits() -> usize {
-    cached_virtual_address_bits(
-        &CURRENT_VIRTUAL_ADDRESS_BITS,
-        read_current_virtual_address_bits,
-    )
 }
 
 /// A canonical 64-bit virtual memory address.
@@ -296,7 +86,7 @@ fn current_virtual_address_bits() -> usize {
 /// check the current address-space mode or produce a new runtime-valid address use a cached
 /// virtual-address width. They require the `instructions` feature and an `x86_64` target, and they
 /// must execute in Ring 0. The first such operation initializes the cache from `CR4.LA57`. Call
-/// `VirtAddrRT::update_current_address_bits` after changing the active address-space mode.
+/// `VirtAddrRT::refetch_virtual_address_bits` after changing the active address-space mode.
 ///
 /// Validity is checked only when an address is created. A later address-space mode change does not
 /// invalidate existing values. Operations that subsequently produce a new address check the
@@ -308,7 +98,7 @@ fn current_virtual_address_bits() -> usize {
 /// follow the crate's feature-selected default.
 ///
 /// ```compile_fail
-/// use x86_64::VirtAddrGeneric;
+/// use x86_64::addr::VirtAddrGeneric;
 ///
 /// let _ = VirtAddrGeneric::zero();
 /// ```
@@ -325,13 +115,6 @@ pub type VirtAddr48 = VirtAddrGeneric<FixedValidity<48>>;
 #[cfg(feature = "virt_addr_57")]
 #[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_57")))]
 pub type VirtAddr57 = VirtAddrGeneric<FixedValidity<57>>;
-
-/// A virtual address checked against the current address-space mode when created.
-///
-/// This alias is available with the `virt_addr_rt` feature.
-#[cfg(feature = "virt_addr_rt")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_rt")))]
-pub type VirtAddrRT = VirtAddrGeneric<RuntimeValidity>;
 
 /// The default virtual-address validity policy.
 ///
@@ -474,99 +257,6 @@ where
     }
 }
 
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-impl VirtAddrGeneric<RuntimeValidity> {
-    /// Updates the cached virtual-address width from the active address-space mode.
-    ///
-    /// The first runtime-valid address operation initializes the cache automatically. Call this
-    /// method after changing `CR4.LA57` and before resuming operations that create or validate
-    /// runtime-valid addresses. The caller is responsible for synchronizing the mode change with
-    /// other processors and threads.
-    ///
-    /// This method reads `CR4.LA57`, so it must execute in Ring 0.
-    #[inline]
-    pub fn update_current_address_bits() {
-        update_cached_virtual_address_bits(
-            &CURRENT_VIRTUAL_ADDRESS_BITS,
-            read_current_virtual_address_bits,
-        );
-    }
-
-    /// Creates a new virtual address valid in the current address-space mode.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if the address is not canonical under the currently active mode.
-    #[inline]
-    pub fn new(addr: u64) -> Self {
-        match Self::try_new(addr) {
-            Ok(address) => address,
-            Err(_) => panic!("virtual address must be canonical in the current address-space mode"),
-        }
-    }
-
-    /// Tries to create a virtual address valid in the current address-space mode.
-    ///
-    /// This function checks the address using the cached active canonical width. The first runtime
-    /// address operation initializes the cache from `CR4.LA57`.
-    #[inline]
-    pub fn try_new(addr: u64) -> Result<Self, VirtAddrNotValid> {
-        try_new_with_bits(addr, current_virtual_address_bits())
-    }
-
-    /// Creates a virtual address by canonicalizing it for the current address-space mode.
-    ///
-    /// This function uses the cached active canonical width to sign-extend the address. The first
-    /// runtime address operation initializes the cache from `CR4.LA57`.
-    #[inline]
-    pub fn new_truncate(addr: u64) -> Self {
-        new_truncate_with_bits(addr, current_virtual_address_bits())
-    }
-
-    /// Creates a virtual address from the given pointer.
-    ///
-    /// The pointer address must be canonical in the current address-space mode.
-    #[cfg(target_pointer_width = "64")]
-    #[inline]
-    pub fn from_ptr<T: ?Sized>(ptr: *const T) -> Self {
-        Self::new(ptr as *const () as u64)
-    }
-
-    /// Aligns the virtual address upwards to the given alignment.
-    ///
-    /// The result is canonicalized using the current address-space mode.
-    #[inline]
-    pub fn align_up<U>(self, align: U) -> Self
-    where
-        U: Into<u64>,
-    {
-        Self::new_truncate(align_up(self.0, align.into()))
-    }
-
-    /// Aligns the virtual address downwards to the given alignment.
-    ///
-    /// The result is canonicalized using the current address-space mode.
-    #[inline]
-    pub fn align_down<U>(self, align: U) -> Self
-    where
-        U: Into<u64>,
-    {
-        self.align_down_u64(align.into())
-    }
-
-    /// Aligns the virtual address downwards to the given alignment.
-    ///
-    /// This variant accepts the alignment as a `u64` for internal users.
-    #[inline]
-    pub(crate) fn align_down_u64(self, align: u64) -> Self {
-        Self::new_truncate(align_down(self.0, align))
-    }
-}
-
 impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Creates a new virtual address, without any checks.
     ///
@@ -676,20 +366,6 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
         align_down(self.0, align) == self.0
     }
 
-    /// Checks whether the address is canonical in the currently active address-space mode.
-    ///
-    /// This method checks the address against the cached active canonical width even though it was
-    /// valid for its policy when created.
-    #[cfg(all(
-        feature = "instructions",
-        feature = "virt_addr_rt",
-        target_arch = "x86_64"
-    ))]
-    #[inline]
-    pub fn is_valid_currently(self) -> bool {
-        canonicalize_with_bits(self.0, current_virtual_address_bits()) == self.0
-    }
-
     /// Creates a checked virtual address for an internal policy-generic API.
     ///
     /// Runtime policies use the cached current address-space mode during this construction.
@@ -699,7 +375,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
         allow(dead_code)
     )]
     pub(crate) fn new_with_validity(addr: u64) -> Self {
-        match try_new_with_bits(addr, validity_bits::<V>()) {
+        match try_new_with_bits(addr, <V>::bits()) {
             Ok(address) => address,
             Err(_) => panic!("virtual address must be canonical for its validity policy"),
         }
@@ -708,13 +384,13 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Returns the first address in the upper canonical half for this policy.
     #[inline]
     pub(crate) fn upper_half_start() -> Self {
-        new_truncate_with_bits(1u64 << (validity_bits::<V>() - 1), validity_bits::<V>())
+        new_truncate_with_bits(1u64 << (<V>::bits() - 1), <V>::bits())
     }
 
     /// Returns the final address in the lower canonical half for this policy.
     #[inline]
     pub(crate) fn lower_half_end() -> Self {
-        unsafe { Self::new_unsafe((1u64 << (validity_bits::<V>() - 1)) - 1) }
+        unsafe { Self::new_unsafe((1u64 << (<V>::bits() - 1)) - 1) }
     }
 
     /// Returns the greatest canonical address for this policy.
@@ -728,15 +404,12 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Runtime policies use the cached current address-space mode during this construction.
     #[inline]
     pub(crate) fn try_new_with_validity(addr: u64) -> Result<Self, VirtAddrNotValid> {
-        try_new_with_bits(addr, validity_bits::<V>())
+        try_new_with_bits(addr, <V>::bits())
     }
 
     #[inline]
     fn new_truncate_with_validity(addr: u64) -> Self {
-        VirtAddrGeneric(
-            canonicalize_with_bits(addr, validity_bits::<V>()),
-            PhantomData,
-        )
+        VirtAddrGeneric(canonicalize_with_bits(addr, <V>::bits()), PhantomData)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
@@ -754,7 +427,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// function always returns the exact bound, so it doesn't need to return a
     /// lower and upper bound like steps_between does.
     pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
-        let mask = (1u64 << validity_bits::<V>()) - 1;
+        let mask = (1u64 << <V>::bits()) - 1;
         (end.0 & mask).checked_sub(start.0 & mask)
     }
 
@@ -767,7 +440,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// An implementation of forward_checked that takes u64 instead of usize.
     #[inline]
     pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let mask = (1u64 << validity_bits::<V>()) - 1;
+        let mask = (1u64 << <V>::bits()) - 1;
         let addr = (start.0 & mask).checked_add(count)?;
         if addr > mask {
             None
@@ -780,7 +453,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     #[cfg(feature = "step_trait")]
     #[inline]
     pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let mask = (1u64 << validity_bits::<V>()) - 1;
+        let mask = (1u64 << <V>::bits()) - 1;
         let addr = (start.0 & mask).checked_sub(count)?;
         Some(Self::new_truncate_with_validity(addr))
     }
@@ -829,7 +502,7 @@ impl<V: VirtAddrValidity> fmt::Pointer for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: VirtAddrArithmeticValidity> Add<u64> for VirtAddrGeneric<V> {
+impl<V: ArithmeticValidity> Add<u64> for VirtAddrGeneric<V> {
     type Output = Self;
 
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
@@ -854,7 +527,7 @@ impl<V: VirtAddrArithmeticValidity> Add<u64> for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: VirtAddrArithmeticValidity> AddAssign<u64> for VirtAddrGeneric<V> {
+impl<V: ArithmeticValidity> AddAssign<u64> for VirtAddrGeneric<V> {
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Add an offset to a virtual address.
     ///
@@ -872,7 +545,7 @@ impl<V: VirtAddrArithmeticValidity> AddAssign<u64> for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: VirtAddrArithmeticValidity> Sub<u64> for VirtAddrGeneric<V> {
+impl<V: ArithmeticValidity> Sub<u64> for VirtAddrGeneric<V> {
     type Output = Self;
 
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
@@ -897,7 +570,7 @@ impl<V: VirtAddrArithmeticValidity> Sub<u64> for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: VirtAddrArithmeticValidity> SubAssign<u64> for VirtAddrGeneric<V> {
+impl<V: ArithmeticValidity> SubAssign<u64> for VirtAddrGeneric<V> {
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Subtract an offset from a virtual address.
     ///
@@ -939,22 +612,6 @@ impl From<VirtAddr48> for VirtAddr57 {
     }
 }
 
-#[cfg(feature = "virt_addr_rt")]
-impl From<VirtAddr48> for VirtAddrRT {
-    #[inline]
-    fn from(address: VirtAddr48) -> Self {
-        unsafe { Self::new_unsafe(address.as_u64()) }
-    }
-}
-
-#[cfg(all(feature = "virt_addr_57", feature = "virt_addr_rt"))]
-impl From<VirtAddrRT> for VirtAddr57 {
-    #[inline]
-    fn from(address: VirtAddrRT) -> Self {
-        unsafe { Self::new_unsafe(address.as_u64()) }
-    }
-}
-
 #[cfg(feature = "virt_addr_57")]
 impl TryFrom<VirtAddr57> for VirtAddr48 {
     type Error = VirtAddrNotValid;
@@ -965,33 +622,8 @@ impl TryFrom<VirtAddr57> for VirtAddr48 {
     }
 }
 
-#[cfg(feature = "virt_addr_rt")]
-impl TryFrom<VirtAddrRT> for VirtAddr48 {
-    type Error = VirtAddrNotValid;
-
-    #[inline]
-    fn try_from(address: VirtAddrRT) -> Result<Self, Self::Error> {
-        Self::try_new(address.as_u64())
-    }
-}
-
-#[cfg(all(
-    feature = "instructions",
-    feature = "virt_addr_57",
-    feature = "virt_addr_rt",
-    target_arch = "x86_64"
-))]
-impl TryFrom<VirtAddr57> for VirtAddrRT {
-    type Error = VirtAddrNotValid;
-
-    #[inline]
-    fn try_from(address: VirtAddr57) -> Result<Self, Self::Error> {
-        Self::try_new(address.as_u64())
-    }
-}
-
 #[cfg(feature = "step_trait")]
-impl<V: VirtAddrArithmeticValidity> Step for VirtAddrGeneric<V> {
+impl<V: ArithmeticValidity> Step for VirtAddrGeneric<V> {
     #[inline]
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
@@ -1349,79 +981,6 @@ mod tests {
         assert_eq!(FIXED57.as_u64(), 0x00ff_0000_0000_0000);
     }
 
-    #[cfg(all(
-        feature = "instructions",
-        feature = "virt_addr_rt",
-        target_arch = "x86_64"
-    ))]
-    #[test]
-    fn runtime_virtaddr_arithmetic_traits_are_available() {
-        fn assert_arithmetic<T>()
-        where
-            T: Add<u64, Output = T> + AddAssign<u64> + Sub<u64, Output = T> + SubAssign<u64>,
-        {
-        }
-
-        assert_arithmetic::<VirtAddrRT>();
-
-        #[cfg(feature = "step_trait")]
-        {
-            fn assert_step<T: Step>() {}
-            assert_step::<VirtAddrRT>();
-        }
-    }
-
-    #[cfg(all(
-        feature = "instructions",
-        feature = "virt_addr_rt",
-        target_arch = "x86_64"
-    ))]
-    #[test]
-    fn runtime_virtual_address_bits_are_cached_and_updateable() {
-        use core::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
-
-        let cache = AtomicU8::new(0);
-        let reads = AtomicUsize::new(0);
-
-        assert_eq!(
-            cached_virtual_address_bits(&cache, || {
-                reads.fetch_add(1, Ordering::Relaxed);
-                57
-            }),
-            57
-        );
-        assert_eq!(
-            cached_virtual_address_bits(&cache, || {
-                reads.fetch_add(1, Ordering::Relaxed);
-                48
-            }),
-            57
-        );
-        assert_eq!(reads.load(Ordering::Relaxed), 1);
-
-        update_cached_virtual_address_bits(&cache, || {
-            reads.fetch_add(1, Ordering::Relaxed);
-            48
-        });
-        assert_eq!(cached_virtual_address_bits(&cache, || 57), 48);
-        assert_eq!(reads.load(Ordering::Relaxed), 2);
-
-        let _: fn() = VirtAddrRT::update_current_address_bits;
-    }
-
-    #[cfg(all(
-        feature = "instructions",
-        feature = "virt_addr_rt",
-        target_arch = "x86_64"
-    ))]
-    #[test]
-    fn current_validity_check_is_available_for_fixed_addresses() {
-        let _: fn(VirtAddr48) -> bool = VirtAddr48::is_valid_currently;
-
-        #[cfg(feature = "virt_addr_57")]
-        let _: fn(VirtAddr57) -> bool = VirtAddr57::is_valid_currently;
-    }
-
     #[test]
     fn fixed_virtaddr_canonicality() {
         assert!(VirtAddr48::try_new(0x0000_7fff_ffff_ffff).is_ok());
@@ -1467,17 +1026,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(feature = "virt_addr_57", feature = "virt_addr_rt"))]
+    #[cfg(feature = "virt_addr_57")]
     fn fixed_virtaddr_conversions_preserve_or_check_values() {
         let address48 = VirtAddr48::new(0xffff_8000_0000_1234);
         let address57 = VirtAddr57::from(address48);
-        let address_rt = VirtAddrRT::from(address48);
 
         assert_eq!(address57.as_u64(), address48.as_u64());
-        assert_eq!(address_rt.as_u64(), address48.as_u64());
         assert_eq!(VirtAddr48::try_from(address57).unwrap(), address48);
-        assert_eq!(VirtAddr48::try_from(address_rt).unwrap(), address48);
-        assert_eq!(VirtAddr57::from(address_rt), address57);
 
         let la57_only = VirtAddr57::new(0x0000_8000_0000_0000);
         assert!(VirtAddr48::try_from(la57_only).is_err());

@@ -1,6 +1,6 @@
 //! Representations of various x86 specific structures and descriptor tables.
 
-use crate::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 
 pub mod gdt;
 
@@ -61,16 +61,16 @@ mod tests {
         };
         let _: &u16 = &p.limit;
 
-        let _: DescriptorTablePointer<crate::DefaultVirtAddrValidity> = p;
+        let _: DescriptorTablePointer<crate::addr::DefaultVirtAddrValidity> = p;
 
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            size_of::<DescriptorTablePointer<crate::FixedValidity<57>>>(),
+            size_of::<DescriptorTablePointer<crate::addr::FixedValidity<57>>>(),
             10
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
-            size_of::<DescriptorTablePointer<crate::RuntimeValidity>>(),
+            size_of::<DescriptorTablePointer<crate::addr::RuntimeValidity>>(),
             10
         );
     }

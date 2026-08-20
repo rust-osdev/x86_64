@@ -15,14 +15,7 @@
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-#[cfg(feature = "virt_addr_57")]
-pub use crate::addr::VirtAddr57;
-pub use crate::addr::{
-    align_down, align_up, DefaultVirtAddrValidity, FixedValidity, PhysAddr, VirtAddr, VirtAddr48,
-    VirtAddrGeneric, VirtAddrValidity,
-};
-#[cfg(feature = "virt_addr_rt")]
-pub use crate::addr::{RuntimeValidity, VirtAddrRT};
+pub use crate::addr::{align_down, align_up, PhysAddr, VirtAddr};
 
 pub mod addr;
 pub mod instructions;
@@ -77,12 +70,4 @@ impl PrivilegeLevel {
 
 pub(crate) mod sealed {
     pub trait Sealed {}
-
-    /// A marker for supported virtual-address validity policies.
-    ///
-    /// This trait seals the public `VirtAddrValidity` trait.
-    pub trait VirtAddrValiditySealed: Copy + Ord + core::hash::Hash {
-        /// Returns the number of valid bits in the virtual address.
-        fn bits() -> usize;
-    }
 }

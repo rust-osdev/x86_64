@@ -20,8 +20,9 @@
 //!
 //! These types are defined for the compatibility with the Nightly Rust build.
 
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 use crate::registers::rflags::RFlags;
-use crate::{DefaultVirtAddrValidity, PrivilegeLevel, VirtAddrGeneric, VirtAddrValidity};
+use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::convert::TryFrom;
@@ -1692,42 +1693,48 @@ mod test {
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            size_of::<Entry<HandlerFunc<crate::FixedValidity<57>>, crate::FixedValidity<57>>>(),
+            size_of::<
+                Entry<HandlerFunc<crate::addr::FixedValidity<57>>, crate::addr::FixedValidity<57>>,
+            >(),
             16
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
-            size_of::<Entry<HandlerFunc<crate::RuntimeValidity>, crate::RuntimeValidity>>(),
+            size_of::<Entry<HandlerFunc<crate::addr::RuntimeValidity>, crate::addr::RuntimeValidity>>(
+            ),
             16
         );
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            size_of::<InterruptDescriptorTable<crate::FixedValidity<57>>>(),
+            size_of::<InterruptDescriptorTable<crate::addr::FixedValidity<57>>>(),
             256 * 16
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
-            size_of::<InterruptDescriptorTable<crate::RuntimeValidity>>(),
+            size_of::<InterruptDescriptorTable<crate::addr::RuntimeValidity>>(),
             256 * 16
         );
         assert_eq!(size_of::<InterruptStackFrame>(), 40);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            size_of::<InterruptStackFrame<crate::FixedValidity<57>>>(),
+            size_of::<InterruptStackFrame<crate::addr::FixedValidity<57>>>(),
             40
         );
         #[cfg(feature = "virt_addr_rt")]
-        assert_eq!(size_of::<InterruptStackFrame<crate::RuntimeValidity>>(), 40);
+        assert_eq!(
+            size_of::<InterruptStackFrame<crate::addr::RuntimeValidity>>(),
+            40
+        );
         assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
-            size_of::<InterruptStackFrameValue<crate::FixedValidity<57>>>(),
+            size_of::<InterruptStackFrameValue<crate::addr::FixedValidity<57>>>(),
             40
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
-            size_of::<InterruptStackFrameValue<crate::RuntimeValidity>>(),
+            size_of::<InterruptStackFrameValue<crate::addr::RuntimeValidity>>(),
             40
         );
     }
@@ -1735,12 +1742,12 @@ mod test {
     #[test]
     fn explicit_policy_idt_and_frames_construct() {
         #[cfg(feature = "virt_addr_57")]
-        let _: InterruptDescriptorTable<crate::FixedValidity<57>> =
+        let _: InterruptDescriptorTable<crate::addr::FixedValidity<57>> =
             InterruptDescriptorTable::new_with_validity();
 
         #[cfg(feature = "virt_addr_57")]
         {
-            let address57 = crate::VirtAddr57::new(0x0000_8000_0000_0000);
+            let address57 = crate::addr::VirtAddr57::new(0x0000_8000_0000_0000);
             let frame57 = InterruptStackFrame::new(
                 address57,
                 SegmentSelector(0),
@@ -1753,10 +1760,10 @@ mod test {
 
         #[cfg(feature = "virt_addr_rt")]
         {
-            let _: InterruptDescriptorTable<crate::RuntimeValidity> =
+            let _: InterruptDescriptorTable<crate::addr::RuntimeValidity> =
                 InterruptDescriptorTable::new_with_validity();
 
-            let address_rt = unsafe { crate::VirtAddrRT::new_unsafe(0x1234) };
+            let address_rt = unsafe { crate::addr::VirtAddrRT::new_unsafe(0x1234) };
             let frame_rt = InterruptStackFrame::new(
                 address_rt,
                 SegmentSelector(0),
@@ -1843,12 +1850,12 @@ mod test {
 
     #[test]
     fn isr_frame_manipulation() {
-        let mut frame: InterruptStackFrame<crate::FixedValidity<48>> =
+        let mut frame: InterruptStackFrame<crate::addr::FixedValidity<48>> =
             InterruptStackFrame(InterruptStackFrameValue {
-                instruction_pointer: crate::VirtAddr48::new(0x1000),
+                instruction_pointer: crate::addr::VirtAddr48::new(0x1000),
                 code_segment: SegmentSelector(0),
                 cpu_flags: RFlags::empty(),
-                stack_pointer: crate::VirtAddr48::new(0x2000),
+                stack_pointer: crate::addr::VirtAddr48::new(0x2000),
                 stack_segment: SegmentSelector(0),
                 _reserved1: Default::default(),
                 _reserved2: Default::default(),

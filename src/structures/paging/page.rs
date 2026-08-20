@@ -1,10 +1,10 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
-use crate::addr::VirtAddrArithmeticValidity;
+use crate::addr::ArithmeticValidity;
+use crate::addr::{DefaultVirtAddrValidity, FixedValidity, VirtAddrGeneric, VirtAddrValidity};
 use crate::sealed::Sealed;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::PageTableIndex;
-use crate::{DefaultVirtAddrValidity, FixedValidity, VirtAddrGeneric, VirtAddrValidity};
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -183,10 +183,12 @@ where
     feature = "virt_addr_rt",
     target_arch = "x86_64"
 ))]
-impl<S: PageSize> Page<S, crate::RuntimeValidity> {
+impl<S: PageSize> Page<S, crate::addr::RuntimeValidity> {
     /// Returns the page that contains the given runtime-valid virtual address.
     #[inline]
-    pub fn containing_address_current(address: VirtAddrGeneric<crate::RuntimeValidity>) -> Self {
+    pub fn containing_address_current(
+        address: VirtAddrGeneric<crate::addr::RuntimeValidity>,
+    ) -> Self {
         Page {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -244,7 +246,7 @@ impl Page<Size1GiB, FixedValidity<48>> {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
-        Page::containing_address_with_validity(crate::VirtAddr48::new_truncate(addr))
+        Page::containing_address_with_validity(crate::addr::VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -261,7 +263,7 @@ impl Page<Size2MiB, FixedValidity<48>> {
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
-        Page::containing_address_with_validity(crate::VirtAddr48::new_truncate(addr))
+        Page::containing_address_with_validity(crate::addr::VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -280,7 +282,7 @@ impl Page<Size4KiB, FixedValidity<48>> {
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
         addr |= p1_index.into_u64() << 12;
-        Page::containing_address_with_validity(crate::VirtAddr48::new_truncate(addr))
+        Page::containing_address_with_validity(crate::addr::VirtAddr48::new_truncate(addr))
     }
 
     /// Returns the level 1 page table index of this page.
@@ -301,7 +303,7 @@ impl<S: PageSize, V: VirtAddrValidity> fmt::Debug for Page<S, V> {
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> Add<u64> for Page<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> Add<u64> for Page<S, V> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
@@ -309,14 +311,14 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Add<u64> for Page<S, V> {
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> AddAssign<u64> for Page<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> AddAssign<u64> for Page<S, V> {
     #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> Sub<u64> for Page<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> Sub<u64> for Page<S, V> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
@@ -324,7 +326,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Sub<u64> for Page<S, V> {
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> SubAssign<u64> for Page<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> SubAssign<u64> for Page<S, V> {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
@@ -340,7 +342,7 @@ impl<S: PageSize, V: VirtAddrValidity> Sub<Self> for Page<S, V> {
 }
 
 #[cfg(feature = "step_trait")]
-impl<S: PageSize, V: VirtAddrArithmeticValidity> Step for Page<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> Step for Page<S, V> {
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
@@ -417,7 +419,7 @@ impl<S: PageSize, V: VirtAddrValidity> PageRange<S, V> {
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRange<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> Iterator for PageRange<S, V> {
     type Item = Page<S, V>;
 
     #[inline]
@@ -475,7 +477,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRange<S, V> {
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> DoubleEndedIterator for PageRange<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> DoubleEndedIterator for PageRange<S, V> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
@@ -580,7 +582,7 @@ impl<S: PageSize, V: VirtAddrValidity> PageRangeInclusive<S, V> {
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRangeInclusive<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> Iterator for PageRangeInclusive<S, V> {
     type Item = Page<S, V>;
 
     #[inline]
@@ -647,7 +649,7 @@ impl<S: PageSize, V: VirtAddrArithmeticValidity> Iterator for PageRangeInclusive
     }
 }
 
-impl<S: PageSize, V: VirtAddrArithmeticValidity> DoubleEndedIterator for PageRangeInclusive<S, V> {
+impl<S: PageSize, V: ArithmeticValidity> DoubleEndedIterator for PageRangeInclusive<S, V> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start <= self.end {
@@ -743,7 +745,7 @@ mod tests {
     type Page<S = Size4KiB> = super::Page<S, FixedValidity<48>>;
 
     /// A fixed-VA48 address used by Ring 3 arithmetic tests.
-    type VirtAddr = crate::VirtAddr48;
+    type VirtAddr = crate::addr::VirtAddr48;
 
     #[test]
     fn page_validity_defaults_and_explicit_policy() {
@@ -755,8 +757,8 @@ mod tests {
 
         #[cfg(feature = "virt_addr_57")]
         {
-            let page57: super::Page<Size4KiB, crate::FixedValidity<57>> =
-                super::Page::containing_address_with_validity(crate::VirtAddr57::new(
+            let page57: super::Page<Size4KiB, crate::addr::FixedValidity<57>> =
+                super::Page::containing_address_with_validity(crate::addr::VirtAddr57::new(
                     0x00ff_0000_0000_1000,
                 ));
             assert_eq!(page57.start_address().as_u64(), 0x00ff_0000_0000_1000);
@@ -766,14 +768,15 @@ mod tests {
     #[test]
     #[cfg(all(feature = "step_trait", feature = "virt_addr_57"))]
     fn page57_step_uses_la57_gap() {
-        let low_end = super::Page::<Size4KiB, crate::FixedValidity<57>>::from_start_address(
-            crate::VirtAddr57::new(0x00ff_ffff_ffff_f000),
+        let low_end = super::Page::<Size4KiB, crate::addr::FixedValidity<57>>::from_start_address(
+            crate::addr::VirtAddr57::new(0x00ff_ffff_ffff_f000),
         )
         .unwrap();
-        let upper_start = super::Page::<Size4KiB, crate::FixedValidity<57>>::from_start_address(
-            crate::VirtAddr57::new(0xff00_0000_0000_0000),
-        )
-        .unwrap();
+        let upper_start =
+            super::Page::<Size4KiB, crate::addr::FixedValidity<57>>::from_start_address(
+                crate::addr::VirtAddr57::new(0xff00_0000_0000_0000),
+            )
+            .unwrap();
 
         assert_eq!(Step::forward(low_end, 1), upper_start);
         assert_eq!(Step::backward(upper_start, 1), low_end);
@@ -787,7 +790,7 @@ mod tests {
             PageTableIndex::new(3),
             PageTableIndex::new(4),
         );
-        let _: super::Page<Size4KiB, crate::FixedValidity<48>> = page;
+        let _: super::Page<Size4KiB, crate::addr::FixedValidity<48>> = page;
     }
 
     fn test_is_hash<T: core::hash::Hash>() {}
