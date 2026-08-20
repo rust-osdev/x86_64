@@ -6,7 +6,20 @@ use core::fmt;
 use core::iter::Step;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
-#[cfg(feature = "memory_encryption")]
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+use core::sync::atomic::AtomicU8;
+#[cfg(any(
+    feature = "memory_encryption",
+    all(
+        feature = "instructions",
+        feature = "virt_addr_rt",
+        target_arch = "x86_64"
+    )
+))]
 use core::sync::atomic::Ordering;
 
 #[cfg(feature = "memory_encryption")]
@@ -65,7 +78,8 @@ pub struct FixedValidity<const BITS: usize>;
 
 /// The runtime virtual-address validity policy.
 ///
-/// This policy checks the currently active address-space mode by reading `CR4.LA57`. The policy
+/// This policy checks the currently active address-space mode using a global cache of
+/// `CR4.LA57`. The first operation that needs the active mode initializes the cache. The policy
 /// type itself is available with the `virt_addr_rt` feature on all targets. Operations that do not
 /// consult the active mode are available wherever the policy is available. Checked construction,
 /// canonicalization, and address-producing arithmetic additionally require the `instructions`
@@ -94,7 +108,10 @@ impl VirtAddrValidity for FixedValidity<57> {}
 #[cfg(feature = "virt_addr_rt")]
 impl VirtAddrValidity for RuntimeValidity {}
 
-/// A validity policy for which address-producing arithmetic is available.
+/// A [`VirtAddrValidity`] for which arithmetic operations are supported.
+///
+/// Enabled fixed validity policies always support arithmetic. `RuntimeValidity` supports
+/// arithmetic when the `instructions` feature is enabled and the target is `x86_64`.
 pub(crate) trait VirtAddrArithmeticValidity: VirtAddrValidity {}
 
 impl<const BITS: usize> VirtAddrArithmeticValidity for FixedValidity<BITS> where
@@ -172,10 +189,60 @@ fn new_truncate_with_bits<V: VirtAddrValidity>(addr: u64, bits: usize) -> VirtAd
     VirtAddrGeneric(canonicalize_with_bits(addr, bits), PhantomData)
 }
 
-/// Returns the number of valid bits for the currently active address-space mode.
-#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+/// The cached virtual-address width for the active address-space mode.
+///
+/// Zero indicates that the cache has not been initialized yet.
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+static CURRENT_VIRTUAL_ADDRESS_BITS: AtomicU8 = AtomicU8::new(0);
+
+/// Returns a lazily initialized virtual-address width from the given cache.
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
 #[inline]
-fn current_virtual_address_bits() -> usize {
+fn cached_virtual_address_bits(cache: &AtomicU8, read_current_bits: impl FnOnce() -> u8) -> usize {
+    let cached = cache.load(Ordering::Relaxed);
+    if cached != 0 {
+        return usize::from(cached);
+    }
+
+    let current = read_current_bits();
+    debug_assert!(current == 48 || current == 57);
+    usize::from(
+        match cache.compare_exchange(0, current, Ordering::Relaxed, Ordering::Relaxed) {
+            Ok(_) => current,
+            Err(initialized) => initialized,
+        },
+    )
+}
+
+/// Replaces the virtual-address width in the given cache.
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+#[inline]
+fn update_cached_virtual_address_bits(cache: &AtomicU8, read_current_bits: impl FnOnce() -> u8) {
+    let current = read_current_bits();
+    debug_assert!(current == 48 || current == 57);
+    cache.store(current, Ordering::Relaxed);
+}
+
+/// Reads the virtual-address width for the currently active address-space mode.
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+#[inline]
+fn read_current_virtual_address_bits() -> u8 {
     use crate::registers::control::{Cr4, Cr4Flags};
 
     if Cr4::read().contains(Cr4Flags::L5_PAGING) {
@@ -183,6 +250,20 @@ fn current_virtual_address_bits() -> usize {
     } else {
         48
     }
+}
+
+/// Returns the cached virtual-address width for the active address-space mode.
+#[cfg(all(
+    feature = "instructions",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+#[inline]
+fn current_virtual_address_bits() -> usize {
+    cached_virtual_address_bits(
+        &CURRENT_VIRTUAL_ADDRESS_BITS,
+        read_current_virtual_address_bits,
+    )
 }
 
 /// A canonical 64-bit virtual memory address.
@@ -212,13 +293,16 @@ fn current_virtual_address_bits() -> usize {
 /// [`VirtAddr48`] and `VirtAddr57` provide const-capable constructors and accessors.
 /// `VirtAddrRT` can be stored, compared, formatted, inspected, and created through
 /// [`zero`](Self::zero) or unsafe [`new_unsafe`](Self::new_unsafe) on all targets. Operations that
-/// check the current address-space mode or produce a new runtime-valid address require the
-/// `instructions` feature and an `x86_64` target, and they must execute in Ring 0.
+/// check the current address-space mode or produce a new runtime-valid address use a cached
+/// virtual-address width. They require the `instructions` feature and an `x86_64` target, and they
+/// must execute in Ring 0. The first such operation initializes the cache from `CR4.LA57`. Call
+/// `VirtAddrRT::update_current_address_bits` after changing the active address-space mode.
 ///
 /// Validity is checked only when an address is created. A later address-space mode change does not
 /// invalidate existing values. Operations that subsequently produce a new address check the
-/// result against the mode active at that time. Use `is_valid_currently` to explicitly revalidate
-/// an existing address when current-mode checks are available.
+/// result against the cached mode at that time. After changing `CR4.LA57`, update the cache before
+/// creating or validating runtime-valid addresses. Use `is_valid_currently` to explicitly
+/// revalidate an existing address when current-mode checks are available.
 ///
 /// The validity parameter is intentionally required. Use [`VirtAddr`] when the validity should
 /// follow the crate's feature-selected default.
@@ -396,6 +480,22 @@ where
     target_arch = "x86_64"
 ))]
 impl VirtAddrGeneric<RuntimeValidity> {
+    /// Updates the cached virtual-address width from the active address-space mode.
+    ///
+    /// The first runtime-valid address operation initializes the cache automatically. Call this
+    /// method after changing `CR4.LA57` and before resuming operations that create or validate
+    /// runtime-valid addresses. The caller is responsible for synchronizing the mode change with
+    /// other processors and threads.
+    ///
+    /// This method reads `CR4.LA57`, so it must execute in Ring 0.
+    #[inline]
+    pub fn update_current_address_bits() {
+        update_cached_virtual_address_bits(
+            &CURRENT_VIRTUAL_ADDRESS_BITS,
+            read_current_virtual_address_bits,
+        );
+    }
+
     /// Creates a new virtual address valid in the current address-space mode.
     ///
     /// # Panics
@@ -411,7 +511,8 @@ impl VirtAddrGeneric<RuntimeValidity> {
 
     /// Tries to create a virtual address valid in the current address-space mode.
     ///
-    /// This function reads `CR4.LA57` and checks the address using the active canonical width.
+    /// This function checks the address using the cached active canonical width. The first runtime
+    /// address operation initializes the cache from `CR4.LA57`.
     #[inline]
     pub fn try_new(addr: u64) -> Result<Self, VirtAddrNotValid> {
         try_new_with_bits(addr, current_virtual_address_bits())
@@ -419,7 +520,8 @@ impl VirtAddrGeneric<RuntimeValidity> {
 
     /// Creates a virtual address by canonicalizing it for the current address-space mode.
     ///
-    /// This function reads `CR4.LA57` and sign-extends the active canonical sign bit.
+    /// This function uses the cached active canonical width to sign-extend the address. The first
+    /// runtime address operation initializes the cache from `CR4.LA57`.
     #[inline]
     pub fn new_truncate(addr: u64) -> Self {
         new_truncate_with_bits(addr, current_virtual_address_bits())
@@ -576,8 +678,13 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
 
     /// Checks whether the address is canonical in the currently active address-space mode.
     ///
-    /// This method checks the address again even though it was valid for its policy when created.
-    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+    /// This method checks the address against the cached active canonical width even though it was
+    /// valid for its policy when created.
+    #[cfg(all(
+        feature = "instructions",
+        feature = "virt_addr_rt",
+        target_arch = "x86_64"
+    ))]
     #[inline]
     pub fn is_valid_currently(self) -> bool {
         canonicalize_with_bits(self.0, current_virtual_address_bits()) == self.0
@@ -585,7 +692,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
 
     /// Creates a checked virtual address for an internal policy-generic API.
     ///
-    /// Runtime policies read the current address-space mode during this construction.
+    /// Runtime policies use the cached current address-space mode during this construction.
     #[inline]
     #[cfg_attr(
         not(all(feature = "instructions", target_arch = "x86_64")),
@@ -618,7 +725,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
 
     /// Tries to create a checked virtual address for an internal policy-generic API.
     ///
-    /// Runtime policies read the current address-space mode during this construction.
+    /// Runtime policies use the cached current address-space mode during this construction.
     #[inline]
     pub(crate) fn try_new_with_validity(addr: u64) -> Result<Self, VirtAddrNotValid> {
         try_new_with_bits(addr, validity_bits::<V>())
@@ -1264,7 +1371,49 @@ mod tests {
         }
     }
 
-    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+    #[cfg(all(
+        feature = "instructions",
+        feature = "virt_addr_rt",
+        target_arch = "x86_64"
+    ))]
+    #[test]
+    fn runtime_virtual_address_bits_are_cached_and_updateable() {
+        use core::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
+
+        let cache = AtomicU8::new(0);
+        let reads = AtomicUsize::new(0);
+
+        assert_eq!(
+            cached_virtual_address_bits(&cache, || {
+                reads.fetch_add(1, Ordering::Relaxed);
+                57
+            }),
+            57
+        );
+        assert_eq!(
+            cached_virtual_address_bits(&cache, || {
+                reads.fetch_add(1, Ordering::Relaxed);
+                48
+            }),
+            57
+        );
+        assert_eq!(reads.load(Ordering::Relaxed), 1);
+
+        update_cached_virtual_address_bits(&cache, || {
+            reads.fetch_add(1, Ordering::Relaxed);
+            48
+        });
+        assert_eq!(cached_virtual_address_bits(&cache, || 57), 48);
+        assert_eq!(reads.load(Ordering::Relaxed), 2);
+
+        let _: fn() = VirtAddrRT::update_current_address_bits;
+    }
+
+    #[cfg(all(
+        feature = "instructions",
+        feature = "virt_addr_rt",
+        target_arch = "x86_64"
+    ))]
     #[test]
     fn current_validity_check_is_available_for_fixed_addresses() {
         let _: fn(VirtAddr48) -> bool = VirtAddr48::is_valid_currently;

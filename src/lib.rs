@@ -78,6 +78,9 @@ impl PrivilegeLevel {
 pub(crate) mod sealed {
     pub trait Sealed {}
 
+    /// A marker for supported virtual-address validity policies.
+    ///
+    /// This trait seals the public `VirtAddrValidity` trait.
     pub trait VirtAddrValiditySealed: Copy + Ord + core::hash::Hash {
         /// Returns the number of valid bits in the virtual address.
         fn bits() -> usize;

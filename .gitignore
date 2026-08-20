@@ -11,3 +11,6 @@
 /target/
 Cargo.lock
 /testing/target
+
+# VS Code local config
+.vscode/

@@ -12,6 +12,8 @@
 - Propagate virtual-address validity through pages, descriptor pointers, TSS, GDT, IDT, handler
   types, interrupt stack frames, TLB commands, and CET legacy bitmap pages.
 - Add `is_valid_currently` for explicitly checking an existing address against the active mode.
+- Cache the active virtual-address width after its first use by `VirtAddrRT`. Add
+  `VirtAddrRT::update_current_address_bits` for refreshing the cache after changing `CR4.LA57`.
 
 ## Compatibility Notes
 
@@ -23,8 +25,9 @@
   `default_virt_addr_57` also enables `virt_addr_57` and changes `VirtAddr` and validity-aware
   aggregate defaults to fixed 57-bit validity.
 - Runtime checked construction and address-producing operations are available only on `x86_64`
-  with the `instructions` feature and require ring 0 because they read `CR4.LA57`. Storage-only
-  operations such as `zero`, `new_unsafe`, formatting, and comparison remain available elsewhere.
+  with the `instructions` feature and require ring 0. The first such operation caches `CR4.LA57`.
+  Call `VirtAddrRT::update_current_address_bits` after changing `CR4.LA57`. Storage-only operations
+  such as `zero`, `new_unsafe`, formatting, and comparison remain available elsewhere.
 - Validity is checked when a value is created. Later address-space mode changes do not
   retroactively invalidate existing values.
 - The mapper stack remains limited to four-level page tables and explicitly accepts VA48 pages.
