@@ -34,9 +34,14 @@ const fn canonicalize_with_bits(addr: u64, bits: usize) -> u64 {
 }
 
 /// Tries to create a new canonical virtual address with the given number of bits.
+///
+/// # Safety
+///
+/// The caller must ensure that `bits` is valid for the selected validity policy. This is not
+/// checked.
 #[inline]
 #[rustversion::attr(since(1.61), const)]
-fn try_new_with_bits<V: VirtAddrValidity>(
+unsafe fn try_new_with_bits<V: VirtAddrValidity>(
     addr: u64,
     bits: usize,
 ) -> Result<VirtAddrGeneric<V>, VirtAddrNotValid> {
@@ -202,7 +207,8 @@ where
     #[inline]
     #[rustversion::attr(since(1.61), const)]
     pub fn try_new(addr: u64) -> Result<Self, VirtAddrNotValid> {
-        try_new_with_bits(addr, BITS)
+        // SAFETY: `BITS` is valid for `FixedValidity<BITS>`, so this is safe.
+        unsafe { try_new_with_bits(addr, BITS) }
     }
 
     /// Creates a canonical virtual address by discarding invalid high bits, with provided fixed
@@ -349,6 +355,15 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     }
 }
 
+impl VirtAddrGeneric<FixedValidity<57>> {
+    /// Returns the 9-bit level 5 page table index.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p5_index(self) -> PageTableIndex {
+        PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9 >> 9) as u16)
+    }
+}
+
 impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Checks whether the virtual address has the demanded alignment.
     #[inline]
@@ -372,10 +387,11 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     #[inline]
     #[cfg_attr(
         not(all(feature = "instructions", target_arch = "x86_64")),
-        allow(dead_code)
+        expect(dead_code)
     )]
     pub(crate) fn new_with_validity(addr: u64) -> Self {
-        match try_new_with_bits(addr, <V>::bits()) {
+        // SAFETY: `V::bits()` is valid for `V`, so this is safe.
+        match unsafe { try_new_with_bits(addr, V::bits()) } {
             Ok(address) => address,
             Err(_) => panic!("virtual address must be canonical for its validity policy"),
         }
@@ -384,13 +400,13 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Returns the first address in the upper canonical half for this policy.
     #[inline]
     pub(crate) fn upper_half_start() -> Self {
-        new_truncate_with_bits(1u64 << (<V>::bits() - 1), <V>::bits())
+        new_truncate_with_bits(1u64 << (V::bits() - 1), V::bits())
     }
 
     /// Returns the final address in the lower canonical half for this policy.
     #[inline]
     pub(crate) fn lower_half_end() -> Self {
-        unsafe { Self::new_unsafe((1u64 << (<V>::bits() - 1)) - 1) }
+        unsafe { Self::new_unsafe((1u64 << (V::bits() - 1)) - 1) }
     }
 
     /// Returns the greatest canonical address for this policy.
@@ -404,12 +420,13 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Runtime policies use the cached current address-space mode during this construction.
     #[inline]
     pub(crate) fn try_new_with_validity(addr: u64) -> Result<Self, VirtAddrNotValid> {
-        try_new_with_bits(addr, <V>::bits())
+        // SAFETY: `V::bits()` is valid for `V`, so this is safe.
+        unsafe { try_new_with_bits(addr, V::bits()) }
     }
 
     #[inline]
     fn new_truncate_with_validity(addr: u64) -> Self {
-        VirtAddrGeneric(canonicalize_with_bits(addr, <V>::bits()), PhantomData)
+        VirtAddrGeneric(canonicalize_with_bits(addr, V::bits()), PhantomData)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
@@ -427,7 +444,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// function always returns the exact bound, so it doesn't need to return a
     /// lower and upper bound like steps_between does.
     pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
-        let mask = (1u64 << <V>::bits()) - 1;
+        let mask = (1u64 << V::bits()) - 1;
         (end.0 & mask).checked_sub(start.0 & mask)
     }
 
@@ -440,7 +457,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// An implementation of forward_checked that takes u64 instead of usize.
     #[inline]
     pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let mask = (1u64 << <V>::bits()) - 1;
+        let mask = (1u64 << V::bits()) - 1;
         let addr = (start.0 & mask).checked_add(count)?;
         if addr > mask {
             None
@@ -453,7 +470,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     #[cfg(feature = "step_trait")]
     #[inline]
     pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let mask = (1u64 << <V>::bits()) - 1;
+        let mask = (1u64 << V::bits()) - 1;
         let addr = (start.0 & mask).checked_sub(count)?;
         Some(Self::new_truncate_with_validity(addr))
     }

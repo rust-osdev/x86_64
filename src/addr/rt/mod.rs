@@ -5,6 +5,8 @@ use core::convert::TryFrom;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod instr;
 
+use crate::structures::paging::PageTableIndex;
+
 #[cfg(feature = "virt_addr_57")]
 use super::VirtAddr57;
 use super::{VirtAddr48, VirtAddrGeneric, VirtAddrNotValid, VirtAddrValidity};
@@ -57,6 +59,15 @@ impl VirtAddrValidity for RuntimeValidity {
                 "runtime virtual-address width requires x86_64 and the instructions feature"
             )
         }
+    }
+}
+
+impl VirtAddrGeneric<RuntimeValidity> {
+    /// Returns the 9-bit level 5 page table index.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn p5_index(self) -> PageTableIndex {
+        PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9 >> 9) as u16)
     }
 }
 

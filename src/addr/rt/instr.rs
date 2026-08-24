@@ -121,7 +121,9 @@ impl VirtAddrGeneric<RuntimeValidity> {
     /// address operation initializes the cache from `CR4.LA57`.
     #[inline]
     pub fn try_new(addr: u64) -> Result<Self, VirtAddrNotValid> {
-        try_new_with_bits(addr, cached_virtual_address_bits())
+        // SAFETY: `cached_virtual_address_bits()` is valid, at least when the cache is initialized,
+        // so this is safe.
+        unsafe { try_new_with_bits(addr, cached_virtual_address_bits()) }
     }
 
     /// Creates a virtual address by canonicalizing it for the current address-space mode.
