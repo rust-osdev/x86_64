@@ -20,8 +20,9 @@
 //!
 //! These types are defined for the compatibility with the Nightly Rust build.
 
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
 use crate::registers::rflags::RFlags;
-use crate::{PrivilegeLevel, VirtAddr};
+use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::convert::TryFrom;
@@ -54,7 +55,7 @@ use super::gdt::SegmentSelector;
 #[derive(Clone, Debug)]
 #[repr(C)]
 #[repr(align(16))]
-pub struct InterruptDescriptorTable {
+pub struct InterruptDescriptorTable<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// A divide error (`#DE`) occurs when the denominator of a DIV instruction or
     /// an IDIV instruction is 0. A `#DE` also occurs if the result is too large to be
     /// represented in the destination.
@@ -62,7 +63,7 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the instruction that caused the `#DE`.
     ///
     /// The vector number of the `#DE` exception is 0.
-    pub divide_error: Entry<HandlerFunc>,
+    pub divide_error: Entry<HandlerFunc<V>, V>,
 
     /// When the debug-exception mechanism is enabled, a `#DB` exception can occur under any
     /// of the following circumstances:
@@ -94,7 +95,7 @@ pub struct InterruptDescriptorTable {
     /// instruction pointer points to the instruction after the one that caused the `#DB`.
     ///
     /// The vector number of the `#DB` exception is 1.
-    pub debug: Entry<HandlerFunc>,
+    pub debug: Entry<HandlerFunc<V>, V>,
 
     /// An non maskable interrupt exception (NMI) occurs as a result of system logic
     /// signaling a non-maskable interrupt to the processor.
@@ -104,7 +105,7 @@ pub struct InterruptDescriptorTable {
     /// boundary where the NMI was recognized.
     ///
     /// The vector number of the NMI exception is 2.
-    pub non_maskable_interrupt: Entry<HandlerFunc>,
+    pub non_maskable_interrupt: Entry<HandlerFunc<V>, V>,
 
     /// A breakpoint (`#BP`) exception occurs when an `INT3` instruction is executed. The
     /// `INT3` is normally used by debug software to set instruction breakpoints by replacing
@@ -112,7 +113,7 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the byte after the `INT3` instruction.
     ///
     /// The vector number of the `#BP` exception is 3.
-    pub breakpoint: Entry<HandlerFunc>,
+    pub breakpoint: Entry<HandlerFunc<V>, V>,
 
     /// An overflow exception (`#OF`) occurs as a result of executing an `INTO` instruction
     /// while the overflow bit in `RFLAGS` is set to 1.
@@ -121,7 +122,7 @@ pub struct InterruptDescriptorTable {
     /// instruction that caused the `#OF`.
     ///
     /// The vector number of the `#OF` exception is 4.
-    pub overflow: Entry<HandlerFunc>,
+    pub overflow: Entry<HandlerFunc<V>, V>,
 
     /// A bound-range exception (`#BR`) exception can occur as a result of executing
     /// the `BOUND` instruction. The `BOUND` instruction compares an array index (first
@@ -131,7 +132,7 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the `BOUND` instruction that caused the `#BR`.
     ///
     /// The vector number of the `#BR` exception is 5.
-    pub bound_range_exceeded: Entry<HandlerFunc>,
+    pub bound_range_exceeded: Entry<HandlerFunc<V>, V>,
 
     /// An invalid opcode exception (`#UD`) occurs when an attempt is made to execute an
     /// invalid or undefined opcode. The validity of an opcode often depends on the
@@ -165,7 +166,7 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the instruction that caused the `#UD`.
     ///
     /// The vector number of the `#UD` exception is 6.
-    pub invalid_opcode: Entry<HandlerFunc>,
+    pub invalid_opcode: Entry<HandlerFunc<V>, V>,
 
     /// A device not available exception (`#NM`) occurs under any of the following conditions:
     ///
@@ -182,7 +183,7 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the instruction that caused the `#NM`.
     ///
     /// The vector number of the `#NM` exception is 7.
-    pub device_not_available: Entry<HandlerFunc>,
+    pub device_not_available: Entry<HandlerFunc<V>, V>,
 
     /// A double fault (`#DF`) exception can occur when a second exception occurs during
     /// the handling of a prior (first) exception or interrupt handler.
@@ -216,14 +217,14 @@ pub struct InterruptDescriptorTable {
     /// and the program cannot be restarted.
     ///
     /// The vector number of the `#DF` exception is 8.
-    pub double_fault: Entry<DivergingHandlerFuncWithErrCode>,
+    pub double_fault: Entry<DivergingHandlerFuncWithErrCode<V>, V>,
 
     /// This interrupt vector is reserved. It is for a discontinued exception originally used
     /// by processors that supported external x87-instruction coprocessors. On those processors,
     /// the exception condition is caused by an invalid-segment or invalid-page access on an
     /// x87-instruction coprocessor-instruction operand. On current processors, this condition
     /// causes a general-protection exception to occur.
-    coprocessor_segment_overrun: Entry<HandlerFunc>,
+    coprocessor_segment_overrun: Entry<HandlerFunc<V>, V>,
 
     /// An invalid TSS exception (`#TS`) occurs only as a result of a control transfer through
     /// a gate descriptor that results in an invalid stack-segment reference using an `SS`
@@ -233,7 +234,7 @@ pub struct InterruptDescriptorTable {
     /// points to the control-transfer instruction that caused the `#TS`.
     ///
     /// The vector number of the `#TS` exception is 10.
-    pub invalid_tss: Entry<HandlerFuncWithErrCode>,
+    pub invalid_tss: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// An segment-not-present exception (`#NP`) occurs when an attempt is made to load a
     /// segment or gate with a clear present bit.
@@ -243,7 +244,7 @@ pub struct InterruptDescriptorTable {
     /// that loaded the segment selector resulting in the `#NP`.
     ///
     /// The vector number of the `#NP` exception is 11.
-    pub segment_not_present: Entry<HandlerFuncWithErrCode>,
+    pub segment_not_present: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// An stack segment exception (`#SS`) can occur in the following situations:
     ///
@@ -260,7 +261,7 @@ pub struct InterruptDescriptorTable {
     /// caused the `#SS`.
     ///
     /// The vector number of the `#NP` exception is 12.
-    pub stack_segment_fault: Entry<HandlerFuncWithErrCode>,
+    pub stack_segment_fault: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// A general protection fault (`#GP`) can occur in various situations. Common causes include:
     ///
@@ -276,7 +277,7 @@ pub struct InterruptDescriptorTable {
     /// the instruction that caused the `#GP`.
     ///
     /// The vector number of the `#GP` exception is 13.
-    pub general_protection_fault: Entry<HandlerFuncWithErrCode>,
+    pub general_protection_fault: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// A page fault (`#PF`) can occur during a memory access in any of the following situations:
     ///
@@ -297,10 +298,10 @@ pub struct InterruptDescriptorTable {
     /// [`PageFaultErrorCode`](struct.PageFaultErrorCode.html) struct.
     ///
     /// The vector number of the `#PF` exception is 14.
-    pub page_fault: Entry<PageFaultHandlerFunc>,
+    pub page_fault: Entry<PageFaultHandlerFunc<V>, V>,
 
     /// vector nr. 15
-    reserved_1: Entry<HandlerFunc>,
+    reserved_1: Entry<HandlerFunc<V>, V>,
 
     /// The x87 Floating-Point Exception-Pending exception (`#MF`) is used to handle unmasked x87
     /// floating-point exceptions. In 64-bit mode, the x87 floating point unit is not used
@@ -308,7 +309,7 @@ pub struct InterruptDescriptorTable {
     /// compatibility mode.
     ///
     /// The vector number of the `#MF` exception is 16.
-    pub x87_floating_point: Entry<HandlerFunc>,
+    pub x87_floating_point: Entry<HandlerFunc<V>, V>,
 
     /// An alignment check exception (`#AC`) occurs when an unaligned-memory data reference
     /// is performed while alignment checking is enabled. An `#AC` can occur only when CPL=3.
@@ -317,7 +318,7 @@ pub struct InterruptDescriptorTable {
     /// instruction that caused the `#AC`.
     ///
     /// The vector number of the `#AC` exception is 17.
-    pub alignment_check: Entry<HandlerFuncWithErrCode>,
+    pub alignment_check: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// The machine check exception (`#MC`) is model specific. Processor implementations
     /// are not required to support the `#MC` exception, and those implementations that do
@@ -326,7 +327,7 @@ pub struct InterruptDescriptorTable {
     /// There is no reliable way to restart the program.
     ///
     /// The vector number of the `#MC` exception is 18.
-    pub machine_check: Entry<DivergingHandlerFunc>,
+    pub machine_check: Entry<DivergingHandlerFunc<V>, V>,
 
     /// The SIMD Floating-Point Exception (`#XF`) is used to handle unmasked SSE
     /// floating-point exceptions. The SSE floating-point exceptions reported by
@@ -342,10 +343,10 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the instruction that caused the `#XF`.
     ///
     /// The vector number of the `#XF` exception is 19.
-    pub simd_floating_point: Entry<HandlerFunc>,
+    pub simd_floating_point: Entry<HandlerFunc<V>, V>,
 
     /// vector nr. 20
-    pub virtualization: Entry<HandlerFunc>,
+    pub virtualization: Entry<HandlerFunc<V>, V>,
 
     /// A #CP exception is generated when shadow stacks are enabled and mismatch
     /// scenarios are detected (possible error code cases below).
@@ -358,10 +359,10 @@ pub struct InterruptDescriptorTable {
     /// - A missing ENDBRANCH instruction if indirect branch tracking is enabled.
     ///
     /// vector nr. 21
-    pub cp_protection_exception: Entry<HandlerFuncWithErrCode>,
+    pub cp_protection_exception: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// vector nr. 22-27
-    reserved_2: [Entry<HandlerFunc>; 6],
+    reserved_2: [Entry<HandlerFunc<V>, V>; 6],
 
     /// The Hypervisor Injection Exception (`#HV`) is injected by a hypervisor
     /// as a doorbell to inform an `SEV-SNP` enabled guest running with the
@@ -378,7 +379,7 @@ pub struct InterruptDescriptorTable {
     /// software-managed para-virtualization interface.
     ///
     /// The vector number of the ``#HV`` exception is 28.
-    pub hv_injection_exception: Entry<HandlerFunc>,
+    pub hv_injection_exception: Entry<HandlerFunc<V>, V>,
 
     /// The VMM Communication Exception (`#VC`) is always generated by hardware when an `SEV-ES`
     /// enabled guest is running and an `NAE` event occurs.
@@ -407,7 +408,7 @@ pub struct InterruptDescriptorTable {
     /// setting intercept bits for events that would occur in the `#VC` handler (such as `IRET`).
     ///
     /// The vector number of the ``#VC`` exception is 29.
-    pub vmm_communication_exception: Entry<HandlerFuncWithErrCode>,
+    pub vmm_communication_exception: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// The Security Exception (`#SX`) signals security-sensitive events that occur while
     /// executing the VMM, in the form of an exception so that the VMM may take appropriate
@@ -418,10 +419,10 @@ pub struct InterruptDescriptorTable {
     /// The only error code currently defined is 1, and indicates redirection of INIT has occurred.
     ///
     /// The vector number of the ``#SX`` exception is 30.
-    pub security_exception: Entry<HandlerFuncWithErrCode>,
+    pub security_exception: Entry<HandlerFuncWithErrCode<V>, V>,
 
     /// vector nr. 31
-    reserved_3: Entry<HandlerFunc>,
+    reserved_3: Entry<HandlerFunc<V>, V>,
 
     /// User-defined interrupts can be initiated either by system logic or software. They occur
     /// when:
@@ -443,14 +444,14 @@ pub struct InterruptDescriptorTable {
     ///   external interrupt was recognized.
     /// - If the interrupt occurs as a result of executing the INTn instruction, the saved
     ///   instruction pointer points to the instruction after the INTn.
-    interrupts: [Entry<HandlerFunc>; 256 - 32],
+    interrupts: [Entry<HandlerFunc<V>, V>; 256 - 32],
 }
 
-impl InterruptDescriptorTable {
+impl<V: VirtAddrValidity> InterruptDescriptorTable<V> {
     /// Creates a new IDT filled with non-present entries.
     #[inline]
     #[rustversion::attr(since(1.61), const)]
-    pub fn new() -> InterruptDescriptorTable {
+    pub fn new_with_validity() -> Self {
         InterruptDescriptorTable {
             divide_error: Entry::missing(),
             debug: Entry::missing(),
@@ -486,42 +487,19 @@ impl InterruptDescriptorTable {
     /// Resets all entries of this IDT in place.
     #[inline]
     pub fn reset(&mut self) {
-        *self = Self::new();
-    }
-
-    /// Loads the IDT in the CPU using the `lidt` command.
-    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-    #[inline]
-    pub fn load(&'static self) {
-        unsafe { self.load_unsafe() }
-    }
-
-    /// Loads the IDT in the CPU using the `lidt` command.
-    ///
-    /// # Safety
-    ///
-    /// As long as it is the active IDT, you must ensure that:
-    ///
-    /// - `self` is never destroyed.
-    /// - `self` always stays at the same memory location. It is recommended to wrap it in
-    ///   a `Box`.
-    ///
-    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-    #[inline]
-    pub unsafe fn load_unsafe(&self) {
-        use crate::instructions::tables::lidt;
-        unsafe {
-            lidt(&self.pointer());
-        }
+        *self = Self::new_with_validity();
     }
 
     /// Creates the descriptor pointer for this table. This pointer can only be
     /// safely used if the table is never modified or destroyed while in use.
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-    fn pointer(&self) -> crate::structures::DescriptorTablePointer {
+    fn pointer(&self) -> crate::structures::DescriptorTablePointer<V>
+    where
+        V: VirtAddrValidity,
+    {
         use core::mem::size_of;
         crate::structures::DescriptorTablePointer {
-            base: VirtAddr::new(self as *const _ as u64),
+            base: VirtAddrGeneric::<V>::new_with_validity(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
         }
     }
@@ -551,7 +529,7 @@ impl InterruptDescriptorTable {
     ///
     /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice(&self, bounds: impl RangeBounds<u8>) -> &[Entry<HandlerFunc>] {
+    pub fn slice(&self, bounds: impl RangeBounds<u8>) -> &[Entry<HandlerFunc<V>, V>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
@@ -560,21 +538,52 @@ impl InterruptDescriptorTable {
     ///
     /// Panics if the entry is an exception.
     #[inline]
-    pub fn slice_mut(&mut self, bounds: impl RangeBounds<u8>) -> &mut [Entry<HandlerFunc>] {
+    pub fn slice_mut(&mut self, bounds: impl RangeBounds<u8>) -> &mut [Entry<HandlerFunc<V>, V>] {
         let (lower_idx, upper_idx) = self.condition_slice_bounds(bounds);
         &mut self.interrupts[(lower_idx - 32)..(upper_idx - 32)]
     }
 }
 
-impl Default for InterruptDescriptorTable {
+impl InterruptDescriptorTable<DefaultVirtAddrValidity> {
+    /// Creates a new IDT with the default virtual-address validity.
+    ///
+    /// Handler addresses assigned later retain their creation-time validity guarantees.
     #[inline]
-    fn default() -> Self {
-        Self::new()
+    #[rustversion::attr(since(1.61), const)]
+    pub fn new() -> Self {
+        Self::new_with_validity()
+    }
+
+    /// Loads the IDT in the CPU using the `lidt` command.
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+    #[inline]
+    pub fn load(&'static self) {
+        unsafe { self.load_unsafe() }
+    }
+
+    /// Loads the IDT without imposing a static lifetime.
+    ///
+    /// # Safety
+    ///
+    /// The caller must keep the IDT alive and unmodified while it is loaded.
+    #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+    #[inline]
+    pub unsafe fn load_unsafe(&self) {
+        use crate::instructions::tables::lidt;
+
+        unsafe { lidt(&self.pointer()) }
     }
 }
 
-impl Index<u8> for InterruptDescriptorTable {
-    type Output = Entry<HandlerFunc>;
+impl<V: VirtAddrValidity> Default for InterruptDescriptorTable<V> {
+    #[inline]
+    fn default() -> Self {
+        Self::new_with_validity()
+    }
+}
+
+impl<V: VirtAddrValidity> Index<u8> for InterruptDescriptorTable<V> {
+    type Output = Entry<HandlerFunc<V>, V>;
 
     /// Returns the IDT entry with the specified index.
     ///
@@ -605,7 +614,7 @@ impl Index<u8> for InterruptDescriptorTable {
     }
 }
 
-impl IndexMut<u8> for InterruptDescriptorTable {
+impl<V: VirtAddrValidity> IndexMut<u8> for InterruptDescriptorTable<V> {
     /// Returns a mutable reference to the IDT entry with the specified index.
     ///
     /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
@@ -637,8 +646,8 @@ impl IndexMut<u8> for InterruptDescriptorTable {
 
 macro_rules! impl_index_for_idt {
     ($ty:ty) => {
-        impl Index<$ty> for InterruptDescriptorTable {
-            type Output = [Entry<HandlerFunc>];
+        impl<V: VirtAddrValidity> Index<$ty> for InterruptDescriptorTable<V> {
+            type Output = [Entry<HandlerFunc<V>, V>];
 
             /// Returns the IDT entry with the specified index.
             ///
@@ -650,7 +659,7 @@ macro_rules! impl_index_for_idt {
             }
         }
 
-        impl IndexMut<$ty> for InterruptDescriptorTable {
+        impl<V: VirtAddrValidity> IndexMut<$ty> for InterruptDescriptorTable<V> {
             /// Returns a mutable reference to the IDT entry with the specified index.
             ///
             /// Panics if the entry is an exception that pushes an error code (use the struct fields for accessing these entries).
@@ -682,16 +691,16 @@ impl_index_for_idt!(RangeFull);
 /// The generic parameter is some [`HandlerFuncType`], depending on the interrupt vector.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct Entry<F> {
+pub struct Entry<F, V = DefaultVirtAddrValidity> {
     pointer_low: u16,
     options: EntryOptions,
     pointer_middle: u16,
     pointer_high: u32,
     reserved: u32,
-    phantom: PhantomData<F>,
+    phantom: PhantomData<(F, V)>,
 }
 
-impl<T> fmt::Debug for Entry<T> {
+impl<T, V: VirtAddrValidity> fmt::Debug for Entry<T, V> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Entry")
             .field("handler_addr", &format_args!("{:#x}", self.handler_addr()))
@@ -700,7 +709,7 @@ impl<T> fmt::Debug for Entry<T> {
     }
 }
 
-impl<T> PartialEq for Entry<T> {
+impl<T, V: VirtAddrValidity> PartialEq for Entry<T, V> {
     fn eq(&self, other: &Self) -> bool {
         self.pointer_low == other.pointer_low
             && self.options == other.options
@@ -717,14 +726,15 @@ impl<T> PartialEq for Entry<T> {
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type HandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame);
+pub type HandlerFunc<V = DefaultVirtAddrValidity> =
+    extern "x86-interrupt" fn(InterruptStackFrame<V>);
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct HandlerFunc(());
+pub struct HandlerFunc<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A handler function for an exception that pushes an error code.
 ///
@@ -733,14 +743,15 @@ pub struct HandlerFunc(());
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type HandlerFuncWithErrCode = extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64);
+pub type HandlerFuncWithErrCode<V = DefaultVirtAddrValidity> =
+    extern "x86-interrupt" fn(InterruptStackFrame<V>, error_code: u64);
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct HandlerFuncWithErrCode(());
+pub struct HandlerFuncWithErrCode<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A page fault handler function that pushes a page fault error code.
 ///
@@ -749,15 +760,15 @@ pub struct HandlerFuncWithErrCode(());
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type PageFaultHandlerFunc =
-    extern "x86-interrupt" fn(InterruptStackFrame, error_code: PageFaultErrorCode);
+pub type PageFaultHandlerFunc<V = DefaultVirtAddrValidity> =
+    extern "x86-interrupt" fn(InterruptStackFrame<V>, error_code: PageFaultErrorCode);
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct PageFaultHandlerFunc(());
+pub struct PageFaultHandlerFunc<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A handler function that must not return, e.g. for a machine check exception.
 ///
@@ -766,14 +777,15 @@ pub struct PageFaultHandlerFunc(());
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type DivergingHandlerFunc = extern "x86-interrupt" fn(InterruptStackFrame) -> !;
+pub type DivergingHandlerFunc<V = DefaultVirtAddrValidity> =
+    extern "x86-interrupt" fn(InterruptStackFrame<V>) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct DivergingHandlerFunc(());
+pub struct DivergingHandlerFunc<V: VirtAddrValidity = DefaultVirtAddrValidity>(PhantomData<V>);
 
 /// A handler function with an error code that must not return, e.g. for a double fault exception.
 ///
@@ -782,20 +794,23 @@ pub struct DivergingHandlerFunc(());
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 ))]
-pub type DivergingHandlerFuncWithErrCode =
-    extern "x86-interrupt" fn(InterruptStackFrame, error_code: u64) -> !;
+pub type DivergingHandlerFuncWithErrCode<V = DefaultVirtAddrValidity> =
+    extern "x86-interrupt" fn(InterruptStackFrame<V>, error_code: u64) -> !;
 /// This type is not usable without the `abi_x86_interrupt` feature.
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "abi_x86_interrupt"
 )))]
 #[derive(Copy, Clone, Debug)]
-pub struct DivergingHandlerFuncWithErrCode(());
+pub struct DivergingHandlerFuncWithErrCode<V: VirtAddrValidity = DefaultVirtAddrValidity>(
+    PhantomData<V>,
+);
 
 /// A general handler function for an interrupt or an exception with the interrupt/exceptions's index and an optional error code.
-pub type GeneralHandlerFunc = fn(InterruptStackFrame, index: u8, error_code: Option<u64>);
+pub type GeneralHandlerFunc<V = DefaultVirtAddrValidity> =
+    fn(InterruptStackFrame<V>, index: u8, error_code: Option<u64>);
 
-impl<F> Entry<F> {
+impl<F, V> Entry<F, V> {
     /// Creates a non-present IDT entry (but sets the must-be-one bits).
     #[inline]
     pub const fn missing() -> Self {
@@ -808,7 +823,9 @@ impl<F> Entry<F> {
             phantom: PhantomData,
         }
     }
+}
 
+impl<F, V: VirtAddrValidity> Entry<F, V> {
     /// Sets the handler address for the IDT entry and sets the following defaults:
     ///   - The code selector is the code segment currently active in the CPU
     ///   - The present bit is set
@@ -825,7 +842,7 @@ impl<F> Entry<F> {
     /// and the signature of such a function is correct for the entry type.
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
-    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
+    pub unsafe fn set_handler_addr(&mut self, addr: VirtAddrGeneric<V>) -> &mut EntryOptions {
         use crate::instructions::segmentation::{Segment, CS};
 
         let addr = addr.as_u64();
@@ -842,18 +859,21 @@ impl<F> Entry<F> {
 
     /// Returns the virtual address of this IDT entry's handler function.
     #[inline]
-    pub fn handler_addr(&self) -> VirtAddr {
+    pub fn handler_addr(&self) -> VirtAddrGeneric<V> {
         let addr = self.pointer_low as u64
             | ((self.pointer_middle as u64) << 16)
             | ((self.pointer_high as u64) << 32);
         // addr is a valid VirtAddr, as the pointer members are either all zero,
         // or have been set by set_handler_addr (which takes a VirtAddr).
-        VirtAddr::new_truncate(addr)
+        unsafe { VirtAddrGeneric::<V>::new_unsafe(addr) }
     }
 }
 
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
-impl<F: HandlerFuncType> Entry<F> {
+impl<F, V: VirtAddrValidity> Entry<F, V>
+where
+    F: HandlerFuncType<V>,
+{
     /// Sets the handler function for the IDT entry and sets the following defaults:
     ///   - The code selector is the code segment currently active in the CPU
     ///   - The present bit is set
@@ -877,27 +897,30 @@ impl<F: HandlerFuncType> Entry<F> {
 /// # Safety
 ///
 /// Implementors have to ensure that `to_virt_addr` returns a valid address.
-pub unsafe trait HandlerFuncType {
+pub unsafe trait HandlerFuncType<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// Get the virtual address of the handler function.
-    fn to_virt_addr(self) -> VirtAddr;
+    fn to_virt_addr(self) -> VirtAddrGeneric<V>;
 }
 
 macro_rules! impl_handler_func_type {
-    ($f:ty) => {
+    ($f:ident) => {
         #[cfg(all(
             any(target_arch = "x86", target_arch = "x86_64"),
             feature = "abi_x86_interrupt"
         ))]
-        unsafe impl HandlerFuncType for $f {
+        unsafe impl<V> HandlerFuncType<V> for $f<V>
+        where
+            V: VirtAddrValidity,
+        {
             #[inline]
-            fn to_virt_addr(self) -> VirtAddr {
+            fn to_virt_addr(self) -> VirtAddrGeneric<V> {
                 // Casting a function pointer to u64 is fine, if the pointer
                 // width doesn't exceed 64 bits.
                 #[cfg_attr(
                     any(target_pointer_width = "32", target_pointer_width = "64"),
                     allow(clippy::fn_to_numeric_cast)
                 )]
-                VirtAddr::new(self as u64)
+                VirtAddrGeneric::<V>::new_with_validity(self as u64)
             }
         }
     };
@@ -1015,16 +1038,18 @@ impl EntryOptions {
 /// occurs, which can cause undefined behavior (see the [`as_mut`](InterruptStackFrame::as_mut)
 /// method for more information).
 #[repr(transparent)]
-pub struct InterruptStackFrame(InterruptStackFrameValue);
+pub struct InterruptStackFrame<V: VirtAddrValidity = DefaultVirtAddrValidity>(
+    InterruptStackFrameValue<V>,
+);
 
-impl InterruptStackFrame {
+impl<V: VirtAddrValidity> InterruptStackFrame<V> {
     /// Creates a new interrupt stack frame with the given values.
     #[inline]
     pub fn new(
-        instruction_pointer: VirtAddr,
+        instruction_pointer: VirtAddrGeneric<V>,
         code_segment: SegmentSelector,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr,
+        stack_pointer: VirtAddrGeneric<V>,
         stack_segment: SegmentSelector,
     ) -> Self {
         Self(InterruptStackFrameValue::new(
@@ -1051,13 +1076,13 @@ impl InterruptStackFrame {
     /// Also, it is not fully clear yet whether modifications of the interrupt stack frame are
     /// officially supported by LLVM's x86 interrupt calling convention.
     #[inline]
-    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {
+    pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue<V>> {
         Volatile::new(&mut self.0)
     }
 }
 
-impl Deref for InterruptStackFrame {
-    type Target = InterruptStackFrameValue;
+impl<V: VirtAddrValidity> Deref for InterruptStackFrame<V> {
+    type Target = InterruptStackFrameValue<V>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -1065,7 +1090,7 @@ impl Deref for InterruptStackFrame {
     }
 }
 
-impl fmt::Debug for InterruptStackFrame {
+impl<V: VirtAddrValidity> fmt::Debug for InterruptStackFrame<V> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
@@ -1075,33 +1100,33 @@ impl fmt::Debug for InterruptStackFrame {
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct InterruptStackFrameValue {
+pub struct InterruptStackFrameValue<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     /// This value points to the instruction that should be executed when the interrupt
     /// handler returns. For most interrupts, this value points to the instruction immediately
     /// following the last executed instruction. However, for some exceptions (e.g., page faults),
     /// this value points to the faulting instruction, so that the instruction is restarted on
     /// return. See the documentation of the [`InterruptDescriptorTable`] fields for more details.
-    pub instruction_pointer: VirtAddr,
+    pub instruction_pointer: VirtAddrGeneric<V>,
     /// The code segment selector at the time of the interrupt.
     pub code_segment: SegmentSelector,
     _reserved1: [u8; 6],
     /// The flags register before the interrupt handler was invoked.
     pub cpu_flags: RFlags,
     /// The stack pointer at the time of the interrupt.
-    pub stack_pointer: VirtAddr,
+    pub stack_pointer: VirtAddrGeneric<V>,
     /// The stack segment descriptor at the time of the interrupt (often zero in 64-bit mode).
     pub stack_segment: SegmentSelector,
     _reserved2: [u8; 6],
 }
 
-impl InterruptStackFrameValue {
+impl<V: VirtAddrValidity> InterruptStackFrameValue<V> {
     /// Creates a new interrupt stack frame with the given values.
     #[inline]
     pub fn new(
-        instruction_pointer: VirtAddr,
+        instruction_pointer: VirtAddrGeneric<V>,
         code_segment: SegmentSelector,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr,
+        stack_pointer: VirtAddrGeneric<V>,
         stack_segment: SegmentSelector,
     ) -> Self {
         Self {
@@ -1148,7 +1173,7 @@ impl InterruptStackFrameValue {
     }
 }
 
-impl fmt::Debug for InterruptStackFrameValue {
+impl<V: VirtAddrValidity> fmt::Debug for InterruptStackFrameValue<V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut s = f.debug_struct("InterruptStackFrame");
         s.field("instruction_pointer", &self.instruction_pointer);
@@ -1419,7 +1444,7 @@ impl TryFrom<u8> for ExceptionVector {
 ))]
 #[macro_export]
 /// Set a general handler in an [`InterruptDescriptorTable`].
-/// ```
+/// ```no_run
 /// #![feature(abi_x86_interrupt)]
 /// use x86_64::set_general_handler;
 /// use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
@@ -1666,9 +1691,88 @@ mod test {
     fn size_test() {
         use core::mem::size_of;
         assert_eq!(size_of::<Entry<HandlerFunc>>(), 16);
+        #[cfg(feature = "virt_addr_57")]
+        assert_eq!(
+            size_of::<
+                Entry<HandlerFunc<crate::addr::FixedValidity<57>>, crate::addr::FixedValidity<57>>,
+            >(),
+            16
+        );
+        #[cfg(feature = "virt_addr_rt")]
+        assert_eq!(
+            size_of::<Entry<HandlerFunc<crate::addr::RuntimeValidity>, crate::addr::RuntimeValidity>>(
+            ),
+            16
+        );
         assert_eq!(size_of::<InterruptDescriptorTable>(), 256 * 16);
+        #[cfg(feature = "virt_addr_57")]
+        assert_eq!(
+            size_of::<InterruptDescriptorTable<crate::addr::FixedValidity<57>>>(),
+            256 * 16
+        );
+        #[cfg(feature = "virt_addr_rt")]
+        assert_eq!(
+            size_of::<InterruptDescriptorTable<crate::addr::RuntimeValidity>>(),
+            256 * 16
+        );
         assert_eq!(size_of::<InterruptStackFrame>(), 40);
+        #[cfg(feature = "virt_addr_57")]
+        assert_eq!(
+            size_of::<InterruptStackFrame<crate::addr::FixedValidity<57>>>(),
+            40
+        );
+        #[cfg(feature = "virt_addr_rt")]
+        assert_eq!(
+            size_of::<InterruptStackFrame<crate::addr::RuntimeValidity>>(),
+            40
+        );
         assert_eq!(size_of::<InterruptStackFrameValue>(), 40);
+        #[cfg(feature = "virt_addr_57")]
+        assert_eq!(
+            size_of::<InterruptStackFrameValue<crate::addr::FixedValidity<57>>>(),
+            40
+        );
+        #[cfg(feature = "virt_addr_rt")]
+        assert_eq!(
+            size_of::<InterruptStackFrameValue<crate::addr::RuntimeValidity>>(),
+            40
+        );
+    }
+
+    #[test]
+    fn explicit_policy_idt_and_frames_construct() {
+        #[cfg(feature = "virt_addr_57")]
+        let _: InterruptDescriptorTable<crate::addr::FixedValidity<57>> =
+            InterruptDescriptorTable::new_with_validity();
+
+        #[cfg(feature = "virt_addr_57")]
+        {
+            let address57 = crate::addr::VirtAddr57::new(0x0000_8000_0000_0000);
+            let frame57 = InterruptStackFrame::new(
+                address57,
+                SegmentSelector(0),
+                RFlags::empty(),
+                address57,
+                SegmentSelector(0),
+            );
+            assert_eq!(frame57.instruction_pointer, address57);
+        }
+
+        #[cfg(feature = "virt_addr_rt")]
+        {
+            let _: InterruptDescriptorTable<crate::addr::RuntimeValidity> =
+                InterruptDescriptorTable::new_with_validity();
+
+            let address_rt = unsafe { crate::addr::VirtAddrRT::new_unsafe(0x1234) };
+            let frame_rt = InterruptStackFrame::new(
+                address_rt,
+                SegmentSelector(0),
+                RFlags::empty(),
+                address_rt,
+                SegmentSelector(0),
+            );
+            assert_eq!(frame_rt.stack_pointer, address_rt);
+        }
     }
 
     #[cfg(all(
@@ -1680,6 +1784,7 @@ mod test {
     // https://github.com/rust-osdev/x86_64/pull/285#issuecomment-962642984
     #[cfg(not(windows))]
     #[test]
+    #[ignore = "runtime-valid handler construction requires ring 0"]
     fn default_handlers() {
         fn general_handler(
             _stack_frame: InterruptStackFrame,
@@ -1745,15 +1850,16 @@ mod test {
 
     #[test]
     fn isr_frame_manipulation() {
-        let mut frame = InterruptStackFrame(InterruptStackFrameValue {
-            instruction_pointer: VirtAddr::new(0x1000),
-            code_segment: SegmentSelector(0),
-            cpu_flags: RFlags::empty(),
-            stack_pointer: VirtAddr::new(0x2000),
-            stack_segment: SegmentSelector(0),
-            _reserved1: Default::default(),
-            _reserved2: Default::default(),
-        });
+        let mut frame: InterruptStackFrame<crate::addr::FixedValidity<48>> =
+            InterruptStackFrame(InterruptStackFrameValue {
+                instruction_pointer: crate::addr::VirtAddr48::new(0x1000),
+                code_segment: SegmentSelector(0),
+                cpu_flags: RFlags::empty(),
+                stack_pointer: crate::addr::VirtAddr48::new(0x2000),
+                stack_segment: SegmentSelector(0),
+                _reserved1: Default::default(),
+                _reserved2: Default::default(),
+            });
 
         unsafe {
             frame.as_mut().update(|f| f.instruction_pointer += 2u64);

@@ -1,5 +1,37 @@
 # Unreleased
 
+## New Features
+
+- Add the sealed `FixedValidity<48>` policy and feature-gated `FixedValidity<57>` and
+  `RuntimeValidity` policies for virtual addresses.
+- Add the generic `VirtAddrGeneric<V>` type and the `VirtAddr48`, `VirtAddr57`, and `VirtAddrRT`
+  aliases.
+- Add `virt_addr_57` for enabling the 57-bit fixed validity policy and `VirtAddr57` alias, and
+  `virt_addr_rt` for enabling the `RuntimeValidity` policy and `VirtAddrRT` alias. Add
+  `default_virt_addr_57` for selecting fixed 57-bit validity as the default.
+- Propagate virtual-address validity through pages, descriptor pointers, TSS, GDT, IDT, handler
+  types, interrupt stack frames, TLB commands, and CET legacy bitmap pages.
+- Add `is_valid_currently` for explicitly checking an existing address against the active mode.
+- Cache the active virtual-address width after its first use by `VirtAddrRT`. Add
+  `VirtAddrRT::refetch_virtual_address_bits` for refreshing the cache after changing `CR4.LA57`.
+
+## Compatibility Notes
+
+- Without new features, `VirtAddr` remains an alias for a fixed 48-bit virtual address. Existing
+  constructors retain their names. Generic validity bounds require Rust 1.61 for these methods to
+  remain `const`, so they are non-const on Rust 1.59 and 1.60.
+- Enabling `virt_addr_57` makes the 57-bit fixed policy and its alias available. Enabling
+  `virt_addr_rt` makes both the runtime policy and its alias available. Enabling
+  `default_virt_addr_57` also enables `virt_addr_57` and changes `VirtAddr` and validity-aware
+  aggregate defaults to fixed 57-bit validity.
+- Runtime checked construction and address-producing operations are available only on `x86_64`
+  with the `instructions` feature and require ring 0. The first such operation caches `CR4.LA57`.
+  Call `VirtAddrRT::refetch_virtual_address_bits` after changing `CR4.LA57`. Storage-only
+  operations such as `zero`, `new_unsafe`, formatting, and comparison remain available elsewhere.
+- Validity is checked when a value is created. Later address-space mode changes do not
+  retroactively invalidate existing values.
+- The mapper stack remains limited to four-level page tables and explicitly accepts VA48 pages.
+
 # 0.15.5 – 2026-07-11
 
 This release is compatible with Rust nightlies starting with `nightly-2026-07-10` (this only applies when the `nightly` feature is used).

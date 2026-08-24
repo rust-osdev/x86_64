@@ -26,7 +26,7 @@ impl<'a> OffsetPageTable<'a> {
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
     #[inline]
-    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: VirtAddr) -> Self {
+    pub unsafe fn new(level_4_table: &'a mut PageTable, phys_offset: VirtAddr48) -> Self {
         let phys_offset = PhysOffset {
             offset: phys_offset,
         };
@@ -46,14 +46,14 @@ impl<'a> OffsetPageTable<'a> {
     }
 
     /// Returns the offset used for converting virtual to physical addresses.
-    pub fn phys_offset(&self) -> VirtAddr {
+    pub fn phys_offset(&self) -> VirtAddr48 {
         self.inner.page_table_frame_mapping().offset
     }
 }
 
 #[derive(Debug)]
 struct PhysOffset {
-    offset: VirtAddr,
+    offset: VirtAddr48,
 }
 
 unsafe impl PageTableFrameMapping for PhysOffset {
@@ -69,7 +69,7 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -87,7 +87,7 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     fn unmap(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
     ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
         self.inner.unmap(page)
     }
@@ -95,7 +95,7 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn update_flags(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
         unsafe { self.inner.update_flags(page, flags) }
@@ -104,7 +104,7 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p4_entry(page, flags) }
@@ -113,7 +113,7 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p3_entry(page, flags) }
@@ -122,14 +122,17 @@ impl Mapper<Size1GiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p2_entry(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p2_entry(page, flags) }
     }
 
     #[inline]
-    fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
+    fn translate_page(
+        &self,
+        page: Page<Size1GiB, FixedValidity<48>>,
+    ) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
@@ -138,7 +141,7 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -156,7 +159,7 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     fn unmap(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
     ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
         self.inner.unmap(page)
     }
@@ -164,7 +167,7 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn update_flags(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
         unsafe { self.inner.update_flags(page, flags) }
@@ -173,7 +176,7 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p4_entry(page, flags) }
@@ -182,7 +185,7 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p3_entry(page, flags) }
@@ -191,14 +194,17 @@ impl Mapper<Size2MiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p2_entry(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p2_entry(page, flags) }
     }
 
     #[inline]
-    fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
+    fn translate_page(
+        &self,
+        page: Page<Size2MiB, FixedValidity<48>>,
+    ) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
@@ -207,7 +213,7 @@ impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -225,7 +231,7 @@ impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     fn unmap(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
     ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
         self.inner.unmap(page)
     }
@@ -233,7 +239,7 @@ impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn update_flags(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
         unsafe { self.inner.update_flags(page, flags) }
@@ -242,7 +248,7 @@ impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p4_entry(page, flags) }
@@ -251,7 +257,7 @@ impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p3_entry(page, flags) }
@@ -260,21 +266,24 @@ impl Mapper<Size4KiB> for OffsetPageTable<'_> {
     #[inline]
     unsafe fn set_flags_p2_entry(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         unsafe { self.inner.set_flags_p2_entry(page, flags) }
     }
 
     #[inline]
-    fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
+    fn translate_page(
+        &self,
+        page: Page<Size4KiB, FixedValidity<48>>,
+    ) -> Result<PhysFrame<Size4KiB>, TranslateError> {
         self.inner.translate_page(page)
     }
 }
 
 impl Translate for OffsetPageTable<'_> {
     #[inline]
-    fn translate(&self, addr: VirtAddr) -> TranslateResult {
+    fn translate(&self, addr: VirtAddr48) -> TranslateResult {
         self.inner.translate(addr)
     }
 }
@@ -291,7 +300,7 @@ impl CleanUp for OffsetPageTable<'_> {
     #[inline]
     unsafe fn clean_up_addr_range<D>(
         &mut self,
-        range: PageRangeInclusive,
+        range: PageRangeInclusive<Size4KiB, FixedValidity<48>>,
         frame_deallocator: &mut D,
     ) where
         D: FrameDeallocator<Size4KiB>,

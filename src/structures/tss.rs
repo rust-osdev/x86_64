@@ -1,25 +1,25 @@
 //! Provides a type for the task state segment structure.
 
-use crate::VirtAddr;
 use core::{
     fmt::{self, Display},
     mem::size_of,
 };
 
+use crate::addr::{DefaultVirtAddrValidity, VirtAddrGeneric, VirtAddrValidity};
+
 /// In 64-bit mode the TSS holds information that is not
 /// directly related to the task-switch mechanism,
 /// but is used for stack switching when an interrupt or exception occurs.
-#[derive(Debug, Clone, Copy)]
 #[repr(C, packed(4))]
-pub struct TaskStateSegment {
+pub struct TaskStateSegment<V: VirtAddrValidity = DefaultVirtAddrValidity> {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
     /// The stack pointers used when a privilege level change occurs from a lower privilege level to a higher one.
-    pub privilege_stack_table: [VirtAddr; 3],
+    pub privilege_stack_table: [VirtAddrGeneric<V>; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
     /// The stack pointers used when an entry in the Interrupt Descriptor Table has an IST value other than 0.
-    pub interrupt_stack_table: [VirtAddr; 7],
+    pub interrupt_stack_table: [VirtAddrGeneric<V>; 7],
     reserved_3: u64,
     reserved_4: u16,
     /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base. It must not
@@ -27,7 +27,7 @@ pub struct TaskStateSegment {
     pub iomap_base: u16,
 }
 
-impl TaskStateSegment {
+impl<V: VirtAddrValidity> TaskStateSegment<V> {
     /// Creates a new TSS with zeroed privilege and interrupt stack table and an
     /// empty I/O-Permission Bitmap.
     ///
@@ -35,11 +35,12 @@ impl TaskStateSegment {
     /// `size_of::<TaskStateSegment>() - 1`, this means that `iomap_base` is
     /// initialized to `size_of::<TaskStateSegment>()`.
     #[inline]
-    pub const fn new() -> TaskStateSegment {
+    #[rustversion::attr(since(1.61), const)]
+    pub fn new_with_validity() -> Self {
         TaskStateSegment {
-            privilege_stack_table: [VirtAddr::zero(); 3],
-            interrupt_stack_table: [VirtAddr::zero(); 7],
-            iomap_base: size_of::<TaskStateSegment>() as u16,
+            privilege_stack_table: [VirtAddrGeneric::zero(); 3],
+            interrupt_stack_table: [VirtAddrGeneric::zero(); 7],
+            iomap_base: size_of::<Self>() as u16,
             reserved_1: 0,
             reserved_2: 0,
             reserved_3: 0,
@@ -48,10 +49,53 @@ impl TaskStateSegment {
     }
 }
 
-impl Default for TaskStateSegment {
+// These traits are implemented manually because Rust 1.59 has limited derive support for generic
+// packed structs. They can use derive once the MSRV is raised to Rust 1.69.
+impl<V: VirtAddrValidity> Copy for TaskStateSegment<V> {}
+
+impl<V: VirtAddrValidity> Clone for TaskStateSegment<V> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<V: VirtAddrValidity> fmt::Debug for TaskStateSegment<V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let reserved_1 = self.reserved_1;
+        let privilege_stack_table = self.privilege_stack_table;
+        let reserved_2 = self.reserved_2;
+        let interrupt_stack_table = self.interrupt_stack_table;
+        let reserved_3 = self.reserved_3;
+        let reserved_4 = self.reserved_4;
+        let iomap_base = self.iomap_base;
+
+        f.debug_struct("TaskStateSegment")
+            .field("reserved_1", &reserved_1)
+            .field("privilege_stack_table", &privilege_stack_table)
+            .field("reserved_2", &reserved_2)
+            .field("interrupt_stack_table", &interrupt_stack_table)
+            .field("reserved_3", &reserved_3)
+            .field("reserved_4", &reserved_4)
+            .field("iomap_base", &iomap_base)
+            .finish()
+    }
+}
+
+impl TaskStateSegment<DefaultVirtAddrValidity> {
+    /// Creates a new TSS with the default virtual-address validity.
+    ///
+    /// Stack addresses assigned later retain their creation-time validity guarantees.
+    #[inline]
+    #[rustversion::attr(since(1.61), const)]
+    pub fn new() -> Self {
+        Self::new_with_validity()
+    }
+}
+
+impl<V: VirtAddrValidity> Default for TaskStateSegment<V> {
     #[inline]
     fn default() -> Self {
-        Self::new()
+        Self::new_with_validity()
     }
 }
 
@@ -123,5 +167,15 @@ mod tests {
         // Per the SDM, the minimum size of a TSS is 0x68 bytes, giving a
         // minimum limit of 0x67.
         assert_eq!(size_of::<TaskStateSegment>(), 0x68);
+        #[cfg(feature = "virt_addr_57")]
+        assert_eq!(
+            size_of::<TaskStateSegment<crate::addr::FixedValidity<57>>>(),
+            0x68
+        );
+        #[cfg(feature = "virt_addr_rt")]
+        assert_eq!(
+            size_of::<TaskStateSegment<crate::addr::RuntimeValidity>>(),
+            0x68
+        );
     }
 }

@@ -6,13 +6,14 @@ pub use self::offset_page_table::OffsetPageTable;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
+use crate::addr::{FixedValidity, VirtAddr48};
 use crate::structures::paging::{
     frame_alloc::{FrameAllocator, FrameDeallocator},
     page::PageRangeInclusive,
     page_table::PageTableFlags,
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
-use crate::{PhysAddr, VirtAddr};
+use crate::PhysAddr;
 
 mod mapped_page_table;
 mod offset_page_table;
@@ -33,7 +34,7 @@ pub trait Translate {
     /// frame is returned. Otherwise an error value is returned.
     ///
     /// This function works with huge pages of all sizes.
-    fn translate(&self, addr: VirtAddr) -> TranslateResult;
+    fn translate(&self, addr: VirtAddr48) -> TranslateResult;
 
     /// Translates the given virtual address to the physical address that it maps to.
     ///
@@ -42,7 +43,7 @@ pub trait Translate {
     /// This is a convenience method. For more information about a mapping see the
     /// [`translate`](Translate::translate) method.
     #[inline]
-    fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
+    fn translate_addr(&self, addr: VirtAddr48) -> Option<PhysAddr> {
         match self.translate(addr) {
             TranslateResult::NotMapped | TranslateResult::InvalidFrameAddress(_) => None,
             TranslateResult::Mapped { frame, offset, .. } => Some(frame.start_address() + offset),
@@ -159,9 +160,10 @@ pub trait Mapper<S: PageSize> {
     /// #    Mapper, Page, PhysFrame, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
+    /// # use x86_64::addr::FixedValidity;
     /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
-    /// #         page: Page<Size4KiB>, frame: PhysFrame) {
+    /// #         page: Page<Size4KiB, FixedValidity<48>>, frame: PhysFrame) {
     ///         mapper
     ///           .map_to(
     ///               page,
@@ -178,7 +180,7 @@ pub trait Mapper<S: PageSize> {
     #[inline]
     unsafe fn map_to<A>(
         &mut self,
-        page: Page<S>,
+        page: Page<S, FixedValidity<48>>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
@@ -248,9 +250,10 @@ pub trait Mapper<S: PageSize> {
     /// #    Mapper, PhysFrame, Page, FrameAllocator,
     /// #    Size4KiB, OffsetPageTable, page_table::PageTableFlags
     /// # };
+    /// # use x86_64::addr::FixedValidity;
     /// # #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     /// # unsafe fn test(mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>,
-    /// #         page: Page<Size4KiB>, frame: PhysFrame) {
+    /// #         page: Page<Size4KiB, FixedValidity<48>>, frame: PhysFrame) {
     ///         mapper
     ///           .map_to_with_table_flags(
     ///               page,
@@ -269,7 +272,7 @@ pub trait Mapper<S: PageSize> {
     /// ```
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<S>,
+        page: Page<S, FixedValidity<48>>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -282,7 +285,10 @@ pub trait Mapper<S: PageSize> {
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
     /// Note that no page tables or pages are deallocated.
-    fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
+    fn unmap(
+        &mut self,
+        page: Page<S, FixedValidity<48>>,
+    ) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
 
     /// Updates the flags of an existing mapping.
     ///
@@ -297,7 +303,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn update_flags(
         &mut self,
-        page: Page<S>,
+        page: Page<S, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<S>, FlagUpdateError>;
 
@@ -312,7 +318,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<S>,
+        page: Page<S, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError>;
 
@@ -327,7 +333,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<S>,
+        page: Page<S, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError>;
 
@@ -342,7 +348,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn set_flags_p2_entry(
         &mut self,
-        page: Page<S>,
+        page: Page<S, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError>;
 
@@ -350,7 +356,10 @@ pub trait Mapper<S: PageSize> {
     ///
     /// This function assumes that the page is mapped to a frame of size `S` and returns an
     /// error otherwise.
-    fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
+    fn translate_page(
+        &self,
+        page: Page<S, FixedValidity<48>>,
+    ) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
     ///
@@ -371,7 +380,8 @@ pub trait Mapper<S: PageSize> {
         S: PageSize,
         Self: Mapper<S>,
     {
-        let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
+        let page =
+            Page::containing_address_with_validity(VirtAddr48::new(frame.start_address().as_u64()));
         unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
 }
@@ -387,7 +397,7 @@ pub trait Mapper<S: PageSize> {
     not(all(feature = "instructions", target_arch = "x86_64")),
     allow(dead_code)
 )] // FIXME
-pub struct MapperFlush<S: PageSize>(Page<S>);
+pub struct MapperFlush<S: PageSize>(Page<S, FixedValidity<48>>);
 
 impl<S: PageSize> MapperFlush<S> {
     /// Create a new flush promise
@@ -395,7 +405,7 @@ impl<S: PageSize> MapperFlush<S> {
     /// Note that this method is intended for implementing the [`Mapper`] trait and no other uses
     /// are expected.
     #[inline]
-    pub fn new(page: Page<S>) -> Self {
+    pub fn new(page: Page<S, FixedValidity<48>>) -> Self {
         MapperFlush(page)
     }
 
@@ -403,7 +413,11 @@ impl<S: PageSize> MapperFlush<S> {
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub fn flush(self) {
+        #[cfg(not(feature = "default_virt_addr_57"))]
         crate::instructions::tlb::flush(self.0.start_address());
+
+        #[cfg(feature = "default_virt_addr_57")]
+        crate::instructions::tlb::flush(self.0.start_address().into());
     }
 
     /// Don't flush the TLB and silence the “must be used” warning.
@@ -412,7 +426,7 @@ impl<S: PageSize> MapperFlush<S> {
 
     /// Returns the page to be flushed.
     #[inline]
-    pub fn page(&self) -> Page<S> {
+    pub fn page(&self) -> Page<S, FixedValidity<48>> {
         self.0
     }
 }
@@ -513,14 +527,14 @@ pub trait CleanUp {
     /// Remove all empty P1-P3 tables in a certain range
     /// ```
     /// # use core::ops::RangeInclusive;
-    /// # use x86_64::{VirtAddr, structures::paging::{
+    /// # use x86_64::{addr::VirtAddr48, structures::paging::{
     /// #    FrameDeallocator, Size4KiB, mapper::CleanUp, page::Page,
     /// # }};
     /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
     /// // clean up all page tables in the lower half of the address space
     /// let lower_half = Page::range_inclusive(
-    ///     Page::containing_address(VirtAddr::new(0)),
-    ///     Page::containing_address(VirtAddr::new(0x0000_7fff_ffff_ffff)),
+    ///     Page::containing_address_with_validity(VirtAddr48::new(0)),
+    ///     Page::containing_address_with_validity(VirtAddr48::new(0x0000_7fff_ffff_ffff)),
     /// );
     /// page_table.clean_up_addr_range(lower_half, frame_deallocator);
     /// # }
@@ -533,7 +547,7 @@ pub trait CleanUp {
     /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
     unsafe fn clean_up_addr_range<D>(
         &mut self,
-        range: PageRangeInclusive,
+        range: PageRangeInclusive<Size4KiB, FixedValidity<48>>,
         frame_deallocator: &mut D,
     ) where
         D: FrameDeallocator<Size4KiB>;

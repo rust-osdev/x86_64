@@ -55,7 +55,8 @@ impl<'a> RecursivePageTable<'a> {
     /// and [in the `unsafe-code-guidelines ` repo](https://github.com/rust-lang/unsafe-code-guidelines/issues/420).
     #[inline]
     pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {
-        let page = Page::containing_address(VirtAddr::new(table as *const _ as u64));
+        let page =
+            Page::containing_address_with_validity(VirtAddr48::new(table as *const _ as u64));
         let recursive_index = page.p4_index();
 
         if page.p3_index() != recursive_index
@@ -116,7 +117,7 @@ impl<'a> RecursivePageTable<'a> {
     /// in the passed entry.
     unsafe fn create_next_table<'b, A, S: PageSize>(
         entry: &'b mut PageTableEntry,
-        next_table_page: Page,
+        next_table_page: Page<Size4KiB, FixedValidity<48>>,
         insert_flags: PageTableFlags,
         allocator: &mut A,
     ) -> Result<&'b mut PageTable, MapToError<S>>
@@ -128,7 +129,7 @@ impl<'a> RecursivePageTable<'a> {
         /// This is a safe function, so we need to use `unsafe` blocks when we do something unsafe.
         fn inner<'b, A, S: PageSize>(
             entry: &'b mut PageTableEntry,
-            next_table_page: Page,
+            next_table_page: Page<Size4KiB, FixedValidity<48>>,
             insert_flags: PageTableFlags,
             allocator: &mut A,
         ) -> Result<&'b mut PageTable, MapToError<S>>
@@ -172,7 +173,7 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         frame: PhysFrame<Size1GiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -204,7 +205,7 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
 
     fn unmap(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
     ) -> Result<(PhysFrame<Size1GiB>, MapperFlush<Size1GiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -234,7 +235,7 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
 
     unsafe fn update_flags(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
         use crate::structures::paging::PageTableFlags as Flags;
@@ -256,7 +257,7 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<Size1GiB>,
+        page: Page<Size1GiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -273,7 +274,7 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p3_entry(
         &mut self,
-        _page: Page<Size1GiB>,
+        _page: Page<Size1GiB, FixedValidity<48>>,
         _flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         Err(FlagUpdateError::ParentEntryHugePage)
@@ -281,13 +282,16 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p2_entry(
         &mut self,
-        _page: Page<Size1GiB>,
+        _page: Page<Size1GiB, FixedValidity<48>>,
         _flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         Err(FlagUpdateError::ParentEntryHugePage)
     }
 
-    fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {
+    fn translate_page(
+        &self,
+        page: Page<Size1GiB, FixedValidity<48>>,
+    ) -> Result<PhysFrame<Size1GiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -310,7 +314,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         frame: PhysFrame<Size2MiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -352,7 +356,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
 
     fn unmap(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
     ) -> Result<(PhysFrame<Size2MiB>, MapperFlush<Size2MiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -388,7 +392,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
 
     unsafe fn update_flags(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
         use crate::structures::paging::PageTableFlags as Flags;
@@ -417,7 +421,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -434,7 +438,7 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<Size2MiB>,
+        page: Page<Size2MiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -457,13 +461,16 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p2_entry(
         &mut self,
-        _page: Page<Size2MiB>,
+        _page: Page<Size2MiB, FixedValidity<48>>,
         _flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         Err(FlagUpdateError::ParentEntryHugePage)
     }
 
-    fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {
+    fn translate_page(
+        &self,
+        page: Page<Size2MiB, FixedValidity<48>>,
+    ) -> Result<PhysFrame<Size2MiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -493,7 +500,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
     #[inline]
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         frame: PhysFrame<Size4KiB>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
@@ -544,7 +551,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
     fn unmap(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
     ) -> Result<(PhysFrame<Size4KiB>, MapperFlush<Size4KiB>), UnmapError> {
         let p4 = &mut self.p4;
         let p4_entry = &p4[page.p4_index()];
@@ -581,7 +588,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
     unsafe fn update_flags(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -615,7 +622,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -632,7 +639,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -655,7 +662,7 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
     unsafe fn set_flags_p2_entry(
         &mut self,
-        page: Page<Size4KiB>,
+        page: Page<Size4KiB, FixedValidity<48>>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
         let p4 = &mut self.p4;
@@ -682,7 +689,10 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         Ok(MapperFlushAll::new())
     }
 
-    fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {
+    fn translate_page(
+        &self,
+        page: Page<Size4KiB, FixedValidity<48>>,
+    ) -> Result<PhysFrame<Size4KiB>, TranslateError> {
         let p4 = &self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -717,8 +727,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
 
 impl Translate for RecursivePageTable<'_> {
     #[allow(clippy::inconsistent_digit_grouping)]
-    fn translate(&self, addr: VirtAddr) -> TranslateResult {
-        let page = Page::containing_address(addr);
+    fn translate(&self, addr: VirtAddr48) -> TranslateResult {
+        let page = Page::containing_address_with_validity(addr);
 
         let p4 = &self.p4;
         let p4_entry = &p4[addr.p4_index()];
@@ -797,8 +807,8 @@ impl CleanUp for RecursivePageTable<'_> {
         unsafe {
             self.clean_up_addr_range(
                 PageRangeInclusive {
-                    start: Page::from_start_address(VirtAddr::new(0)).unwrap(),
-                    end: Page::from_start_address(VirtAddr::new(0xffff_ffff_ffff_f000)).unwrap(),
+                    start: Page::from_start_address(VirtAddr48::new(0)).unwrap(),
+                    end: Page::from_start_address(VirtAddr48::new(0xffff_ffff_ffff_f000)).unwrap(),
                 },
                 frame_deallocator,
             )
@@ -807,7 +817,7 @@ impl CleanUp for RecursivePageTable<'_> {
 
     unsafe fn clean_up_addr_range<D>(
         &mut self,
-        range: PageRangeInclusive,
+        range: PageRangeInclusive<Size4KiB, FixedValidity<48>>,
         frame_deallocator: &mut D,
     ) where
         D: FrameDeallocator<Size4KiB>,
@@ -816,7 +826,7 @@ impl CleanUp for RecursivePageTable<'_> {
             recursive_index: PageTableIndex,
             page_table: &mut PageTable,
             level: PageTableLevel,
-            range: PageRangeInclusive,
+            range: PageRangeInclusive<Size4KiB, FixedValidity<48>>,
             frame_deallocator: &mut impl FrameDeallocator<Size4KiB>,
         ) -> bool {
             if range.is_empty() {
@@ -843,15 +853,21 @@ impl CleanUp for RecursivePageTable<'_> {
                     })
                 {
                     if let Ok(frame) = entry.frame() {
-                        let start = VirtAddr::forward_checked_impl(
+                        let start = VirtAddr48::forward_checked_impl(
                             table_addr,
                             (offset_per_entry as usize) * i,
                         )
                         .unwrap();
                         let end = start + (offset_per_entry - 1);
-                        let start = Page::<Size4KiB>::containing_address(start);
+                        let start =
+                            Page::<Size4KiB, FixedValidity<48>>::containing_address_with_validity(
+                                start,
+                            );
                         let start = start.max(range.start);
-                        let end = Page::<Size4KiB>::containing_address(end);
+                        let end =
+                            Page::<Size4KiB, FixedValidity<48>>::containing_address_with_validity(
+                                end,
+                            );
                         let end = end.min(range.end);
                         let page_table =
                             [p1_ptr, p2_ptr, p3_ptr][level as usize - 2](start, recursive_index);
@@ -913,12 +929,18 @@ impl fmt::Display for InvalidPageTable {
 }
 
 #[inline]
-fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {
+fn p3_ptr<S: PageSize>(
+    page: Page<S, FixedValidity<48>>,
+    recursive_index: PageTableIndex,
+) -> *mut PageTable {
     p3_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
 #[inline]
-fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
+fn p3_page<S: PageSize>(
+    page: Page<S, FixedValidity<48>>,
+    recursive_index: PageTableIndex,
+) -> Page<Size4KiB, FixedValidity<48>> {
     Page::from_page_table_indices(
         recursive_index,
         recursive_index,
@@ -928,12 +950,18 @@ fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page 
 }
 
 #[inline]
-fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {
+fn p2_ptr<S: NotGiantPageSize>(
+    page: Page<S, FixedValidity<48>>,
+    recursive_index: PageTableIndex,
+) -> *mut PageTable {
     p2_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
 #[inline]
-fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
+fn p2_page<S: NotGiantPageSize>(
+    page: Page<S, FixedValidity<48>>,
+    recursive_index: PageTableIndex,
+) -> Page<Size4KiB, FixedValidity<48>> {
     Page::from_page_table_indices(
         recursive_index,
         recursive_index,
@@ -943,12 +971,18 @@ fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) 
 }
 
 #[inline]
-fn p1_ptr(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> *mut PageTable {
+fn p1_ptr(
+    page: Page<Size4KiB, FixedValidity<48>>,
+    recursive_index: PageTableIndex,
+) -> *mut PageTable {
     p1_page(page, recursive_index).start_address().as_mut_ptr()
 }
 
 #[inline]
-fn p1_page(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> Page {
+fn p1_page(
+    page: Page<Size4KiB, FixedValidity<48>>,
+    recursive_index: PageTableIndex,
+) -> Page<Size4KiB, FixedValidity<48>> {
     Page::from_page_table_indices(
         recursive_index,
         page.p4_index(),
