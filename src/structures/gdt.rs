@@ -599,16 +599,21 @@ mod tests {
 
     #[test]
     fn policy_does_not_change_gdt_layout() {
-        assert_eq!(mem::size_of::<GlobalDescriptorTable>(), 72);
+        #[cfg(target_pointer_width = "64")]
+        const EXPECTED_SIZE: usize = 72;
+        #[cfg(target_pointer_width = "32")]
+        const EXPECTED_SIZE: usize = 68;
+
+        assert_eq!(mem::size_of::<GlobalDescriptorTable>(), EXPECTED_SIZE);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(
             mem::size_of::<GlobalDescriptorTable<8, crate::addr::FixedValidity<57>>>(),
-            72
+            EXPECTED_SIZE
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(
             mem::size_of::<GlobalDescriptorTable<8, crate::addr::RuntimeValidity>>(),
-            72
+            EXPECTED_SIZE
         );
         #[cfg(feature = "virt_addr_rt")]
         assert_eq!(

@@ -355,6 +355,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     }
 }
 
+#[cfg(feature = "virt_addr_57")]
 impl VirtAddrGeneric<FixedValidity<57>> {
     /// Returns the 9-bit level 5 page table index.
     #[inline]
@@ -385,10 +386,6 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     ///
     /// Runtime policies use the cached current address-space mode during this construction.
     #[inline]
-    #[cfg_attr(
-        not(all(feature = "instructions", target_arch = "x86_64")),
-        expect(dead_code)
-    )]
     pub(crate) fn new_with_validity(addr: u64) -> Self {
         // SAFETY: `V::bits()` is valid for `V`, so this is safe.
         match unsafe { try_new_with_bits(addr, V::bits()) } {
