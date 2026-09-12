@@ -92,7 +92,7 @@ impl VirtAddr {
 
     /// Tries to create a new canonical virtual address.
     ///
-    /// This function checks wether the given address is canonical
+    /// This function checks whether the given address is canonical
     /// and returns an error otherwise. An address is canonical
     /// if bits 48 to 64 are a correct sign
     /// extension (i.e. copies of bit 47).
@@ -267,7 +267,6 @@ impl VirtAddr {
     /// An implementation of steps_between that returns u64. Note that this
     /// function always returns the exact bound, so it doesn't need to return a
     /// lower and upper bound like steps_between does.
-    #[cfg(any(feature = "instructions", feature = "step_trait"))]
     pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
         let mut steps = end.0.checked_sub(start.0)?;
 
@@ -494,6 +493,37 @@ impl Step for VirtAddr {
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
         Self::backward_checked_u64(start, u64::try_from(count).ok()?)
     }
+
+    // Kani's bundled toolchain predates these methods being added to `Step`.
+    // Exclude them there so the crate still compiles under `cargo kani`.
+    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
+    #[cfg(not(kani))]
+    #[inline]
+    fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        match Self::forward_checked(start, count) {
+            Some(next) => (next, false),
+            None => (start, true),
+        }
+    }
+
+    // Kani's bundled toolchain predates these methods being added to `Step`.
+    // Exclude them there so the crate still compiles under `cargo kani`.
+    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
+    #[cfg(not(kani))]
+    #[inline]
+    fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        match Self::backward_checked(start, count) {
+            Some(next) => (next, false),
+            None => (start, true),
+        }
+    }
+}
+
+#[cfg(kani)]
+impl kani::Arbitrary for VirtAddr {
+    fn any() -> Self {
+        Self::new_truncate(kani::any())
+    }
 }
 
 /// A passed `u64` was not a valid physical address.
@@ -517,8 +547,9 @@ impl PhysAddr {
     /// ## Panics
     ///
     /// This function panics if a bit in the range 52 to 64 is set.
-    // If the `memory_encryption` feature has been enabled and an encryption bit has been
-    // configured, this also panics if the encryption bit is manually set in the address.
+    ///
+    /// If the `memory_encryption` feature has been enabled and an encryption bit has been
+    /// configured, this also panics if the encryption bit is manually set in the address.
     #[inline]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn new(addr: u64) -> Self {
@@ -716,6 +747,13 @@ impl Sub<PhysAddr> for PhysAddr {
     #[inline]
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
+    }
+}
+
+#[cfg(kani)]
+impl kani::Arbitrary for PhysAddr {
+    fn any() -> Self {
+        Self::new_truncate(kani::any())
     }
 }
 
@@ -932,6 +970,26 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "step_trait")]
+    fn virtaddr_step_overflowing() {
+        assert_eq!(
+            Step::forward_overflowing(VirtAddr(0x7fff_ffff_ffff), 1),
+            (VirtAddr(0xffff_8000_0000_0000), false)
+        );
+        assert_eq!(
+            Step::backward_overflowing(VirtAddr(0xffff_8000_0000_0000), 1),
+            (VirtAddr(0x7fff_ffff_ffff), false)
+        );
+        assert_eq!(
+            Step::forward_overflowing(VirtAddr(0), 0),
+            (VirtAddr(0), false)
+        );
+
+        assert!(Step::forward_overflowing(VirtAddr(0xffff_ffff_ffff_ffff), 1).1);
+        assert!(Step::backward_overflowing(VirtAddr(0), 1).1);
+    }
+
+    #[test]
     pub fn test_align_up() {
         // align 1
         assert_eq!(align_up(0, 1), 0);
@@ -1001,10 +1059,8 @@ mod proofs {
     // step starting from any address.
     #[kani::proof]
     fn forward_base_case() {
-        let start_raw: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start_raw) else {
-            return;
-        };
+        let start = kani::any::<VirtAddr>();
+        let start_raw = start.as_u64();
 
         // Adding 0 to any address should always yield the same address.
         let same = Step::forward(start, 0);
@@ -1038,10 +1094,7 @@ mod proofs {
     // same as taking one combined large step.
     #[kani::proof]
     fn forward_induction_step() {
-        let start_raw: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start_raw) else {
-            return;
-        };
+        let start = kani::any::<VirtAddr>();
 
         let count1: usize = kani::any();
         let count2: usize = kani::any();
@@ -1068,10 +1121,7 @@ mod proofs {
     // for all inputs for which `forward_checked` succeeds.
     #[kani::proof]
     fn forward_implies_backward() {
-        let start_raw: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start_raw) else {
-            return;
-        };
+        let start = kani::any::<VirtAddr>();
         let count: usize = kani::any();
 
         // If `forward_checked` succeeds...
@@ -1088,10 +1138,7 @@ mod proofs {
     // succeeds, `forward` succeeds as well.
     #[kani::proof]
     fn backward_implies_forward() {
-        let end_raw: u64 = kani::any();
-        let Ok(end) = VirtAddr::try_new(end_raw) else {
-            return;
-        };
+        let end = kani::any::<VirtAddr>();
         let count: usize = kani::any();
 
         // If `backward_checked` succeeds...
@@ -1113,10 +1160,7 @@ mod proofs {
     // `steps_between` for all inputs for which `forward_checked` succeeds.
     #[kani::proof]
     fn forward_implies_steps_between() {
-        let start: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start) else {
-            return;
-        };
+        let start = kani::any::<VirtAddr>();
         let count: usize = kani::any();
 
         // If `forward_checked` succeeds...
@@ -1132,14 +1176,8 @@ mod proofs {
     // succeeds, `forward` succeeds as well.
     #[kani::proof]
     fn steps_between_implies_forward() {
-        let start: u64 = kani::any();
-        let Ok(start) = VirtAddr::try_new(start) else {
-            return;
-        };
-        let end: u64 = kani::any();
-        let Ok(end) = VirtAddr::try_new(end) else {
-            return;
-        };
+        let start = kani::any::<VirtAddr>();
+        let end = kani::any::<VirtAddr>();
 
         // If `steps_between` succeeds...
         let Some(count) = Step::steps_between(&start, &end).1 else {

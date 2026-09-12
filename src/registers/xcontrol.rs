@@ -53,7 +53,7 @@ bitflags! {
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
-    use core::arch::asm;
+    use core::arch::x86_64::{_xgetbv, _xsetbv};
 
     impl XCr0 {
         /// Read the current set of XCR0 flags.
@@ -65,16 +65,7 @@ mod x86_64 {
         /// Read the current raw XCR0 value.
         #[inline]
         pub fn read_raw() -> u64 {
-            unsafe {
-                let (low, high): (u32, u32);
-                asm!(
-                    "xgetbv",
-                    in("ecx") 0,
-                    out("rax") low, out("rdx") high,
-                    options(nomem, nostack, preserves_flags),
-                );
-                ((high as u64) << 32) | (low as u64)
-            }
+            unsafe { _xgetbv(0) }
         }
 
         /// Write XCR0 flags.
@@ -133,16 +124,8 @@ mod x86_64 {
         /// enable features that are not supported by the architecture
         #[inline]
         pub unsafe fn write_raw(value: u64) {
-            let low = value as u32;
-            let high = (value >> 32) as u32;
-
             unsafe {
-                asm!(
-                    "xsetbv",
-                    in("ecx") 0,
-                    in("rax") low, in("rdx") high,
-                    options(nomem, nostack, preserves_flags),
-                );
+                _xsetbv(0, value);
             }
         }
 

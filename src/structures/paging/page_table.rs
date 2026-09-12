@@ -396,6 +396,30 @@ impl Step for PageTableIndex {
         let idx = usize::from(start).checked_sub(count)?;
         Some(Self::new(idx as u16))
     }
+
+    // Kani's bundled toolchain predates these methods being added to `Step`.
+    // Exclude them there so the crate still compiles under `cargo kani`.
+    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
+    #[cfg(not(kani))]
+    #[inline]
+    fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        match Self::forward_checked(start, count) {
+            Some(next) => (next, false),
+            None => (start, true),
+        }
+    }
+
+    // Kani's bundled toolchain predates these methods being added to `Step`.
+    // Exclude them there so the crate still compiles under `cargo kani`.
+    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
+    #[cfg(not(kani))]
+    #[inline]
+    fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        match Self::backward_checked(start, count) {
+            Some(next) => (next, false),
+            None => (start, true),
+        }
+    }
 }
 
 /// A 12-bit offset into a 4KiB Page.
@@ -491,5 +515,27 @@ impl PageTableLevel {
     /// Returns the alignment for the address space described by an entry in a table of this level.
     pub const fn entry_address_space_alignment(self) -> u64 {
         1u64 << (((self as u8 - 1) * 9) + 12)
+    }
+}
+
+#[cfg(all(test, feature = "step_trait"))]
+mod tests {
+    use super::*;
+    use core::iter::Step;
+
+    #[test]
+    fn page_table_index_step_overflowing() {
+        assert_eq!(
+            Step::forward_overflowing(PageTableIndex::new(0), 511),
+            (PageTableIndex::new(511), false)
+        );
+        assert_eq!(
+            Step::backward_overflowing(PageTableIndex::new(511), 511),
+            (PageTableIndex::new(0), false)
+        );
+
+        // Overflow the 0..512 range: only the flag is specified.
+        assert!(Step::forward_overflowing(PageTableIndex::new(511), 1).1);
+        assert!(Step::backward_overflowing(PageTableIndex::new(0), 1).1);
     }
 }

@@ -34,6 +34,7 @@ impl RdRand {
             }
         }
     }
+
     /// Uniformly sampled u32.
     /// May fail in rare circumstances or heavy load.
     #[inline]
@@ -49,6 +50,7 @@ impl RdRand {
             }
         }
     }
+
     /// Uniformly sampled u16.
     /// May fail in rare circumstances or heavy load.
     #[inline]

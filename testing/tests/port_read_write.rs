@@ -1,4 +1,3 @@
-#![feature(abi_x86_interrupt)]
 #![no_std]
 #![no_main]
 
@@ -16,7 +15,7 @@ const CRT_DATA_PORT: u16 = 0x3D5;
 // bits that won't crash the system when written to
 const OFFSET_REGISTER: u8 = 0x0A;
 
-// A randomly chosen value to test againts
+// A randomly chosen value to test against
 const TEST_VALUE: u8 = 0b10101010;
 
 /// This function is the entry point, since the linker looks for a function
