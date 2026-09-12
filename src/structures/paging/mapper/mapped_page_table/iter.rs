@@ -141,7 +141,7 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
 
     /// Increments the current P4 index.
     ///
-    /// This sets the lower indixes to zero.
+    /// This sets the lower indices to zero.
     /// When reaching the end, this returns [`None`] .
     fn increment_p4_index(&mut self) -> Option<()> {
         self.p4_index += 1;
@@ -159,7 +159,7 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
 
     /// Increments the current P3 index.
     ///
-    /// This sets the lower indixes to zero.
+    /// This sets the lower indices to zero.
     /// When reaching the end, this increments the next-higher index and returns [`None`].
     fn increment_p3_index(&mut self) -> Option<()> {
         self.p3_index += 1;
@@ -176,7 +176,7 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
 
     /// Increments the current P2 index.
     ///
-    /// This sets the lower indixes to zero.
+    /// This sets the lower indices to zero.
     /// When reaching the end, this increments the next-higher index and returns [`None`].
     fn increment_p2_index(&mut self) -> Option<()> {
         self.p2_index += 1;
