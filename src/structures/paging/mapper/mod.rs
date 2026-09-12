@@ -9,10 +9,10 @@ pub use self::mapped_page_table::{OffsetPageTable, PhysOffset};
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use crate::structures::paging::{
+    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
     frame_alloc::{FrameAllocator, FrameDeallocator},
     page::PageRangeInclusive,
     page_table::{PageTableEntry, PageTableFlags},
-    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
 };
 use crate::{PhysAddr, VirtAddr};
 

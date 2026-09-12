@@ -7,8 +7,8 @@
 
 use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-use crate::structures::paging::page_table::PHYSICAL_ADDRESS_MASK;
 use crate::structures::paging::PageTableFlags;
+use crate::structures::paging::page_table::PHYSICAL_ADDRESS_MASK;
 
 /// Position of the encryption (C/S) bit in the physical address
 pub(crate) static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);

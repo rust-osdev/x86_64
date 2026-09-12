@@ -250,14 +250,14 @@ impl PatMemoryType {
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
+    use crate::PhysAddr;
+    use crate::PrivilegeLevel;
     use crate::addr::VirtAddr;
     use crate::registers::rflags::RFlags;
     use crate::structures::gdt::SegmentSelector;
     use crate::structures::paging::Page;
     use crate::structures::paging::PhysFrame;
     use crate::structures::paging::Size4KiB;
-    use crate::PhysAddr;
-    use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
     use core::fmt;
@@ -265,7 +265,7 @@ mod x86_64 {
     #[cfg(doc)]
     use crate::registers::{
         control::Cr4Flags,
-        segmentation::{Segment, Segment64, CS, SS},
+        segmentation::{CS, SS, Segment, Segment64},
     };
     use core::arch::asm;
 

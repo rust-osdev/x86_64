@@ -3,12 +3,12 @@
 use bit_field::BitField;
 
 use crate::{
-    instructions::segmentation::{Segment, CS},
-    structures::paging::{
-        page::{NotGiantPageSize, PageRange},
-        Page, PageSize, Size2MiB, Size4KiB,
-    },
     PrivilegeLevel, VirtAddr,
+    instructions::segmentation::{CS, Segment},
+    structures::paging::{
+        Page, PageSize, Size2MiB, Size4KiB,
+        page::{NotGiantPageSize, PageRange},
+    },
 };
 use core::{arch::asm, cmp, convert::TryFrom, fmt};
 

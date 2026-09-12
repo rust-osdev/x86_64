@@ -1,14 +1,14 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+use crate::PrivilegeLevel;
 pub use crate::registers::segmentation::SegmentSelector;
 use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
-use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::{cmp, fmt, mem};
 // imports for intra-doc links
 #[cfg(doc)]
-use crate::registers::segmentation::{Segment, CS, SS};
+use crate::registers::segmentation::{CS, SS, Segment};
 
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 use core::sync::atomic::{AtomicU64 as EntryValue, Ordering};
@@ -193,8 +193,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     ///
     /// Panics if the GDT doesn't have enough free entries.
     #[inline]
-    #[rustversion::attr(since(1.83), const)]
-    pub fn append(&mut self, entry: Descriptor) -> SegmentSelector {
+    pub const fn append(&mut self, entry: Descriptor) -> SegmentSelector {
         let index = match entry {
             Descriptor::UserSegment(value) => {
                 if self.len > self.table.len().saturating_sub(1) {
@@ -246,8 +245,7 @@ impl<const MAX: usize> GlobalDescriptorTable<MAX> {
     }
 
     #[inline]
-    #[rustversion::attr(since(1.83), const)]
-    fn push(&mut self, value: u64) -> usize {
+    const fn push(&mut self, value: u64) -> usize {
         let index = self.len;
         self.table[index] = Entry::new(value);
         self.len += 1;

@@ -293,8 +293,7 @@ pub struct InterruptDescriptorTable {
     /// The virtual (linear) address that caused the `#PF` is stored in the `CR2` register.
     /// The saved instruction pointer points to the instruction that caused the `#PF`.
     ///
-    /// The page-fault error code is described by the
-    /// [`PageFaultErrorCode`](struct.PageFaultErrorCode.html) struct.
+    /// The page-fault error code is described by the [`PageFaultErrorCode`] struct.
     ///
     /// The vector number of the `#PF` exception is 14.
     pub page_fault: Entry<PageFaultHandlerFunc>,
@@ -449,8 +448,7 @@ pub struct InterruptDescriptorTable {
 impl InterruptDescriptorTable {
     /// Creates a new IDT filled with non-present entries.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn new() -> InterruptDescriptorTable {
+    pub const fn new() -> InterruptDescriptorTable {
         InterruptDescriptorTable {
             divide_error: Entry::missing(),
             debug: Entry::missing(),
@@ -826,7 +824,7 @@ impl<F> Entry<F> {
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
-        use crate::instructions::segmentation::{Segment, CS};
+        use crate::instructions::segmentation::{CS, Segment};
 
         let addr = addr.as_u64();
         self.pointer_low = addr as u16;

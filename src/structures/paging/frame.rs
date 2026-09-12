@@ -1,8 +1,10 @@
 //! Abstractions for default-sized and huge physical memory frames.
 
+use dep_const_fn::const_fn;
+
 use super::page::AddressNotAligned;
-use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
+use crate::structures::paging::page::{PageSize, Size4KiB};
 use core::convert::TryFrom;
 use core::fmt;
 use core::marker::PhantomData;
@@ -26,8 +28,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {
+    pub const fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
@@ -42,8 +43,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// The address must be correctly aligned.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
+    pub const unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
         PhysFrame {
             start_address,
             size: PhantomData,
@@ -62,10 +62,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// This function will panic if the resulting address is not valid.
     #[inline]
-    #[rustversion::attr(
-        since(1.61),
-        dep_const_fn::const_fn(cfg(not(feature = "memory_encryption")))
-    )]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub fn from_pfn(pfn: u64) -> Self {
         match Self::try_from_pfn(pfn) {
             Ok(frame) => frame,
@@ -85,10 +82,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// This function will return an error if the resulting address is not valid.
     #[inline]
-    #[rustversion::attr(
-        since(1.61),
-        dep_const_fn::const_fn(cfg(not(feature = "memory_encryption")))
-    )]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub fn try_from_pfn(pfn: u64) -> Result<Self, PfnNotValid> {
         let addr_raw = if let Some(addr_raw) = pfn.checked_mul(S::SIZE) {
             addr_raw
@@ -112,8 +106,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// The resulting address must be valid.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_pfn_unchecked(pfn: u64) -> Self {
+    pub const unsafe fn from_pfn_unchecked(pfn: u64) -> Self {
         PhysFrame {
             start_address: unsafe { PhysAddr::new_unsafe(pfn * S::SIZE) },
             size: PhantomData,
@@ -122,8 +115,7 @@ impl<S: PageSize> PhysFrame<S> {
 
     /// Returns the frame that contains the given physical address.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn containing_address(address: PhysAddr) -> Self {
+    pub const fn containing_address(address: PhysAddr) -> Self {
         PhysFrame {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -132,15 +124,13 @@ impl<S: PageSize> PhysFrame<S> {
 
     /// Returns the start address of the frame.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn start_address(self) -> PhysAddr {
+    pub const fn start_address(self) -> PhysAddr {
         self.start_address
     }
 
     /// Returns the size the frame (4KB, 2MB or 1GB).
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn size(self) -> u64 {
+    pub const fn size(self) -> u64 {
         S::SIZE
     }
 
@@ -160,22 +150,22 @@ impl<S: PageSize> PhysFrame<S> {
     /// assert_eq!(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0xC000_0000)).pfn(), 0x3);
     /// ```
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn pfn(self) -> u64 {
+    pub const fn pfn(self) -> u64 {
         self.start_address.as_u64() / S::SIZE
     }
 
     /// Returns a range of frames, exclusive `end`.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
+    pub const fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
         PhysFrameRange { start, end }
     }
 
     /// Returns a range of frames, inclusive `end`.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
+    pub const fn range_inclusive(
+        start: PhysFrame<S>,
+        end: PhysFrame<S>,
+    ) -> PhysFrameRangeInclusive<S> {
         PhysFrameRangeInclusive { start, end }
     }
 }

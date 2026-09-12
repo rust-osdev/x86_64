@@ -1,10 +1,10 @@
 //! Provides functions to read and write segment registers.
 
-pub use crate::registers::segmentation::{Segment, Segment64, CS, DS, ES, FS, GS, SS};
+pub use crate::registers::segmentation::{CS, DS, ES, FS, GS, SS, Segment, Segment64};
 use crate::{
+    VirtAddr,
     registers::model_specific::{FsBase, GsBase, Msr},
     structures::gdt::SegmentSelector,
-    VirtAddr,
 };
 use core::arch::asm;
 
