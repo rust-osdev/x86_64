@@ -449,8 +449,7 @@ pub struct InterruptDescriptorTable {
 impl InterruptDescriptorTable {
     /// Creates a new IDT filled with non-present entries.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn new() -> InterruptDescriptorTable {
+    pub const fn new() -> InterruptDescriptorTable {
         InterruptDescriptorTable {
             divide_error: Entry::missing(),
             debug: Entry::missing(),
