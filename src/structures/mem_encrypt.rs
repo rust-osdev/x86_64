@@ -8,14 +8,20 @@
 use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use crate::structures::paging::PageTableFlags;
-use crate::structures::paging::page_table::PHYSICAL_ADDRESS_MASK;
 
 /// Position of the encryption (C/S) bit in the physical address
+///
+/// If a memory encryption configuration has been set up, this contains a bit
+/// mask with just that bit set.
 pub(crate) static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);
 
 /// Is the encryption bit reversed (i.e. its presence denote that the page is _decrypted_ rather
 /// than encrypted)
 static ENC_BIT_REVERSED: AtomicBool = AtomicBool::new(false);
+
+/// The mask of valid physical address bits.
+#[cfg(feature = "memory_encryption")]
+pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_ffffu64);
 
 /// Defines the configuration for memory encryption
 #[derive(Debug)]
@@ -34,11 +40,19 @@ pub enum MemoryEncryptionConfiguration {
 }
 
 /// Enable memory encryption by defining the physical address bit that is used to mark a page
-/// encrypted (or shared) in a page table entry
+/// encrypted (or shared) in a page table entry.
+///
+/// Once memory encryption has been enabled [`PhysAddr::new`](crate::addr::PhysAddr::new) will not
+/// allow any bits at or above the encryption bit to be set.
 ///
 /// # Safety
+///
 /// Caller must make sure that any existing page table entry is discarded or adapted to take this
 /// bit into consideration.
+///
+/// The caller must ensure that there are no [`PhysAddr`](crate::addr::PhysAddr) instances that
+/// have the encryption bit or any bits above it set.
+///
 /// The configuration provided by caller must be correct, otherwise physical address bits will
 /// incorrectly be considered as page table flags.
 pub unsafe fn enable_memory_encryption(configuration: MemoryEncryptionConfiguration) {
@@ -47,9 +61,10 @@ pub unsafe fn enable_memory_encryption(configuration: MemoryEncryptionConfigurat
         MemoryEncryptionConfiguration::SharedBit(pos) => (pos, true),
     };
 
-    let c_bit_mask = 1u64 << bit_position;
+    let addr_mask = u64::MAX << bit_position;
+    PHYSICAL_ADDRESS_MASK.fetch_and(!addr_mask, Ordering::Relaxed);
 
-    PHYSICAL_ADDRESS_MASK.fetch_and(!c_bit_mask, Ordering::Relaxed);
+    let c_bit_mask = 1u64 << bit_position;
     ENC_BIT_MASK.store(c_bit_mask, Ordering::Relaxed);
     ENC_BIT_REVERSED.store(reversed, Ordering::Release);
 }
