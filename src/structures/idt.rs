@@ -293,8 +293,7 @@ pub struct InterruptDescriptorTable {
     /// The virtual (linear) address that caused the `#PF` is stored in the `CR2` register.
     /// The saved instruction pointer points to the instruction that caused the `#PF`.
     ///
-    /// The page-fault error code is described by the
-    /// [`PageFaultErrorCode`](struct.PageFaultErrorCode.html) struct.
+    /// The page-fault error code is described by the [`PageFaultErrorCode`] struct.
     ///
     /// The vector number of the `#PF` exception is 14.
     pub page_fault: Entry<PageFaultHandlerFunc>,
