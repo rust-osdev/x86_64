@@ -24,7 +24,7 @@ jobs:
       matrix:
         rust:
           - nightly
-          - 1.59
+          - 1.98
     runs-on: ubuntu-latest
     env:
       # rustup prioritizes environment variables over rust-toolchain.toml files.

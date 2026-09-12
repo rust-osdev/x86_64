@@ -12,6 +12,7 @@
 - [make page types `repr(transparent)` and range types `repr(Rust)`](https://github.com/rust-osdev/x86_64/pull/584)
 - [add `MappedPageTable::display`](https://github.com/rust-osdev/x86_64/pull/574)
   - The mappings of a `MappedPageTable` can now be displayed.
+- [Increase the Minimum Supported Rust Version to 1.98](https://github.com/rust-osdev/x86_64/pull/604)
 
 # 0.15.5 – 2026-07-11
 
