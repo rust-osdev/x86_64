@@ -1,9 +1,9 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
-use crate::sealed::Sealed;
-use crate::structures::paging::page_table::PageTableLevel;
-use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
+use crate::sealed::Sealed;
+use crate::structures::paging::PageTableIndex;
+use crate::structures::paging::page_table::PageTableLevel;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]

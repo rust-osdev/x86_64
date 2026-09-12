@@ -3,8 +3,8 @@
 use dep_const_fn::const_fn;
 
 use super::page::AddressNotAligned;
-use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
+use crate::structures::paging::page::{PageSize, Size4KiB};
 use core::convert::TryFrom;
 use core::fmt;
 use core::marker::PhantomData;

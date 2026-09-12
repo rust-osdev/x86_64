@@ -825,7 +825,7 @@ impl<F> Entry<F> {
     #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
     #[inline]
     pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {
-        use crate::instructions::segmentation::{Segment, CS};
+        use crate::instructions::segmentation::{CS, Segment};
 
         let addr = addr.as_u64();
         self.pointer_low = addr as u16;

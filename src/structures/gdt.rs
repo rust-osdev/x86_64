@@ -1,14 +1,14 @@
 //! Types for the Global Descriptor Table and segment selectors.
 
+use crate::PrivilegeLevel;
 pub use crate::registers::segmentation::SegmentSelector;
 use crate::structures::tss::{InvalidIoMap, TaskStateSegment};
-use crate::PrivilegeLevel;
 use bit_field::BitField;
 use bitflags::bitflags;
 use core::{cmp, fmt, mem};
 // imports for intra-doc links
 #[cfg(doc)]
-use crate::registers::segmentation::{Segment, CS, SS};
+use crate::registers::segmentation::{CS, SS, Segment};
 
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 use core::sync::atomic::{AtomicU64 as EntryValue, Ordering};
