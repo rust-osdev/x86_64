@@ -16,7 +16,7 @@ name = "x86_64"
 readme = "README.md"
 repository = "https://github.com/rust-osdev/x86_64"
 version = "0.15.5"
-edition = "2018"
+edition = "2024"
 rust-version = "1.98"
 
 [dependencies]
