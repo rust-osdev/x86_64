@@ -369,7 +369,9 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Creates a checked virtual address for an internal policy-generic API.
     ///
     /// Runtime policies use the cached current address-space mode during this construction.
+    /// Reserved for future extensions to the `paging` module.
     #[inline]
+    #[expect(unused)]
     pub(crate) fn new_with_validity(addr: u64) -> Self {
         // SAFETY: `V::bits()` is valid for `V`, so this is safe.
         match unsafe { try_new_with_bits(addr, V::bits()) } {
@@ -379,19 +381,25 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     }
 
     /// Returns the first address in the upper canonical half for this policy.
+    /// Reserved for future extensions to the `paging` module.
     #[inline]
+    #[expect(unused)]
     pub(crate) fn upper_half_start() -> Self {
         new_truncate_with_bits(1u64 << (V::bits() - 1), V::bits())
     }
 
     /// Returns the final address in the lower canonical half for this policy.
+    /// Reserved for future extensions to the `paging` module.
     #[inline]
+    #[expect(unused)]
     pub(crate) fn lower_half_end() -> Self {
         unsafe { Self::new_unsafe((1u64 << (V::bits() - 1)) - 1) }
     }
 
     /// Returns the greatest canonical address for this policy.
+    /// Reserved for future extensions to the `paging` module.
     #[inline]
+    #[expect(unused)]
     pub(crate) fn max_value() -> Self {
         unsafe { Self::new_unsafe(u64::MAX) }
     }
