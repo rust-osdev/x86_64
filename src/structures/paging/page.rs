@@ -323,10 +323,6 @@ impl<S: PageSize> Step for Page<S> {
         })
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::forward_checked(start, count) {
             Some(next) => (next, false),
@@ -334,10 +330,6 @@ impl<S: PageSize> Step for Page<S> {
         }
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::backward_checked(start, count) {
             Some(next) => (next, false),
