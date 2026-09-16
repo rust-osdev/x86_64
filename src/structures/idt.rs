@@ -294,7 +294,7 @@ pub struct InterruptDescriptorTable {
     /// The saved instruction pointer points to the instruction that caused the `#PF`.
     ///
     /// The page-fault error code is described by the
-    /// [`PageFaultErrorCode`](struct.PageFaultErrorCode.html) struct.
+    /// [`PageFaultErrorCode`] struct.
     ///
     /// The vector number of the `#PF` exception is 14.
     pub page_fault: Entry<PageFaultHandlerFunc>,
