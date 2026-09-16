@@ -486,10 +486,6 @@ impl Step for VirtAddr {
         Self::backward_checked_u64(start, u64::try_from(count).ok()?)
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     #[inline]
     fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::forward_checked(start, count) {
@@ -498,10 +494,6 @@ impl Step for VirtAddr {
         }
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     #[inline]
     fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::backward_checked(start, count) {
