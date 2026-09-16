@@ -132,7 +132,9 @@ impl VirtAddrGeneric<RuntimeValidity> {
     /// runtime address operation initializes the cache from `CR4.LA57`.
     #[inline]
     pub fn new_truncate(addr: u64) -> Self {
-        new_truncate_with_bits(addr, cached_virtual_address_bits())
+        // SAFETY: `cached_virtual_address_bits()` is valid, at least when the cache is initialized,
+        // so this is safe.
+        unsafe { new_truncate_with_bits(addr, cached_virtual_address_bits()) }
     }
 
     /// Creates a virtual address from the given pointer.

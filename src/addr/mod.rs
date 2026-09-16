@@ -54,8 +54,16 @@ const unsafe fn try_new_with_bits<V: VirtAddrValidity>(
 
 /// Creates a canonical virtual address by discarding invalid high bits, with the given number of
 /// bits.
+///
+/// # Safety
+///
+/// The caller must ensure that `bits` is valid for the selected validity policy. This is not
+/// checked.
 #[inline]
-const fn new_truncate_with_bits<V: VirtAddrValidity>(addr: u64, bits: usize) -> VirtAddrGeneric<V> {
+const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
+    addr: u64,
+    bits: usize,
+) -> VirtAddrGeneric<V> {
     VirtAddrGeneric(canonicalize_with_bits(addr, bits), PhantomData)
 }
 
@@ -218,7 +226,8 @@ where
     /// an address is canonical, use [`new`](Self::new) or [`try_new`](Self::try_new).
     #[inline]
     pub const fn new_truncate(addr: u64) -> Self {
-        new_truncate_with_bits(addr, BITS)
+        // SAFETY: `BITS` is valid for `FixedValidity<BITS>`, so this is safe.
+        unsafe { new_truncate_with_bits(addr, BITS) }
     }
 
     /// Creates a fixed-width virtual address from the given pointer.
@@ -383,15 +392,16 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Returns the first address in the upper canonical half for this policy.
     /// Reserved for future extensions to the `paging` module.
     #[inline]
-    #[expect(unused)]
+    #[cfg_attr(not(test), expect(dead_code))]
     pub(crate) fn upper_half_start() -> Self {
-        new_truncate_with_bits(1u64 << (V::bits() - 1), V::bits())
+        // SAFETY: `V::bits()` is valid for `V`, so this is safe.
+        unsafe { Self::new_unsafe((1u64 << (V::bits() - 1)).wrapping_neg()) }
     }
 
     /// Returns the final address in the lower canonical half for this policy.
     /// Reserved for future extensions to the `paging` module.
     #[inline]
-    #[expect(unused)]
+    #[cfg_attr(not(test), expect(dead_code))]
     pub(crate) fn lower_half_end() -> Self {
         unsafe { Self::new_unsafe((1u64 << (V::bits() - 1)) - 1) }
     }
@@ -401,6 +411,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     #[inline]
     #[expect(unused)]
     pub(crate) fn max_value() -> Self {
+        // SAFETY: `u64::MAX` is a valid canonical address for any address-space mode, so this is safe.
         unsafe { Self::new_unsafe(u64::MAX) }
     }
 
@@ -994,6 +1005,24 @@ mod tests {
             assert!(VirtAddr57::try_new(0x0100_0000_0000_0000).is_err());
             assert!(VirtAddr57::try_new(0xff00_0000_0000_0000).is_ok());
             assert!(VirtAddr57::try_new(0x0000_8000_0000_0000).is_ok());
+        }
+    }
+
+    #[test]
+    fn hole_border() {
+        assert_eq!(VirtAddr48::lower_half_end().as_u64(), 0x0000_7fff_ffff_ffff);
+        assert_eq!(
+            VirtAddr48::upper_half_start().as_u64(),
+            0xffff_8000_0000_0000
+        );
+
+        #[cfg(feature = "virt_addr_57")]
+        {
+            assert_eq!(VirtAddr57::lower_half_end().as_u64(), 0x00ff_ffff_ffff_ffff);
+            assert_eq!(
+                VirtAddr57::upper_half_start().as_u64(),
+                0xff00_0000_0000_0000
+            );
         }
     }
 
