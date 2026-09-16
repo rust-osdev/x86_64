@@ -149,7 +149,6 @@ pub fn int3() {
 /// crash if you invoke a double-fault (#8) or machine-check (#18) exception.
 /// It can also cause memory/register corruption depending on the interrupt
 /// implementation (if it expects values/pointers to be passed in registers).
-#[cfg(feature = "asm_const")]
 pub unsafe fn software_interrupt<const NUM: u8>() {
     unsafe {
         asm!("int {num}", num = const NUM, options(nomem, nostack));

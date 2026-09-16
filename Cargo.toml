@@ -28,9 +28,8 @@ const_fn = "0.4.11"
 default = ["nightly", "instructions"]
 instructions = []
 memory_encryption = []
-nightly = ["step_trait", "abi_x86_interrupt", "asm_const"]
+nightly = ["step_trait", "abi_x86_interrupt"]
 abi_x86_interrupt = []
-asm_const = []
 step_trait = []
 doc_cfg = []
 
