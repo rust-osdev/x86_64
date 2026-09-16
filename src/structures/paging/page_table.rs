@@ -5,10 +5,12 @@ use core::fmt;
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
 #[cfg(feature = "memory_encryption")]
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::Ordering;
 
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
+#[cfg(feature = "memory_encryption")]
+use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
 
 use bitflags::bitflags;
 use dep_const_fn::const_fn;
@@ -22,10 +24,6 @@ pub enum FrameError {
     /// as return type, so a huge frame can't be returned.
     HugeFrame,
 }
-
-/// The mask used to remove flags from a page table entry to obtain the physical address
-#[cfg(feature = "memory_encryption")]
-pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_f000u64);
 
 /// A 64-bit page table entry.
 #[derive(Clone)]
@@ -109,13 +107,13 @@ impl PageTableEntry {
     #[inline(always)]
     #[cfg(not(feature = "memory_encryption"))]
     const fn physical_address_mask() -> u64 {
-        0x000f_ffff_ffff_f000u64
+        0x000f_ffff_ffff_f000
     }
 
     #[inline(always)]
     #[cfg(feature = "memory_encryption")]
     fn physical_address_mask() -> u64 {
-        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
+        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed) & !0xfff
     }
 }
 
