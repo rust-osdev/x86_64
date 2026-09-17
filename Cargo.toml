@@ -33,9 +33,6 @@ abi_x86_interrupt = []
 step_trait = []
 doc_cfg = []
 
-# These are deprecated and no longer needed:
-doc_auto_cfg = []
-
 [package.metadata.docs.rs]
 all-features = true
 
