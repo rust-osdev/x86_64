@@ -25,7 +25,7 @@ volatile = "0.4.4"
 const_fn = "0.4.11"
 
 [features]
-default = ["nightly", "instructions"]
+default = ["instructions"]
 instructions = []
 memory_encryption = []
 nightly = ["step_trait", "abi_x86_interrupt"]
