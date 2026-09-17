@@ -1,6 +1,6 @@
 //! Representations of various x86 specific structures and descriptor tables.
 
-use crate::VirtAddr;
+use crate::{addr::VirtValidity, VirtAddr};
 
 pub mod gdt;
 
@@ -16,11 +16,11 @@ pub mod tss;
 /// This is in a format suitable for giving to 'lgdt' or 'lidt'.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed(2))]
-pub struct DescriptorTablePointer {
+pub struct DescriptorTablePointer<V: VirtValidity> {
     /// Size of the DT in bytes - 1.
     pub limit: u16,
     /// Pointer to the memory region containing the DT.
-    pub base: VirtAddr,
+    pub base: VirtAddr<V>,
 }
 
 #[cfg(test)]

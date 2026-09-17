@@ -2,6 +2,7 @@
 
 pub use crate::registers::segmentation::{Segment, Segment64, CS, DS, ES, FS, GS, SS};
 use crate::{
+    addr::VirtValidity,
     registers::model_specific::{FsBase, GsBase, Msr},
     structures::gdt::SegmentSelector,
     VirtAddr,
@@ -41,7 +42,7 @@ macro_rules! segment64_impl {
         impl Segment64 for $type {
             const BASE: Msr = <$base>::MSR;
             #[inline]
-            fn read_base() -> VirtAddr {
+            fn read_base<V: VirtValidity>() -> VirtAddr<V> {
                 unsafe {
                     let val: u64;
                     asm!(concat!("rd", $name, "base {}"), out(reg) val, options(nomem, nostack, preserves_flags));
@@ -50,7 +51,7 @@ macro_rules! segment64_impl {
             }
 
             #[inline]
-            unsafe fn write_base(base: VirtAddr) {
+            unsafe fn write_base<V: VirtValidity>(base: VirtAddr<V>) {
                 unsafe{
                     asm!(concat!("wr", $name, "base {}"), in(reg) base.as_u64(), options(nostack, preserves_flags));
                 }

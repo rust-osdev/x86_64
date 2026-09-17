@@ -3,6 +3,7 @@
 use bit_field::BitField;
 
 use crate::{
+    addr::VirtValidity,
     instructions::segmentation::{Segment, CS},
     structures::paging::{
         page::{NotGiantPageSize, PageRange},
@@ -14,7 +15,7 @@ use core::{arch::asm, cmp, convert::TryFrom, fmt};
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
-pub fn flush(addr: VirtAddr) {
+pub fn flush<V: VirtValidity>(addr: VirtAddr<V>) {
     unsafe {
         asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
     }
@@ -30,9 +31,9 @@ pub fn flush_all() {
 
 /// The Invalidate PCID Command to execute.
 #[derive(Debug)]
-pub enum InvPcidCommand {
+pub enum InvPcidCommand<V: VirtValidity> {
     /// The logical processor invalidates mappings—except global translations—for the linear address and PCID specified.
-    Address(VirtAddr, Pcid),
+    Address(VirtAddr<V>, Pcid),
 
     /// The logical processor invalidates all mappings—except global translations—associated with the PCID.
     Single(Pcid),
@@ -47,7 +48,7 @@ pub enum InvPcidCommand {
 // TODO: Remove this in the next breaking release.
 #[deprecated = "please use `InvPcidCommand` instead"]
 #[doc(hidden)]
-pub type InvPicdCommand = InvPcidCommand;
+pub type InvPicdCommand<V> = InvPcidCommand<V>;
 
 /// The INVPCID descriptor comprises 128 bits and consists of a PCID and a linear address.
 /// For INVPCID type 0, the processor uses the full 64 bits of the linear address even outside 64-bit mode; the linear address is not used for other INVPCID types.
@@ -98,7 +99,7 @@ impl fmt::Display for PcidTooBig {
 ///
 /// This function is unsafe as it requires CPUID.(EAX=07H, ECX=0H):EBX.INVPCID to be 1.
 #[inline]
-pub unsafe fn flush_pcid(command: InvPcidCommand) {
+pub unsafe fn flush_pcid<V: VirtValidity>(command: InvPcidCommand<V>) {
     let mut desc = InvpcidDescriptor {
         pcid: 0,
         address: 0,
@@ -200,7 +201,7 @@ impl Invlpgb {
     }
 
     /// Create a `InvlpgbFlushBuilder`.
-    pub fn build(&self) -> InvlpgbFlushBuilder<'_> {
+    pub fn build<V: VirtValidity>(&self) -> InvlpgbFlushBuilder<'_, V> {
         InvlpgbFlushBuilder {
             invlpgb: self,
             page_range: None,
@@ -225,12 +226,12 @@ impl Invlpgb {
 /// A builder struct to construct the parameters for the `invlpgb` instruction.
 #[derive(Debug, Clone)]
 #[must_use]
-pub struct InvlpgbFlushBuilder<'a, S = Size4KiB>
+pub struct InvlpgbFlushBuilder<'a, V: VirtValidity, S = Size4KiB>
 where
     S: NotGiantPageSize,
 {
     invlpgb: &'a Invlpgb,
-    page_range: Option<PageRange<S>>,
+    page_range: Option<PageRange<V, S>>,
     pcid: Option<Pcid>,
     asid: Option<u16>,
     include_global: bool,
@@ -238,15 +239,16 @@ where
     include_nested_translations: bool,
 }
 
-impl<'a, S> InvlpgbFlushBuilder<'a, S>
+impl<'a, S, V> InvlpgbFlushBuilder<'a, V, S>
 where
     S: NotGiantPageSize,
+    V: VirtValidity,
 {
     /// Flush a range of pages.
     ///
     /// If the range doesn't fit within `invlpgb_count_max`, `invlpgb` is
     /// executed multiple times.
-    pub fn pages<T>(self, page_range: PageRange<T>) -> InvlpgbFlushBuilder<'a, T>
+    pub fn pages<T>(self, page_range: PageRange<V, T>) -> InvlpgbFlushBuilder<'a, V, T>
     where
         T: NotGiantPageSize,
     {
@@ -317,11 +319,11 @@ where
         if let Some(mut pages) = self.page_range {
             while !pages.is_empty() {
                 // Calculate out how many pages we still need to flush.
-                let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).0;
+                let count = Page::<V, S>::steps_between_impl(&pages.start, &pages.end).0;
 
                 // Make sure that we never jump the gap in the address space when flushing.
                 let second_half_start =
-                    Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
+                    Page::<V, S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
                 let count = if pages.start < second_half_start {
                     let count_to_second_half =
                         Page::steps_between_impl(&pages.start, &second_half_start).0;
@@ -355,7 +357,7 @@ where
             }
         } else {
             unsafe {
-                flush_broadcast::<S>(
+                flush_broadcast::<S, V>(
                     None,
                     self.pcid,
                     self.asid,
@@ -389,8 +391,8 @@ impl fmt::Display for AsidOutOfRangeError {
 
 /// See `INVLPGB` in AMD64 Architecture Programmer's Manual Volume 3
 #[inline]
-unsafe fn flush_broadcast<S>(
-    va_and_count: Option<(Page<S>, u16)>,
+unsafe fn flush_broadcast<S, V: VirtValidity>(
+    va_and_count: Option<(Page<V, S>, u16)>,
     pcid: Option<Pcid>,
     asid: Option<u16>,
     include_global: bool,

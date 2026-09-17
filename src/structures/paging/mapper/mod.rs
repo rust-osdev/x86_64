@@ -6,11 +6,14 @@ pub use self::offset_page_table::OffsetPageTable;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
-use crate::structures::paging::{
-    frame_alloc::{FrameAllocator, FrameDeallocator},
-    page::PageRangeInclusive,
-    page_table::PageTableFlags,
-    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+use crate::{
+    addr::VirtValidity,
+    structures::paging::{
+        frame_alloc::{FrameAllocator, FrameDeallocator},
+        page::PageRangeInclusive,
+        page_table::PageTableFlags,
+        Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    },
 };
 use crate::{PhysAddr, VirtAddr};
 
@@ -25,7 +28,7 @@ pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB>
 impl<T> MapperAllSizes for T where T: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}
 
 /// Provides methods for translating virtual addresses.
-pub trait Translate {
+pub trait Translate<V: VirtValidity> {
     /// Return the frame that the given virtual address is mapped to and the offset within that
     /// frame.
     ///
@@ -33,7 +36,7 @@ pub trait Translate {
     /// frame is returned. Otherwise an error value is returned.
     ///
     /// This function works with huge pages of all sizes.
-    fn translate(&self, addr: VirtAddr) -> TranslateResult;
+    fn translate(&self, addr: VirtAddr<V>) -> TranslateResult;
 
     /// Translates the given virtual address to the physical address that it maps to.
     ///

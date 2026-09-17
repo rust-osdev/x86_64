@@ -1,6 +1,6 @@
 //! Provides a type for the task state segment structure.
 
-use crate::VirtAddr;
+use crate::{addr::VirtValidity, VirtAddr};
 use core::{
     fmt::{self, Display},
     mem::size_of,
@@ -11,15 +11,15 @@ use core::{
 /// but is used for stack switching when an interrupt or exception occurs.
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed(4))]
-pub struct TaskStateSegment {
+pub struct TaskStateSegment<V: VirtValidity> {
     reserved_1: u32,
     /// The full 64-bit canonical forms of the stack pointers (RSP) for privilege levels 0-2.
     /// The stack pointers used when a privilege level change occurs from a lower privilege level to a higher one.
-    pub privilege_stack_table: [VirtAddr; 3],
+    pub privilege_stack_table: [VirtAddr<V>; 3],
     reserved_2: u64,
     /// The full 64-bit canonical forms of the interrupt stack table (IST) pointers.
     /// The stack pointers used when an entry in the Interrupt Descriptor Table has an IST value other than 0.
-    pub interrupt_stack_table: [VirtAddr; 7],
+    pub interrupt_stack_table: [VirtAddr<V>; 7],
     reserved_3: u64,
     reserved_4: u16,
     /// The 16-bit offset to the I/O permission bit map from the 64-bit TSS base. It must not
@@ -27,7 +27,7 @@ pub struct TaskStateSegment {
     pub iomap_base: u16,
 }
 
-impl TaskStateSegment {
+impl<V: VirtValidity> TaskStateSegment<V> {
     /// Creates a new TSS with zeroed privilege and interrupt stack table and an
     /// empty I/O-Permission Bitmap.
     ///
@@ -35,11 +35,14 @@ impl TaskStateSegment {
     /// `size_of::<TaskStateSegment>() - 1`, this means that `iomap_base` is
     /// initialized to `size_of::<TaskStateSegment>()`.
     #[inline]
-    pub const fn new() -> TaskStateSegment {
+    pub const fn new() -> Self
+    where
+        V: [const] VirtValidity,
+    {
         TaskStateSegment {
             privilege_stack_table: [VirtAddr::zero(); 3],
             interrupt_stack_table: [VirtAddr::zero(); 7],
-            iomap_base: size_of::<TaskStateSegment>() as u16,
+            iomap_base: size_of::<Self>() as u16,
             reserved_1: 0,
             reserved_2: 0,
             reserved_3: 0,
@@ -48,7 +51,7 @@ impl TaskStateSegment {
     }
 }
 
-impl Default for TaskStateSegment {
+impl<V: VirtValidity> Default for TaskStateSegment<V> {
     #[inline]
     fn default() -> Self {
         Self::new()
