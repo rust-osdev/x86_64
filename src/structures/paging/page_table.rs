@@ -13,7 +13,7 @@ use crate::addr::PhysAddr;
 use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
 
 use bitflags::bitflags;
-use dep_const_fn::const_fn;
+use const_fn::const_fn;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]

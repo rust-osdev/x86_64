@@ -1,6 +1,6 @@
 //! Abstractions for default-sized and huge physical memory frames.
 
-use dep_const_fn::const_fn;
+use const_fn::const_fn;
 
 use super::page::AddressNotAligned;
 use crate::PhysAddr;

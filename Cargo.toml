@@ -22,20 +22,19 @@ rust-version = "1.98"
 bit_field = "0.10.1"
 bitflags = "2.3.2"
 volatile = "0.4.4"
-dep_const_fn = { package = "const_fn", version = "0.4.11" }
+const_fn = "0.4.11"
 
 [features]
 default = ["nightly", "instructions"]
 instructions = []
 memory_encryption = []
-nightly = ["const_fn", "step_trait", "abi_x86_interrupt", "asm_const"]
+nightly = ["step_trait", "abi_x86_interrupt", "asm_const"]
 abi_x86_interrupt = []
 asm_const = []
 step_trait = []
 doc_cfg = []
 
 # These are deprecated and no longer needed:
-const_fn = []
 doc_auto_cfg = []
 
 [package.metadata.docs.rs]

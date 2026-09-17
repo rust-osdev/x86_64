@@ -14,7 +14,7 @@ use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 
 use bit_field::BitField;
-use dep_const_fn::const_fn;
+use const_fn::const_fn;
 
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
