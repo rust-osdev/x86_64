@@ -98,7 +98,7 @@ jobs:
 
       - name: Cache binaries
         id: cache-bin
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: binaries
           key: ${{ runner.OS }}-binaries
@@ -176,7 +176,10 @@ jobs:
           cache-targets: false
       - run: cargo install cargo-semver-checks --locked
       - name: Check semver
-        run: cargo +stable semver-checks check-release --default-features
+        # don't check `step_trait` feature, which still changes frequently on nightly and leads
+        # to errors in this job (cargo-semver-checks mainly supports stable, so there might be
+        # errors until the nightly change reaches stable).
+        run: cargo +stable semver-checks check-release --only-explicit-features --features instructions,abi_x86_interrupt,asm_const,const_fn
 
   typos:
     name: Typos
