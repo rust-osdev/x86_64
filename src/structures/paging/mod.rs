@@ -1,6 +1,14 @@
 //! Abstractions for page tables and other paging related structures.
 //!
 //! Page tables translate virtual memory “pages” to physical memory “frames”.
+//!
+//! ## Virtual address width
+//!
+//! Enabling `default_virt_addr_57` changes the [`crate::VirtAddr`] type to use 57-bit
+//! canonical addresses. The paging abstractions in this module currently retain their
+//! 48-bit address-space assumptions, including the canonical-address gap handling in
+//! page ranges and mapper range operations. Those operations do not yet provide full
+//! five-level paging address-space coverage.
 
 pub use self::frame::PhysFrame;
 pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
