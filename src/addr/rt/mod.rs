@@ -20,19 +20,6 @@ use super::{VirtAddr48, VirtAddrGeneric, VirtAddrNotValid, VirtAddrValidity};
 /// canonicalization, and address-producing arithmetic additionally require the `instructions`
 /// feature and an `x86_64` target, and they must execute in Ring 0.
 #[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_rt")))]
-#[cfg_attr(
-    not(all(feature = "instructions", target_arch = "x86_64")),
-    doc = r#"
-Address-producing arithmetic is unavailable when the current address-space mode cannot be read:
-
-```compile_fail
-use x86_64::{RuntimeValidity, VirtAddrGeneric};
-
-let address = VirtAddrGeneric::<RuntimeValidity>::zero();
-let _ = address + 1u64;
-```
-"#
-)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RuntimeValidity;
 

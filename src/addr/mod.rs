@@ -35,7 +35,7 @@ const fn canonicalize_with_bits(addr: u64, bits: usize) -> u64 {
 
 /// Tries to create a new canonical virtual address with the given number of bits.
 ///
-/// # Safety
+/// ## Safety
 ///
 /// The caller must ensure that `bits` is valid for the selected validity policy. This is not
 /// checked.
@@ -52,10 +52,10 @@ const unsafe fn try_new_with_bits<V: VirtAddrValidity>(
     }
 }
 
-/// Creates a canonical virtual address by discarding invalid high bits, with the given number of
-/// bits.
+/// Creates a canonical virtual address by discarding invalid high bits and sign-extending the most
+/// significant valid bit, with the given number of bits.
 ///
-/// # Safety
+/// ## Safety
 ///
 /// The caller must ensure that `bits` is valid for the selected validity policy. This is not
 /// checked.
@@ -69,16 +69,14 @@ const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
 
 /// A canonical 64-bit virtual memory address.
 ///
-/// This is a wrapper type around an `u64`, so it is always 8 bytes, even when compiled
-/// on non 64-bit systems. The
-/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
-/// between `u64` and `usize`.
+/// ## Virtual Address Modes and Validity Policies
 ///
 /// On `x86_64`, virtual addresses are canonical when all bits above the most significant valid bit
-/// are copies of that bit. Currently, two address-space modes are supported on `x86_64`:
+/// are copies of that bit. Currently, two paging levels are supported on `x86_64`, which correspond
+/// to two virtual address-space modes:
 ///
-/// - Four-level paging (48-bit): The most significant valid bit is bit 47.
-/// - Five-level paging (57-bit): The most significant valid bit is bit 56.
+/// - Four-level paging: 48 bits (bit 47 - bit 0) are valid in virtual addresses.
+/// - Five-level paging: 57 bits (bit 56 - bit 0) are valid in virtual addresses.
 ///
 /// [`VirtAddrGeneric`] uses [`VirtAddrValidity`] to create different types of virtual addresses for
 /// different modes:
@@ -91,7 +89,36 @@ const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
 ///   active address-space mode. Validity is checked only when an address is created. A later
 ///   address-space mode change does not invalidate existing values.
 ///
-/// [`VirtAddr48`] and `VirtAddr57` provide const-capable constructors and accessors.
+/// ## Representation
+///
+/// [`VirtAddrGeneric`] is a wrapper type around an `u64`, so it is always 8 bytes, even when
+/// compiled on non-64-bit systems. The
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for
+/// performing conversions between `u64` and `usize`, when using this type on non-64-bit systems.
+///
+/// ## Creation
+///
+/// Virtual addresses can be created by using the [`new`](Self::new), [`try_new`](Self::try_new),
+/// [`new_truncate`](Self::new_truncate), and [`new_unsafe`](Self::new_unsafe) methods. `new`, `try_new`,
+/// `new_truncate` are not available for `VirtAddrRT` in const contexts, but `new_unsafe` is always
+/// available.
+///
+/// [`zero`](Self::zero) can be used to create a virtual address that points to `0`.
+///
+/// ## Conversion
+///
+/// Virtual addresses can be converted to `u64` by using the [`as_u64`](Self::as_u64) method. They
+/// can also be converted from and to raw pointers by using the [`from_ptr`](Self::from_ptr),
+/// [`as_ptr`](Self::as_ptr), and [`as_mut_ptr`](Self::as_mut_ptr) methods.
+///
+/// Virtual addresses of different types can also be converted to each other. For conversions that
+/// nevel fail (`VirtAddr48` to `VirtAddr57` and `VirtAddrRT`, and `VirtAddrRT` to `VirtAddr57`),
+/// [`From`](https://doc.rust-lang.org/std/convert/trait.From.html) is implemented. For conversions
+/// that can fail (`VirtAddr57` to `VirtAddr48` and `VirtAddrRT`, and `VirtAddrRT` to `VirtAddr57`),
+/// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) is implemented.
+///
+/// ## Limitations on `VirtAddrRT`
+///
 /// `VirtAddrRT` can be stored, compared, formatted, inspected, and created through
 /// [`zero`](Self::zero) or unsafe [`new_unsafe`](Self::new_unsafe) on all targets. Operations that
 /// check the current address-space mode or produce a new runtime-valid address use a cached
@@ -105,8 +132,19 @@ const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
 /// creating or validating runtime-valid addresses. Use `is_valid_currently` to explicitly
 /// revalidate an existing address when current-mode checks are available.
 ///
-/// The validity parameter is intentionally required. Use [`VirtAddr`] when the validity should
-/// follow the crate's feature-selected default.
+/// ## Usage
+///
+/// Avoid using `VirtAddrGeneric` directly. Use `VirtAddrRT` if you want to make your codebase
+/// adaptive to different address-space modes. Use `VirtAddr48` or `VirtAddr57` when you want to
+/// express the bit width limitation explicitly. Use `VirtAddr` otherwise.
+///
+/// ```
+/// use x86_64::addr::VirtAddr;
+///
+/// let _ = VirtAddr::new(0x42_0000);
+/// ```
+///
+/// If you really need to use `VirtAddrGeneric`, remember to specify the validity policy explicitly.
 ///
 /// ```compile_fail
 /// use x86_64::addr::VirtAddrGeneric;
@@ -192,26 +230,26 @@ impl<const BITS: usize> VirtAddrGeneric<FixedValidity<BITS>>
 where
     FixedValidity<BITS>: VirtAddrValidity,
 {
-    /// Creates a new canonical virtual address, with provided fixed width.
+    /// Creates a new canonical virtual address.
     ///
     /// The provided address should already be canonical. If you want to check
     /// whether an address is canonical, use [`try_new`](Self::try_new).
     ///
     /// ## Panics
     ///
-    /// This function panics if the address is not canonical for the selected fixed width.
+    /// This function panics if the address is not canonical for the current `VirtAddr` type.
     #[inline]
     pub const fn new(addr: u64) -> Self {
         // TODO: Replace with .ok().expect(msg) when that works on stable.
         match Self::try_new(addr) {
             Ok(v) => v,
-            Err(_) => panic!("virtual address must be canonical for the selected fixed width"),
+            Err(_) => panic!("virtual address must be canonical for the `VirtAddr` type"),
         }
     }
 
-    /// Tries to create a new canonical virtual address, with provided fixed width.
+    /// Tries to create a new canonical virtual address.
     ///
-    /// This function checks whether the given address is canonical for the selected fixed width
+    /// This function checks whether the given address is canonical for the current `VirtAddr` type
     /// and returns an error otherwise.
     #[inline]
     pub const fn try_new(addr: u64) -> Result<Self, VirtAddrNotValid> {
@@ -219,20 +257,19 @@ where
         unsafe { try_new_with_bits(addr, BITS) }
     }
 
-    /// Creates a canonical virtual address by discarding invalid high bits, with provided fixed
-    /// width.
+    /// Creates a canonical virtual address by discarding invalid high bits.
     ///
-    /// This function sign-extends the selected fixed-width sign bit. If you want to check whether
-    /// an address is canonical, use [`new`](Self::new) or [`try_new`](Self::try_new).
+    /// This function sign-extends the most significant valid bit. If you want to check whether an
+    /// address is canonical, use [`new`](Self::new) or [`try_new`](Self::try_new).
     #[inline]
     pub const fn new_truncate(addr: u64) -> Self {
         // SAFETY: `BITS` is valid for `FixedValidity<BITS>`, so this is safe.
         unsafe { new_truncate_with_bits(addr, BITS) }
     }
 
-    /// Creates a fixed-width virtual address from the given pointer.
+    /// Creates a virtual address from the given pointer.
     ///
-    /// The pointer address must be canonical under the selected fixed validity policy.
+    /// The pointer address must be canonical.
     #[cfg(target_pointer_width = "64")]
     #[inline]
     pub fn from_ptr<T: ?Sized>(ptr: *const T) -> Self {

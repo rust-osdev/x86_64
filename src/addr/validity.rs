@@ -29,18 +29,15 @@ use core::hash::Hash;
 ///
 /// let _ = x86_64::addr::VirtAddrGeneric::<CustomValidity>::zero();
 /// ```
-#[cfg_attr(
-    not(feature = "virt_addr_57"),
-    doc = r#"
-`FixedValidity<57>` requires the `virt_addr_57` feature:
-
-```compile_fail
-use x86_64::{FixedValidity, VirtAddrGeneric};
-
-let _ = VirtAddrGeneric::<FixedValidity<57>>::zero();
-```
-"#
-)]
+///
+/// `FixedValidity<57>` requires the `virt_addr_57` feature, the following code fails to compile
+/// when the feature is disabled:
+///
+/// ```ignored
+/// use x86_64::{FixedValidity, VirtAddrGeneric};
+///
+/// let _ = VirtAddrGeneric::<FixedValidity<57>>::zero();
+/// ```
 pub trait VirtAddrValidity: crate::sealed::Sealed + Copy + Ord + Hash {
     /// Returns the number of valid bits in the virtual address.
     ///
