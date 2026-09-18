@@ -22,35 +22,6 @@ impl ArithmeticValidity for RuntimeValidity {}
 /// Zero indicates that the cache has not been initialized yet.
 static CURRENT_VIRTUAL_ADDRESS_BITS: AtomicU8 = AtomicU8::new(0);
 
-/// Returns a lazily initialized virtual-address width from the given cache.
-#[inline]
-fn cached_virtual_address_bits_with(
-    cache: &AtomicU8,
-    read_current_bits: impl FnOnce() -> u8,
-) -> usize {
-    let cached = cache.load(Ordering::Relaxed);
-    if cached != 0 {
-        return usize::from(cached);
-    }
-
-    let current = read_current_bits();
-    debug_assert!(current == 48 || current == 57);
-    usize::from(
-        match cache.compare_exchange(0, current, Ordering::Relaxed, Ordering::Relaxed) {
-            Ok(_) => current,
-            Err(initialized) => initialized,
-        },
-    )
-}
-
-/// Replaces the virtual-address width in the given cache.
-#[inline]
-fn refetch_virtual_address_bits_with(cache: &AtomicU8, read_current_bits: impl FnOnce() -> u8) {
-    let current = read_current_bits();
-    debug_assert!(current == 48 || current == 57);
-    cache.store(current, Ordering::Relaxed);
-}
-
 /// Reads the virtual-address width for the currently active address-space mode.
 ///
 /// This function must execute in Ring 0.
@@ -65,25 +36,27 @@ fn read_current_virtual_address_bits() -> u8 {
     }
 }
 
-/// Refetches and caches the virtual-address width for the active address-space mode.
-///
-/// This function must execute in Ring 0.
-#[inline]
-fn refetch_virtual_address_bits() {
-    refetch_virtual_address_bits_with(
-        &CURRENT_VIRTUAL_ADDRESS_BITS,
-        read_current_virtual_address_bits,
-    );
-}
-
 /// Returns the cached virtual-address width for the active address-space mode.
 ///
 /// This function must execute in Ring 0 if the cache has not been initialized yet.
 #[inline]
 pub(super) fn cached_virtual_address_bits() -> usize {
-    cached_virtual_address_bits_with(
-        &CURRENT_VIRTUAL_ADDRESS_BITS,
-        read_current_virtual_address_bits,
+    let cached = CURRENT_VIRTUAL_ADDRESS_BITS.load(Ordering::Relaxed);
+    if cached != 0 {
+        return usize::from(cached);
+    }
+
+    let current = read_current_virtual_address_bits();
+    usize::from(
+        match CURRENT_VIRTUAL_ADDRESS_BITS.compare_exchange(
+            0,
+            current,
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+        ) {
+            Ok(_) => current,
+            Err(initialized) => initialized,
+        },
     )
 }
 
@@ -99,7 +72,7 @@ impl VirtAddrGeneric<RuntimeValidity> {
     /// This method reads `CR4.LA57`, so it must execute in Ring 0.
     #[inline]
     pub fn refetch_virtual_address_bits() {
-        refetch_virtual_address_bits();
+        CURRENT_VIRTUAL_ADDRESS_BITS.store(read_current_virtual_address_bits(), Ordering::Relaxed);
     }
 
     /// Creates a new virtual address valid in the current address-space mode.
@@ -201,7 +174,6 @@ impl TryFrom<VirtAddr57> for VirtAddrRT {
 #[cfg(test)]
 mod tests {
     use core::ops::{Add, AddAssign, Sub, SubAssign};
-    use core::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
 
     #[cfg(feature = "step_trait")]
     use core::iter::Step;
@@ -225,37 +197,6 @@ mod tests {
             fn assert_step<T: Step>() {}
             assert_step::<VirtAddrRT>();
         }
-    }
-
-    #[test]
-    fn runtime_virtual_address_bits_are_cached_and_updateable() {
-        let cache = AtomicU8::new(0);
-        let reads = AtomicUsize::new(0);
-
-        assert_eq!(
-            cached_virtual_address_bits_with(&cache, || {
-                reads.fetch_add(1, Ordering::Relaxed);
-                57
-            }),
-            57
-        );
-        assert_eq!(
-            cached_virtual_address_bits_with(&cache, || {
-                reads.fetch_add(1, Ordering::Relaxed);
-                48
-            }),
-            57
-        );
-        assert_eq!(reads.load(Ordering::Relaxed), 1);
-
-        refetch_virtual_address_bits_with(&cache, || {
-            reads.fetch_add(1, Ordering::Relaxed);
-            48
-        });
-        assert_eq!(cached_virtual_address_bits_with(&cache, || 57), 48);
-        assert_eq!(reads.load(Ordering::Relaxed), 2);
-
-        let _: fn() = VirtAddrRT::refetch_virtual_address_bits;
     }
 
     #[test]
