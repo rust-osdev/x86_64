@@ -11,7 +11,7 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::sync::atomic::Ordering;
 
 #[cfg(feature = "memory_encryption")]
-use crate::structures::mem_encrypt::ENC_BIT_MASK;
+use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 
@@ -733,14 +733,15 @@ impl PhysAddr {
     #[cfg(feature = "memory_encryption")]
     #[inline]
     pub fn new_truncate(addr: u64) -> PhysAddr {
-        PhysAddr((addr % (1 << 52)) & !ENC_BIT_MASK.load(Ordering::Relaxed))
+        PhysAddr(addr & PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
     }
 
     /// Creates a new physical address, without any checks.
     ///
     /// ## Safety
     ///
-    /// You must make sure bits 52..64 are zero. This is not checked.
+    /// You must make sure bits 52..64 are zero and that no bits at or above
+    /// the encryption bit (if one is configured) are set. This is not checked.
     #[inline]
     pub const unsafe fn new_unsafe(addr: u64) -> PhysAddr {
         PhysAddr(addr)
