@@ -375,46 +375,6 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
         align_down(self.0, align) == self.0
     }
 
-    /// Creates a checked virtual address for an internal policy-generic API.
-    ///
-    /// Runtime policies use the cached current address-space mode during this construction.
-    /// Reserved for future extensions to the `paging` module.
-    #[inline]
-    #[expect(unused)]
-    pub(crate) fn new_with_validity(addr: u64) -> Self {
-        // SAFETY: `V::bits()` is valid for `V`, so this is safe.
-        match unsafe { try_new_with_bits(addr, V::bits()) } {
-            Ok(address) => address,
-            Err(_) => panic!("virtual address must be canonical for its validity policy"),
-        }
-    }
-
-    /// Returns the first address in the upper canonical half for this policy.
-    /// Reserved for future extensions to the `paging` module.
-    #[inline]
-    #[cfg_attr(not(test), expect(dead_code))]
-    pub(crate) fn upper_half_start() -> Self {
-        // SAFETY: `V::bits()` is valid for `V`, so this is safe.
-        unsafe { Self::new_unsafe((1u64 << (V::bits() - 1)).wrapping_neg()) }
-    }
-
-    /// Returns the final address in the lower canonical half for this policy.
-    /// Reserved for future extensions to the `paging` module.
-    #[inline]
-    #[cfg_attr(not(test), expect(dead_code))]
-    pub(crate) fn lower_half_end() -> Self {
-        unsafe { Self::new_unsafe((1u64 << (V::bits() - 1)) - 1) }
-    }
-
-    /// Returns the greatest canonical address for this policy.
-    /// Reserved for future extensions to the `paging` module.
-    #[inline]
-    #[expect(unused)]
-    pub(crate) fn max_value() -> Self {
-        // SAFETY: `u64::MAX` is a valid canonical address for any address-space mode, so this is safe.
-        unsafe { Self::new_unsafe(u64::MAX) }
-    }
-
     /// Tries to create a checked virtual address for an internal policy-generic API.
     ///
     /// Runtime policies use the cached current address-space mode during this construction.
@@ -1005,24 +965,6 @@ mod tests {
             assert!(VirtAddr57::try_new(0x0100_0000_0000_0000).is_err());
             assert!(VirtAddr57::try_new(0xff00_0000_0000_0000).is_ok());
             assert!(VirtAddr57::try_new(0x0000_8000_0000_0000).is_ok());
-        }
-    }
-
-    #[test]
-    fn hole_border() {
-        assert_eq!(VirtAddr48::lower_half_end().as_u64(), 0x0000_7fff_ffff_ffff);
-        assert_eq!(
-            VirtAddr48::upper_half_start().as_u64(),
-            0xffff_8000_0000_0000
-        );
-
-        #[cfg(feature = "virt_addr_57")]
-        {
-            assert_eq!(VirtAddr57::lower_half_end().as_u64(), 0x00ff_ffff_ffff_ffff);
-            assert_eq!(
-                VirtAddr57::upper_half_start().as_u64(),
-                0xff00_0000_0000_0000
-            );
         }
     }
 
