@@ -1,19 +1,26 @@
 # Unreleased
 
+# 0.16.0-rc.0 – 2026-09-24
+
 ## Breaking changes
 
 - [add `Mapper::clear` to clear any page table entry regardless of the present flag](https://github.com/rust-osdev/x86_64/pull/484)
-- [`Mapper::unmap` now also returns the flags of the page ](https://github.com/rust-osdev/x86_64/pull/484)
+- [`Mapper::unmap` now also returns the flags of the page](https://github.com/rust-osdev/x86_64/pull/484)
 - [make `OffsetPageTable` a type alias](https://github.com/rust-osdev/x86_64/pull/576)
   - To migrate, replace `OffsetPageTable::new` with `OffsetPageTable::from_phys_offset` or `MappedPageTable::from_phys_offset`.
   - `OffsetPageTable`'s `PageTableFrameMapping` implementation is now public as `PhysOffset`.
-- [make range types `!Copy`](https://github.com/rust-osdev/x86_64/pull/581)
-  - To migrate, use `.clone()` if necessary.
 - [make page types `repr(transparent)` and range types `repr(Rust)`](https://github.com/rust-osdev/x86_64/pull/584)
 - [add `MappedPageTable::display`](https://github.com/rust-osdev/x86_64/pull/574)
   - The mappings of a `MappedPageTable` can now be displayed.
 - [Increase the Minimum Supported Rust Version to 1.98](https://github.com/rust-osdev/x86_64/pull/604)
 - [make memory encryption bit an upper limit for physical address bits](https://github.com/rust-osdev/x86_64/pull/603)
+- [add page attribute table support](https://github.com/rust-osdev/x86_64/pull/548)
+  - `PageTableEntry::frame` now takes an `is_level_1_entry: bool` parameter.
+- [make `FsBase::write`, `GsBase::write`, and `KernelGsBase::write` unsafe](https://github.com/rust-osdev/x86_64/pull/528)
+- [remove the `doc_auto_cfg`, `asm_const`, and `const_fn` features](https://github.com/rust-osdev/x86_64/pull/607)
+- [no longer enable the `nightly` feature by default](https://github.com/rust-osdev/x86_64/pull/607)
+  - To migrate, enable the `nightly` feature explicitly if you use nightly-only features.
+- [implement `IntoIterator` instead of `Iterator` for range types](https://github.com/rust-osdev/x86_64/pull/609)
 
 # 0.15.5 – 2026-07-11
 
