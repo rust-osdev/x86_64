@@ -13,7 +13,7 @@ use crate::addr::PhysAddr;
 use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
 
 use bitflags::bitflags;
-use dep_const_fn::const_fn;
+use const_fn::const_fn;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -395,10 +395,6 @@ impl Step for PageTableIndex {
         Some(Self::new(idx as u16))
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     #[inline]
     fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::forward_checked(start, count) {
@@ -407,10 +403,6 @@ impl Step for PageTableIndex {
         }
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     #[inline]
     fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::backward_checked(start, count) {

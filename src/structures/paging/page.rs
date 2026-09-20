@@ -160,7 +160,10 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    #[cfg(any(feature = "instructions", feature = "step_trait"))]
+    #[cfg(any(
+        all(feature = "instructions", target_arch = "x86_64"),
+        feature = "step_trait"
+    ))]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
         if let Some(steps) = Self::steps_between_u64(start, end) {
             let steps = usize::try_from(steps).ok();
@@ -171,7 +174,10 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    #[cfg(any(feature = "instructions", feature = "step_trait"))]
+    #[cfg(any(
+        all(feature = "instructions", target_arch = "x86_64"),
+        feature = "step_trait"
+    ))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
         let start_address = VirtAddr::forward_checked_u64(start.start_address, count)?;
@@ -313,10 +319,6 @@ impl<S: PageSize> Step for Page<S> {
         })
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::forward_checked(start, count) {
             Some(next) => (next, false),
@@ -324,10 +326,6 @@ impl<S: PageSize> Step for Page<S> {
         }
     }
 
-    // Kani's bundled toolchain predates these methods being added to `Step`.
-    // Exclude them there so the crate still compiles under `cargo kani`.
-    // This can be removed once Kani upgrades its bundled toolchain to nightly-2026-07-10 or later.
-    #[cfg(not(kani))]
     fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
         match Self::backward_checked(start, count) {
             Some(next) => (next, false),

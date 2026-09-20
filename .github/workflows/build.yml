@@ -34,15 +34,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - run: cargo build --no-default-features --features instructions
-      - run: cargo build --no-default-features --features memory_encryption
+      - run: cargo build
       - run: cargo build --no-default-features
-      - run: cargo doc --no-default-features --features instructions
-      - run: cargo doc --no-default-features --features memory_encryption
+      - run: cargo build --features memory_encryption
+      - run: cargo doc
       - run: cargo doc --no-default-features
-      - run: cargo test --no-default-features --features instructions
-      - run: cargo test --no-default-features --features memory_encryption
+      - run: cargo doc --features memory_encryption
+      - run: cargo test
       - run: cargo test --no-default-features
+      - run: cargo test --features memory_encryption
 
   test:
     name: "Test"
@@ -51,6 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
+        features: ["", "nightly"]
 
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 15
@@ -61,24 +62,24 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl, i686-unknown-linux-musl, thumbv7em-none-eabihf
 
-      - run: cargo build
+      - run: cargo build --features "${{ matrix.features }}"
 
-      - run: cargo doc
+      - run: cargo doc --features "${{ matrix.features }}"
 
       - run: cargo build --target x86_64-unknown-linux-musl
         if: runner.os == 'Linux'
 
-      - run: cargo test
+      - run: cargo test --features "${{ matrix.features }}"
 
-      - run: cargo test --target x86_64-unknown-linux-musl
+      - run: cargo test --features "${{ matrix.features }}" --target x86_64-unknown-linux-musl
         if: runner.os == 'Linux'
 
       - name: "Build on non x86_64 platforms"
         run: |
-          cargo build --target i686-unknown-linux-musl --no-default-features --features nightly
-          cargo build --target thumbv7em-none-eabihf --no-default-features --features nightly
+          cargo build --target i686-unknown-linux-musl --features "${{ matrix.features }}"
+          cargo build --target thumbv7em-none-eabihf --features "${{ matrix.features }}"
 
-      - run: cargo test --target i686-unknown-linux-musl --no-default-features --features nightly
+      - run: cargo test --target i686-unknown-linux-musl --features "${{ matrix.features }}"
         if: runner.os == 'Linux'
 
   bootloader-test:
@@ -98,7 +99,7 @@ jobs:
 
       - name: Cache binaries
         id: cache-bin
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: binaries
           key: ${{ runner.OS }}-binaries
@@ -176,7 +177,10 @@ jobs:
           cache-targets: false
       - run: cargo install cargo-semver-checks --locked
       - name: Check semver
-        run: cargo +stable semver-checks check-release --default-features
+        # don't check `step_trait` feature, which still changes frequently on nightly and leads
+        # to errors in this job (cargo-semver-checks mainly supports stable, so there might be
+        # errors until the nightly change reaches stable).
+        run: cargo +stable semver-checks check-release --only-explicit-features --features instructions,abi_x86_interrupt
 
   typos:
     name: Typos
@@ -194,3 +198,5 @@ jobs:
           shared-key: "kani"
           cache-targets: false
       - uses: model-checking/kani-github-action@v1.1
+        with:
+          args: --all-features
