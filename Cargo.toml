@@ -14,7 +14,7 @@ categories = ["no-std"]
 license = "MIT/Apache-2.0"
 name = "x86_64"
 repository = "https://github.com/rust-osdev/x86_64"
-version = "0.15.5"
+version = "0.16.0-rc.0"
 edition = "2024"
 rust-version = "1.98"
 
