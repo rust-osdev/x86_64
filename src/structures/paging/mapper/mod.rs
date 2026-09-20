@@ -1,21 +1,22 @@
 //! Abstractions for reading and modifying the mapping of pages.
 
-pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};
+pub use self::mapped_page_table::{
+    Display as MappedPageTableDisplay, MappedPageTable, PageTableFrameMapping,
+};
 #[cfg(target_pointer_width = "64")]
-pub use self::offset_page_table::OffsetPageTable;
+pub use self::mapped_page_table::{OffsetPageTable, PhysOffset};
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
 use crate::structures::paging::{
+    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
     frame_alloc::{FrameAllocator, FrameDeallocator},
     page::PageRangeInclusive,
-    page_table::PageTableFlags,
-    Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
+    page_table::{PageTableEntry, PageTableFlags},
 };
 use crate::{PhysAddr, VirtAddr};
 
 mod mapped_page_table;
-mod offset_page_table;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod recursive_page_table;
 
@@ -282,7 +283,18 @@ pub trait Mapper<S: PageSize> {
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
     /// Note that no page tables or pages are deallocated.
-    fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;
+    fn unmap(
+        &mut self,
+        page: Page<S>,
+    ) -> Result<(PhysFrame<S>, PageTableFlags, MapperFlush<S>), UnmapError>;
+
+    /// Clears a mapping from the page table and returns the frame that used to be mapped.
+    ///
+    /// Unlike [`Mapper::unmap`] this will ignore the present flag of the page and will successfully
+    /// clear the table entry for any valid page.
+    ///
+    /// Note that no page tables or pages are deallocated.
+    fn clear(&mut self, page: Page<S>) -> Result<UnmappedFrame<S>, UnmapError>;
 
     /// Updates the flags of an existing mapping.
     ///
@@ -374,6 +386,27 @@ pub trait Mapper<S: PageSize> {
         let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
         unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
+}
+
+/// The result of [`Mapper::clear`], representing either
+/// the unmapped frame or the entry data if the frame is not marked as present.
+#[derive(Debug)]
+#[must_use = "Page table changes must be flushed or ignored if the page is present."]
+pub enum UnmappedFrame<S: PageSize> {
+    /// The frame was present before the [`Mapper::clear`] call
+    Present {
+        /// The physical frame that was unmapped
+        frame: PhysFrame<S>,
+        /// The flags of the frame that was unmapped
+        flags: PageTableFlags,
+        /// The changed page, to flush the TLB
+        flush: MapperFlush<S>,
+    },
+    /// The frame was not present before the [`Mapper::clear`] call
+    NotPresent {
+        /// The page table entry
+        entry: PageTableEntry,
+    },
 }
 
 /// This type represents a page whose mapping has changed in the page table.

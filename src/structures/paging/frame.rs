@@ -1,16 +1,22 @@
 //! Abstractions for default-sized and huge physical memory frames.
 
+use const_fn::const_fn;
+
 use super::page::AddressNotAligned;
-use crate::structures::paging::page::{PageSize, Size4KiB};
 use crate::PhysAddr;
+use crate::structures::paging::page::{PageSize, Size4KiB};
 use core::convert::TryFrom;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A physical memory frame.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct PhysFrame<S: PageSize = Size4KiB> {
     // TODO: Make private when our minimum supported stable Rust version is 1.61
     pub(crate) start_address: PhysAddr,
@@ -22,8 +28,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {
+    pub const fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
@@ -38,8 +43,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// The address must be correctly aligned.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
+    pub const unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {
         PhysFrame {
             start_address,
             size: PhantomData,
@@ -58,10 +62,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// This function will panic if the resulting address is not valid.
     #[inline]
-    #[rustversion::attr(
-        since(1.61),
-        dep_const_fn::const_fn(cfg(not(feature = "memory_encryption")))
-    )]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub fn from_pfn(pfn: u64) -> Self {
         match Self::try_from_pfn(pfn) {
             Ok(frame) => frame,
@@ -81,10 +82,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// This function will return an error if the resulting address is not valid.
     #[inline]
-    #[rustversion::attr(
-        since(1.61),
-        dep_const_fn::const_fn(cfg(not(feature = "memory_encryption")))
-    )]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub fn try_from_pfn(pfn: u64) -> Result<Self, PfnNotValid> {
         let addr_raw = if let Some(addr_raw) = pfn.checked_mul(S::SIZE) {
             addr_raw
@@ -108,8 +106,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// The resulting address must be valid.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_pfn_unchecked(pfn: u64) -> Self {
+    pub const unsafe fn from_pfn_unchecked(pfn: u64) -> Self {
         PhysFrame {
             start_address: unsafe { PhysAddr::new_unsafe(pfn * S::SIZE) },
             size: PhantomData,
@@ -118,8 +115,7 @@ impl<S: PageSize> PhysFrame<S> {
 
     /// Returns the frame that contains the given physical address.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn containing_address(address: PhysAddr) -> Self {
+    pub const fn containing_address(address: PhysAddr) -> Self {
         PhysFrame {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -128,15 +124,13 @@ impl<S: PageSize> PhysFrame<S> {
 
     /// Returns the start address of the frame.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn start_address(self) -> PhysAddr {
+    pub const fn start_address(self) -> PhysAddr {
         self.start_address
     }
 
     /// Returns the size the frame (4KB, 2MB or 1GB).
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn size(self) -> u64 {
+    pub const fn size(self) -> u64 {
         S::SIZE
     }
 
@@ -156,22 +150,22 @@ impl<S: PageSize> PhysFrame<S> {
     /// assert_eq!(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0xC000_0000)).pfn(), 0x3);
     /// ```
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn pfn(self) -> u64 {
+    pub const fn pfn(self) -> u64 {
         self.start_address.as_u64() / S::SIZE
     }
 
     /// Returns a range of frames, exclusive `end`.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
+    pub const fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
         PhysFrameRange { start, end }
     }
 
     /// Returns a range of frames, inclusive `end`.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {
+    pub const fn range_inclusive(
+        start: PhysFrame<S>,
+        end: PhysFrame<S>,
+    ) -> PhysFrameRangeInclusive<S> {
         PhysFrameRangeInclusive { start, end }
     }
 }
@@ -226,7 +220,6 @@ impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
 
 /// An range of physical memory frames, exclusive the upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PhysFrameRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
@@ -258,14 +251,28 @@ impl<S: PageSize> PhysFrameRange<S> {
     }
 }
 
-impl<S: PageSize> Iterator for PhysFrameRange<S> {
+impl<S: PageSize> IntoIterator for PhysFrameRange<S> {
+    type Item = PhysFrame<S>;
+
+    type IntoIter = PhysFrameRangeIter<S>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        PhysFrameRangeIter(self)
+    }
+}
+
+/// By-value [`PhysFrameRange`] iterator.
+#[derive(Clone, Debug)]
+pub struct PhysFrameRangeIter<S: PageSize = Size4KiB>(PhysFrameRange<S>);
+
+impl<S: PageSize> Iterator for PhysFrameRangeIter<S> {
     type Item = PhysFrame<S>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            let frame = self.start;
-            self.start += 1;
+        if self.0.start < self.0.end {
+            let frame = self.0.start;
+            self.0.start += 1;
             Some(frame)
         } else {
             None
@@ -273,7 +280,7 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -286,36 +293,36 @@ impl<S: PageSize> Iterator for PhysFrameRange<S> {
         // can't just add `n` to `self.start` (it might overflow). Handle this
         // by doing two steps, `self.len()-1` and `1`. This should return
         // `None`.
-        if n >= self.len() {
-            self.nth(self.len() as usize - 1)?;
+        if n >= self.0.len() {
+            self.nth(self.0.len() as usize - 1)?;
             return self.next();
         }
 
-        self.start += n;
+        self.0.start += n;
         self.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.len();
+        let len = self.0.len();
         usize::try_from(len)
             .map(|len| (len, Some(len)))
             .unwrap_or((usize::MAX, None))
     }
 }
 
-impl<S: PageSize> DoubleEndedIterator for PhysFrameRange<S> {
+impl<S: PageSize> DoubleEndedIterator for PhysFrameRangeIter<S> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            self.end -= 1;
-            Some(self.end)
+        if self.0.start < self.0.end {
+            self.0.end -= 1;
+            Some(self.0.end)
         } else {
             None
         }
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -328,12 +335,12 @@ impl<S: PageSize> DoubleEndedIterator for PhysFrameRange<S> {
         // can't just subtract `n` to `self.end` (it might overflow). Handle
         // this by doing two steps, `self.len()-1` and `1`. This should return
         // `None`.
-        if n >= self.len() {
-            self.nth_back(self.len() as usize - 1)?;
+        if n >= self.0.len() {
+            self.nth_back(self.0.len() as usize - 1)?;
             return self.next_back();
         }
 
-        self.end -= n;
+        self.0.end -= n;
         self.next_back()
     }
 }
@@ -367,7 +374,6 @@ impl fmt::Display for PfnNotValid {
 
 /// An range of physical memory frames, inclusive the upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: PhysFrame<S>,
@@ -399,22 +405,36 @@ impl<S: PageSize> PhysFrameRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
+impl<S: PageSize> IntoIterator for PhysFrameRangeInclusive<S> {
+    type Item = PhysFrame<S>;
+
+    type IntoIter = PhysFrameRangeInclusiveIter<S>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        PhysFrameRangeInclusiveIter(self)
+    }
+}
+
+/// By-value [`PhysFrameRangeInclusive`] iterator.
+#[derive(Clone, Debug)]
+pub struct PhysFrameRangeInclusiveIter<S: PageSize = Size4KiB>(PhysFrameRangeInclusive<S>);
+
+impl<S: PageSize> Iterator for PhysFrameRangeInclusiveIter<S> {
     type Item = PhysFrame<S>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let frame = self.start;
+        if self.0.start <= self.0.end {
+            let frame = self.0.start;
 
             // If the end of the inclusive range is the maximum page possible for size S,
             // incrementing start until it is greater than the end will cause an integer overflow.
             // So instead, in that case we decrement end rather than incrementing start.
             let max_frame_addr = PhysAddr::new_truncate(u64::MAX) - (S::SIZE - 1);
-            if self.start.start_address() < max_frame_addr {
-                self.start += 1;
+            if self.0.start.start_address() < max_frame_addr {
+                self.0.start += 1;
             } else {
-                self.end -= 1;
+                self.0.end -= 1;
             }
             Some(frame)
         } else {
@@ -423,7 +443,7 @@ impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -436,36 +456,36 @@ impl<S: PageSize> Iterator for PhysFrameRangeInclusive<S> {
         // can't just add `n` to `self.start` (it might overflow). Handle this
         // by doing two steps, `self.len()-1` and `1`. This should return
         // `None`.
-        if n >= self.len() {
-            self.nth(self.len() as usize - 1)?;
+        if n >= self.0.len() {
+            self.nth(self.0.len() as usize - 1)?;
             return self.next();
         }
 
-        self.start += n;
+        self.0.start += n;
         self.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.len();
+        let len = self.0.len();
         usize::try_from(len)
             .map(|len| (len, Some(len)))
             .unwrap_or((usize::MAX, None))
     }
 }
 
-impl<S: PageSize> DoubleEndedIterator for PhysFrameRangeInclusive<S> {
+impl<S: PageSize> DoubleEndedIterator for PhysFrameRangeInclusiveIter<S> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let frame = self.end;
+        if self.0.start <= self.0.end {
+            let frame = self.0.end;
 
             // If the start of the inclusive range is 0, decrementing end until
             // it is smaller than the start will cause an integer underflow.
             // So instead, in that case we increment start rather than decrementing end.
-            if self.end.start_address().as_u64() != 0 {
-                self.end -= 1;
+            if self.0.end.start_address().as_u64() != 0 {
+                self.0.end -= 1;
             } else {
-                self.start += 1;
+                self.0.start += 1;
             }
             Some(frame)
         } else {
@@ -474,7 +494,7 @@ impl<S: PageSize> DoubleEndedIterator for PhysFrameRangeInclusive<S> {
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -487,12 +507,12 @@ impl<S: PageSize> DoubleEndedIterator for PhysFrameRangeInclusive<S> {
         // can't just subtract `n` to `self.end` (it might overflow). Handle
         // this by doing two steps, `self.len()-1` and `1`. This should return
         // `None`.
-        if n >= self.len() {
-            self.nth_back(self.len() as usize - 1)?;
+        if n >= self.0.len() {
+            self.nth_back(self.0.len() as usize - 1)?;
             return self.next_back();
         }
 
-        self.end -= n;
+        self.0.end -= n;
         self.next_back()
     }
 }
@@ -538,7 +558,7 @@ mod proofs {
     fn phys_frame_range_next() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range(start, end);
+        let mut range_iter = PhysFrame::range(start, end).into_iter();
 
         // Test that calling `next` twice works.
         let difference = end
@@ -546,16 +566,16 @@ mod proofs {
             .as_u64()
             .checked_sub(start.start_address().as_u64());
         let expected_result = difference.is_some_and(|d| d >= 0x1000).then(|| start);
-        assert_eq!(range.next(), expected_result);
+        assert_eq!(range_iter.next(), expected_result);
         let expected_result = difference.is_some_and(|d| d >= 0x2000).then(|| start + 1);
-        assert_eq!(range.next(), expected_result);
+        assert_eq!(range_iter.next(), expected_result);
     }
 
     #[kani::proof]
     fn phys_frame_range_inclusive_next() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range_inclusive(start, end);
+        let mut range_iter = PhysFrame::range_inclusive(start, end).into_iter();
 
         // Test that calling `next` twice works.
         let difference = end
@@ -563,16 +583,16 @@ mod proofs {
             .as_u64()
             .checked_sub(start.start_address().as_u64());
         let expected_result = difference.is_some().then(|| start);
-        assert_eq!(range.next(), expected_result);
+        assert_eq!(range_iter.next(), expected_result);
         let expected_result = difference.is_some_and(|d| d >= 0x1000).then(|| start + 1);
-        assert_eq!(range.next(), expected_result);
+        assert_eq!(range_iter.next(), expected_result);
     }
 
     #[kani::proof]
     fn phys_frame_range_next_back() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range(start, end);
+        let mut range_iter = PhysFrame::range(start, end).into_iter();
 
         // Test that calling `next_back` twice works.
         let difference = end
@@ -580,16 +600,16 @@ mod proofs {
             .as_u64()
             .checked_sub(start.start_address().as_u64());
         let expected_result = difference.is_some_and(|d| d >= 0x1000).then(|| end - 1);
-        assert_eq!(range.next_back(), expected_result);
+        assert_eq!(range_iter.next_back(), expected_result);
         let expected_result = difference.is_some_and(|d| d >= 0x2000).then(|| end - 2);
-        assert_eq!(range.next_back(), expected_result);
+        assert_eq!(range_iter.next_back(), expected_result);
     }
 
     #[kani::proof]
     fn phys_frame_range_inclusive_next_back() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range_inclusive(start, end);
+        let mut range_iter = PhysFrame::range_inclusive(start, end).into_iter();
 
         // Test that calling `next_back` twice works.
         let difference = end
@@ -597,9 +617,9 @@ mod proofs {
             .as_u64()
             .checked_sub(start.start_address().as_u64());
         let expected_result = difference.is_some().then(|| end);
-        assert_eq!(range.next_back(), expected_result);
+        assert_eq!(range_iter.next_back(), expected_result);
         let expected_result = difference.is_some_and(|d| d >= 0x1000).then(|| end - 1);
-        assert_eq!(range.next_back(), expected_result);
+        assert_eq!(range_iter.next_back(), expected_result);
     }
 
     #[kani::proof]
@@ -607,12 +627,12 @@ mod proofs {
     fn phys_frame_range_nth_0() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range(start, end);
-        let mut range2 = PhysFrame::range(start, end);
+        let mut range_iter = PhysFrame::range(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range(start, end).into_iter();
 
         // Test that nth(0) behaves like next().
-        assert_eq!(range.next(), range2.nth(0));
-        assert_eq!(range.next(), range2.nth(0));
+        assert_eq!(range_iter.next(), range_iter2.nth(0));
+        assert_eq!(range_iter.next(), range_iter2.nth(0));
     }
 
     #[kani::proof]
@@ -623,13 +643,13 @@ mod proofs {
         let m = kani::any::<usize>();
         let n = kani::any::<usize>();
         let sum = m.saturating_add(n).saturating_add(1);
-        let mut range = PhysFrame::range(start, end);
-        let mut range2 = PhysFrame::range(start, end);
+        let mut range_iter = PhysFrame::range(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range(start, end).into_iter();
 
         // Test that doing steps of size m and n is equivalent to a single step
         // of size m+n+1.
-        range.nth(m);
-        assert_eq!(range.nth(n), range2.nth(sum));
+        range_iter.nth(m);
+        assert_eq!(range_iter.nth(n), range_iter2.nth(sum));
     }
 
     #[kani::proof]
@@ -637,12 +657,12 @@ mod proofs {
     fn phys_frame_range_inclusive_nth_0() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range_inclusive(start, end);
-        let mut range2 = PhysFrame::range_inclusive(start, end);
+        let mut range_iter = PhysFrame::range_inclusive(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range_inclusive(start, end).into_iter();
 
         // Test that nth(0) behaves like next().
-        assert_eq!(range.next(), range2.nth(0));
-        assert_eq!(range.next(), range2.nth(0));
+        assert_eq!(range_iter.next(), range_iter2.nth(0));
+        assert_eq!(range_iter.next(), range_iter2.nth(0));
     }
 
     #[kani::proof]
@@ -653,13 +673,13 @@ mod proofs {
         let m = kani::any::<usize>();
         let n = kani::any::<usize>();
         let sum = m.saturating_add(n).saturating_add(1);
-        let mut range = PhysFrame::range_inclusive(start, end);
-        let mut range2 = PhysFrame::range_inclusive(start, end);
+        let mut range_iter = PhysFrame::range_inclusive(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range_inclusive(start, end).into_iter();
 
         // Test that doing steps of size m and n is equivalent to a single step
         // of size m+n+1.
-        range.nth(m);
-        assert_eq!(range.nth(n), range2.nth(sum));
+        range_iter.nth(m);
+        assert_eq!(range_iter.nth(n), range_iter2.nth(sum));
     }
 
     #[kani::proof]
@@ -667,12 +687,12 @@ mod proofs {
     fn phys_frame_range_nth_back_0() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range(start, end);
-        let mut range2 = PhysFrame::range(start, end);
+        let mut range_iter = PhysFrame::range(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range(start, end).into_iter();
 
         // Test that nth_back(0) behaves like next_back().
-        assert_eq!(range.next_back(), range2.nth_back(0));
-        assert_eq!(range.next_back(), range2.nth_back(0));
+        assert_eq!(range_iter.next_back(), range_iter2.nth_back(0));
+        assert_eq!(range_iter.next_back(), range_iter2.nth_back(0));
     }
 
     #[kani::proof]
@@ -683,13 +703,13 @@ mod proofs {
         let m = kani::any::<usize>();
         let n = kani::any::<usize>();
         let sum = m.saturating_add(n).saturating_add(1);
-        let mut range = PhysFrame::range(start, end);
-        let mut range2 = PhysFrame::range(start, end);
+        let mut range_iter = PhysFrame::range(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range(start, end).into_iter();
 
         // Test that doing steps of size m and n is equivalent to a single step
         // of size m+n+1.
-        range.nth_back(m);
-        assert_eq!(range.nth_back(n), range2.nth_back(sum));
+        range_iter.nth_back(m);
+        assert_eq!(range_iter.nth_back(n), range_iter2.nth_back(sum));
     }
 
     #[kani::proof]
@@ -697,12 +717,12 @@ mod proofs {
     fn phys_frame_range_inclusive_nth_back_0() {
         let start = kani::any::<PhysFrame>();
         let end = kani::any::<PhysFrame>();
-        let mut range = PhysFrame::range_inclusive(start, end);
-        let mut range2 = PhysFrame::range_inclusive(start, end);
+        let mut range_iter = PhysFrame::range_inclusive(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range_inclusive(start, end).into_iter();
 
         // Test that nth_back(0) behaves like next_back().
-        assert_eq!(range.next_back(), range2.nth_back(0));
-        assert_eq!(range.next_back(), range2.nth_back(0));
+        assert_eq!(range_iter.next_back(), range_iter2.nth_back(0));
+        assert_eq!(range_iter.next_back(), range_iter2.nth_back(0));
     }
 
     #[kani::proof]
@@ -713,12 +733,12 @@ mod proofs {
         let m = kani::any::<usize>();
         let n = kani::any::<usize>();
         let sum = m.saturating_add(n).saturating_add(1);
-        let mut range = PhysFrame::range_inclusive(start, end);
-        let mut range2 = PhysFrame::range_inclusive(start, end);
+        let mut range_iter = PhysFrame::range_inclusive(start, end).into_iter();
+        let mut range_iter2 = PhysFrame::range_inclusive(start, end).into_iter();
 
         // Test that doing steps of size m and n is equivalent to a single step
         // of size m+n+1.
-        range.nth_back(m);
-        assert_eq!(range.nth_back(n), range2.nth_back(sum));
+        range_iter.nth_back(m);
+        assert_eq!(range_iter.nth_back(n), range_iter2.nth_back(sum));
     }
 }

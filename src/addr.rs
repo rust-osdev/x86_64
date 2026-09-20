@@ -9,12 +9,12 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::sync::atomic::Ordering;
 
 #[cfg(feature = "memory_encryption")]
-use crate::structures::mem_encrypt::ENC_BIT_MASK;
+use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
 use crate::structures::paging::page_table::PageTableLevel;
 use crate::structures::paging::{PageOffset, PageTableIndex};
 
 use bit_field::BitField;
-use dep_const_fn::const_fn;
+use const_fn::const_fn;
 
 const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 
@@ -28,6 +28,10 @@ const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;
 /// On `x86_64`, only the 48 lower bits of a virtual address can be used. The top 16 bits need
 /// to be copies of bit 47, i.e. the most significant bit. Addresses that fulfil this criterion
 /// are called “canonical”. This type guarantees that it always represents a canonical address.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct VirtAddr(u64);
@@ -41,6 +45,10 @@ pub struct VirtAddr(u64);
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
 /// to be zero. This type guarantees that it always represents a valid physical address.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct PhysAddr(u64);
@@ -555,14 +563,15 @@ impl PhysAddr {
     #[cfg(feature = "memory_encryption")]
     #[inline]
     pub fn new_truncate(addr: u64) -> PhysAddr {
-        PhysAddr((addr % (1 << 52)) & !ENC_BIT_MASK.load(Ordering::Relaxed))
+        PhysAddr(addr & PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed))
     }
 
     /// Creates a new physical address, without any checks.
     ///
     /// ## Safety
     ///
-    /// You must make sure bits 52..64 are zero. This is not checked.
+    /// You must make sure bits 52..64 are zero and that no bits at or above
+    /// the encryption bit (if one is configured) are set. This is not checked.
     #[inline]
     pub const unsafe fn new_unsafe(addr: u64) -> PhysAddr {
         PhysAddr(addr)

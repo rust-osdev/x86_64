@@ -230,8 +230,8 @@ impl PriorityClass {
 mod x86_64 {
     use super::*;
     use crate::{
-        addr::VirtAddrNotValid, instructions::tlb::Pcid, structures::paging::PhysFrame, PhysAddr,
-        VirtAddr,
+        PhysAddr, VirtAddr, addr::VirtAddrNotValid, instructions::tlb::Pcid,
+        structures::paging::PhysFrame,
     };
     use core::arch::asm;
 

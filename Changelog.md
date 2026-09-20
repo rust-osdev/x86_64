@@ -1,5 +1,20 @@
 # Unreleased
 
+## Breaking changes
+
+- [add `Mapper::clear` to clear any page table entry regardless of the present flag](https://github.com/rust-osdev/x86_64/pull/484)
+- [`Mapper::unmap` now also returns the flags of the page ](https://github.com/rust-osdev/x86_64/pull/484)
+- [make `OffsetPageTable` a type alias](https://github.com/rust-osdev/x86_64/pull/576)
+  - To migrate, replace `OffsetPageTable::new` with `OffsetPageTable::from_phys_offset` or `MappedPageTable::from_phys_offset`.
+  - `OffsetPageTable`'s `PageTableFrameMapping` implementation is now public as `PhysOffset`.
+- [make range types `!Copy`](https://github.com/rust-osdev/x86_64/pull/581)
+  - To migrate, use `.clone()` if necessary.
+- [make page types `repr(transparent)` and range types `repr(Rust)`](https://github.com/rust-osdev/x86_64/pull/584)
+- [add `MappedPageTable::display`](https://github.com/rust-osdev/x86_64/pull/574)
+  - The mappings of a `MappedPageTable` can now be displayed.
+- [Increase the Minimum Supported Rust Version to 1.98](https://github.com/rust-osdev/x86_64/pull/604)
+- [make memory encryption bit an upper limit for physical address bits](https://github.com/rust-osdev/x86_64/pull/603)
+
 # 0.15.5 – 2026-07-11
 
 This release is compatible with Rust nightlies starting with `nightly-2026-07-10` (this only applies when the `nightly` feature is used).
