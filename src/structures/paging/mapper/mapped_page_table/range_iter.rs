@@ -24,7 +24,7 @@ pub struct MappedPageRangeInclusive<S: PageSize = Size4KiB> {
 impl<S: PageSize> MappedPageRangeInclusive<S> {
     /// Returns the page range.
     pub fn page_range(&self) -> PageRangeInclusive<S> {
-        self.page_range.clone()
+        self.page_range
     }
 
     /// Returns the frame range.
