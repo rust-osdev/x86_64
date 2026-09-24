@@ -82,6 +82,7 @@ impl VirtAddr {
     /// This function panics if the bits in the range 48 to 64 are invalid
     /// (i.e. are not a proper sign extension of bit 47).
     #[inline]
+    #[track_caller]
     pub const fn new(addr: u64) -> VirtAddr {
         // TODO: Replace with .ok().expect(msg) when that works on stable.
         match Self::try_new(addr) {
@@ -390,6 +391,7 @@ impl Add<u64> for VirtAddr {
     /// This function will panic on overflow or if the result is not a
     /// canonical address.
     #[inline]
+    #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
         VirtAddr::try_new(
             self.0
@@ -413,6 +415,7 @@ impl AddAssign<u64> for VirtAddr {
     /// This function will panic on overflow or if the result is not a
     /// canonical address.
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -433,6 +436,7 @@ impl Sub<u64> for VirtAddr {
     /// This function will panic on overflow or if the result is not a
     /// canonical address.
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
         VirtAddr::try_new(
             self.0
@@ -456,6 +460,7 @@ impl SubAssign<u64> for VirtAddr {
     /// This function will panic on overflow or if the result is not a
     /// canonical address.
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -470,6 +475,7 @@ impl Sub<VirtAddr> for VirtAddr {
     ///
     /// This function will panic on overflow.
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: VirtAddr) -> Self::Output {
         self.as_u64()
             .checked_sub(rhs.as_u64())
@@ -543,6 +549,7 @@ impl PhysAddr {
     /// If the `memory_encryption` feature has been enabled and an encryption bit has been
     /// configured, this also panics if the encryption bit is manually set in the address.
     #[inline]
+    #[track_caller]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn new(addr: u64) -> Self {
         // TODO: Replace with .ok().expect(msg) when that works on stable.
@@ -708,6 +715,7 @@ impl fmt::Pointer for PhysAddr {
 impl Add<u64> for PhysAddr {
     type Output = Self;
     #[inline]
+    #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
         PhysAddr::new(self.0.checked_add(rhs).unwrap())
     }
@@ -715,6 +723,7 @@ impl Add<u64> for PhysAddr {
 
 impl AddAssign<u64> for PhysAddr {
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -723,6 +732,7 @@ impl AddAssign<u64> for PhysAddr {
 impl Sub<u64> for PhysAddr {
     type Output = Self;
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
         PhysAddr::new(self.0.checked_sub(rhs).unwrap())
     }
@@ -730,6 +740,7 @@ impl Sub<u64> for PhysAddr {
 
 impl SubAssign<u64> for PhysAddr {
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -738,6 +749,7 @@ impl SubAssign<u64> for PhysAddr {
 impl Sub<PhysAddr> for PhysAddr {
     type Output = u64;
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: PhysAddr) -> Self::Output {
         self.as_u64().checked_sub(rhs.as_u64()).unwrap()
     }
@@ -756,6 +768,7 @@ impl kani::Arbitrary for PhysAddr {
 ///
 /// Panics if the alignment is not a power of two.
 #[inline]
+#[track_caller]
 pub const fn align_down(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
     addr & !(align - 1)
@@ -767,6 +780,7 @@ pub const fn align_down(addr: u64, align: u64) -> u64 {
 ///
 /// Panics if the alignment is not a power of two or if an overflow occurs.
 #[inline]
+#[track_caller]
 pub const fn align_up(addr: u64, align: u64) -> u64 {
     assert!(align.is_power_of_two(), "`align` must be a power of two");
     let align_mask = align - 1;
