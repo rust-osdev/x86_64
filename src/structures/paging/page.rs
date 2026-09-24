@@ -263,6 +263,7 @@ impl<S: PageSize> fmt::Debug for Page<S> {
 impl<S: PageSize> Add<u64> for Page<S> {
     type Output = Self;
     #[inline]
+    #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
         Page::containing_address(self.start_address() + rhs * S::SIZE)
     }
@@ -270,6 +271,7 @@ impl<S: PageSize> Add<u64> for Page<S> {
 
 impl<S: PageSize> AddAssign<u64> for Page<S> {
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -278,6 +280,7 @@ impl<S: PageSize> AddAssign<u64> for Page<S> {
 impl<S: PageSize> Sub<u64> for Page<S> {
     type Output = Self;
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
         Page::containing_address(self.start_address() - rhs * S::SIZE)
     }
@@ -285,6 +288,7 @@ impl<S: PageSize> Sub<u64> for Page<S> {
 
 impl<S: PageSize> SubAssign<u64> for Page<S> {
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -293,6 +297,7 @@ impl<S: PageSize> SubAssign<u64> for Page<S> {
 impl<S: PageSize> Sub<Self> for Page<S> {
     type Output = u64;
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: Self) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
     }

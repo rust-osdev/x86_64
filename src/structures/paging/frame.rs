@@ -62,6 +62,7 @@ impl<S: PageSize> PhysFrame<S> {
     ///
     /// This function will panic if the resulting address is not valid.
     #[inline]
+    #[track_caller]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub fn from_pfn(pfn: u64) -> Self {
         match Self::try_from_pfn(pfn) {
@@ -183,6 +184,7 @@ impl<S: PageSize> fmt::Debug for PhysFrame<S> {
 impl<S: PageSize> Add<u64> for PhysFrame<S> {
     type Output = Self;
     #[inline]
+    #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
         PhysFrame::containing_address(self.start_address() + rhs * S::SIZE)
     }
@@ -190,6 +192,7 @@ impl<S: PageSize> Add<u64> for PhysFrame<S> {
 
 impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
@@ -198,6 +201,7 @@ impl<S: PageSize> AddAssign<u64> for PhysFrame<S> {
 impl<S: PageSize> Sub<u64> for PhysFrame<S> {
     type Output = Self;
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
         PhysFrame::containing_address(self.start_address() - rhs * S::SIZE)
     }
@@ -205,6 +209,7 @@ impl<S: PageSize> Sub<u64> for PhysFrame<S> {
 
 impl<S: PageSize> SubAssign<u64> for PhysFrame<S> {
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
@@ -213,6 +218,7 @@ impl<S: PageSize> SubAssign<u64> for PhysFrame<S> {
 impl<S: PageSize> Sub<PhysFrame<S>> for PhysFrame<S> {
     type Output = u64;
     #[inline]
+    #[track_caller]
     fn sub(self, rhs: PhysFrame<S>) -> Self::Output {
         (self.start_address - rhs.start_address) / S::SIZE
     }
