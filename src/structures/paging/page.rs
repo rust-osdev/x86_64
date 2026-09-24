@@ -1,9 +1,9 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
-use crate::sealed::Sealed;
-use crate::structures::paging::page_table::PageTableLevel;
-use crate::structures::paging::PageTableIndex;
 use crate::VirtAddr;
+use crate::sealed::Sealed;
+use crate::structures::paging::PageTableIndex;
+use crate::structures::paging::page_table::PageTableLevel;
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -63,8 +63,12 @@ impl PageSize for Size1GiB {
 impl Sealed for super::Size1GiB {}
 
 /// A virtual memory page.
+///
+/// # Representation
+///
+/// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct Page<S: PageSize = Size4KiB> {
     start_address: VirtAddr,
     size: PhantomData<S>,
@@ -78,8 +82,7 @@ impl<S: PageSize> Page<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
+    pub const fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
@@ -92,8 +95,7 @@ impl<S: PageSize> Page<S> {
     ///
     /// The address must be correctly aligned.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+    pub const unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
         Page {
             start_address,
             size: PhantomData,
@@ -102,8 +104,7 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the page that contains the given virtual address.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn containing_address(address: VirtAddr) -> Self {
+    pub const fn containing_address(address: VirtAddr) -> Self {
         Page {
             start_address: address.align_down_u64(S::SIZE),
             size: PhantomData,
@@ -112,50 +113,43 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the start address of the page.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn start_address(self) -> VirtAddr {
+    pub const fn start_address(self) -> VirtAddr {
         self.start_address
     }
 
     /// Returns the size the page (4KB, 2MB or 1GB).
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn size(self) -> u64 {
+    pub const fn size(self) -> u64 {
         S::SIZE
     }
 
     /// Returns the level 4 page table index of this page.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn p4_index(self) -> PageTableIndex {
+    pub const fn p4_index(self) -> PageTableIndex {
         self.start_address().p4_index()
     }
 
     /// Returns the level 3 page table index of this page.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn p3_index(self) -> PageTableIndex {
+    pub const fn p3_index(self) -> PageTableIndex {
         self.start_address().p3_index()
     }
 
     /// Returns the table index of this page at the specified level.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+    pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
         self.start_address().page_table_index(level)
     }
 
     /// Returns a range of pages, exclusive `end`.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range(start: Self, end: Self) -> PageRange<S> {
+    pub const fn range(start: Self, end: Self) -> PageRange<S> {
         PageRange { start, end }
     }
 
     /// Returns a range of pages, inclusive `end`.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+    pub const fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
         PageRangeInclusive { start, end }
     }
 
@@ -166,7 +160,10 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    #[cfg(any(feature = "instructions", feature = "step_trait"))]
+    #[cfg(any(
+        all(feature = "instructions", target_arch = "x86_64"),
+        feature = "step_trait"
+    ))]
     pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {
         if let Some(steps) = Self::steps_between_u64(start, end) {
             let steps = usize::try_from(steps).ok();
@@ -177,7 +174,10 @@ impl<S: PageSize> Page<S> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
-    #[cfg(any(feature = "instructions", feature = "step_trait"))]
+    #[cfg(any(
+        all(feature = "instructions", target_arch = "x86_64"),
+        feature = "step_trait"
+    ))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
         let start_address = VirtAddr::forward_checked_u64(start.start_address, count)?;
@@ -191,8 +191,7 @@ impl<S: PageSize> Page<S> {
 impl<S: NotGiantPageSize> Page<S> {
     /// Returns the level 2 page table index of this page.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn p2_index(self) -> PageTableIndex {
+    pub const fn p2_index(self) -> PageTableIndex {
         self.start_address().p2_index()
     }
 }
@@ -200,8 +199,7 @@ impl<S: NotGiantPageSize> Page<S> {
 impl Page<Size1GiB> {
     /// Returns the 1GiB memory page with the specified page table indices.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn from_page_table_indices_1gib(
+    pub const fn from_page_table_indices_1gib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
     ) -> Self {
@@ -215,8 +213,7 @@ impl Page<Size1GiB> {
 impl Page<Size2MiB> {
     /// Returns the 2MiB memory page with the specified page table indices.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn from_page_table_indices_2mib(
+    pub const fn from_page_table_indices_2mib(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
@@ -232,8 +229,7 @@ impl Page<Size2MiB> {
 impl Page<Size4KiB> {
     /// Returns the 4KiB memory page with the specified page table indices.
     #[inline]
-    #[rustversion::attr(since(1.61), const)]
-    pub fn from_page_table_indices(
+    pub const fn from_page_table_indices(
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
@@ -340,7 +336,6 @@ impl<S: PageSize> Step for Page<S> {
 
 /// A range of pages with exclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PageRange<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: Page<S>,
@@ -372,14 +367,28 @@ impl<S: PageSize> PageRange<S> {
     }
 }
 
-impl<S: PageSize> Iterator for PageRange<S> {
+impl<S: PageSize> IntoIterator for PageRange<S> {
+    type Item = Page<S>;
+
+    type IntoIter = PageRangeIter<S>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        PageRangeIter(self)
+    }
+}
+
+/// By-value [`PageRange`] iterator.
+#[derive(Clone, Debug)]
+pub struct PageRangeIter<S: PageSize = Size4KiB>(PageRange<S>);
+
+impl<S: PageSize> Iterator for PageRangeIter<S> {
     type Item = Page<S>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            let page = self.start;
-            self.start += 1;
+        if self.0.start < self.0.end {
+            let page = self.0.start;
+            self.0.start += 1;
             Some(page)
         } else {
             None
@@ -387,7 +396,7 @@ impl<S: PageSize> Iterator for PageRange<S> {
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -399,48 +408,48 @@ impl<S: PageSize> Iterator for PageRange<S> {
         // Handling `n >= self.len()` is a bit more complicated because we
         // can't just add `n` to `self.start`. Handle this by doing two steps,
         // `self.len()-1` and `1`. This should return `None` (or panic).
-        if n >= self.len() {
-            self.nth(self.len() as usize - 1)?;
+        if n >= self.0.len() {
+            self.nth(self.0.len() as usize - 1)?;
             return self.next();
         }
 
         // Figure out how many steps there are until the address range gap.
         let second_half_start = Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
-        let steps_until_gap = Page::steps_between_u64(&self.start, &second_half_start)
+        let steps_until_gap = Page::steps_between_u64(&self.0.start, &second_half_start)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
             // Jump just *before* the address range gap.
-            self.start += steps_until_gap - 1;
+            self.0.start += steps_until_gap - 1;
             // Advancing one more time should panic.
             self.next()?;
             unreachable!("the previous call to `next` should have panicked")
         }
 
-        self.start += n;
+        self.0.start += n;
         self.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.len();
+        let len = self.0.len();
         usize::try_from(len)
             .map(|len| (len, Some(len)))
             .unwrap_or((usize::MAX, None))
     }
 }
 
-impl<S: PageSize> DoubleEndedIterator for PageRange<S> {
+impl<S: PageSize> DoubleEndedIterator for PageRangeIter<S> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            self.end -= 1;
-            Some(self.end)
+        if self.0.start < self.0.end {
+            self.0.end -= 1;
+            Some(self.0.end)
         } else {
             None
         }
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -452,24 +461,24 @@ impl<S: PageSize> DoubleEndedIterator for PageRange<S> {
         // Handling `n >= self.len()` is a bit more complicated because we
         // can't just subtract `n` from `self.end`. Handle this by doing two
         // steps, `self.len()-1` and `1`. This should return `None` (or panic).
-        if n >= self.len() {
-            self.nth_back(self.len() as usize - 1);
+        if n >= self.0.len() {
+            self.nth_back(self.0.len() as usize - 1);
             return self.next_back();
         }
 
         // Figure out how many steps there are until the address range gap.
         let first_half_end = Page::<S>::containing_address(VirtAddr::new(0x7fff_ffff_f000));
-        let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.end)
+        let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.0.end)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
             // Jump just *before* the address range gap.
-            self.end -= steps_until_gap - 1;
+            self.0.end -= steps_until_gap - 1;
             // Advancing one more time should panic.
             self.next_back()?;
             unreachable!("the previous call to `next_back` should have panicked")
         }
 
-        self.end -= n;
+        self.0.end -= n;
         self.next_back()
     }
 }
@@ -496,7 +505,6 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 
 /// A range of pages with inclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
     /// The start of the range, inclusive.
     pub start: Page<S>,
@@ -528,22 +536,36 @@ impl<S: PageSize> PageRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> Iterator for PageRangeInclusive<S> {
+impl<S: PageSize> IntoIterator for PageRangeInclusive<S> {
+    type Item = Page<S>;
+
+    type IntoIter = PageRangeInclusiveIter<S>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        PageRangeInclusiveIter(self)
+    }
+}
+
+/// By-value [`PageRangeInclusive`] iterator.
+#[derive(Clone, Debug)]
+pub struct PageRangeInclusiveIter<S: PageSize = Size4KiB>(PageRangeInclusive<S>);
+
+impl<S: PageSize> Iterator for PageRangeInclusiveIter<S> {
     type Item = Page<S>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let page = self.start;
+        if self.0.start <= self.0.end {
+            let page = self.0.start;
 
             // If the end of the inclusive range is the maximum page possible for size S,
             // incrementing start until it is greater than the end will cause an integer overflow.
             // So instead, in that case we decrement end rather than incrementing start.
             let max_page_addr = VirtAddr::new(u64::MAX) - (S::SIZE - 1);
-            if self.start.start_address() < max_page_addr {
-                self.start += 1;
+            if self.0.start.start_address() < max_page_addr {
+                self.0.start += 1;
             } else {
-                self.end -= 1;
+                self.0.end -= 1;
             }
             Some(page)
         } else {
@@ -552,7 +574,7 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -564,48 +586,48 @@ impl<S: PageSize> Iterator for PageRangeInclusive<S> {
         // Handling `n >= self.len()` is a bit more complicated because we
         // can't just add `n` to `self.start`. Handle this by doing two steps,
         // `self.len()-1` and `1`. This should return `None` (or panic).
-        if n >= self.len() {
-            self.nth(self.len() as usize - 1)?;
+        if n >= self.0.len() {
+            self.nth(self.0.len() as usize - 1)?;
             return self.next();
         }
 
         // Figure out how many steps there are until the address range gap.
         let second_half_start = Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
-        let steps_until_gap = Page::steps_between_u64(&self.start, &second_half_start)
+        let steps_until_gap = Page::steps_between_u64(&self.0.start, &second_half_start)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
             // Jump just *before* the address range gap.
-            self.start += steps_until_gap - 1;
+            self.0.start += steps_until_gap - 1;
             // Advancing one more time should panic.
             self.next()?;
             unreachable!("the previous call to `next` should have panicked")
         }
 
-        self.start += n;
+        self.0.start += n;
         self.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.len();
+        let len = self.0.len();
         usize::try_from(len)
             .map(|len| (len, Some(len)))
             .unwrap_or((usize::MAX, None))
     }
 }
 
-impl<S: PageSize> DoubleEndedIterator for PageRangeInclusive<S> {
+impl<S: PageSize> DoubleEndedIterator for PageRangeInclusiveIter<S> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.start <= self.end {
-            let page = self.end;
+        if self.0.start <= self.0.end {
+            let page = self.0.end;
 
             // If the start of the inclusive range is 0, decrementing end until
             // it is smaller than the start will cause an integer underflow.
             // So instead, in that case we increment start rather than decrementing end.
-            if self.end.start_address().as_u64() != 0 {
-                self.end -= 1;
+            if self.0.end.start_address().as_u64() != 0 {
+                self.0.end -= 1;
             } else {
-                self.start += 1;
+                self.0.start += 1;
             }
             Some(page)
         } else {
@@ -614,7 +636,7 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeInclusive<S> {
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        if self.is_empty() {
+        if self.0.is_empty() {
             return None;
         }
 
@@ -626,24 +648,24 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeInclusive<S> {
         // Handling `n >= self.len()` is a bit more complicated because we
         // can't just subtract `n` from `self.end`. Handle this by doing two
         // steps, `self.len()-1` and `1`. This should return `None` (or panic).
-        if n >= self.len() {
-            self.nth_back(self.len() as usize - 1);
+        if n >= self.0.len() {
+            self.nth_back(self.0.len() as usize - 1);
             return self.next_back();
         }
 
         // Figure out how many steps there are until the address range gap.
         let first_half_end = Page::<S>::containing_address(VirtAddr::new(0x7fff_ffff_f000));
-        let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.end)
+        let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.0.end)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
             // Jump just *before* the address range gap.
-            self.end -= steps_until_gap - 1;
+            self.0.end -= steps_until_gap - 1;
             // Advancing one more time should panic.
             self.next_back()?;
             unreachable!("the previous call to `next_back` should have panicked")
         }
 
-        self.end -= n;
+        self.0.end -= n;
         self.next_back()
     }
 }
@@ -696,23 +718,23 @@ mod tests {
         let start: Page = Page::containing_address(start_addr);
         let end = start + number;
 
-        let mut range = Page::range(start, end);
+        let mut range_iter = Page::range(start, end).into_iter();
         for i in 0..number {
             assert_eq!(
-                range.next(),
+                range_iter.next(),
                 Some(Page::containing_address(start_addr + page_size * i))
             );
         }
-        assert_eq!(range.next(), None);
+        assert_eq!(range_iter.next(), None);
 
-        let mut range_inclusive = Page::range_inclusive(start, end);
+        let mut range_inclusive_iter = Page::range_inclusive(start, end).into_iter();
         for i in 0..=number {
             assert_eq!(
-                range_inclusive.next(),
+                range_inclusive_iter.next(),
                 Some(Page::containing_address(start_addr + page_size * i))
             );
         }
-        assert_eq!(range_inclusive.next(), None);
+        assert_eq!(range_inclusive_iter.next(), None);
     }
 
     #[test]
@@ -724,14 +746,14 @@ mod tests {
         let start: Page = Page::containing_address(start_addr);
         let end = start + number;
 
-        let mut range_inclusive = Page::range_inclusive(start, end);
+        let mut range_inclusive_iter = Page::range_inclusive(start, end).into_iter();
         for i in 0..=number {
             assert_eq!(
-                range_inclusive.next(),
+                range_inclusive_iter.next(),
                 Some(Page::containing_address(start_addr + page_size * i))
             );
         }
-        assert_eq!(range_inclusive.next(), None);
+        assert_eq!(range_inclusive_iter.next(), None);
     }
 
     #[test]
@@ -743,7 +765,7 @@ mod tests {
         let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
-        Page::range(start, end).next();
+        Page::range(start, end).into_iter().next();
     }
 
     // TODO: This probably shouldn't panic, but we can't fix this without a breaking change.
@@ -756,7 +778,7 @@ mod tests {
         let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
-        Page::range(start, end).next_back();
+        Page::range(start, end).into_iter().next_back();
     }
 
     #[test]
@@ -768,7 +790,7 @@ mod tests {
         let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
-        Page::range_inclusive(start, end).next();
+        Page::range_inclusive(start, end).into_iter().next();
     }
 
     #[test]
@@ -780,7 +802,7 @@ mod tests {
         let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
-        Page::range_inclusive(start, end).next_back();
+        Page::range_inclusive(start, end).into_iter().next_back();
     }
 
     // TODO: This probably shouldn't panic, but we can't fix this without a breaking change.
@@ -793,8 +815,8 @@ mod tests {
         let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
-        Page::range_inclusive(start, end).next();
-        Page::range_inclusive(start, end).next();
+        Page::range_inclusive(start, end).into_iter().next();
+        Page::range_inclusive(start, end).into_iter().next();
     }
 
     #[test]
@@ -806,8 +828,8 @@ mod tests {
         let end = VirtAddr::new(end);
         let start = Page::<Size4KiB>::from_start_address(start).unwrap();
         let end = Page::from_start_address(end).unwrap();
-        Page::range_inclusive(start, end).next_back();
-        Page::range_inclusive(start, end).next_back();
+        Page::range_inclusive(start, end).into_iter().next_back();
+        Page::range_inclusive(start, end).into_iter().next_back();
     }
 
     #[test]
@@ -964,19 +986,19 @@ mod proofs {
 
         if should_panic {
             // Calling `next` should panic.
-            let mut our_range = Page::range(start, end);
-            our_range.next();
-            our_range.next();
+            let mut our_range_iter = Page::range(start, end).into_iter();
+            our_range_iter.next();
+            our_range_iter.next();
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range(start, end);
+        let mut our_range_iter = Page::range(start, end).into_iter();
         let mut native_range = start..end;
         // The first assert checks that we're returning the correct value.
-        assert_eq!(our_range.next(), native_range.next());
+        assert_eq!(our_range_iter.next(), native_range.next());
         // The second assert checks that we're updating the range state correctly.
-        assert_eq!(our_range.next(), native_range.next());
+        assert_eq!(our_range_iter.next(), native_range.next());
     }
 
     #[kani::proof]
@@ -1002,19 +1024,19 @@ mod proofs {
 
         if should_panic {
             // Calling `next_back` should panic.
-            let mut our_range = Page::range(start, end);
-            our_range.next_back();
-            our_range.next_back();
+            let mut our_range_iter = Page::range(start, end).into_iter();
+            our_range_iter.next_back();
+            our_range_iter.next_back();
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range(start, end);
+        let mut our_range_iter = Page::range(start, end).into_iter();
         let mut native_range = start..end;
         // The first assert checks that we're returning the correct value.
-        assert_eq!(our_range.next_back(), native_range.next_back());
+        assert_eq!(our_range_iter.next_back(), native_range.next_back());
         // The second assert checks that we're updating the range state correctly.
-        assert_eq!(our_range.next_back(), native_range.next_back());
+        assert_eq!(our_range_iter.next_back(), native_range.next_back());
     }
 
     #[kani::proof]
@@ -1040,19 +1062,19 @@ mod proofs {
 
         if should_panic {
             // Calling `next` should panic.
-            let mut our_range = Page::range_inclusive(start, end);
-            our_range.next();
-            our_range.next();
+            let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
+            our_range_iter.next();
+            our_range_iter.next();
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range_inclusive(start, end);
+        let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
         let mut native_range = start..=end;
         // The first assert checks that we're returning the correct value.
-        assert_eq!(our_range.next(), native_range.next());
+        assert_eq!(our_range_iter.next(), native_range.next());
         // The second assert checks that we're updating the range state correctly.
-        assert_eq!(our_range.next(), native_range.next());
+        assert_eq!(our_range_iter.next(), native_range.next());
     }
 
     #[kani::proof]
@@ -1078,19 +1100,19 @@ mod proofs {
 
         if should_panic {
             // Calling `next_back` should panic.
-            let mut our_range = Page::range_inclusive(start, end);
-            our_range.next_back();
-            our_range.next_back();
+            let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
+            our_range_iter.next_back();
+            our_range_iter.next_back();
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range_inclusive(start, end);
+        let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
         let mut native_range = start..=end;
         // The first assert checks that we're returning the correct value.
-        assert_eq!(our_range.next_back(), native_range.next_back());
+        assert_eq!(our_range_iter.next_back(), native_range.next_back());
         // The second assert checks that we're updating the range state correctly.
-        assert_eq!(our_range.next_back(), native_range.next_back());
+        assert_eq!(our_range_iter.next_back(), native_range.next_back());
     }
 
     #[kani::proof]
@@ -1125,17 +1147,17 @@ mod proofs {
 
         if should_panic {
             // Calling `nth` should panic.
-            let mut our_range = Page::range(start, end);
-            our_range.nth(n as usize);
-            our_range.nth(m as usize);
+            let mut our_range_iter = Page::range(start, end).into_iter();
+            our_range_iter.nth(n as usize);
+            our_range_iter.nth(m as usize);
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range(start, end);
+        let mut our_range_iter = Page::range(start, end).into_iter();
         let mut native_range = start..end;
-        assert_eq!(our_range.nth(m as usize), native_range.nth(m as usize));
-        assert_eq!(our_range.nth(n as usize), native_range.nth(n as usize));
+        assert_eq!(our_range_iter.nth(m as usize), native_range.nth(m as usize));
+        assert_eq!(our_range_iter.nth(n as usize), native_range.nth(n as usize));
     }
 
     #[kani::proof]
@@ -1173,21 +1195,21 @@ mod proofs {
 
         if should_panic {
             // Calling `nth_back` should panic.
-            let mut our_range = Page::range(start, end);
-            our_range.nth_back(n as usize);
-            our_range.nth_back(m as usize);
+            let mut our_range_iter = Page::range(start, end).into_iter();
+            our_range_iter.nth_back(n as usize);
+            our_range_iter.nth_back(m as usize);
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range(start, end);
+        let mut our_range_iter = Page::range(start, end).into_iter();
         let mut native_range = start..end;
         assert_eq!(
-            our_range.nth_back(m as usize),
+            our_range_iter.nth_back(m as usize),
             native_range.nth_back(m as usize)
         );
         assert_eq!(
-            our_range.nth_back(n as usize),
+            our_range_iter.nth_back(n as usize),
             native_range.nth_back(n as usize)
         );
     }
@@ -1226,17 +1248,17 @@ mod proofs {
 
         if should_panic {
             // Calling `nth` should panic.
-            let mut our_range = Page::range_inclusive(start, end);
-            our_range.nth(n as usize);
-            our_range.nth(m as usize);
+            let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
+            our_range_iter.nth(n as usize);
+            our_range_iter.nth(m as usize);
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range_inclusive(start, end);
+        let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
         let mut native_range = start..=end;
-        assert_eq!(our_range.nth(m as usize), native_range.nth(m as usize));
-        assert_eq!(our_range.nth(n as usize), native_range.nth(n as usize));
+        assert_eq!(our_range_iter.nth(m as usize), native_range.nth(m as usize));
+        assert_eq!(our_range_iter.nth(n as usize), native_range.nth(n as usize));
     }
 
     #[kani::proof]
@@ -1274,21 +1296,21 @@ mod proofs {
 
         if should_panic {
             // Calling `nth_back` should panic.
-            let mut our_range = Page::range_inclusive(start, end);
-            our_range.nth_back(n as usize);
-            our_range.nth_back(m as usize);
+            let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
+            our_range_iter.nth_back(n as usize);
+            our_range_iter.nth_back(m as usize);
             return;
         }
 
         // Otherwise the results should match what `Range` returns.
-        let mut our_range = Page::range_inclusive(start, end);
+        let mut our_range_iter = Page::range_inclusive(start, end).into_iter();
         let mut native_range = start..=end;
         assert_eq!(
-            our_range.nth_back(m as usize),
+            our_range_iter.nth_back(m as usize),
             native_range.nth_back(m as usize)
         );
         assert_eq!(
-            our_range.nth_back(n as usize),
+            our_range_iter.nth_back(n as usize),
             native_range.nth_back(n as usize)
         );
     }

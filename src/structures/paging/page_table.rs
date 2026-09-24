@@ -5,13 +5,15 @@ use core::fmt;
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
 #[cfg(feature = "memory_encryption")]
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::Ordering;
 
 use super::{PageSize, PhysFrame, Size4KiB};
 use crate::addr::PhysAddr;
+#[cfg(feature = "memory_encryption")]
+use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
 
 use bitflags::bitflags;
-use dep_const_fn::const_fn;
+use const_fn::const_fn;
 
 /// The error returned by the `PageTableEntry::frame` method.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -22,10 +24,6 @@ pub enum FrameError {
     /// as return type, so a huge frame can't be returned.
     HugeFrame,
 }
-
-/// The mask used to remove flags from a page table entry to obtain the physical address
-#[cfg(feature = "memory_encryption")]
-pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_f000u64);
 
 /// A 64-bit page table entry.
 #[derive(Clone)]
@@ -68,16 +66,19 @@ impl PageTableEntry {
 
     /// Returns the physical frame mapped by this entry.
     ///
+    /// Set `is_level_1_entry` to `true` if the `PageTableEntry` is from a
+    /// level 1 page table.
+    ///
     /// Returns the following errors:
     ///
     /// - `FrameError::FrameNotPresent` if the entry doesn't have the `PRESENT` flag set.
     /// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the
-    ///   `addr` function must be used)
+    ///   `addr` function must be used) and `is_level_1_entry` is `false`
     #[inline]
-    pub fn frame(&self) -> Result<PhysFrame, FrameError> {
+    pub fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
         if !self.flags().contains(PageTableFlags::PRESENT) {
             Err(FrameError::FrameNotPresent)
-        } else if self.flags().contains(PageTableFlags::HUGE_PAGE) {
+        } else if !is_level_1_entry && self.flags().contains(PageTableFlags::HUGE_PAGE) {
             Err(FrameError::HugeFrame)
         } else {
             Ok(PhysFrame::containing_address(self.addr()))
@@ -94,7 +95,6 @@ impl PageTableEntry {
     /// Map the entry to the specified physical frame with the specified flags.
     #[inline]
     pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
-        assert!(!flags.contains(PageTableFlags::HUGE_PAGE));
         self.set_addr(frame.start_address(), flags)
     }
 
@@ -107,13 +107,13 @@ impl PageTableEntry {
     #[inline(always)]
     #[cfg(not(feature = "memory_encryption"))]
     const fn physical_address_mask() -> u64 {
-        0x000f_ffff_ffff_f000u64
+        0x000f_ffff_ffff_f000
     }
 
     #[inline(always)]
     #[cfg(feature = "memory_encryption")]
     fn physical_address_mask() -> u64 {
-        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed)
+        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed) & !0xfff
     }
 }
 
@@ -148,17 +148,21 @@ bitflags! {
         /// Controls whether accesses from userspace (i.e. ring 3) are permitted.
         const USER_ACCESSIBLE = 1 << 2;
         /// If this bit is set, a “write-through” policy is used for the cache, else a “write-back”
-        /// policy is used.
+        /// policy is used. This referred to as the page-level write-through (PWT) bit.
         const WRITE_THROUGH =   1 << 3;
-        /// Disables caching for the pointed entry is cacheable.
+        /// Disables caching for the pointed entry if it is cacheable. This referred to as the
+        /// page-level cache disable (PCD) bit.
         const NO_CACHE =        1 << 4;
         /// Set by the CPU when the mapped frame or page table is accessed.
         const ACCESSED =        1 << 5;
         /// Set by the CPU on a write to the mapped frame.
         const DIRTY =           1 << 6;
-        /// Specifies that the entry maps a huge frame instead of a page table. Only allowed in
-        /// P2 or P3 tables.
+        /// Specifies that the entry maps a huge frame instead of a page table. This is the same bit
+        /// as `PAT_4KIB_PAGE`.
         const HUGE_PAGE =       1 << 7;
+        /// This is the PAT bit for page table entries that point to 4KiB pages. This is the same
+        /// bit as `HUGE_PAGE`.
+        const PAT_4KIB_PAGE =   1 << 7;
         /// Indicates that the mapping is present in all address spaces, so it isn't flushed from
         /// the TLB on an address space switch.
         const GLOBAL =          1 << 8;
@@ -168,6 +172,8 @@ bitflags! {
         const BIT_10 =          1 << 10;
         /// Available to the OS, can be used to store additional data, e.g. custom flags.
         const BIT_11 =          1 << 11;
+        /// This is the PAT bit for page table entries that point to huge pages.
+        const PAT_HUGE_PAGE =   1 << 12;
         /// Available to the OS, can be used to store additional data, e.g. custom flags.
         const BIT_52 =          1 << 52;
         /// Available to the OS, can be used to store additional data, e.g. custom flags.

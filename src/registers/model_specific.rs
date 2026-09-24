@@ -74,6 +74,10 @@ pub struct SCet;
 #[derive(Debug)]
 pub struct ApicBase;
 
+/// IA32_PAT: Page Attribute Table.
+#[derive(Debug)]
+pub struct Pat;
+
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0080);
@@ -122,6 +126,22 @@ impl SCet {
 impl ApicBase {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0x1B);
+}
+
+impl Pat {
+    /// The underlying model specific register.
+    pub const MSR: Msr = Msr(0x277);
+    /// The default PAT configuration following a power up or reset of the processor.
+    pub const DEFAULT: [PatMemoryType; 8] = [
+        PatMemoryType::WriteBack,
+        PatMemoryType::WriteThrough,
+        PatMemoryType::Uncacheable,
+        PatMemoryType::StrongUncacheable,
+        PatMemoryType::WriteBack,
+        PatMemoryType::WriteThrough,
+        PatMemoryType::Uncacheable,
+        PatMemoryType::StrongUncacheable,
+    ];
 }
 
 bitflags! {
@@ -190,17 +210,54 @@ bitflags! {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
+/// Memory types used in the [PAT](Pat).
+#[repr(u8)]
+pub enum PatMemoryType {
+    /// Uncacheable (UC).
+    StrongUncacheable = 0x00,
+    /// Uses a write combining (WC) cache policy.
+    WriteCombining = 0x01,
+    /// Uses a write through (WT) cache policy.
+    WriteThrough = 0x04,
+    /// Uses a write protected (WP) cache policy.
+    WriteProtected = 0x05,
+    /// Uses a write back (WB) cache policy.
+    WriteBack = 0x06,
+    /// Same as strong uncacheable, but can be overridden to be write combining by MTRRs (UC-).
+    Uncacheable = 0x07,
+}
+impl PatMemoryType {
+    /// Converts from bits, returning `None` if the value is invalid.
+    pub const fn from_bits(bits: u8) -> Option<Self> {
+        match bits {
+            0x00 => Some(Self::StrongUncacheable),
+            0x01 => Some(Self::WriteCombining),
+            0x04 => Some(Self::WriteThrough),
+            0x05 => Some(Self::WriteProtected),
+            0x06 => Some(Self::WriteBack),
+            0x07 => Some(Self::Uncacheable),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying bits.
+    pub const fn bits(self) -> u8 {
+        self as u8
+    }
+}
+
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod x86_64 {
     use super::*;
+    use crate::PhysAddr;
+    use crate::PrivilegeLevel;
     use crate::addr::VirtAddr;
     use crate::registers::rflags::RFlags;
     use crate::structures::gdt::SegmentSelector;
     use crate::structures::paging::Page;
     use crate::structures::paging::PhysFrame;
     use crate::structures::paging::Size4KiB;
-    use crate::PhysAddr;
-    use crate::PrivilegeLevel;
     use bit_field::BitField;
     use core::convert::TryInto;
     use core::fmt;
@@ -208,7 +265,7 @@ mod x86_64 {
     #[cfg(doc)]
     use crate::registers::{
         control::Cr4Flags,
-        segmentation::{Segment, Segment64, CS, SS},
+        segmentation::{CS, SS, Segment, Segment64},
     };
     use core::arch::asm;
 
@@ -338,8 +395,13 @@ mod x86_64 {
         ///
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`FS::write_base`] can be used instead.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that this write operation has no unsafe side
+        /// effects, as the segment base address might be in use.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub unsafe fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -359,8 +421,13 @@ mod x86_64 {
         ///
         /// If [`CR4.FSGSBASE`][Cr4Flags::FSGSBASE] is set, the more efficient
         /// [`GS::write_base`] can be used instead.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that this write operation has no unsafe side
+        /// effects, as the segment base address might be in use.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub unsafe fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -374,8 +441,12 @@ mod x86_64 {
         }
 
         /// Write a given virtual address to the KernelGsBase register.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that a future call to [`GS::swap`] has no unsafe side effects.
         #[inline]
-        pub fn write(address: VirtAddr) {
+        pub unsafe fn write(address: VirtAddr) {
             let mut msr = Self::MSR;
             unsafe { msr.write(address.as_u64()) };
         }
@@ -725,6 +796,38 @@ mod x86_64 {
             let mut msr = Self::MSR;
             unsafe {
                 msr.write(flags | addr.as_u64());
+            }
+        }
+    }
+
+    impl Pat {
+        /// Reads IA32_PAT.
+        ///
+        /// The PAT must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        #[inline]
+        pub fn read() -> [PatMemoryType; 8] {
+            unsafe { Self::MSR.read() }
+                .to_ne_bytes()
+                .map(|bits| PatMemoryType::from_bits(bits).unwrap())
+        }
+
+        /// Writes IA32_PAT.
+        ///
+        /// The PAT must be supported on the CPU, otherwise a general protection exception will
+        /// occur. Support can be detected using the `cpuid` instruction.
+        ///
+        /// # Safety
+        ///
+        /// All affected pages must be flushed from the TLB. Processor caches may also need to be
+        /// flushed. Additionally, all pages that map to a given frame must have the same memory
+        /// type.
+        #[inline]
+        pub unsafe fn write(table: [PatMemoryType; 8]) {
+            let bits = u64::from_ne_bytes(table.map(PatMemoryType::bits));
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(bits);
             }
         }
     }
