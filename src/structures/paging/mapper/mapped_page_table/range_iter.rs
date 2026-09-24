@@ -30,7 +30,11 @@ impl<S: PageSize> MappedPageRangeInclusive<S> {
     /// Returns the frame range.
     pub fn frame_range(&self) -> PhysFrameRangeInclusive<S> {
         let start = self.frame_start;
-        let end = start + self.page_range.len() - 1;
+        let end = if self.page_range.start > self.page_range.end {
+            start - (self.page_range.start - self.page_range.end)
+        } else {
+            start + (self.page_range.end - self.page_range.start)
+        };
         PhysFrameRangeInclusive { start, end }
     }
 
