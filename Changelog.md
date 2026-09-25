@@ -2,7 +2,7 @@
 
 ## New Features
 
-- [Add `checked_add()` and `checked_sub()` to `VirtAddr` and `PhysAddr`](https://github.com/rust-osdev/x86_64/pull/618)
+- [Add `checked_add()` and `checked_sub()` to `VirtAddr`, `PhysAddr`, `Page`, and `PhysFrame`](https://github.com/rust-osdev/x86_64/pull/618)
 
 # 0.16.0-rc.0 – 2026-09-24
 
