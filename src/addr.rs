@@ -168,6 +168,50 @@ impl VirtAddr {
         self.0 == 0
     }
 
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Add an offset to a virtual address.
+    ///
+    /// This function performs normal arithmetic addition and doesn't jump the
+    /// address gap. If you're looking for a successor operation that jumps the
+    /// address gap, use [`Step::forward`].
+    ///
+    /// This function returns `None` on overflow or if the result is not a
+    /// canonical address.
+    #[inline]
+    pub const fn checked_add(self, rhs: u64) -> Option<Self> {
+        let Some(addr) = self.0.checked_add(rhs) else {
+            return None;
+        };
+
+        let Ok(addr) = Self::try_new(addr) else {
+            return None;
+        };
+
+        Some(addr)
+    }
+
+    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
+    /// Subtract an offset from a virtual address.
+    ///
+    /// This function performs normal arithmetic subtraction and doesn't jump
+    /// the address gap. If you're looking for a predecessor operation that
+    /// jumps the address gap, use [`Step::backward`].
+    ///
+    /// This function returns `None` on overflow or if the result is not a
+    /// canonical address.
+    #[inline]
+    pub const fn checked_sub(self, rhs: u64) -> Option<Self> {
+        let Some(addr) = self.0.checked_sub(rhs) else {
+            return None;
+        };
+
+        let Ok(addr) = Self::try_new(addr) else {
+            return None;
+        };
+
+        Some(addr)
+    }
+
     /// Aligns the virtual address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
@@ -379,41 +423,21 @@ impl fmt::Pointer for VirtAddr {
 impl Add<u64> for VirtAddr {
     type Output = Self;
 
-    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Add an offset to a virtual address.
     ///
-    /// This function performs normal arithmetic addition and doesn't jump the
-    /// address gap. If you're looking for a successor operation that jumps the
-    /// address gap, use [`Step::forward`].
-    ///
-    /// # Panics
-    ///
-    /// This function will panic on overflow or if the result is not a
-    /// canonical address.
+    /// This function panics when [`VirtAddr::checked_add`] returns `None`.
     #[inline]
     #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
-        VirtAddr::try_new(
-            self.0
-                .checked_add(rhs)
-                .expect("attempt to add with overflow"),
-        )
-        .expect("attempt to add resulted in non-canonical virtual address")
+        self.checked_add(rhs)
+            .expect("attempt to add with overflow or resulted in non-canonical virtual address")
     }
 }
 
 impl AddAssign<u64> for VirtAddr {
-    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Add an offset to a virtual address.
     ///
-    /// This function performs normal arithmetic addition and doesn't jump the
-    /// address gap. If you're looking for a successor operation that jumps the
-    /// address gap, use [`Step::forward`].
-    ///
-    /// # Panics
-    ///
-    /// This function will panic on overflow or if the result is not a
-    /// canonical address.
+    /// This function panics when [`VirtAddr::checked_add`] returns `None`.
     #[inline]
     #[track_caller]
     fn add_assign(&mut self, rhs: u64) {
@@ -424,41 +448,22 @@ impl AddAssign<u64> for VirtAddr {
 impl Sub<u64> for VirtAddr {
     type Output = Self;
 
-    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Subtract an offset from a virtual address.
     ///
-    /// This function performs normal arithmetic subtraction and doesn't jump
-    /// the address gap. If you're looking for a predecessor operation that
-    /// jumps the address gap, use [`Step::backward`].
-    ///
-    /// # Panics
-    ///
-    /// This function will panic on overflow or if the result is not a
-    /// canonical address.
+    /// This function panics when [`VirtAddr::checked_sub`] returns `None`.
     #[inline]
     #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
-        VirtAddr::try_new(
-            self.0
-                .checked_sub(rhs)
-                .expect("attempt to subtract with overflow"),
+        self.checked_sub(rhs).expect(
+            "attempt to subtract with overflow or resulted in non-canonical virtual address",
         )
-        .expect("attempt to subtract resulted in non-canonical virtual address")
     }
 }
 
 impl SubAssign<u64> for VirtAddr {
-    #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Subtract an offset from a virtual address.
     ///
-    /// This function performs normal arithmetic subtraction and doesn't jump
-    /// the address gap. If you're looking for a predecessor operation that
-    /// jumps the address gap, use [`Step::backward`].
-    ///
-    /// # Panics
-    ///
-    /// This function will panic on overflow or if the result is not a
-    /// canonical address.
+    /// This function panics when [`VirtAddr::checked_sub`] returns `None`.
     #[inline]
     #[track_caller]
     fn sub_assign(&mut self, rhs: u64) {
@@ -618,6 +623,42 @@ impl PhysAddr {
         self.0 == 0
     }
 
+    /// Add an offset to a physical address.
+    ///
+    /// This function returns `None` on overflow or if the result is not a
+    /// valid physical address.
+    #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn checked_add(self, rhs: u64) -> Option<Self> {
+        let Some(addr) = self.0.checked_add(rhs) else {
+            return None;
+        };
+
+        let Ok(addr) = Self::try_new(addr) else {
+            return None;
+        };
+
+        Some(addr)
+    }
+
+    /// Subtract an offset from a physical address.
+    ///
+    /// This function returns `None` on overflow or if the result is not a
+    /// valid physical address.
+    #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn checked_sub(self, rhs: u64) -> Option<Self> {
+        let Some(addr) = self.0.checked_sub(rhs) else {
+            return None;
+        };
+
+        let Ok(addr) = Self::try_new(addr) else {
+            return None;
+        };
+
+        Some(addr)
+    }
+
     /// Aligns the physical address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
@@ -717,7 +758,8 @@ impl Add<u64> for PhysAddr {
     #[inline]
     #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
-        PhysAddr::new(self.0.checked_add(rhs).unwrap())
+        self.checked_add(rhs)
+            .expect("attempt to add with overflow or resulted in invalid physical address")
     }
 }
 
@@ -734,7 +776,8 @@ impl Sub<u64> for PhysAddr {
     #[inline]
     #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
-        PhysAddr::new(self.0.checked_sub(rhs).unwrap())
+        self.checked_sub(rhs)
+            .expect("attempt to subtract with overflow or resulted in invalid physical address")
     }
 }
 

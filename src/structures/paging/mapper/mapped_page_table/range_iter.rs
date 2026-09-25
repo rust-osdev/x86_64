@@ -174,7 +174,7 @@ impl<P: PageTableFrameMapping> Iterator for MappedPageTableRangeInclusiveIter<'_
         // Find the end of the current contiguous range.
         let mut end = start;
         for mapped_page in &mut self.iter {
-            if mapped_page != end + 1 {
+            if Some(mapped_page) != end.checked_add(1) {
                 // The current item is no longer contiguous to the current range,
                 // so save it for next time.
                 self.next_start = Some(mapped_page);
