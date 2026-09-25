@@ -4,6 +4,10 @@
 
 - [Add `checked_add()` and `checked_sub()` to `VirtAddr`, `PhysAddr`, `Page`, and `PhysFrame`](https://github.com/rust-osdev/x86_64/pull/618)
 
+## Fixes
+
+- [Add `#[track_caller]` to `MappedPage::add()` and `MappedPageItem::add()`](https://github.com/rust-osdev/x86_64/pull/618)
+
 # 0.16.0-rc.0 – 2026-09-24
 
 ## Breaking changes
