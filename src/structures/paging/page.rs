@@ -123,6 +123,40 @@ impl<S: PageSize> Page<S> {
         S::SIZE
     }
 
+    /// Add an offset to a page.
+    ///
+    /// This function returns `None` on overflow or if the result does not have a
+    /// valid virtual address.
+    #[inline]
+    pub const fn checked_add(self, rhs: u64) -> Option<Self> {
+        let Some(offset) = rhs.checked_mul(S::SIZE) else {
+            return None;
+        };
+
+        let Some(addr) = self.start_address().checked_add(offset) else {
+            return None;
+        };
+
+        Some(Self::containing_address(addr))
+    }
+
+    /// Subtract an offset from a page.
+    ///
+    /// This function returns `None` on overflow or if the result does not have a
+    /// valid virtual address.
+    #[inline]
+    pub const fn checked_sub(self, rhs: u64) -> Option<Self> {
+        let Some(offset) = rhs.checked_mul(S::SIZE) else {
+            return None;
+        };
+
+        let Some(addr) = self.start_address().checked_sub(offset) else {
+            return None;
+        };
+
+        Some(Self::containing_address(addr))
+    }
+
     /// Returns the level 4 page table index of this page.
     #[inline]
     pub const fn p4_index(self) -> PageTableIndex {
@@ -265,7 +299,8 @@ impl<S: PageSize> Add<u64> for Page<S> {
     #[inline]
     #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
-        Page::containing_address(self.start_address() + rhs * S::SIZE)
+        self.checked_add(rhs)
+            .expect("attempt to add with overflow or resulted in non-canonical virtual address")
     }
 }
 
@@ -282,7 +317,9 @@ impl<S: PageSize> Sub<u64> for Page<S> {
     #[inline]
     #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
-        Page::containing_address(self.start_address() - rhs * S::SIZE)
+        self.checked_sub(rhs).expect(
+            "attempt to subtract with overflow or resulted in non-canonical virtual address",
+        )
     }
 }
 
