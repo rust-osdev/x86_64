@@ -1,5 +1,9 @@
 # Unreleased
 
+## Breaking changes
+
+- [Range types (`PageRange`, `PhysFrameRange`, `PageRangeInclusive`, and `PhysFrameRangeInclusive`) now jump the address space gap instead of panicking](https://github.com/rust-osdev/x86_64/pull/618)
+
 ## New Features
 
 - [Add `checked_add()` and `checked_sub()` to `VirtAddr`, `PhysAddr`, `Page`, and `PhysFrame`](https://github.com/rust-osdev/x86_64/pull/618)
