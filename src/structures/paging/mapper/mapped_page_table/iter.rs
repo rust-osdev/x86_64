@@ -26,6 +26,7 @@ pub struct MappedPage<S: PageSize = Size4KiB> {
 impl<S: PageSize> Add<u64> for MappedPage<S> {
     type Output = Self;
 
+    #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
         Self {
             page: self.page + rhs,
@@ -51,6 +52,7 @@ pub enum MappedPageItem {
 impl Add<u64> for MappedPageItem {
     type Output = Self;
 
+    #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
         match self {
             Self::Size4KiB(mapped_page) => Self::Size4KiB(mapped_page + rhs),
