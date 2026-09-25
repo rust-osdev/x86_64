@@ -4,6 +4,8 @@
 
 use core::ops::Add;
 
+use const_fn::const_fn;
+
 use super::{MappedPageTable, PageTableFrameMapping, PageTableWalkError, PageTableWalker};
 use crate::structures::paging::{
     Page, PageSize, PageTable, PageTableFlags, PageTableIndex, PhysFrame, Size1GiB, Size2MiB,
@@ -23,16 +25,32 @@ pub struct MappedPage<S: PageSize = Size4KiB> {
     pub flags: PageTableFlags,
 }
 
+impl<S: PageSize> MappedPage<S> {
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn checked_add(self, rhs: u64) -> Option<Self> {
+        let Some(page) = self.page.checked_add(rhs) else {
+            return None;
+        };
+
+        let Some(frame) = self.frame.checked_add(rhs) else {
+            return None;
+        };
+
+        Some(Self {
+            page,
+            frame,
+            flags: self.flags,
+        })
+    }
+}
+
 impl<S: PageSize> Add<u64> for MappedPage<S> {
     type Output = Self;
 
     #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
-        Self {
-            page: self.page + rhs,
-            frame: self.frame + rhs,
-            flags: self.flags,
-        }
+        self.checked_add(rhs)
+            .expect("attempt to add with overflow or resulted in invalid mapped page")
     }
 }
 
@@ -49,16 +67,42 @@ pub enum MappedPageItem {
     Size1GiB(MappedPage<Size1GiB>),
 }
 
+impl MappedPageItem {
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn checked_add(self, rhs: u64) -> Option<Self> {
+        match self {
+            Self::Size4KiB(mapped_page) => {
+                let Some(page) = mapped_page.checked_add(rhs) else {
+                    return None;
+                };
+
+                Some(Self::Size4KiB(page))
+            }
+            Self::Size2MiB(mapped_page) => {
+                let Some(page) = mapped_page.checked_add(rhs) else {
+                    return None;
+                };
+
+                Some(Self::Size2MiB(page))
+            }
+            Self::Size1GiB(mapped_page) => {
+                let Some(page) = mapped_page.checked_add(rhs) else {
+                    return None;
+                };
+
+                Some(Self::Size1GiB(page))
+            }
+        }
+    }
+}
+
 impl Add<u64> for MappedPageItem {
     type Output = Self;
 
     #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
-        match self {
-            Self::Size4KiB(mapped_page) => Self::Size4KiB(mapped_page + rhs),
-            Self::Size2MiB(mapped_page) => Self::Size2MiB(mapped_page + rhs),
-            Self::Size1GiB(mapped_page) => Self::Size1GiB(mapped_page + rhs),
-        }
+        self.checked_add(rhs)
+            .expect("attempt to add with overflow or resulted in invalid mapped page item")
     }
 }
 
