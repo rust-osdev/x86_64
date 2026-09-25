@@ -762,7 +762,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "attempt to add resulted in non-canonical virtual address: VirtAddrNotValid(0x800000000000)"]
+    #[should_panic = "attempt to add with overflow or resulted in non-canonical virtual address"]
     fn test_page_range_next_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0xffff_8000_0000_0000;
@@ -775,7 +775,7 @@ mod tests {
 
     // TODO: This probably shouldn't panic, but we can't fix this without a breaking change.
     #[test]
-    #[should_panic = "attempt to subtract resulted in non-canonical virtual address: VirtAddrNotValid(0xffff7ffffffff000)"]
+    #[should_panic = "attempt to subtract with overflow or resulted in non-canonical virtual address"]
     fn test_page_range_next_back_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0xffff_8000_0000_0000;
@@ -787,7 +787,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "attempt to add resulted in non-canonical virtual address: VirtAddrNotValid(0x800000000000)"]
+    #[should_panic = "attempt to add with overflow or resulted in non-canonical virtual address"]
     fn test_page_range_inclusive_next_not_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0x7fff_ffff_f000;
@@ -799,7 +799,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "attempt to subtract resulted in non-canonical virtual address: VirtAddrNotValid(0xffff7ffffffff000)"]
+    #[should_panic = "attempt to subtract with overflow or resulted in non-canonical virtual address"]
     fn test_page_range_inclusive_next_back_not_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0xffff_8000_0000_0000;
@@ -812,7 +812,7 @@ mod tests {
 
     // TODO: This probably shouldn't panic, but we can't fix this without a breaking change.
     #[test]
-    #[should_panic = "attempt to add resulted in non-canonical virtual address: VirtAddrNotValid(0x800000000000)"]
+    #[should_panic = "attempt to add with overflow or resulted in non-canonical virtual address"]
     fn test_page_range_inclusive_next_jumping_gap_panics() {
         let start = 0x7fff_ffff_f000;
         let end = 0x7fff_ffff_f000;
@@ -825,7 +825,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "attempt to subtract resulted in non-canonical virtual address: VirtAddrNotValid(0xffff7ffffffff000)"]
+    #[should_panic = "attempt to subtract with overflow or resulted in non-canonical virtual address"]
     fn test_page_range_inclusive_next_back_jumping_gap_panics() {
         let start = 0xffff_8000_0000_0000;
         let end = 0xffff_8000_0000_0000;
