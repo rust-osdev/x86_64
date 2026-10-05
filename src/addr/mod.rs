@@ -165,33 +165,15 @@ pub type VirtAddr48 = VirtAddrGeneric<FixedValidity<48>>;
 #[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_57")))]
 pub type VirtAddr57 = VirtAddrGeneric<FixedValidity<57>>;
 
-/// The default virtual-address validity policy.
+/// The default validity policy for virtual addresses.
 ///
-/// This is [`FixedValidity<48>`] by default and [`FixedValidity<57>`] when the
-/// `default_virt_addr_57` feature is enabled.
-#[cfg(not(feature = "default_virt_addr_57"))]
+/// This crate uses 48-bit canonical addressing by default.
 pub type DefaultVirtAddrValidity = FixedValidity<48>;
 
-/// The default virtual-address validity policy.
+/// The default virtual address type used by this crate.
 ///
-/// This is [`FixedValidity<48>`] by default and [`FixedValidity<57>`] when the
-/// `default_virt_addr_57` feature is enabled.
-#[cfg(feature = "default_virt_addr_57")]
-pub type DefaultVirtAddrValidity = FixedValidity<57>;
-
-/// The default virtual address type.
-///
-/// This is an alias for [`VirtAddr48`] by default and `VirtAddr57` when the
-/// `default_virt_addr_57` feature is enabled.
-#[cfg(not(feature = "default_virt_addr_57"))]
+/// `VirtAddr` follows 48-bit canonical addressing.
 pub type VirtAddr = VirtAddr48;
-
-/// The default virtual address type.
-///
-/// This is an alias for [`VirtAddr48`] by default and [`VirtAddr57`] when the
-/// `default_virt_addr_57` feature is enabled.
-#[cfg(feature = "default_virt_addr_57")]
-pub type VirtAddr = VirtAddr57;
 
 /// A 64-bit physical memory address.
 ///
@@ -971,7 +953,6 @@ mod tests {
     const UNSAFE_VIRT_ADDR_RT: VirtAddrRT = unsafe { VirtAddrRT::new_unsafe(0x1234) };
 
     #[test]
-    #[cfg(not(feature = "default_virt_addr_57"))]
     fn default_virtaddr_is_va48() {
         let _: fn(u64) -> VirtAddr48 = crate::VirtAddr::new;
 
@@ -980,15 +961,7 @@ mod tests {
             VirtAddrGeneric::<FixedValidity<48>>::new(0x1234);
         assert_eq!(FIXED48.as_u64(), 0x1234);
         assert_eq!(GENERIC48.as_u64(), 0x1234);
-    }
-
-    #[test]
-    #[cfg(feature = "default_virt_addr_57")]
-    fn configured_default_virtaddr_is_va57() {
-        let _: fn(u64) -> VirtAddr57 = crate::VirtAddr::new;
-
-        const FIXED57: VirtAddr57 = VirtAddr57::new(0x00ff_0000_0000_0000);
-        assert_eq!(FIXED57.as_u64(), 0x00ff_0000_0000_0000);
+        assert!(crate::VirtAddr::try_new(0x0000_8000_0000_0000).is_err());
     }
 
     #[test]
