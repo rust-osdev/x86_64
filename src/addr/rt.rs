@@ -100,20 +100,6 @@ fn cached_virtual_address_bits() -> usize {
 }
 
 impl VirtAddrGeneric<RuntimeValidity> {
-    /// Refetches the virtual-address width from the active address-space mode and updates the
-    /// cached value.
-    ///
-    /// The first runtime-valid address operation initializes the cache automatically. Call this
-    /// method after changing `CR4.LA57` and before resuming operations that create or validate
-    /// runtime-valid addresses. The caller is responsible for synchronizing the mode change with
-    /// other processors and threads.
-    ///
-    /// This method reads `CR4.LA57`, so it must execute in Ring 0.
-    #[inline]
-    pub fn refetch_virtual_address_bits() {
-        CURRENT_VIRTUAL_ADDRESS_BITS.store(read_current_virtual_address_bits(), Ordering::Relaxed);
-    }
-
     /// Creates a new virtual address valid in the current address-space mode.
     ///
     /// # Panics
@@ -186,6 +172,20 @@ impl VirtAddrGeneric<RuntimeValidity> {
     #[inline]
     pub(crate) fn align_down_u64(self, align: u64) -> Self {
         Self::new_truncate(align_down(self.0, align))
+    }
+
+    /// Refetches the virtual-address width from the active address-space mode and updates the
+    /// cached value.
+    ///
+    /// The first runtime-valid address operation initializes the cache automatically. Call this
+    /// method after changing `CR4.LA57` and before resuming operations that create or validate
+    /// runtime-valid addresses. The caller is responsible for synchronizing the mode change with
+    /// other processors and threads.
+    ///
+    /// This method reads `CR4.LA57`, so it must execute in Ring 0.
+    #[inline]
+    pub fn refetch_virtual_address_bits() {
+        CURRENT_VIRTUAL_ADDRESS_BITS.store(read_current_virtual_address_bits(), Ordering::Relaxed);
     }
 }
 
