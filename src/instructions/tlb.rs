@@ -314,7 +314,7 @@ where
 
     /// Execute the flush.
     pub fn flush(&self) {
-        if let Some(mut pages) = self.page_range.clone() {
+        if let Some(mut pages) = self.page_range {
             while !pages.is_empty() {
                 // Calculate out how many pages we still need to flush.
                 let count = Page::<S>::steps_between_impl(&pages.start, &pages.end).0;
