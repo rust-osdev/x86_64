@@ -32,15 +32,6 @@ pub(crate) const fn canonicalize_with_bits(addr: u64, bits: usize) -> u64 {
     ((addr << shift) as i64 >> shift) as u64
 }
 
-/// Canonical-aware forward arithmetic for an explicit architectural width.
-///
-/// Internal callers supply the width of a validity policy or an architectural root level.
-pub(crate) fn forward_checked_with_bits(start: u64, count: u64, bits: usize) -> Option<u64> {
-    let mask = (1u64 << bits) - 1;
-    let address = (start & mask).checked_add(count)?;
-    (address <= mask).then(|| canonicalize_with_bits(address, bits))
-}
-
 /// Tries to create a new canonical virtual address with the given number of bits.
 ///
 /// ## Safety
@@ -432,9 +423,13 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// An implementation of forward_checked that takes u64 instead of usize.
     #[inline]
     pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let addr = forward_checked_with_bits(start.0, count, V::bits())?;
-        // SAFETY: `forward_checked_with_bits` canonicalized the result for `V`.
-        Some(unsafe { Self::new_unsafe(addr) })
+        let bits = V::bits();
+        let mask = (1u64 << bits) - 1;
+        let addr = (start.as_u64() & mask).checked_add(count)?;
+        (addr <= mask).then(|| unsafe {
+            // SAFETY: `bits` is the width of `V`.
+            new_truncate_with_bits(addr, bits)
+        })
     }
 
     /// An implementation of backward_checked that takes u64 instead of usize.
