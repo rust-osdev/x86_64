@@ -28,9 +28,18 @@ pub use validity::{FixedValidity, VirtAddrValidity};
 
 /// Canonicalizes the given address with the given number of bits.
 #[inline]
-const fn canonicalize_with_bits(addr: u64, bits: usize) -> u64 {
+pub(crate) const fn canonicalize_with_bits(addr: u64, bits: usize) -> u64 {
     let shift = 64 - bits;
     ((addr << shift) as i64 >> shift) as u64
+}
+
+/// Canonical-aware forward arithmetic for an explicit architectural width.
+///
+/// Internal callers supply the width of a validity policy or an architectural root level.
+pub(crate) fn forward_checked_with_bits(start: u64, count: u64, bits: usize) -> Option<u64> {
+    let mask = (1u64 << bits) - 1;
+    let address = (start & mask).checked_add(count)?;
+    (address <= mask).then(|| canonicalize_with_bits(address, bits))
 }
 
 /// Tries to create a new canonical virtual address with the given number of bits.
@@ -162,7 +171,6 @@ pub type VirtAddr48 = VirtAddrGeneric<FixedValidity<48>>;
 ///
 /// This alias is available with the `virt_addr_57` feature.
 #[cfg(feature = "virt_addr_57")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_57")))]
 pub type VirtAddr57 = VirtAddrGeneric<FixedValidity<57>>;
 
 /// The default validity policy for virtual addresses.
@@ -362,19 +370,16 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9) as u16)
     }
 
-    /// Returns the 9-bit level page table index.
-    #[inline]
-    pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
-        PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
-    }
-}
-
-#[cfg(feature = "virt_addr_57")]
-impl VirtAddrGeneric<FixedValidity<57>> {
     /// Returns the 9-bit level 5 page table index.
     #[inline]
     pub const fn p5_index(self) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9 >> 9) as u16)
+    }
+
+    /// Returns the 9-bit level page table index.
+    #[inline]
+    pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
+        PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
     }
 }
 
@@ -401,11 +406,6 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     pub(crate) fn try_new_with_validity(addr: u64) -> Result<Self, VirtAddrNotValid> {
         // SAFETY: `V::bits()` is valid for `V`, so this is safe.
         unsafe { try_new_with_bits(addr, V::bits()) }
-    }
-
-    #[inline]
-    fn new_truncate_with_validity(addr: u64) -> Self {
-        VirtAddrGeneric(canonicalize_with_bits(addr, V::bits()), PhantomData)
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
@@ -436,22 +436,20 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// An implementation of forward_checked that takes u64 instead of usize.
     #[inline]
     pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let mask = (1u64 << V::bits()) - 1;
-        let addr = (start.0 & mask).checked_add(count)?;
-        if addr > mask {
-            None
-        } else {
-            Some(Self::new_truncate_with_validity(addr))
-        }
+        let addr = forward_checked_with_bits(start.0, count, V::bits())?;
+        // SAFETY: `forward_checked_with_bits` canonicalized the result for `V`.
+        Some(unsafe { Self::new_unsafe(addr) })
     }
 
     /// An implementation of backward_checked that takes u64 instead of usize.
     #[cfg(feature = "step_trait")]
     #[inline]
     pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let mask = (1u64 << V::bits()) - 1;
+        let bits = V::bits();
+        let mask = (1u64 << bits) - 1;
         let addr = (start.0 & mask).checked_sub(count)?;
-        Some(Self::new_truncate_with_validity(addr))
+        // SAFETY: `bits` is the width of `V`.
+        Some(unsafe { new_truncate_with_bits(addr, bits) })
     }
 }
 

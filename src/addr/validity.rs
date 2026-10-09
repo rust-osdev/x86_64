@@ -45,6 +45,20 @@ pub trait VirtAddrValidity: crate::sealed::Sealed + Copy + Ord + Hash {
     /// known as a const parameter. It is used for common code that is generic over validity
     /// policies, including `RuntimeValidity`.
     fn bits() -> usize;
+
+    /// Returns the last canonical address in the lower half of this validity's
+    /// address space.
+    #[inline]
+    fn lower_half_end() -> u64 {
+        !Self::upper_half_start()
+    }
+
+    /// Returns the first canonical address in the upper half of this validity's
+    /// address space.
+    #[inline]
+    fn upper_half_start() -> u64 {
+        u64::MAX << (Self::bits() - 1)
+    }
 }
 
 /// A fixed-width virtual-address validity policy.

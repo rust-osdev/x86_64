@@ -5,8 +5,6 @@ use core::convert::TryFrom;
 #[cfg(all(feature = "instructions", target_arch = "x86_64"))]
 mod instr;
 
-use crate::structures::paging::PageTableIndex;
-
 #[cfg(feature = "virt_addr_57")]
 use super::VirtAddr57;
 use super::{VirtAddr48, VirtAddrGeneric, VirtAddrNotValid, VirtAddrValidity};
@@ -19,14 +17,12 @@ use super::{VirtAddr48, VirtAddrGeneric, VirtAddrNotValid, VirtAddrValidity};
 /// consult the active mode are available wherever the policy is available. Checked construction,
 /// canonicalization, and address-producing arithmetic additionally require the `instructions`
 /// feature and an `x86_64` target, and they must execute in Ring 0.
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_rt")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RuntimeValidity;
 
 /// A virtual address checked against the current address-space mode when created.
 ///
 /// This alias is available with the `virt_addr_rt` feature.
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "virt_addr_rt")))]
 pub type VirtAddrRT = VirtAddrGeneric<RuntimeValidity>;
 
 impl crate::sealed::Sealed for RuntimeValidity {}
@@ -46,14 +42,6 @@ impl VirtAddrValidity for RuntimeValidity {
                 "runtime virtual-address width requires x86_64 and the instructions feature"
             )
         }
-    }
-}
-
-impl VirtAddrGeneric<RuntimeValidity> {
-    /// Returns the 9-bit level 5 page table index.
-    #[inline]
-    pub const fn p5_index(self) -> PageTableIndex {
-        PageTableIndex::new_truncate((self.0 >> 12 >> 9 >> 9 >> 9 >> 9) as u16)
     }
 }
 
