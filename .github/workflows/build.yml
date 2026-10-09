@@ -71,6 +71,9 @@ jobs:
 
       - run: cargo test --features "${{ matrix.features }}"
 
+      - name: Test LA57 and runtime address support
+        run: cargo test --features "${{ matrix.features }} virt_addr_57 virt_addr_rt"
+
       - run: cargo test --features "${{ matrix.features }}" --target x86_64-unknown-linux-musl
         if: runner.os == 'Linux'
 
