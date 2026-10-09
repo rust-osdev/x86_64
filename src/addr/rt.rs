@@ -1,21 +1,60 @@
-//! Runtime virtual-address width operations for the `RuntimeValidity` policy.
+//! Runtime virtual-address validity policy and operations.
 
-#[cfg(feature = "virt_addr_57")]
 use core::convert::TryFrom;
 use core::sync::atomic::{AtomicU8, Ordering};
 
 #[cfg(feature = "virt_addr_57")]
-use crate::addr::VirtAddr57;
-use crate::addr::{
-    ArithmeticValidity, VirtAddrGeneric, VirtAddrNotValid, VirtAddrValidity, align_down, align_up,
+use super::VirtAddr57;
+use super::{
+    VirtAddr48, VirtAddrGeneric, VirtAddrNotValid, VirtAddrValidity, align_down, align_up,
     canonicalize_with_bits, new_truncate_with_bits, try_new_with_bits,
 };
 
-use super::RuntimeValidity;
-#[cfg(any(test, feature = "virt_addr_57"))]
-use super::VirtAddrRT;
+/// The runtime virtual-address validity policy.
+///
+/// This policy checks the currently active address-space mode using a global cache of
+/// `CR4.LA57`. The first operation that needs the active mode initializes the cache. This policy
+/// is available only on `x86_64` with the `virt_addr_rt` feature, which enables `instructions`.
+/// Checked construction, canonicalization, and address-producing arithmetic must execute in Ring 0.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct RuntimeValidity;
 
-impl ArithmeticValidity for RuntimeValidity {}
+/// A virtual address checked against the current address-space mode when created.
+///
+/// This alias is available only on `x86_64` with the `virt_addr_rt` feature.
+pub type VirtAddrRT = VirtAddrGeneric<RuntimeValidity>;
+
+impl crate::sealed::Sealed for RuntimeValidity {}
+
+impl VirtAddrValidity for RuntimeValidity {
+    fn bits() -> usize {
+        cached_virtual_address_bits()
+    }
+}
+
+impl From<VirtAddr48> for VirtAddrRT {
+    #[inline]
+    fn from(address: VirtAddr48) -> Self {
+        unsafe { Self::new_unsafe(address.as_u64()) }
+    }
+}
+
+#[cfg(feature = "virt_addr_57")]
+impl From<VirtAddrRT> for VirtAddr57 {
+    #[inline]
+    fn from(address: VirtAddrRT) -> Self {
+        unsafe { Self::new_unsafe(address.as_u64()) }
+    }
+}
+
+impl TryFrom<VirtAddrRT> for VirtAddr48 {
+    type Error = VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(address: VirtAddrRT) -> Result<Self, Self::Error> {
+        Self::try_new(address.as_u64())
+    }
+}
 
 /// The cached virtual-address width for the active address-space mode.
 ///
@@ -40,7 +79,7 @@ fn read_current_virtual_address_bits() -> u8 {
 ///
 /// This function must execute in Ring 0 if the cache has not been initialized yet.
 #[inline]
-pub(super) fn cached_virtual_address_bits() -> usize {
+fn cached_virtual_address_bits() -> usize {
     let cached = CURRENT_VIRTUAL_ADDRESS_BITS.load(Ordering::Relaxed);
     if cached != 0 {
         return usize::from(cached);
@@ -178,8 +217,6 @@ mod tests {
     #[cfg(feature = "step_trait")]
     use core::iter::Step;
 
-    use crate::addr::VirtAddr48;
-
     use super::*;
 
     #[test]
@@ -205,5 +242,20 @@ mod tests {
 
         #[cfg(feature = "virt_addr_57")]
         let _: fn(VirtAddr57) -> bool = VirtAddr57::is_valid_currently;
+    }
+
+    #[test]
+    fn runtime_fixed_conversions_preserve_or_check_values() {
+        let address48 = VirtAddr48::new(0xffff_8000_0000_1234);
+        let address_rt = VirtAddrRT::from(address48);
+
+        assert_eq!(address_rt.as_u64(), address48.as_u64());
+        assert_eq!(VirtAddr48::try_from(address_rt).unwrap(), address48);
+
+        #[cfg(feature = "virt_addr_57")]
+        {
+            let address57 = VirtAddr57::from(address_rt);
+            assert_eq!(address57.as_u64(), address48.as_u64());
+        }
     }
 }

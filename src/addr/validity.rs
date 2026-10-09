@@ -9,7 +9,7 @@ use core::hash::Hash;
 ///
 /// - [`FixedValidity<48>`]: 48-bit fixed width.
 /// - [`FixedValidity<57>`]: 57-bit fixed width (requires the `virt_addr_57` feature).
-/// - `RuntimeValidity`: Runtime validity (requires the `virt_addr_rt` feature).
+/// - `RuntimeValidity`: Runtime validity (requires `x86_64` and the `virt_addr_rt` feature).
 ///
 /// This trait is used by [`VirtAddrGeneric`](super::VirtAddrGeneric) to construct different
 /// virtual-address types.
@@ -84,15 +84,4 @@ impl VirtAddrValidity for FixedValidity<57> {
     fn bits() -> usize {
         57
     }
-}
-
-/// A [`VirtAddrValidity`] for which arithmetic operations are supported.
-///
-/// Enabled fixed validity policies always support arithmetic. `RuntimeValidity` supports
-/// arithmetic when the `instructions` feature is enabled and the target is `x86_64`.
-pub(crate) trait ArithmeticValidity: VirtAddrValidity {}
-
-impl<const BITS: usize> ArithmeticValidity for FixedValidity<BITS> where
-    FixedValidity<BITS>: VirtAddrValidity
-{
 }

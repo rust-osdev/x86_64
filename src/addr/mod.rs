@@ -17,13 +17,12 @@ use crate::structures::paging::{PageOffset, PageTableIndex};
 
 use dep_const_fn::const_fn;
 
-#[cfg(feature = "virt_addr_rt")]
+#[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
 mod rt;
 mod validity;
 
-#[cfg(feature = "virt_addr_rt")]
+#[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
 pub use rt::{RuntimeValidity, VirtAddrRT};
-pub(crate) use validity::ArithmeticValidity;
 pub use validity::{FixedValidity, VirtAddrValidity};
 
 /// Canonicalizes the given address with the given number of bits.
@@ -94,8 +93,8 @@ const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
 ///   canonical virtual address.)
 /// - `VirtAddr57` (with `virt_addr_57`): A virtual address that is canonical under five-level
 ///   paging. (A 57-bit canonical virtual address.)
-/// - `VirtAddrRT` (with `virt_addr_rt`): A virtual address that is canonical under the currently
-///   active address-space mode. Validity is checked only when an address is created. A later
+/// - `VirtAddrRT` (on `x86_64` with `virt_addr_rt`): A virtual address that is canonical under the
+///   currently active address-space mode. Validity is checked only when an address is created. A later
 ///   address-space mode change does not invalidate existing values.
 ///
 /// ## Representation
@@ -116,9 +115,9 @@ const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
 ///
 /// ## Conversion
 ///
-/// Virtual addresses can be converted to `u64` by using the [`as_u64`](Self::as_u64) method. They
-/// can also be converted from and to raw pointers by using the [`from_ptr`](Self::from_ptr),
-/// [`as_ptr`](Self::as_ptr), and [`as_mut_ptr`](Self::as_mut_ptr) methods.
+/// Virtual addresses can be converted to `u64` by using the [`as_u64`](Self::as_u64) method. On
+/// 64-bit targets, they can also be converted from and to raw pointers by using the `from_ptr`,
+/// `as_ptr`, and `as_mut_ptr` methods.
 ///
 /// Virtual addresses of different types can also be converted to each other. For conversions that
 /// nevel fail (`VirtAddr48` to `VirtAddr57` and `VirtAddrRT`, and `VirtAddrRT` to `VirtAddr57`),
@@ -128,11 +127,10 @@ const unsafe fn new_truncate_with_bits<V: VirtAddrValidity>(
 ///
 /// ## Limitations on `VirtAddrRT`
 ///
-/// `VirtAddrRT` can be stored, compared, formatted, inspected, and created through
-/// [`zero`](Self::zero) or unsafe [`new_unsafe`](Self::new_unsafe) on all targets. Operations that
-/// check the current address-space mode or produce a new runtime-valid address use a cached
-/// virtual-address width. They require the `instructions` feature and an `x86_64` target, and they
-/// must execute in Ring 0. The first such operation initializes the cache from `CR4.LA57`. Call
+/// `VirtAddrRT` is available only on `x86_64` with the `virt_addr_rt` feature, which enables
+/// `instructions`. Operations that check the current address-space mode or produce a new
+/// runtime-valid address use a cached virtual-address width and must execute in Ring 0. The first
+/// such operation initializes the cache from `CR4.LA57`. Call
 /// `VirtAddrRT::refetch_virtual_address_bits` after changing the active address-space mode.
 ///
 /// Validity is checked only when an address is created. A later address-space mode change does not
@@ -496,7 +494,7 @@ impl<V: VirtAddrValidity> fmt::Pointer for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: ArithmeticValidity> Add<u64> for VirtAddrGeneric<V> {
+impl<V: VirtAddrValidity> Add<u64> for VirtAddrGeneric<V> {
     type Output = Self;
 
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
@@ -521,7 +519,7 @@ impl<V: ArithmeticValidity> Add<u64> for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: ArithmeticValidity> AddAssign<u64> for VirtAddrGeneric<V> {
+impl<V: VirtAddrValidity> AddAssign<u64> for VirtAddrGeneric<V> {
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Add an offset to a virtual address.
     ///
@@ -539,7 +537,7 @@ impl<V: ArithmeticValidity> AddAssign<u64> for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: ArithmeticValidity> Sub<u64> for VirtAddrGeneric<V> {
+impl<V: VirtAddrValidity> Sub<u64> for VirtAddrGeneric<V> {
     type Output = Self;
 
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
@@ -564,7 +562,7 @@ impl<V: ArithmeticValidity> Sub<u64> for VirtAddrGeneric<V> {
     }
 }
 
-impl<V: ArithmeticValidity> SubAssign<u64> for VirtAddrGeneric<V> {
+impl<V: VirtAddrValidity> SubAssign<u64> for VirtAddrGeneric<V> {
     #[cfg_attr(not(feature = "step_trait"), allow(rustdoc::broken_intra_doc_links))]
     /// Subtract an offset from a virtual address.
     ///
@@ -617,7 +615,7 @@ impl TryFrom<VirtAddr57> for VirtAddr48 {
 }
 
 #[cfg(feature = "step_trait")]
-impl<V: ArithmeticValidity> Step for VirtAddrGeneric<V> {
+impl<V: VirtAddrValidity> Step for VirtAddrGeneric<V> {
     #[inline]
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
@@ -947,8 +945,37 @@ mod tests {
     const UNSAFE_VIRT_ADDR_48: VirtAddr48 = unsafe { VirtAddr48::new_unsafe(0x1234) };
     #[cfg(feature = "virt_addr_57")]
     const UNSAFE_VIRT_ADDR_57: VirtAddr57 = unsafe { VirtAddr57::new_unsafe(0x1234) };
-    #[cfg(feature = "virt_addr_rt")]
+    #[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
     const UNSAFE_VIRT_ADDR_RT: VirtAddrRT = unsafe { VirtAddrRT::new_unsafe(0x1234) };
+
+    #[test]
+    fn validity_bound_supports_address_arithmetic() {
+        fn check<V: VirtAddrValidity>(address: VirtAddrGeneric<V>) {
+            assert_eq!(((address + 4) - 4).as_u64(), address.as_u64());
+            let mut next = address;
+            next += 4;
+            next -= 4;
+            assert_eq!(next, address);
+            #[cfg(feature = "step_trait")]
+            {
+                let next = Step::forward_checked(address, 4).unwrap();
+                assert_eq!(Step::backward_checked(next, 4), Some(address));
+            }
+        }
+
+        check(VirtAddr48::new(0x1234));
+        #[cfg(feature = "virt_addr_57")]
+        check(VirtAddr57::new(0x0000_8000_0000_1234));
+    }
+
+    #[test]
+    #[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
+    fn runtime_feature_provides_checked_constructors() {
+        let _: fn(u64) -> VirtAddrRT = VirtAddrRT::new;
+        let _: fn(u64) -> Result<VirtAddrRT, VirtAddrNotValid> = VirtAddrRT::try_new;
+        let _: fn(u64) -> VirtAddrRT = VirtAddrRT::new_truncate;
+        let _: fn() = VirtAddrRT::refetch_virtual_address_bits;
+    }
 
     #[test]
     fn default_virtaddr_is_va48() {
@@ -1030,7 +1057,7 @@ mod tests {
             core::mem::size_of::<VirtAddr57>(),
             core::mem::size_of::<u64>()
         );
-        #[cfg(feature = "virt_addr_rt")]
+        #[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
         assert_eq!(
             core::mem::size_of::<VirtAddrRT>(),
             core::mem::size_of::<u64>()
@@ -1044,7 +1071,7 @@ mod tests {
             core::mem::align_of::<VirtAddr57>(),
             core::mem::align_of::<u64>()
         );
-        #[cfg(feature = "virt_addr_rt")]
+        #[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
         assert_eq!(
             core::mem::align_of::<VirtAddrRT>(),
             core::mem::align_of::<u64>()
@@ -1056,7 +1083,7 @@ mod tests {
         assert_eq!(UNSAFE_VIRT_ADDR_48.as_u64(), 0x1234);
         #[cfg(feature = "virt_addr_57")]
         assert_eq!(UNSAFE_VIRT_ADDR_57.as_u64(), 0x1234);
-        #[cfg(feature = "virt_addr_rt")]
+        #[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
         assert_eq!(UNSAFE_VIRT_ADDR_RT.as_u64(), 0x1234);
     }
 
