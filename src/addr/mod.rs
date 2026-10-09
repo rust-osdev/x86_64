@@ -939,7 +939,7 @@ mod tests {
     /// This helper preserves the concise tuple-constructor spelling used by the original tests.
     #[allow(non_snake_case)]
     fn VirtAddr(addr: u64) -> VirtAddr48 {
-        unsafe { VirtAddr48::new_unsafe(addr) }
+        VirtAddr48::new(addr)
     }
 
     const UNSAFE_VIRT_ADDR_48: VirtAddr48 = unsafe { VirtAddr48::new_unsafe(0x1234) };
