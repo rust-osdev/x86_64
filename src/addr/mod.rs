@@ -379,9 +379,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {
         PageTableIndex::new_truncate((self.0 >> 12 >> ((level as u8 - 1) * 9)) as u16)
     }
-}
 
-impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     /// Checks whether the virtual address has the demanded alignment.
     #[inline]
     pub fn is_aligned<U>(self, align: U) -> bool
