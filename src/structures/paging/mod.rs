@@ -6,7 +6,7 @@ pub use self::frame::PhysFrame;
 pub use self::frame_alloc::{FrameAllocator, FrameDeallocator};
 #[doc(no_inline)]
 pub use self::mapper::MappedPageTable;
-#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 #[doc(no_inline)]
 pub use self::mapper::RecursivePageTable;
 pub use self::mapper::{Mapper, Translate};
@@ -14,7 +14,9 @@ pub use self::mapper::{Mapper, Translate};
 #[doc(no_inline)]
 pub use self::mapper::{OffsetPageTable, PhysOffset};
 pub use self::page::{Page, PageSize, Size1GiB, Size2MiB, Size4KiB};
-pub use self::page_table::{PageOffset, PageTable, PageTableFlags, PageTableIndex};
+pub use self::page_table::{
+    PageOffset, PageTable, PageTableFlags, PageTableIndex, PageTableRootLevel,
+};
 
 pub mod frame;
 mod frame_alloc;

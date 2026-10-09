@@ -412,6 +412,50 @@ impl Step for PageTableIndex {
     }
 }
 
+/// An address's indices, independent of root level, traversal state and validity policy.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct PageTableIndices {
+    /// Ordered from P1 to P5. Every coordinate is always a valid table index.
+    indices: [PageTableIndex; PageTableLevel::Five as usize],
+}
+
+impl PageTableIndices {
+    /// Extracts all five indices without validating or canonicalizing the address.
+    ///
+    /// This does not consult runtime validity. Canonical VA48 addresses naturally yield
+    /// P5 = 0 or 511, even when the actual root is L4.
+    pub(crate) fn from_address(address: u64) -> Self {
+        fn index_at(address: u64, level: PageTableLevel) -> PageTableIndex {
+            PageTableIndex::new_truncate((address / level.entry_address_space_alignment()) as u16)
+        }
+
+        Self {
+            indices: [
+                index_at(address, PageTableLevel::One),
+                index_at(address, PageTableLevel::Two),
+                index_at(address, PageTableLevel::Three),
+                index_at(address, PageTableLevel::Four),
+                index_at(address, PageTableLevel::Five),
+            ],
+        }
+    }
+
+    /// Returns the index at `level`.
+    pub(crate) fn index(&self, level: PageTableLevel) -> PageTableIndex {
+        self.indices[level as usize - 1]
+    }
+
+    /// Changes only the index at `level`.
+    pub(crate) fn set_index(&mut self, level: PageTableLevel, index: PageTableIndex) {
+        self.indices[level as usize - 1] = index;
+    }
+
+    /// Clears the indices strictly below `level`, leaving it and higher indices unchanged.
+    pub(crate) fn zero_below(&mut self, level: PageTableLevel) {
+        self.indices[..level as usize - 1].fill(PageTableIndex::new(0));
+    }
+}
+
 /// A 12-bit offset into a 4KiB Page.
 ///
 /// This type is returned by the `VirtAddr::page_offset` method.
@@ -464,7 +508,7 @@ impl From<PageOffset> for usize {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-/// A value between 1 and 4.
+/// A page-table level between 1 and 5.
 pub enum PageTableLevel {
     /// Represents the level for a page table.
     One = 1,
@@ -474,12 +518,15 @@ pub enum PageTableLevel {
     Three,
     /// Represents the level for a page-map level-4.
     Four,
+    /// Represents the level for a page-map level-5.
+    Five,
 }
 
 impl PageTableLevel {
     /// Returns the next lower level or `None` for level 1
     pub const fn next_lower_level(self) -> Option<Self> {
         match self {
+            PageTableLevel::Five => Some(PageTableLevel::Four),
             PageTableLevel::Four => Some(PageTableLevel::Three),
             PageTableLevel::Three => Some(PageTableLevel::Two),
             PageTableLevel::Two => Some(PageTableLevel::One),
@@ -487,10 +534,11 @@ impl PageTableLevel {
         }
     }
 
-    /// Returns the next higher level or `None` for level 4
+    /// Returns the next higher level or `None` for level 5
     pub const fn next_higher_level(self) -> Option<Self> {
         match self {
-            PageTableLevel::Four => None,
+            PageTableLevel::Five => None,
+            PageTableLevel::Four => Some(PageTableLevel::Five),
             PageTableLevel::Three => Some(PageTableLevel::Four),
             PageTableLevel::Two => Some(PageTableLevel::Three),
             PageTableLevel::One => Some(PageTableLevel::Two),
@@ -505,6 +553,79 @@ impl PageTableLevel {
     /// Returns the alignment for the address space described by an entry in a table of this level.
     pub const fn entry_address_space_alignment(self) -> u64 {
         1u64 << (((self as u8 - 1) * 9) + 12)
+    }
+}
+
+/// The possible root levels of an x86 page table.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PageTableRootLevel {
+    /// A four-level page table root.
+    Four,
+    /// A five-level page table root.
+    Five,
+}
+
+impl PageTableRootLevel {
+    /// Returns the corresponding general page-table level.
+    pub const fn as_page_table_level(self) -> PageTableLevel {
+        match self {
+            Self::Four => PageTableLevel::Four,
+            Self::Five => PageTableLevel::Five,
+        }
+    }
+
+    /// Returns the cached current active page table root level.
+    ///
+    /// Use [`VirtAddrRT::refetch_virtual_address_bits`](crate::addr::VirtAddrRT::refetch_virtual_address_bits)
+    /// to update the cache before reading it if necessary.
+    #[cfg(all(target_arch = "x86_64", feature = "virt_addr_rt"))]
+    pub fn current_active_root_level() -> Self {
+        use crate::addr::{FixedValidity, RuntimeValidity, VirtAddrValidity};
+
+        if RuntimeValidity::bits() == FixedValidity::<48>::bits() {
+            PageTableRootLevel::Four
+        } else {
+            PageTableRootLevel::Five
+        }
+    }
+}
+
+#[cfg(test)]
+mod indices_tests {
+    use super::*;
+
+    #[test]
+    fn address_indices_ignore_offsets_and_bits_above_p5() {
+        let indices = PageTableIndices::from_address(0xfe05_0200_c040_1abc);
+        for (level, expected) in [
+            (PageTableLevel::One, 1),
+            (PageTableLevel::Two, 2),
+            (PageTableLevel::Three, 3),
+            (PageTableLevel::Four, 4),
+            (PageTableLevel::Five, 5),
+        ] {
+            assert_eq!(u16::from(indices.index(level)), expected);
+        }
+
+        let indices = PageTableIndices::from_address(0xffff_8000_0000_0000);
+        assert_eq!(u16::from(indices.index(PageTableLevel::Five)), 511);
+        assert_eq!(u16::from(indices.index(PageTableLevel::Four)), 256);
+        assert_eq!(u16::from(indices.index(PageTableLevel::Three)), 0);
+    }
+
+    #[test]
+    fn zero_below_preserves_the_selected_and_higher_indices() {
+        for (level, expected) in [
+            (PageTableLevel::One, [1, 2, 3, 4, 5]),
+            (PageTableLevel::Two, [0, 2, 3, 4, 5]),
+            (PageTableLevel::Three, [0, 0, 3, 4, 5]),
+            (PageTableLevel::Four, [0, 0, 0, 4, 5]),
+            (PageTableLevel::Five, [0, 0, 0, 0, 5]),
+        ] {
+            let mut indices = PageTableIndices::from_address(0x0005_0200_c040_1000);
+            indices.zero_below(level);
+            assert_eq!(indices.indices.map(u16::from), expected);
+        }
     }
 }
 
