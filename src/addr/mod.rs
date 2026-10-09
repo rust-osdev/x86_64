@@ -1090,7 +1090,7 @@ mod tests {
     #[test]
     #[should_panic]
     pub fn add_overflow_virtaddr() {
-        let _ = VirtAddr48::new(0xffff_ffff_ffff_ffff) + 1;
+        let _ = VirtAddr::new(0xffff_ffff_ffff_ffff) + 1;
     }
 
     #[test]
@@ -1102,7 +1102,7 @@ mod tests {
     #[test]
     #[should_panic]
     pub fn sub_underflow_virtaddr() {
-        let _ = VirtAddr48::new(0) - 1;
+        let _ = VirtAddr::new(0) - 1;
     }
 
     #[test]
@@ -1113,10 +1113,10 @@ mod tests {
 
     #[test]
     pub fn virtaddr_new_truncate() {
-        assert_eq!(VirtAddr48::new_truncate(0), VirtAddr(0));
-        assert_eq!(VirtAddr48::new_truncate(1 << 47), VirtAddr(0xfffff << 47));
-        assert_eq!(VirtAddr48::new_truncate(123), VirtAddr(123));
-        assert_eq!(VirtAddr48::new_truncate(123 << 47), VirtAddr(0xfffff << 47));
+        assert_eq!(VirtAddr::new_truncate(0), VirtAddr(0));
+        assert_eq!(VirtAddr::new_truncate(1 << 47), VirtAddr(0xfffff << 47));
+        assert_eq!(VirtAddr::new_truncate(123), VirtAddr(123));
+        assert_eq!(VirtAddr::new_truncate(123 << 47), VirtAddr(0xfffff << 47));
     }
 
     #[test]
@@ -1304,8 +1304,8 @@ mod tests {
     fn test_virt_addr_align_up() {
         // Make sure the 47th bit is extended.
         assert_eq!(
-            VirtAddr48::new(0x7fff_ffff_ffff).align_up(2u64),
-            VirtAddr48::new(0xffff_8000_0000_0000)
+            VirtAddr::new(0x7fff_ffff_ffff).align_up(2u64),
+            VirtAddr::new(0xffff_8000_0000_0000)
         );
     }
 
@@ -1313,15 +1313,15 @@ mod tests {
     fn test_virt_addr_align_down() {
         // Make sure the 47th bit is extended.
         assert_eq!(
-            VirtAddr48::new(0xffff_8000_0000_0000).align_down(1u64 << 48),
-            VirtAddr48::new(0)
+            VirtAddr::new(0xffff_8000_0000_0000).align_down(1u64 << 48),
+            VirtAddr::new(0)
         );
     }
 
     #[test]
     #[should_panic]
     fn test_virt_addr_align_up_overflow() {
-        VirtAddr48::new(0xffff_ffff_ffff_ffff).align_up(2u64);
+        VirtAddr::new(0xffff_ffff_ffff_ffff).align_up(2u64);
     }
 
     #[test]
@@ -1336,8 +1336,8 @@ mod tests {
         let slice = &[1, 2, 3, 4, 5];
         // Make sure that from_ptr(slice) is the address of the first element
         assert_eq!(
-            VirtAddr48::from_ptr(slice.as_slice()),
-            VirtAddr48::from_ptr(&slice[0])
+            VirtAddr::from_ptr(slice.as_slice()),
+            VirtAddr::from_ptr(&slice[0])
         );
     }
 }
@@ -1377,7 +1377,7 @@ mod proofs {
         };
         if let Some(expected) = expected {
             // Verify that `expected` is a valid address.
-            assert!(VirtAddr48::try_new(expected).is_ok());
+            assert!(VirtAddr::try_new(expected).is_ok());
         }
         // Verify `forward_checked`.
         let next = Step::forward_checked(start, 1);
