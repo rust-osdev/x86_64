@@ -633,7 +633,7 @@ pub(crate) fn cleanup_table_address<V: VirtAddrValidity>(
     if level == root_level {
         VirtAddrGeneric::zero()
     } else {
-        // SAFETY: level is alway not root level, so the alignment is always
+        // SAFETY: level is always not root level, so the alignment is always
         // less than the half of the address space.
         unsafe { start.align_down_u64(level.table_address_space_alignment()) }
     }
