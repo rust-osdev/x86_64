@@ -1,4 +1,4 @@
-//! Functions to load GDT, IDT, and TSS structures.
+//! Functions to load GDT, IDT, LDT, and TSS structures.
 
 use crate::VirtAddr;
 use crate::structures::gdt::SegmentSelector;
@@ -89,4 +89,40 @@ pub unsafe fn load_tss(sel: SegmentSelector) {
     unsafe {
         asm!("ltr {0:x}", in(reg) sel.0, options(nostack, preserves_flags));
     }
+}
+
+/// Load the local descriptor table register using the `lldt` instruction.
+///
+/// The processor copies the base and limit of the LDT descriptor into the
+/// LDTR, so a later change to that GDT entry takes effect only once the
+/// selector is loaded again. Unlike [`load_tss`], `lldt` does not write to
+/// the descriptor, so the same LDT can be loaded on several CPUs.
+///
+/// Loading [`SegmentSelector::NULL`] marks the LDTR as invalid. Calling
+/// `lldt` with any other selector that does not point to an LDT entry in the
+/// GDT results in a `#GP` exception.
+///
+/// ## Safety
+///
+/// This function is unsafe because the caller must ensure that the given
+/// `SegmentSelector` is null or points to a valid LDT entry in the GDT and
+/// that the LDT stays valid for as long as it is loaded.
+#[inline]
+pub unsafe fn lldt(sel: SegmentSelector) {
+    unsafe {
+        asm!("lldt {0:x}", in(reg) sel.0, options(readonly, nostack, preserves_flags));
+    }
+}
+
+/// Get the segment selector of the current LDT using the `sldt` instruction.
+///
+/// This is the selector last loaded into the LDTR. If its GDT entry changed
+/// since, the processor still uses the base and limit it loaded then.
+#[inline]
+pub fn sldt() -> SegmentSelector {
+    let sel: u16;
+    unsafe {
+        asm!("sldt {0:x}", out(reg) sel, options(nomem, nostack, preserves_flags));
+    }
+    SegmentSelector(sel)
 }
