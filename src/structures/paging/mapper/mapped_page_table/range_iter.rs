@@ -8,6 +8,7 @@ use core::ops::RangeInclusive;
 
 use super::iter::{MappedPage, MappedPageItem, MappedPageTableIter};
 use super::{MappedPageTable, PageTableFrameMapping};
+use crate::addr::{FixedValidity, VirtAddrValidity};
 use crate::structures::paging::frame::PhysFrameRangeInclusive;
 use crate::structures::paging::page::PageRangeInclusive;
 use crate::structures::paging::{
@@ -15,22 +16,23 @@ use crate::structures::paging::{
 };
 
 /// A contiguous range of [`MappedPage`]s.
-pub struct MappedPageRangeInclusive<S: PageSize = Size4KiB> {
-    page_range: PageRangeInclusive<S>,
+pub struct MappedPageRangeInclusive<S: PageSize = Size4KiB, V: VirtAddrValidity = FixedValidity<48>>
+{
+    page_range: PageRangeInclusive<S, V>,
     frame_start: PhysFrame<S>,
     flags: PageTableFlags,
 }
 
-impl<S: PageSize> MappedPageRangeInclusive<S> {
+impl<S: PageSize, V: VirtAddrValidity> MappedPageRangeInclusive<S, V> {
     /// Returns the page range.
-    pub fn page_range(&self) -> PageRangeInclusive<S> {
+    pub fn page_range(&self) -> PageRangeInclusive<S, V> {
         self.page_range
     }
 
     /// Returns the frame range.
     pub fn frame_range(&self) -> PhysFrameRangeInclusive<S> {
         let start = self.frame_start;
-        let end = start + self.page_range.len() - 1;
+        let end = start + (self.page_range.len() - 1);
         PhysFrameRangeInclusive { start, end }
     }
 
@@ -50,7 +52,9 @@ impl<S: PageSize> MappedPageRangeInclusive<S> {
     }
 }
 
-impl<S: PageSize> TryFrom<RangeInclusive<MappedPage<S>>> for MappedPageRangeInclusive<S> {
+impl<S: PageSize, V: VirtAddrValidity> TryFrom<RangeInclusive<MappedPage<S, V>>>
+    for MappedPageRangeInclusive<S, V>
+{
     /// The type returned in the event of a conversion error.
     type Error = TryFromMappedPageError;
 
@@ -58,7 +62,7 @@ impl<S: PageSize> TryFrom<RangeInclusive<MappedPage<S>>> for MappedPageRangeIncl
     ///
     /// This returns an error if the number of pages is not equal to the number of frames.
     /// This also returns an error if the page table flags are not equal.
-    fn try_from(value: RangeInclusive<MappedPage<S>>) -> Result<Self, Self::Error> {
+    fn try_from(value: RangeInclusive<MappedPage<S, V>>) -> Result<Self, Self::Error> {
         let page_range = PageRangeInclusive {
             start: value.start().page,
             end: value.end().page,
@@ -87,18 +91,20 @@ impl<S: PageSize> TryFrom<RangeInclusive<MappedPage<S>>> for MappedPageRangeIncl
 }
 
 /// A [`MappedPageRangeInclusive`] of any size.
-pub enum MappedPageRangeInclusiveItem {
+pub enum MappedPageRangeInclusiveItem<V: VirtAddrValidity = FixedValidity<48>> {
     /// The [`MappedPageRangeInclusive`] has a size of 4KiB.
-    Size4KiB(MappedPageRangeInclusive<Size4KiB>),
+    Size4KiB(MappedPageRangeInclusive<Size4KiB, V>),
 
     /// The [`MappedPageRangeInclusive`] has a size of 2MiB.
-    Size2MiB(MappedPageRangeInclusive<Size2MiB>),
+    Size2MiB(MappedPageRangeInclusive<Size2MiB, V>),
 
     /// The [`MappedPageRangeInclusive`] has a size of 1GiB.
-    Size1GiB(MappedPageRangeInclusive<Size1GiB>),
+    Size1GiB(MappedPageRangeInclusive<Size1GiB, V>),
 }
 
-impl TryFrom<RangeInclusive<MappedPageItem>> for MappedPageRangeInclusiveItem {
+impl<V: VirtAddrValidity> TryFrom<RangeInclusive<MappedPageItem<V>>>
+    for MappedPageRangeInclusiveItem<V>
+{
     /// The type returned in the event of a conversion error.
     type Error = TryFromMappedPageError;
 
@@ -107,7 +113,7 @@ impl TryFrom<RangeInclusive<MappedPageItem>> for MappedPageRangeInclusiveItem {
     /// This returns an error if the number of pages is not equal to the number of frames
     /// or when the page sizes are not equal.
     /// This also returns an error if the page table flags are not equal.
-    fn try_from(value: RangeInclusive<MappedPageItem>) -> Result<Self, Self::Error> {
+    fn try_from(value: RangeInclusive<MappedPageItem<V>>) -> Result<Self, Self::Error> {
         match (*value.start(), *value.end()) {
             (MappedPageItem::Size4KiB(start), MappedPageItem::Size4KiB(end)) => {
                 let range = MappedPageRangeInclusive::try_from(start..=end)?;
@@ -145,14 +151,20 @@ impl fmt::Display for TryFromMappedPageError {
 /// # Current implementation
 ///
 /// Performs a depth-fist search for the next contiguous range of [`MappedPageItem`]s and returns it as a [`MappedPageRangeInclusiveItem`].
-pub struct MappedPageTableRangeInclusiveIter<'a, P: PageTableFrameMapping> {
-    iter: MappedPageTableIter<'a, P>,
-    next_start: Option<MappedPageItem>,
+pub struct MappedPageTableRangeInclusiveIter<'a, P: PageTableFrameMapping, const BITS: usize = 48>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
+    iter: MappedPageTableIter<'a, P, BITS>,
+    next_start: Option<MappedPageItem<FixedValidity<BITS>>>,
 }
 
-impl<P: PageTableFrameMapping> MappedPageTable<'_, P> {
+impl<P: PageTableFrameMapping, const BITS: usize> MappedPageTable<'_, P, BITS>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
     /// Returns an iterator over the page table's [`MappedPageRangeInclusiveItem`]s.
-    pub(super) fn range_iter(&self) -> MappedPageTableRangeInclusiveIter<'_, &P> {
+    pub(super) fn range_iter(&self) -> MappedPageTableRangeInclusiveIter<'_, &P, BITS> {
         MappedPageTableRangeInclusiveIter {
             iter: self.iter(),
             next_start: None,
@@ -160,8 +172,12 @@ impl<P: PageTableFrameMapping> MappedPageTable<'_, P> {
     }
 }
 
-impl<P: PageTableFrameMapping> Iterator for MappedPageTableRangeInclusiveIter<'_, P> {
-    type Item = MappedPageRangeInclusiveItem;
+impl<P: PageTableFrameMapping, const BITS: usize> Iterator
+    for MappedPageTableRangeInclusiveIter<'_, P, BITS>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
+    type Item = MappedPageRangeInclusiveItem<FixedValidity<BITS>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // Take the start item from last iteration or get a new one.
@@ -170,7 +186,7 @@ impl<P: PageTableFrameMapping> Iterator for MappedPageTableRangeInclusiveIter<'_
         // Find the end of the current contiguous range.
         let mut end = start;
         for mapped_page in &mut self.iter {
-            if mapped_page != end + 1 {
+            if !mapped_page.follows(&end) {
                 // The current item is no longer contiguous to the current range,
                 // so save it for next time.
                 self.next_start = Some(mapped_page);

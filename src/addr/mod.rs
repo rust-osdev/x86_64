@@ -1,5 +1,6 @@
 //! Physical and virtual addresses manipulation
 
+#[cfg(any(feature = "step_trait", feature = "virt_addr_57"))]
 use core::convert::TryFrom;
 use core::fmt;
 use core::hash::Hash;
@@ -30,6 +31,14 @@ pub use validity::{FixedValidity, VirtAddrValidity};
 pub(crate) const fn canonicalize_with_bits(addr: u64, bits: usize) -> u64 {
     let shift = 64 - bits;
     ((addr << shift) as i64 >> shift) as u64
+}
+
+/// Advances an address within the canonical address space of the given width.
+#[inline]
+pub(crate) fn forward_checked_with_bits(start: u64, count: u64, bits: usize) -> Option<u64> {
+    let mask = (1u64 << bits) - 1;
+    let address = (start & mask).checked_add(count)?;
+    (address <= mask).then(|| canonicalize_with_bits(address, bits))
 }
 
 /// Tries to create a new canonical virtual address with the given number of bits.
@@ -274,19 +283,25 @@ where
     where
         U: Into<u64>,
     {
-        self.align_down_u64(align.into())
-    }
-
-    /// Aligns the virtual address downwards to the given alignment.
-    ///
-    /// This variant accepts the alignment as a `u64` for internal users.
-    #[inline]
-    pub(crate) const fn align_down_u64(self, align: u64) -> Self {
-        Self::new_truncate(align_down(self.0, align))
+        Self::new_truncate(align_down(self.0, align.into()))
     }
 }
 
 impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
+    /// Aligns the virtual address downwards to the given alignment.
+    ///
+    /// This internal variant accepts the alignment as a `u64` and preserves the
+    /// validity policy of the address.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the alignment is not greater than the half
+    /// of the size of the address space.
+    #[inline]
+    pub(crate) const unsafe fn align_down_u64(self, align: u64) -> Self {
+        // Clearing low address bits cannot change the canonical sign extension.
+        VirtAddrGeneric(align_down(self.0, align), PhantomData)
+    }
     /// Creates a new virtual address, without any checks.
     ///
     /// ## Safety
@@ -415,21 +430,23 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(feature = "step_trait")]
     #[inline]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         Self::forward_checked_u64(start, u64::try_from(count).ok()?)
     }
 
     /// An implementation of forward_checked that takes u64 instead of usize.
+    #[cfg(any(
+        test,
+        all(feature = "instructions", target_arch = "x86_64"),
+        feature = "step_trait"
+    ))]
     #[inline]
     pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {
-        let bits = V::bits();
-        let mask = (1u64 << bits) - 1;
-        let addr = (start.as_u64() & mask).checked_add(count)?;
-        (addr <= mask).then(|| unsafe {
-            // SAFETY: `bits` is the width of `V`.
-            new_truncate_with_bits(addr, bits)
-        })
+        let addr = forward_checked_with_bits(start.as_u64(), count, V::bits())?;
+        // SAFETY: `forward_checked_with_bits` canonicalized the result for `V`.
+        Some(unsafe { Self::new_unsafe(addr) })
     }
 
     /// An implementation of backward_checked that takes u64 instead of usize.

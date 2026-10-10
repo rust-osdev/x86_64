@@ -14,6 +14,12 @@
   - The mappings of a `MappedPageTable` can now be displayed.
 - [Increase the Minimum Supported Rust Version to 1.98](https://github.com/rust-osdev/x86_64/pull/604)
 - [make memory encryption bit an upper limit for physical address bits](https://github.com/rust-osdev/x86_64/pull/603)
+- [add 57-bit and runtime-validated virtual address types](https://github.com/rust-osdev/x86_64/pull/605)
+  - `VirtAddr57` and `VirtAddrRT` are available through the `virt_addr_57` and `virt_addr_rt` features.
+- [adapt paging types and mappers to fixed-width and runtime virtual addresses](https://github.com/rust-osdev/x86_64/pull/619)
+  - `RecursivePageTable` now requires the `virt_addr_rt` feature when it is used on `x86_64`.
+  - `Page`, page ranges, mapper traits, and page-table mappers now carry a virtual-address validity policy and support four- and five-level paging.
+  - `OffsetPageTable::from_phys_offset` and `PhysOffset::new` now take a raw `u64`; their `phys_offset` accessors also return `u64`.
 
 # 0.15.5 – 2026-07-11
 

@@ -163,15 +163,7 @@ impl VirtAddrGeneric<RuntimeValidity> {
     where
         U: Into<u64>,
     {
-        self.align_down_u64(align.into())
-    }
-
-    /// Aligns the virtual address downwards to the given alignment.
-    ///
-    /// This variant accepts the alignment as a `u64` for internal users.
-    #[inline]
-    pub(crate) fn align_down_u64(self, align: u64) -> Self {
-        Self::new_truncate(align_down(self.0, align))
+        Self::new_truncate(align_down(self.0, align.into()))
     }
 
     /// Refetches the virtual-address width from the active address-space mode and updates the
@@ -218,6 +210,99 @@ mod tests {
     use core::iter::Step;
 
     use super::*;
+
+    #[test]
+    fn runtime_l5_index_constructors_preserve_indices_or_reject() {
+        use crate::structures::paging::{Page, PageTableIndex, Size1GiB, Size2MiB, Size4KiB};
+
+        const TEST_WIDTH: &str = "X86_64_TEST_L5_ADDRESS_BITS";
+        let Ok(bits) = std::env::var(TEST_WIDTH) else {
+            // This test deliberately launches two child test processes. That is unusual, but
+            // necessary: each process must run only this test so its global
+            // `CURRENT_VIRTUAL_ADDRESS_BITS` cache cannot be shared with, or affected by, any
+            // other test that uses the cache. The environment variable seeds the cache without
+            // requiring a privileged CR4 read. If a better way to isolate this process-global
+            // state becomes available, this subprocess-based test should be replaced.
+            for bits in [48, 57] {
+                let output = std::process::Command::new(std::env::current_exe().unwrap())
+                    .args([
+                        "--exact",
+                        "addr::rt::tests::runtime_l5_index_constructors_preserve_indices_or_reject",
+                        "--nocapture",
+                    ])
+                    .env(TEST_WIDTH, bits.to_string())
+                    .output()
+                    .unwrap();
+                assert!(
+                    output.status.success()
+                        && std::string::String::from_utf8_lossy(&output.stdout)
+                            .contains("1 passed; 0 failed"),
+                    "runtime width {bits}:\n{}\n{}",
+                    std::string::String::from_utf8_lossy(&output.stdout),
+                    std::string::String::from_utf8_lossy(&output.stderr),
+                );
+            }
+            return;
+        };
+        let bits = bits.parse::<u8>().unwrap();
+        assert!(matches!(bits, 48 | 57));
+        CURRENT_VIRTUAL_ADDRESS_BITS.store(bits, Ordering::Relaxed);
+
+        for p5 in [0, 1, 255, 256, 510, 511] {
+            for p4 in [0, 255, 256, 511] {
+                let p5_index = PageTableIndex::new(p5);
+                let p4_index = PageTableIndex::new(p4);
+                let results = [
+                    std::panic::catch_unwind(|| {
+                        Page::<Size1GiB, RuntimeValidity>::from_page_table_indices_1gib_l5(
+                            p5_index,
+                            p4_index,
+                            PageTableIndex::new(3),
+                        )
+                        .start_address()
+                        .as_u64()
+                    }),
+                    std::panic::catch_unwind(|| {
+                        Page::<Size2MiB, RuntimeValidity>::from_page_table_indices_2mib_l5(
+                            p5_index,
+                            p4_index,
+                            PageTableIndex::new(3),
+                            PageTableIndex::new(4),
+                        )
+                        .start_address()
+                        .as_u64()
+                    }),
+                    std::panic::catch_unwind(|| {
+                        Page::<Size4KiB, RuntimeValidity>::from_page_table_indices_l5(
+                            p5_index,
+                            p4_index,
+                            PageTableIndex::new(3),
+                            PageTableIndex::new(4),
+                            PageTableIndex::new(5),
+                        )
+                        .start_address()
+                        .as_u64()
+                    }),
+                ];
+                for (result, low_bits) in results.into_iter().zip([
+                    3 << 30,
+                    (3 << 30) | (4 << 21),
+                    (3 << 30) | (4 << 21) | (5 << 12),
+                ]) {
+                    let fits = bits == 57 || (p5 == 0 && p4 < 256) || (p5 == 511 && p4 >= 256);
+                    if !fits {
+                        assert!(result.is_err(), "P5={p5}, P4={p4} must be rejected");
+                        continue;
+                    }
+                    let address = result.unwrap();
+                    assert_eq!((address >> 48) & 511, u64::from(p5));
+                    assert_eq!((address >> 39) & 511, u64::from(p4));
+                    assert_eq!(address & ((1 << 39) - 1), low_bits);
+                    assert_eq!(address >> 57, if p5 < 256 { 0 } else { 127 });
+                }
+            }
+        }
+    }
 
     #[test]
     fn runtime_virtaddr_arithmetic_traits_are_available() {

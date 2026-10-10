@@ -5,28 +5,38 @@ pub use self::mapped_page_table::{
 };
 #[cfg(target_pointer_width = "64")]
 pub use self::mapped_page_table::{OffsetPageTable, PhysOffset};
-#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};
 
+use crate::PhysAddr;
+use crate::addr::{FixedValidity, VirtAddrGeneric, VirtAddrValidity};
 use crate::structures::paging::{
     Page, PageSize, PhysFrame, Size1GiB, Size2MiB, Size4KiB,
     frame_alloc::{FrameAllocator, FrameDeallocator},
     page::PageRangeInclusive,
     page_table::{PageTableEntry, PageTableFlags},
 };
-use crate::{PhysAddr, VirtAddr};
+
+#[cfg(any(test, all(feature = "virt_addr_rt", target_arch = "x86_64")))]
+use crate::structures::paging::page_table::PageTableLevel;
 
 mod mapped_page_table;
-#[cfg(all(feature = "instructions", target_arch = "x86_64"))]
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 mod recursive_page_table;
 
 /// An empty convenience trait that requires the `Mapper` trait for all page sizes.
-pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}
+pub trait MapperAllSizes<V: VirtAddrValidity = FixedValidity<48>>:
+    Mapper<Size4KiB, V> + Mapper<Size2MiB, V> + Mapper<Size1GiB, V>
+{
+}
 
-impl<T> MapperAllSizes for T where T: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}
+impl<T, V: VirtAddrValidity> MapperAllSizes<V> for T where
+    T: Mapper<Size4KiB, V> + Mapper<Size2MiB, V> + Mapper<Size1GiB, V>
+{
+}
 
 /// Provides methods for translating virtual addresses.
-pub trait Translate {
+pub trait Translate<V: VirtAddrValidity = FixedValidity<48>> {
     /// Return the frame that the given virtual address is mapped to and the offset within that
     /// frame.
     ///
@@ -34,7 +44,7 @@ pub trait Translate {
     /// frame is returned. Otherwise an error value is returned.
     ///
     /// This function works with huge pages of all sizes.
-    fn translate(&self, addr: VirtAddr) -> TranslateResult;
+    fn translate(&self, addr: VirtAddrGeneric<V>) -> TranslateResult;
 
     /// Translates the given virtual address to the physical address that it maps to.
     ///
@@ -43,9 +53,11 @@ pub trait Translate {
     /// This is a convenience method. For more information about a mapping see the
     /// [`translate`](Translate::translate) method.
     #[inline]
-    fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {
+    fn translate_addr(&self, addr: VirtAddrGeneric<V>) -> Option<PhysAddr> {
         match self.translate(addr) {
-            TranslateResult::NotMapped | TranslateResult::InvalidFrameAddress(_) => None,
+            TranslateResult::NotMapped
+            | TranslateResult::AddressNotValid
+            | TranslateResult::InvalidFrameAddress(_) => None,
             TranslateResult::Mapped { frame, offset, .. } => Some(frame.start_address() + offset),
         }
     }
@@ -72,6 +84,8 @@ pub enum TranslateResult {
     },
     /// The given virtual address is not mapped to a physical frame.
     NotMapped,
+    /// The address is valid under `V` but cannot be represented by this root level.
+    AddressNotValid,
     /// The page table entry for the given virtual address points to an invalid physical address.
     InvalidFrameAddress(PhysAddr),
 }
@@ -107,12 +121,16 @@ impl MappedFrame {
     }
 }
 
+/// The result of [`Mapper::unmap`].
+pub type MapperUnmapResult<S, V> = (PhysFrame<S>, PageTableFlags, MapperFlush<S, V>);
+
 /// A trait for common page table operations on pages of size `S`.
-pub trait Mapper<S: PageSize> {
+pub trait Mapper<S: PageSize, V: VirtAddrValidity = FixedValidity<48>> {
     /// Creates a new mapping in the page table.
     ///
     /// This function might need additional physical frames to create new page tables. These
-    /// frames are allocated from the `allocator` argument. At most three frames are required.
+    /// frames are allocated from the `allocator` argument. At most four frames are required for
+    /// a five-level root (three for a four-level root).
     ///
     /// Parent page table entries are automatically updated with `PRESENT | WRITABLE | USER_ACCESSIBLE`
     /// if present in the `PageTableFlags`. Depending on the used mapper implementation
@@ -179,11 +197,11 @@ pub trait Mapper<S: PageSize> {
     #[inline]
     unsafe fn map_to<A>(
         &mut self,
-        page: Page<S>,
+        page: Page<S, V>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError<S>>
+    ) -> Result<MapperFlush<S, V>, MapToError<S>>
     where
         Self: Sized,
         A: FrameAllocator<Size4KiB> + ?Sized,
@@ -201,7 +219,8 @@ pub trait Mapper<S: PageSize> {
     /// Creates a new mapping in the page table.
     ///
     /// This function might need additional physical frames to create new page tables. These
-    /// frames are allocated from the `allocator` argument. At most three frames are required.
+    /// frames are allocated from the `allocator` argument. At most four frames are required for
+    /// a five-level root (three for a four-level root).
     ///
     /// The flags of the parent table(s) can be explicitly specified. Those flags are used for
     /// newly created table entries, and for existing entries the flags are added.
@@ -270,12 +289,12 @@ pub trait Mapper<S: PageSize> {
     /// ```
     unsafe fn map_to_with_table_flags<A>(
         &mut self,
-        page: Page<S>,
+        page: Page<S, V>,
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         parent_table_flags: PageTableFlags,
         frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError<S>>
+    ) -> Result<MapperFlush<S, V>, MapToError<S>>
     where
         Self: Sized,
         A: FrameAllocator<Size4KiB> + ?Sized;
@@ -283,10 +302,7 @@ pub trait Mapper<S: PageSize> {
     /// Removes a mapping from the page table and returns the frame that used to be mapped.
     ///
     /// Note that no page tables or pages are deallocated.
-    fn unmap(
-        &mut self,
-        page: Page<S>,
-    ) -> Result<(PhysFrame<S>, PageTableFlags, MapperFlush<S>), UnmapError>;
+    fn unmap(&mut self, page: Page<S, V>) -> Result<MapperUnmapResult<S, V>, UnmapError>;
 
     /// Clears a mapping from the page table and returns the frame that used to be mapped.
     ///
@@ -294,7 +310,7 @@ pub trait Mapper<S: PageSize> {
     /// clear the table entry for any valid page.
     ///
     /// Note that no page tables or pages are deallocated.
-    fn clear(&mut self, page: Page<S>) -> Result<UnmappedFrame<S>, UnmapError>;
+    fn clear(&mut self, page: Page<S, V>) -> Result<UnmappedFrame<S, V>, UnmapError>;
 
     /// Updates the flags of an existing mapping.
     ///
@@ -309,9 +325,25 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn update_flags(
         &mut self,
-        page: Page<S>,
+        page: Page<S, V>,
         flags: PageTableFlags,
-    ) -> Result<MapperFlush<S>, FlagUpdateError>;
+    ) -> Result<MapperFlush<S, V>, FlagUpdateError>;
+
+    /// Set the flags of the root level-5 entry. On a level-4 mapper this
+    /// returns [`FlagUpdateError::PageTableLevelNotPresent`].
+    ///
+    /// # Safety
+    ///
+    /// As with [Self::update_flags], the caller must ensure that changing the effective
+    /// permissions of every mapping below this entry cannot violate memory safety.
+    unsafe fn set_flags_p5_entry(
+        &mut self,
+        page: Page<S, V>,
+        flags: PageTableFlags,
+    ) -> Result<MapperFlushAll, FlagUpdateError> {
+        let _ = (page, flags);
+        Err(FlagUpdateError::PageTableLevelNotPresent)
+    }
 
     /// Set the flags of an existing page level 4 table entry
     ///
@@ -324,7 +356,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn set_flags_p4_entry(
         &mut self,
-        page: Page<S>,
+        page: Page<S, V>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError>;
 
@@ -339,7 +371,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn set_flags_p3_entry(
         &mut self,
-        page: Page<S>,
+        page: Page<S, V>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError>;
 
@@ -354,7 +386,7 @@ pub trait Mapper<S: PageSize> {
     /// spaces.
     unsafe fn set_flags_p2_entry(
         &mut self,
-        page: Page<S>,
+        page: Page<S, V>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError>;
 
@@ -362,7 +394,7 @@ pub trait Mapper<S: PageSize> {
     ///
     /// This function assumes that the page is mapped to a frame of size `S` and returns an
     /// error otherwise.
-    fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;
+    fn translate_page(&self, page: Page<S, V>) -> Result<PhysFrame<S>, TranslateError>;
 
     /// Maps the given frame to the virtual page with the same address.
     ///
@@ -376,14 +408,16 @@ pub trait Mapper<S: PageSize> {
         frame: PhysFrame<S>,
         flags: PageTableFlags,
         frame_allocator: &mut A,
-    ) -> Result<MapperFlush<S>, MapToError<S>>
+    ) -> Result<MapperFlush<S, V>, MapToError<S>>
     where
         Self: Sized,
         A: FrameAllocator<Size4KiB> + ?Sized,
         S: PageSize,
-        Self: Mapper<S>,
+        Self: Mapper<S, V>,
     {
-        let page = Page::containing_address(VirtAddr::new(frame.start_address().as_u64()));
+        let address = VirtAddrGeneric::<V>::try_new_with_validity(frame.start_address().as_u64())
+            .map_err(|_| MapToError::AddressNotValid)?;
+        let page = Page::containing_address(address);
         unsafe { self.map_to(page, frame, flags, frame_allocator) }
     }
 }
@@ -392,7 +426,7 @@ pub trait Mapper<S: PageSize> {
 /// the unmapped frame or the entry data if the frame is not marked as present.
 #[derive(Debug)]
 #[must_use = "Page table changes must be flushed or ignored if the page is present."]
-pub enum UnmappedFrame<S: PageSize> {
+pub enum UnmappedFrame<S: PageSize, V: VirtAddrValidity = FixedValidity<48>> {
     /// The frame was present before the [`Mapper::clear`] call
     Present {
         /// The physical frame that was unmapped
@@ -400,7 +434,7 @@ pub enum UnmappedFrame<S: PageSize> {
         /// The flags of the frame that was unmapped
         flags: PageTableFlags,
         /// The changed page, to flush the TLB
-        flush: MapperFlush<S>,
+        flush: MapperFlush<S, V>,
     },
     /// The frame was not present before the [`Mapper::clear`] call
     NotPresent {
@@ -420,15 +454,15 @@ pub enum UnmappedFrame<S: PageSize> {
     not(all(feature = "instructions", target_arch = "x86_64")),
     allow(dead_code)
 )] // FIXME
-pub struct MapperFlush<S: PageSize>(Page<S>);
+pub struct MapperFlush<S: PageSize, V: VirtAddrValidity = FixedValidity<48>>(Page<S, V>);
 
-impl<S: PageSize> MapperFlush<S> {
+impl<S: PageSize, V: VirtAddrValidity> MapperFlush<S, V> {
     /// Create a new flush promise
     ///
     /// Note that this method is intended for implementing the [`Mapper`] trait and no other uses
     /// are expected.
     #[inline]
-    pub fn new(page: Page<S>) -> Self {
+    pub fn new(page: Page<S, V>) -> Self {
         MapperFlush(page)
     }
 
@@ -445,7 +479,7 @@ impl<S: PageSize> MapperFlush<S> {
 
     /// Returns the page to be flushed.
     #[inline]
-    pub fn page(&self) -> Page<S> {
+    pub fn page(&self) -> Page<S, V> {
         self.0
     }
 }
@@ -487,6 +521,8 @@ pub enum MapToError<S: PageSize> {
     /// An additional frame was needed for the mapping process, but the frame allocator
     /// returned `None`.
     FrameAllocationFailed,
+    /// The address is not usable by the mapper's root level.
+    AddressNotValid,
     /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
     /// given page is part of an already mapped huge page.
     ParentEntryHugePage,
@@ -497,6 +533,8 @@ pub enum MapToError<S: PageSize> {
 /// An error indicating that an `unmap` call failed.
 #[derive(Debug)]
 pub enum UnmapError {
+    /// The address is not usable by the mapper's root level.
+    AddressNotValid,
     /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
     /// given page is part of a huge page and can't be freed individually.
     ParentEntryHugePage,
@@ -509,6 +547,10 @@ pub enum UnmapError {
 /// An error indicating that an `update_flags` call failed.
 #[derive(Debug)]
 pub enum FlagUpdateError {
+    /// The address is not usable by the mapper's root level.
+    AddressNotValid,
+    /// The requested page-table level does not exist for this mapper's root.
+    PageTableLevelNotPresent,
     /// The given page is not mapped to a physical frame.
     PageNotMapped,
     /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
@@ -519,6 +561,8 @@ pub enum FlagUpdateError {
 /// An error indicating that an `translate` call failed.
 #[derive(Debug)]
 pub enum TranslateError {
+    /// The address is not usable by the mapper's root level.
+    AddressNotValid,
     /// The given page is not mapped to a physical frame.
     PageNotMapped,
     /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
@@ -532,7 +576,7 @@ static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;
 
 /// Provides methods for cleaning up unused entries.
 pub trait CleanUp {
-    /// Remove all empty P1-P3 tables
+    /// Removes empty child page tables below the root (P1-P3, and P4 for a five-level root).
     ///
     /// ## Safety
     ///
@@ -543,13 +587,13 @@ pub trait CleanUp {
     where
         D: FrameDeallocator<Size4KiB>;
 
-    /// Remove all empty P1-P3 tables in a certain range
+    /// Removes empty child page tables in a certain range.
     /// ```
     /// # use core::ops::RangeInclusive;
     /// # use x86_64::{VirtAddr, structures::paging::{
-    /// #    FrameDeallocator, Size4KiB, mapper::CleanUp, page::Page,
+    /// #    FrameDeallocator, Mapper, Size4KiB, mapper::CleanUp, page::Page,
     /// # }};
-    /// # unsafe fn test(page_table: &mut impl CleanUp, frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
+    /// # unsafe fn test(page_table: &mut (impl CleanUp + Mapper<Size4KiB>), frame_deallocator: &mut impl FrameDeallocator<Size4KiB>) {
     /// // clean up all page tables in the lower half of the address space
     /// let lower_half = Page::range_inclusive(
     ///     Page::containing_address(VirtAddr::new(0)),
@@ -564,10 +608,77 @@ pub trait CleanUp {
     /// The caller has to guarantee that it's safe to free page table frames:
     /// All page table frames must only be used once and only in this page table
     /// (e.g. no reference counted page tables or reusing the same page tables for different virtual addresses ranges in the same page table).
-    unsafe fn clean_up_addr_range<D>(
+    ///
+    /// The mapper must support the range policy through Mapper<Size4KiB, V>.
+    /// Both endpoints must be valid under their address policy and representable by the
+    /// mapper's root. A range may span both canonical halves; cleanup skips the root's
+    /// canonical hole. For active recursive mappings, the root level, runtime cache and
+    /// active paging mode must also continue to satisfy the mapper's construction contract.
+    unsafe fn clean_up_addr_range<D, V: VirtAddrValidity>(
         &mut self,
-        range: PageRangeInclusive,
+        range: PageRangeInclusive<Size4KiB, V>,
         frame_deallocator: &mut D,
     ) where
-        D: FrameDeallocator<Size4KiB>;
+        D: FrameDeallocator<Size4KiB>,
+        Self: Mapper<Size4KiB, V>;
+}
+
+#[inline]
+#[cfg(test)]
+pub(crate) fn cleanup_table_address<V: VirtAddrValidity>(
+    root_level: PageTableLevel,
+    level: PageTableLevel,
+    start: VirtAddrGeneric<V>,
+) -> VirtAddrGeneric<V> {
+    if level == root_level {
+        VirtAddrGeneric::zero()
+    } else {
+        // SAFETY: level is always not root level, so the alignment is always
+        // less than the half of the address space.
+        unsafe { start.align_down_u64(level.table_address_space_alignment()) }
+    }
+}
+
+#[inline]
+#[cfg(any(test, all(feature = "virt_addr_rt", target_arch = "x86_64")))]
+pub(crate) fn cleanup_entry_address<V: VirtAddrValidity>(
+    table_address: VirtAddrGeneric<V>,
+    offset: u64,
+) -> Option<VirtAddrGeneric<V>> {
+    VirtAddrGeneric::<V>::forward_checked_u64(table_address, offset)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::addr::VirtAddr;
+
+    #[test]
+    fn cleanup_root_addresses_use_zero_base_and_canonical_forwarding() {
+        let table_addr = cleanup_table_address(
+            PageTableLevel::Four,
+            PageTableLevel::Four,
+            VirtAddr::new(0xffff_8000_0000_0000),
+        );
+        assert_eq!(table_addr.as_u64(), 0);
+
+        let entry_addr = cleanup_entry_address(table_addr, 256 * (1 << 39)).unwrap();
+        assert_eq!(entry_addr.as_u64(), 0xffff_8000_0000_0000);
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn cleanup_l5_root_addresses_canonicalize_high_half() {
+        type V57 = crate::addr::FixedValidity<57>;
+
+        let table_addr = cleanup_table_address(
+            PageTableLevel::Five,
+            PageTableLevel::Five,
+            VirtAddrGeneric::<V57>::new(0xff00_0000_0000_0000),
+        );
+        assert_eq!(table_addr.as_u64(), 0);
+
+        let entry_addr = cleanup_entry_address(table_addr, 256 * (1 << 48)).unwrap();
+        assert_eq!(entry_addr.as_u64(), 0xff00_0000_0000_0000);
+    }
 }

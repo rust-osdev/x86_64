@@ -4,11 +4,15 @@ use core::fmt::{self, Write};
 
 use super::range_iter::{MappedPageRangeInclusive, MappedPageRangeInclusiveItem};
 use super::{MappedPageTable, PageTableFrameMapping};
+use crate::addr::{FixedValidity, VirtAddrValidity};
 use crate::structures::paging::frame::PhysFrameRangeInclusive;
 use crate::structures::paging::page::PageRangeInclusive;
 use crate::structures::paging::{PageSize, PageTableFlags};
 
-impl<P: PageTableFrameMapping> MappedPageTable<'_, P> {
+impl<P: PageTableFrameMapping, const BITS: usize> MappedPageTable<'_, P, BITS>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
     /// Display the page table mappings as a human-readable table.
     ///
     /// This method returns an object that implements [`fmt::Display`].
@@ -21,13 +25,13 @@ impl<P: PageTableFrameMapping> MappedPageTable<'_, P> {
     ///
     /// # let level_4_table = &mut x86_64::structures::paging::page_table::PageTable::new();
     /// # let phys_offset = x86_64::VirtAddr::zero();
-    /// let page_table = unsafe { MappedPageTable::from_phys_offset(level_4_table, phys_offset) };
+    /// let page_table = unsafe { MappedPageTable::<_>::from_phys_offset(level_4_table, phys_offset.as_u64()) };
     ///
     /// println!("{}", page_table.display());
     /// ```
     ///
     /// [`MappedPageTableDisplay`]: Display
-    pub fn display(&self) -> Display<'_, P> {
+    pub fn display(&self) -> Display<'_, P, BITS> {
         Display { page_table: self }
     }
 }
@@ -48,7 +52,7 @@ impl<P: PageTableFrameMapping> MappedPageTable<'_, P> {
 ///
 /// # let level_4_table = &mut x86_64::structures::paging::page_table::PageTable::new();
 /// # let phys_offset = x86_64::VirtAddr::zero();
-/// let page_table = unsafe { MappedPageTable::from_phys_offset(level_4_table, phys_offset) };
+/// let page_table = unsafe { MappedPageTable::<_>::from_phys_offset(level_4_table, phys_offset.as_u64()) };
 ///
 /// println!("{}", page_table.display());
 /// ```
@@ -115,17 +119,26 @@ impl<P: PageTableFrameMapping> MappedPageTable<'_, P> {
 ///
 /// [`Display`]: fmt::Display
 /// [`PRESENT`]: PageTableFlags::PRESENT
-pub struct Display<'a, P: PageTableFrameMapping> {
-    page_table: &'a MappedPageTable<'a, P>,
+pub struct Display<'a, P: PageTableFrameMapping, const BITS: usize = 48>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
+    page_table: &'a MappedPageTable<'a, P, BITS>,
 }
 
-impl<P: PageTableFrameMapping + fmt::Debug> fmt::Debug for Display<'_, P> {
+impl<P: PageTableFrameMapping + fmt::Debug, const BITS: usize> fmt::Debug for Display<'_, P, BITS>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.page_table, f)
     }
 }
 
-impl<P: PageTableFrameMapping> fmt::Display for Display<'_, P> {
+impl<P: PageTableFrameMapping, const BITS: usize> fmt::Display for Display<'_, P, BITS>
+where
+    FixedValidity<BITS>: VirtAddrValidity,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut has_fields = false;
 
@@ -152,17 +165,17 @@ impl<P: PageTableFrameMapping> fmt::Display for Display<'_, P> {
 }
 
 /// A helper struct for formatting a [`MappedPageRangeInclusiveItem`] as a table row.
-struct MappedPageRangeInclusiveItemDisplay<'a> {
-    item: &'a MappedPageRangeInclusiveItem,
+struct MappedPageRangeInclusiveItemDisplay<'a, V: VirtAddrValidity> {
+    item: &'a MappedPageRangeInclusiveItem<V>,
 }
 
-impl MappedPageRangeInclusiveItem {
-    fn display(&self) -> MappedPageRangeInclusiveItemDisplay<'_> {
+impl<V: VirtAddrValidity> MappedPageRangeInclusiveItem<V> {
+    fn display(&self) -> MappedPageRangeInclusiveItemDisplay<'_, V> {
         MappedPageRangeInclusiveItemDisplay { item: self }
     }
 }
 
-impl fmt::Display for MappedPageRangeInclusiveItemDisplay<'_> {
+impl<V: VirtAddrValidity> fmt::Display for MappedPageRangeInclusiveItemDisplay<'_, V> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.item {
             MappedPageRangeInclusiveItem::Size4KiB(range) => fmt::Display::fmt(&range.display(), f),
@@ -173,17 +186,17 @@ impl fmt::Display for MappedPageRangeInclusiveItemDisplay<'_> {
 }
 
 /// A helper struct for formatting a [`MappedPageRangeInclusive`] as a table row.
-struct MappedPageRangeInclusiveDisplay<'a, S: PageSize> {
-    range: &'a MappedPageRangeInclusive<S>,
+struct MappedPageRangeInclusiveDisplay<'a, S: PageSize, V: VirtAddrValidity> {
+    range: &'a MappedPageRangeInclusive<S, V>,
 }
 
-impl<S: PageSize> MappedPageRangeInclusive<S> {
-    fn display(&self) -> MappedPageRangeInclusiveDisplay<'_, S> {
+impl<S: PageSize, V: VirtAddrValidity> MappedPageRangeInclusive<S, V> {
+    fn display(&self) -> MappedPageRangeInclusiveDisplay<'_, S, V> {
         MappedPageRangeInclusiveDisplay { range: self }
     }
 }
 
-impl<S: PageSize> fmt::Display for MappedPageRangeInclusiveDisplay<'_, S> {
+impl<S: PageSize, V: VirtAddrValidity> fmt::Display for MappedPageRangeInclusiveDisplay<'_, S, V> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             let size = S::DEBUG_STR;
@@ -222,7 +235,7 @@ struct AddressRangeDisplay<T> {
     end: Option<T>,
 }
 
-impl<S: PageSize> PageRangeInclusive<S> {
+impl<S: PageSize, V: VirtAddrValidity> PageRangeInclusive<S, V> {
     fn display(&self) -> AddressRangeDisplay<u64> {
         let start = self.start.start_address().as_u64();
         let end = self.end.start_address().as_u64().checked_add(S::SIZE);
