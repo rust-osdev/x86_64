@@ -220,6 +220,17 @@ impl<S: PageSize> Page<S> {
             size: PhantomData,
         })
     }
+
+    // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
+    #[cfg(feature = "step_trait")]
+    pub(crate) fn backward_checked_impl(start: Self, count: usize) -> Option<Self> {
+        let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
+        let start_address = VirtAddr::backward_checked_u64(start.start_address, count)?;
+        Some(Self {
+            start_address,
+            size: PhantomData,
+        })
+    }
 }
 
 impl<S: NotGiantPageSize> Page<S> {
@@ -351,14 +362,7 @@ impl<S: PageSize> Step for Page<S> {
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
-        use core::convert::TryFrom;
-
-        let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
-        let start_address = VirtAddr::backward_checked_u64(start.start_address, count)?;
-        Some(Self {
-            start_address,
-            size: PhantomData,
-        })
+        Self::backward_checked_impl(start, count)
     }
 
     fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
