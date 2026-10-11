@@ -155,6 +155,42 @@ impl<S: PageSize> PhysFrame<S> {
         self.start_address.as_u64() / S::SIZE
     }
 
+    /// Add an offset to a frame.
+    ///
+    /// This function returns `None` on overflow or if the result does not have a
+    /// valid physical address.
+    #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn checked_add(self, rhs: u64) -> Option<Self> {
+        let Some(offset) = rhs.checked_mul(S::SIZE) else {
+            return None;
+        };
+
+        let Some(addr) = self.start_address().checked_add(offset) else {
+            return None;
+        };
+
+        Some(Self::containing_address(addr))
+    }
+
+    /// Subtract an offset from a frame.
+    ///
+    /// This function returns `None` on overflow or if the result does not have a
+    /// valid physical address.
+    #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn checked_sub(self, rhs: u64) -> Option<Self> {
+        let Some(offset) = rhs.checked_mul(S::SIZE) else {
+            return None;
+        };
+
+        let Some(addr) = self.start_address().checked_sub(offset) else {
+            return None;
+        };
+
+        Some(Self::containing_address(addr))
+    }
+
     /// Returns a range of frames, exclusive `end`.
     #[inline]
     pub const fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {
@@ -186,7 +222,8 @@ impl<S: PageSize> Add<u64> for PhysFrame<S> {
     #[inline]
     #[track_caller]
     fn add(self, rhs: u64) -> Self::Output {
-        PhysFrame::containing_address(self.start_address() + rhs * S::SIZE)
+        self.checked_add(rhs)
+            .expect("attempt to add with overflow or resulted in invalid physical address")
     }
 }
 
@@ -203,7 +240,8 @@ impl<S: PageSize> Sub<u64> for PhysFrame<S> {
     #[inline]
     #[track_caller]
     fn sub(self, rhs: u64) -> Self::Output {
-        PhysFrame::containing_address(self.start_address() - rhs * S::SIZE)
+        self.checked_sub(rhs)
+            .expect("attempt to subtract with overflow or resulted in invalid physical address")
     }
 }
 
