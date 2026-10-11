@@ -16,8 +16,8 @@
 - [make memory encryption bit an upper limit for physical address bits](https://github.com/rust-osdev/x86_64/pull/603)
 - [add 57-bit and runtime-validated virtual address types](https://github.com/rust-osdev/x86_64/pull/605)
   - `VirtAddr57` and `VirtAddrRT` are available through the `virt_addr_57` and `virt_addr_rt` features.
-- Generalize `Page` and page ranges over virtual-address validity policies, including five-level page indices.
-  - TLB invalidation now accepts fixed-width and runtime virtual addresses.
+  - [add `VirtAddr57/RT` support for `Page`](https://github.com/rust-osdev/x86_64/pull/619) Generalize `Page` and page ranges over virtual-address validity policies, including five-level page indices.
+    - TLB invalidation now accepts fixed-width and runtime virtual addresses.
 
 # 0.15.5 – 2026-07-11
 
