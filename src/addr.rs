@@ -352,7 +352,6 @@ impl VirtAddr {
     }
 
     /// An implementation of backward_checked that takes u64 instead of usize.
-    #[cfg(feature = "step_trait")]
     #[inline]
     pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {
         if count > ADDRESS_SPACE_SIZE {
