@@ -569,9 +569,6 @@ impl<S: PageSize, V: VirtAddrValidity> PageRange<S, V> {
     }
 
     /// Returns the number of pages in the range.
-    ///
-    /// For a nonempty range with `RuntimeValidity`, this uses the cached address width.
-    /// If the cache is uninitialized, it reads CR4 and must execute in Ring 0.
     #[inline]
     pub fn len(&self) -> u64 {
         if !self.is_empty() {
@@ -755,9 +752,6 @@ impl<S: PageSize, V: VirtAddrValidity> PageRangeInclusive<S, V> {
     }
 
     /// Returns the number of pages in the range.
-    ///
-    /// For a nonempty range with `RuntimeValidity`, this uses the cached address width.
-    /// If the cache is uninitialized, it reads CR4 and must execute in Ring 0.
     #[inline]
     pub fn len(&self) -> u64 {
         if !self.is_empty() {
