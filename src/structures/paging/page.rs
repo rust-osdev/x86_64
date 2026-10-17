@@ -388,6 +388,86 @@ impl Page<Size4KiB, RuntimeValidity> {
     }
 }
 
+#[cfg(feature = "virt_addr_57")]
+impl<S: PageSize> From<Page<S, FixedValidity<48>>> for Page<S, FixedValidity<57>> {
+    #[inline]
+    fn from(page: Page<S, FixedValidity<48>>) -> Self {
+        Page {
+            start_address: page.start_address.into(),
+            size: PhantomData,
+        }
+    }
+}
+
+#[cfg(feature = "virt_addr_57")]
+impl<S: PageSize> TryFrom<Page<S, FixedValidity<57>>> for Page<S, FixedValidity<48>> {
+    type Error = crate::addr::VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(page: Page<S, FixedValidity<57>>) -> Result<Self, Self::Error> {
+        VirtAddr48::try_from(page.start_address).map(|start_address| Page {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl<S: PageSize> From<Page<S, FixedValidity<48>>> for Page<S, RuntimeValidity> {
+    #[inline]
+    fn from(page: Page<S, FixedValidity<48>>) -> Self {
+        Page {
+            start_address: page.start_address.into(),
+            size: PhantomData,
+        }
+    }
+}
+
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl<S: PageSize> TryFrom<Page<S, RuntimeValidity>> for Page<S, FixedValidity<48>> {
+    type Error = crate::addr::VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(page: Page<S, RuntimeValidity>) -> Result<Self, Self::Error> {
+        VirtAddr48::try_from(page.start_address).map(|start_address| Page {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
+#[cfg(all(
+    feature = "virt_addr_57",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+impl<S: PageSize> From<Page<S, RuntimeValidity>> for Page<S, FixedValidity<57>> {
+    #[inline]
+    fn from(page: Page<S, RuntimeValidity>) -> Self {
+        Page {
+            start_address: page.start_address.into(),
+            size: PhantomData,
+        }
+    }
+}
+
+#[cfg(all(
+    feature = "virt_addr_57",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+impl<S: PageSize> TryFrom<Page<S, FixedValidity<57>>> for Page<S, RuntimeValidity> {
+    type Error = crate::addr::VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(page: Page<S, FixedValidity<57>>) -> Result<Self, Self::Error> {
+        VirtAddrRT::try_from(page.start_address).map(|start_address| Page {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
 impl<S: PageSize, V: VirtAddrValidity> fmt::Debug for Page<S, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
@@ -1022,6 +1102,94 @@ mod tests {
             PageTableIndex::new(0),
         );
         assert_eq!(reconstructed.p5_index(), PageTableIndex::new(511));
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn fixed_page_validity_conversions_preserve_page_size_and_address() {
+        fn assert_conversion<S: PageSize>(page48: Page<S>) {
+            let page57: Page<S, FixedValidity<57>> = page48.into();
+            assert_eq!(
+                page57.start_address().as_u64(),
+                page48.start_address().as_u64()
+            );
+            assert_eq!(page57.size(), page48.size());
+            let converted_back = Page::<S>::try_from(page57).unwrap();
+            assert_eq!(converted_back, page48);
+        }
+
+        assert_conversion(Page::<Size4KiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size2MiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size1GiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+
+        let page57 = Page::<Size4KiB, FixedValidity<57>>::containing_address(VirtAddr57::new(
+            0x0001_0000_0000_1000,
+        ));
+        assert!(Page::<Size4KiB>::try_from(page57).is_err());
+    }
+
+    #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+    #[test]
+    fn runtime_page_48_conversions_match_address_conversions() {
+        fn assert_conversion<S: PageSize>(page48: Page<S>)
+        where
+            Page<S>: Into<Page<S, RuntimeValidity>>,
+            Page<S, RuntimeValidity>: TryFrom<Page<S>>,
+        {
+            let page_rt: Page<S, RuntimeValidity> = page48.into();
+            assert_eq!(
+                page_rt.start_address().as_u64(),
+                page48.start_address().as_u64()
+            );
+            assert_eq!(page_rt.size(), page48.size());
+            assert_eq!(Page::<S>::try_from(page_rt).unwrap(), page48);
+
+            #[cfg(feature = "virt_addr_57")]
+            {
+                let page57: Page<S, FixedValidity<57>> = page_rt.into();
+                assert_eq!(
+                    page57.start_address().as_u64(),
+                    page48.start_address().as_u64()
+                );
+                assert_eq!(page57.size(), page48.size());
+            }
+        }
+
+        assert_conversion(Page::<Size4KiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size2MiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size1GiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+    }
+
+    #[cfg(all(
+        feature = "virt_addr_57",
+        feature = "virt_addr_rt",
+        target_arch = "x86_64"
+    ))]
+    #[test]
+    fn runtime_page_57_conversions_match_address_conversions() {
+        fn assert_conversion<S: PageSize>()
+        where
+            Page<S, RuntimeValidity>: Into<Page<S, FixedValidity<57>>>,
+            Page<S, FixedValidity<57>>: TryFrom<Page<S, RuntimeValidity>>,
+            Page<S, RuntimeValidity>: TryFrom<Page<S, FixedValidity<57>>>,
+        {
+        }
+
+        assert_conversion::<Size4KiB>();
+        assert_conversion::<Size2MiB>();
+        assert_conversion::<Size1GiB>();
     }
 
     fn test_is_hash<T: core::hash::Hash>() {}
