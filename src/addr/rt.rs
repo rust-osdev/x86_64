@@ -253,36 +253,27 @@ mod tests {
                 let p5_index = PageTableIndex::new(p5);
                 let p4_index = PageTableIndex::new(p4);
                 let results = [
-                    std::panic::catch_unwind(|| {
-                        Page::<Size1GiB, RuntimeValidity>::from_page_table_indices_1gib_l5(
-                            p5_index,
-                            p4_index,
-                            PageTableIndex::new(3),
-                        )
-                        .start_address()
-                        .as_u64()
-                    }),
-                    std::panic::catch_unwind(|| {
-                        Page::<Size2MiB, RuntimeValidity>::from_page_table_indices_2mib_l5(
-                            p5_index,
-                            p4_index,
-                            PageTableIndex::new(3),
-                            PageTableIndex::new(4),
-                        )
-                        .start_address()
-                        .as_u64()
-                    }),
-                    std::panic::catch_unwind(|| {
-                        Page::<Size4KiB, RuntimeValidity>::from_page_table_indices_l5(
-                            p5_index,
-                            p4_index,
-                            PageTableIndex::new(3),
-                            PageTableIndex::new(4),
-                            PageTableIndex::new(5),
-                        )
-                        .start_address()
-                        .as_u64()
-                    }),
+                    Page::<Size1GiB, RuntimeValidity>::from_page_table_indices_1gib(
+                        p5_index,
+                        p4_index,
+                        PageTableIndex::new(3),
+                    )
+                    .map(|page| page.start_address().as_u64()),
+                    Page::<Size2MiB, RuntimeValidity>::from_page_table_indices_2mib(
+                        p5_index,
+                        p4_index,
+                        PageTableIndex::new(3),
+                        PageTableIndex::new(4),
+                    )
+                    .map(|page| page.start_address().as_u64()),
+                    Page::<Size4KiB, RuntimeValidity>::from_page_table_indices(
+                        p5_index,
+                        p4_index,
+                        PageTableIndex::new(3),
+                        PageTableIndex::new(4),
+                        PageTableIndex::new(5),
+                    )
+                    .map(|page| page.start_address().as_u64()),
                 ];
                 for (result, low_bits) in results.into_iter().zip([
                     3 << 30,

@@ -1,6 +1,11 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
-use crate::addr::{FixedValidity, VirtAddrGeneric, VirtAddrValidity, canonicalize_with_bits};
+#[cfg(any(
+    feature = "virt_addr_57",
+    all(feature = "virt_addr_rt", target_arch = "x86_64")
+))]
+use crate::addr::canonicalize_with_bits;
+use crate::addr::{FixedValidity, VirtAddrGeneric, VirtAddrValidity};
 #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 use crate::addr::{RuntimeValidity, VirtAddrRT};
 use crate::sealed::Sealed;
@@ -210,10 +215,7 @@ impl<S: NotGiantPageSize, V: VirtAddrValidity> Page<S, V> {
     }
 }
 
-impl<const BITS: usize> Page<Size1GiB, FixedValidity<BITS>>
-where
-    FixedValidity<BITS>: VirtAddrValidity,
-{
+impl Page<Size1GiB, FixedValidity<48>> {
     /// Returns the 1GiB memory page with the specified page table indices.
     #[inline]
     pub const fn from_page_table_indices_1gib(
@@ -223,32 +225,28 @@ where
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<BITS>>::new_truncate(addr))
+        Page::containing_address(VirtAddrGeneric::<FixedValidity<48>>::new_truncate(addr))
     }
+}
 
+#[cfg(feature = "virt_addr_57")]
+impl Page<Size1GiB, FixedValidity<57>> {
     /// Returns a 1GiB page from all five-level indices.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the indices describe an address that is not canonical under `FixedValidity<BITS>`.
     #[inline]
-    pub const fn from_page_table_indices_1gib_l5(
+    pub const fn from_page_table_indices_1gib(
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
     ) -> Self {
         let addr =
             (p5_index.into_u64() << 48) | (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<BITS>>::new(
+        Page::containing_address(VirtAddrGeneric::<FixedValidity<57>>::new(
             canonicalize_with_bits(addr, 57),
         ))
     }
 }
 
-impl<const BITS: usize> Page<Size2MiB, FixedValidity<BITS>>
-where
-    FixedValidity<BITS>: VirtAddrValidity,
-{
+impl Page<Size2MiB, FixedValidity<48>> {
     /// Returns the 2MiB memory page with the specified page table indices.
     #[inline]
     pub const fn from_page_table_indices_2mib(
@@ -260,16 +258,15 @@ where
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<BITS>>::new_truncate(addr))
+        Page::containing_address(VirtAddrGeneric::<FixedValidity<48>>::new_truncate(addr))
     }
+}
 
+#[cfg(feature = "virt_addr_57")]
+impl Page<Size2MiB, FixedValidity<57>> {
     /// Returns a 2MiB page from all five-level indices.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the indices describe an address that is not canonical under `FixedValidity<BITS>`.
     #[inline]
-    pub const fn from_page_table_indices_2mib_l5(
+    pub const fn from_page_table_indices_2mib(
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -279,16 +276,13 @@ where
             | (p4_index.into_u64() << 39)
             | (p3_index.into_u64() << 30)
             | (p2_index.into_u64() << 21);
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<BITS>>::new(
+        Page::containing_address(VirtAddrGeneric::<FixedValidity<57>>::new(
             canonicalize_with_bits(addr, 57),
         ))
     }
 }
 
-impl<const BITS: usize> Page<Size4KiB, FixedValidity<BITS>>
-where
-    FixedValidity<BITS>: VirtAddrValidity,
-{
+impl Page<Size4KiB, FixedValidity<48>> {
     /// Returns the 4KiB memory page with the specified page table indices.
     #[inline]
     pub const fn from_page_table_indices(
@@ -302,16 +296,15 @@ where
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
         addr |= p1_index.into_u64() << 12;
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<BITS>>::new_truncate(addr))
+        Page::containing_address(VirtAddrGeneric::<FixedValidity<48>>::new_truncate(addr))
     }
+}
 
+#[cfg(feature = "virt_addr_57")]
+impl Page<Size4KiB, FixedValidity<57>> {
     /// Returns a 4KiB page from all five-level indices.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the indices describe an address that is not canonical under `FixedValidity<BITS>`.
     #[inline]
-    pub const fn from_page_table_indices_l5(
+    pub const fn from_page_table_indices(
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
@@ -323,7 +316,7 @@ where
             | (p3_index.into_u64() << 30)
             | (p2_index.into_u64() << 21)
             | (p1_index.into_u64() << 12);
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<BITS>>::new(
+        Page::containing_address(VirtAddrGeneric::<FixedValidity<57>>::new(
             canonicalize_with_bits(addr, 57),
         ))
     }
@@ -333,109 +326,69 @@ impl<V: VirtAddrValidity> Page<Size4KiB, V> {
     /// Returns the level 1 page table index of this page.
     #[inline]
     pub const fn p1_index(self) -> PageTableIndex {
-        self.start_address().p1_index()
+        self.start_address.p1_index()
     }
 }
 
 #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 impl Page<Size1GiB, RuntimeValidity> {
-    /// Returns the 1GiB memory page with the specified page table indices.
+    /// Tries to create a 1GiB page from all five-level indices.
+    ///
+    /// Returns an error if the indices do not describe an address that is canonical in the
+    /// cached active mode.
     #[inline]
     pub fn from_page_table_indices_1gib(
-        p4_index: PageTableIndex,
-        p3_index: PageTableIndex,
-    ) -> Self {
-        let addr = (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
-        Page::containing_address(VirtAddrRT::new_truncate(addr))
-    }
-
-    /// Returns a 1GiB page from all five-level indices.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the indices describe an address that is not canonical in the cached active mode.
-    #[inline]
-    pub fn from_page_table_indices_1gib_l5(
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
-    ) -> Self {
+    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
         let addr =
             (p5_index.into_u64() << 48) | (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
-        Page::containing_address(VirtAddrRT::new(canonicalize_with_bits(addr, 57)))
+        VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
     }
 }
 
 #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 impl Page<Size2MiB, RuntimeValidity> {
-    /// Returns the 2MiB memory page with the specified page table indices.
+    /// Tries to create a 2MiB page from all five-level indices.
+    ///
+    /// Returns an error if the indices do not describe an address that is canonical in the
+    /// cached active mode.
     #[inline]
     pub fn from_page_table_indices_2mib(
-        p4_index: PageTableIndex,
-        p3_index: PageTableIndex,
-        p2_index: PageTableIndex,
-    ) -> Self {
-        let addr =
-            (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30) | (p2_index.into_u64() << 21);
-        Page::containing_address(VirtAddrRT::new_truncate(addr))
-    }
-
-    /// Returns a 2MiB page from all five-level indices.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the indices describe an address that is not canonical in the cached active mode.
-    #[inline]
-    pub fn from_page_table_indices_2mib_l5(
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
-    ) -> Self {
+    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
         let addr = (p5_index.into_u64() << 48)
             | (p4_index.into_u64() << 39)
             | (p3_index.into_u64() << 30)
             | (p2_index.into_u64() << 21);
-        Page::containing_address(VirtAddrRT::new(canonicalize_with_bits(addr, 57)))
+        VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
     }
 }
 
 #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 impl Page<Size4KiB, RuntimeValidity> {
-    /// Returns the 4KiB memory page with the specified page table indices.
+    /// Tries to create a 4KiB page from all five-level indices.
+    ///
+    /// Returns an error if the indices do not describe an address that is canonical in the
+    /// cached active mode.
     #[inline]
     pub fn from_page_table_indices(
-        p4_index: PageTableIndex,
-        p3_index: PageTableIndex,
-        p2_index: PageTableIndex,
-        p1_index: PageTableIndex,
-    ) -> Self {
-        let addr = (p4_index.into_u64() << 39)
-            | (p3_index.into_u64() << 30)
-            | (p2_index.into_u64() << 21)
-            | (p1_index.into_u64() << 12);
-        Page::containing_address(VirtAddrRT::new_truncate(addr))
-    }
-
-    /// Returns a 4KiB page from all five-level indices.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the indices describe an address that is not canonical in the cached active mode.
-    #[inline]
-    pub fn from_page_table_indices_l5(
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
         p1_index: PageTableIndex,
-    ) -> Self {
+    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
         let addr = (p5_index.into_u64() << 48)
             | (p4_index.into_u64() << 39)
             | (p3_index.into_u64() << 30)
             | (p2_index.into_u64() << 21)
             | (p1_index.into_u64() << 12);
-        Page::containing_address(VirtAddrRT::new(canonicalize_with_bits(addr, 57)))
+        VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
     }
 }
 
@@ -940,14 +893,14 @@ mod tests {
 
     #[cfg(feature = "virt_addr_57")]
     const CONST_PAGE_57_1G: Page<Size1GiB, FixedValidity<57>> =
-        Page::<Size1GiB, FixedValidity<57>>::from_page_table_indices_1gib_l5(
+        Page::<Size1GiB, FixedValidity<57>>::from_page_table_indices_1gib(
             PageTableIndex::new(1),
             PageTableIndex::new(2),
             PageTableIndex::new(3),
         );
     #[cfg(feature = "virt_addr_57")]
     const CONST_PAGE_57_2M: Page<Size2MiB, FixedValidity<57>> =
-        Page::<Size2MiB, FixedValidity<57>>::from_page_table_indices_2mib_l5(
+        Page::<Size2MiB, FixedValidity<57>>::from_page_table_indices_2mib(
             PageTableIndex::new(1),
             PageTableIndex::new(2),
             PageTableIndex::new(3),
@@ -955,7 +908,7 @@ mod tests {
         );
     #[cfg(feature = "virt_addr_57")]
     const CONST_PAGE_57_4K: Page<Size4KiB, FixedValidity<57>> =
-        Page::<Size4KiB, FixedValidity<57>>::from_page_table_indices_l5(
+        Page::<Size4KiB, FixedValidity<57>>::from_page_table_indices(
             PageTableIndex::new(1),
             PageTableIndex::new(2),
             PageTableIndex::new(3),
@@ -979,61 +932,31 @@ mod tests {
     }
 
     #[test]
-    fn l5_index_constructors_reject_unrepresentable_va48_indices() {
+    fn four_level_fixed_constructors_preserve_indices() {
         let zero = PageTableIndex::new(0);
-        for (p5, p4) in [(1, 0), (510, 0), (0, 256), (511, 0)] {
-            let p5 = PageTableIndex::new(p5);
+        for p4 in [0, 255, 256, 511] {
             let p4 = PageTableIndex::new(p4);
-            assert!(
-                std::panic::catch_unwind(|| {
-                    Page::<Size1GiB>::from_page_table_indices_1gib_l5(p5, p4, zero)
-                })
-                .is_err()
-            );
-            assert!(
-                std::panic::catch_unwind(|| {
-                    Page::<Size2MiB>::from_page_table_indices_2mib_l5(p5, p4, zero, zero)
-                })
-                .is_err()
-            );
-            assert!(
-                std::panic::catch_unwind(|| {
-                    Page::<Size4KiB>::from_page_table_indices_l5(p5, p4, zero, zero, zero)
-                })
-                .is_err()
-            );
+            let one_gib = Page::<Size1GiB>::from_page_table_indices_1gib(p4, zero);
+            let two_mib = Page::<Size2MiB>::from_page_table_indices_2mib(p4, zero, zero);
+            let four_kib = Page::<Size4KiB>::from_page_table_indices(p4, zero, zero, zero);
+            assert_eq!(one_gib.p4_index(), p4);
+            assert_eq!(two_mib.p4_index(), p4);
+            assert_eq!(four_kib.p4_index(), p4);
         }
-
-        let low = Page::<Size4KiB>::from_page_table_indices_l5(
-            PageTableIndex::new(0),
-            PageTableIndex::new(255),
-            zero,
-            zero,
-            zero,
-        );
-        let high = Page::<Size4KiB>::from_page_table_indices_l5(
-            PageTableIndex::new(511),
-            PageTableIndex::new(256),
-            zero,
-            zero,
-            zero,
-        );
-        assert_eq!(low.p5_index(), PageTableIndex::new(0));
-        assert_eq!(high.p5_index(), PageTableIndex::new(511));
+        let high =
+            Page::<Size4KiB>::from_page_table_indices(PageTableIndex::new(256), zero, zero, zero);
         assert_eq!(high.start_address().as_u64(), 0xffff_8000_0000_0000);
     }
 
     #[test]
-    fn l5_va48_high_half_constructors_are_const() {
-        const P5: PageTableIndex = PageTableIndex::new(511);
+    fn four_level_va48_high_half_constructors_are_const() {
         const P4: PageTableIndex = PageTableIndex::new(256);
         const ZERO: PageTableIndex = PageTableIndex::new(0);
-        const PAGE_1G: Page<Size1GiB> =
-            Page::<Size1GiB>::from_page_table_indices_1gib_l5(P5, P4, ZERO);
+        const PAGE_1G: Page<Size1GiB> = Page::<Size1GiB>::from_page_table_indices_1gib(P4, ZERO);
         const PAGE_2M: Page<Size2MiB> =
-            Page::<Size2MiB>::from_page_table_indices_2mib_l5(P5, P4, ZERO, ZERO);
+            Page::<Size2MiB>::from_page_table_indices_2mib(P4, ZERO, ZERO);
         const PAGE_4K: Page<Size4KiB> =
-            Page::<Size4KiB>::from_page_table_indices_l5(P5, P4, ZERO, ZERO, ZERO);
+            Page::<Size4KiB>::from_page_table_indices(P4, ZERO, ZERO, ZERO);
         for address in [
             PAGE_1G.start_address(),
             PAGE_2M.start_address(),
@@ -1045,18 +968,18 @@ mod tests {
 
     #[cfg(feature = "virt_addr_57")]
     #[test]
-    fn l5_va57_constructors_preserve_all_indices_at_p5_boundaries() {
+    fn five_level_va57_constructors_preserve_all_indices_at_p5_boundaries() {
         for p5 in [0, 1, 255, 256, 510, 511] {
             let index = PageTableIndex::new;
             let addresses = [
-                Page::<Size1GiB, FixedValidity<57>>::from_page_table_indices_1gib_l5(
+                Page::<Size1GiB, FixedValidity<57>>::from_page_table_indices_1gib(
                     index(p5),
                     index(2),
                     index(3),
                 )
                 .start_address()
                 .as_u64(),
-                Page::<Size2MiB, FixedValidity<57>>::from_page_table_indices_2mib_l5(
+                Page::<Size2MiB, FixedValidity<57>>::from_page_table_indices_2mib(
                     index(p5),
                     index(2),
                     index(3),
@@ -1064,7 +987,7 @@ mod tests {
                 )
                 .start_address()
                 .as_u64(),
-                Page::<Size4KiB, FixedValidity<57>>::from_page_table_indices_l5(
+                Page::<Size4KiB, FixedValidity<57>>::from_page_table_indices(
                     index(p5),
                     index(2),
                     index(3),
@@ -1098,7 +1021,7 @@ mod tests {
         ));
         assert_eq!(low.p5_index(), PageTableIndex::new(0));
         assert_eq!(high.p5_index(), PageTableIndex::new(511));
-        let reconstructed = Page57::from_page_table_indices_l5(
+        let reconstructed = Page57::from_page_table_indices(
             PageTableIndex::new(511),
             PageTableIndex::new(0),
             PageTableIndex::new(0),
