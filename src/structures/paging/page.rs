@@ -1,11 +1,13 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
+#[cfg(feature = "virt_addr_57")]
+use crate::addr::VirtAddr57;
 #[cfg(any(
     feature = "virt_addr_57",
     all(feature = "virt_addr_rt", target_arch = "x86_64")
 ))]
 use crate::addr::canonicalize_with_bits;
-use crate::addr::{FixedValidity, VirtAddrGeneric, VirtAddrValidity};
+use crate::addr::{FixedValidity, VirtAddr48, VirtAddrGeneric, VirtAddrValidity};
 #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 use crate::addr::{RuntimeValidity, VirtAddrRT};
 use crate::sealed::Sealed;
@@ -225,7 +227,7 @@ impl Page<Size1GiB, FixedValidity<48>> {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<48>>::new_truncate(addr))
+        Page::containing_address(VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -240,9 +242,7 @@ impl Page<Size1GiB, FixedValidity<57>> {
     ) -> Self {
         let addr =
             (p5_index.into_u64() << 48) | (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<57>>::new(
-            canonicalize_with_bits(addr, 57),
-        ))
+        Page::containing_address(VirtAddr57::new(canonicalize_with_bits(addr, 57)))
     }
 }
 
@@ -258,7 +258,7 @@ impl Page<Size2MiB, FixedValidity<48>> {
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<48>>::new_truncate(addr))
+        Page::containing_address(VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -276,9 +276,7 @@ impl Page<Size2MiB, FixedValidity<57>> {
             | (p4_index.into_u64() << 39)
             | (p3_index.into_u64() << 30)
             | (p2_index.into_u64() << 21);
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<57>>::new(
-            canonicalize_with_bits(addr, 57),
-        ))
+        Page::containing_address(VirtAddr57::new(canonicalize_with_bits(addr, 57)))
     }
 }
 
@@ -296,7 +294,7 @@ impl Page<Size4KiB, FixedValidity<48>> {
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
         addr |= p1_index.into_u64() << 12;
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<48>>::new_truncate(addr))
+        Page::containing_address(VirtAddr48::new_truncate(addr))
     }
 }
 
@@ -316,9 +314,7 @@ impl Page<Size4KiB, FixedValidity<57>> {
             | (p3_index.into_u64() << 30)
             | (p2_index.into_u64() << 21)
             | (p1_index.into_u64() << 12);
-        Page::containing_address(VirtAddrGeneric::<FixedValidity<57>>::new(
-            canonicalize_with_bits(addr, 57),
-        ))
+        Page::containing_address(VirtAddr57::new(canonicalize_with_bits(addr, 57)))
     }
 }
 
@@ -1013,12 +1009,9 @@ mod tests {
     #[cfg(feature = "virt_addr_57")]
     #[test]
     fn five_level_page_preserves_p5_index() {
-        type V57 = crate::addr::FixedValidity<57>;
-        type Page57 = Page<Size4KiB, V57>;
-        let low = Page57::containing_address(crate::addr::VirtAddrGeneric::<V57>::new(0x1234));
-        let high = Page57::containing_address(crate::addr::VirtAddrGeneric::<V57>::new(
-            0xffff_8000_0000_0000,
-        ));
+        type Page57 = Page<Size4KiB, FixedValidity<57>>;
+        let low = Page57::containing_address(VirtAddr57::new(0x1234));
+        let high = Page57::containing_address(VirtAddr57::new(0xffff_8000_0000_0000));
         assert_eq!(low.p5_index(), PageTableIndex::new(0));
         assert_eq!(high.p5_index(), PageTableIndex::new(511));
         let reconstructed = Page57::from_page_table_indices(
