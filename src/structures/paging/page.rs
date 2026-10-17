@@ -1,6 +1,15 @@
 //! Abstractions for default-sized and huge virtual memory pages.
 
-use crate::VirtAddr;
+#[cfg(feature = "virt_addr_57")]
+use crate::addr::VirtAddr57;
+#[cfg(any(
+    feature = "virt_addr_57",
+    all(feature = "virt_addr_rt", target_arch = "x86_64")
+))]
+use crate::addr::canonicalize_with_bits;
+use crate::addr::{FixedValidity, VirtAddr48, VirtAddrGeneric, VirtAddrValidity};
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+use crate::addr::{RuntimeValidity, VirtAddrRT};
 use crate::sealed::Sealed;
 use crate::structures::paging::PageTableIndex;
 use crate::structures::paging::page_table::PageTableLevel;
@@ -69,12 +78,12 @@ impl Sealed for super::Size1GiB {}
 /// This struct has the same representation as a [`u64`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
-pub struct Page<S: PageSize = Size4KiB> {
-    start_address: VirtAddr,
+pub struct Page<S: PageSize = Size4KiB, V: VirtAddrValidity = FixedValidity<48>> {
+    start_address: VirtAddrGeneric<V>,
     size: PhantomData<S>,
 }
 
-impl<S: PageSize> Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> Page<S, V> {
     /// The page size in bytes.
     pub const SIZE: u64 = S::SIZE;
 
@@ -82,11 +91,16 @@ impl<S: PageSize> Page<S> {
     ///
     /// Returns an error if the address is not correctly aligned (i.e. is not a valid page start).
     #[inline]
-    pub const fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {
+    pub const fn from_start_address(
+        address: VirtAddrGeneric<V>,
+    ) -> Result<Self, AddressNotAligned> {
         if !address.is_aligned_u64(S::SIZE) {
             return Err(AddressNotAligned);
         }
-        Ok(Page::containing_address(address))
+        Ok(Page {
+            start_address: address,
+            size: PhantomData,
+        })
     }
 
     /// Returns the page that starts at the given virtual address.
@@ -95,7 +109,7 @@ impl<S: PageSize> Page<S> {
     ///
     /// The address must be correctly aligned.
     #[inline]
-    pub const unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {
+    pub const unsafe fn from_start_address_unchecked(start_address: VirtAddrGeneric<V>) -> Self {
         Page {
             start_address,
             size: PhantomData,
@@ -104,16 +118,17 @@ impl<S: PageSize> Page<S> {
 
     /// Returns the page that contains the given virtual address.
     #[inline]
-    pub const fn containing_address(address: VirtAddr) -> Self {
+    pub const fn containing_address(address: VirtAddrGeneric<V>) -> Self {
         Page {
-            start_address: address.align_down_u64(S::SIZE),
+            // SAFETY: S::SIZE is always less than the half of the address space.
+            start_address: unsafe { address.align_down_u64(S::SIZE) },
             size: PhantomData,
         }
     }
 
     /// Returns the start address of the page.
     #[inline]
-    pub const fn start_address(self) -> VirtAddr {
+    pub const fn start_address(self) -> VirtAddrGeneric<V> {
         self.start_address
     }
 
@@ -121,6 +136,12 @@ impl<S: PageSize> Page<S> {
     #[inline]
     pub const fn size(self) -> u64 {
         S::SIZE
+    }
+
+    /// Returns the level 5 page table index of this page.
+    #[inline]
+    pub const fn p5_index(self) -> PageTableIndex {
+        self.start_address().page_table_index(PageTableLevel::Five)
     }
 
     /// Returns the level 4 page table index of this page.
@@ -143,19 +164,19 @@ impl<S: PageSize> Page<S> {
 
     /// Returns a range of pages, exclusive `end`.
     #[inline]
-    pub const fn range(start: Self, end: Self) -> PageRange<S> {
+    pub const fn range(start: Self, end: Self) -> PageRange<S, V> {
         PageRange { start, end }
     }
 
     /// Returns a range of pages, inclusive `end`.
     #[inline]
-    pub const fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {
+    pub const fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S, V> {
         PageRangeInclusive { start, end }
     }
 
     // FIXME: Move this into the `Step` impl, once `Step` is stabilized.
     pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {
-        VirtAddr::steps_between_u64(&start.start_address(), &end.start_address())
+        VirtAddrGeneric::<V>::steps_between_u64(&start.start_address(), &end.start_address())
             .map(|steps| steps / S::SIZE)
     }
 
@@ -180,7 +201,7 @@ impl<S: PageSize> Page<S> {
     ))]
     pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
-        let start_address = VirtAddr::forward_checked_u64(start.start_address, count)?;
+        let start_address = VirtAddrGeneric::<V>::forward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -188,7 +209,7 @@ impl<S: PageSize> Page<S> {
     }
 }
 
-impl<S: NotGiantPageSize> Page<S> {
+impl<S: NotGiantPageSize, V: VirtAddrValidity> Page<S, V> {
     /// Returns the level 2 page table index of this page.
     #[inline]
     pub const fn p2_index(self) -> PageTableIndex {
@@ -196,7 +217,7 @@ impl<S: NotGiantPageSize> Page<S> {
     }
 }
 
-impl Page<Size1GiB> {
+impl Page<Size1GiB, FixedValidity<48>> {
     /// Returns the 1GiB memory page with the specified page table indices.
     #[inline]
     pub const fn from_page_table_indices_1gib(
@@ -206,11 +227,26 @@ impl Page<Size1GiB> {
         let mut addr = 0;
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
-        Page::containing_address(VirtAddr::new_truncate(addr))
+        Page::containing_address(VirtAddr48::new_truncate(addr))
     }
 }
 
-impl Page<Size2MiB> {
+#[cfg(feature = "virt_addr_57")]
+impl Page<Size1GiB, FixedValidity<57>> {
+    /// Returns a 1GiB page from all five-level indices.
+    #[inline]
+    pub const fn from_page_table_indices_1gib(
+        p5_index: PageTableIndex,
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+    ) -> Self {
+        let addr =
+            (p5_index.into_u64() << 48) | (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
+        Page::containing_address(VirtAddr57::new(canonicalize_with_bits(addr, 57)))
+    }
+}
+
+impl Page<Size2MiB, FixedValidity<48>> {
     /// Returns the 2MiB memory page with the specified page table indices.
     #[inline]
     pub const fn from_page_table_indices_2mib(
@@ -222,11 +258,29 @@ impl Page<Size2MiB> {
         addr |= p4_index.into_u64() << 39;
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
-        Page::containing_address(VirtAddr::new_truncate(addr))
+        Page::containing_address(VirtAddr48::new_truncate(addr))
     }
 }
 
-impl Page<Size4KiB> {
+#[cfg(feature = "virt_addr_57")]
+impl Page<Size2MiB, FixedValidity<57>> {
+    /// Returns a 2MiB page from all five-level indices.
+    #[inline]
+    pub const fn from_page_table_indices_2mib(
+        p5_index: PageTableIndex,
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+    ) -> Self {
+        let addr = (p5_index.into_u64() << 48)
+            | (p4_index.into_u64() << 39)
+            | (p3_index.into_u64() << 30)
+            | (p2_index.into_u64() << 21);
+        Page::containing_address(VirtAddr57::new(canonicalize_with_bits(addr, 57)))
+    }
+}
+
+impl Page<Size4KiB, FixedValidity<48>> {
     /// Returns the 4KiB memory page with the specified page table indices.
     #[inline]
     pub const fn from_page_table_indices(
@@ -240,9 +294,31 @@ impl Page<Size4KiB> {
         addr |= p3_index.into_u64() << 30;
         addr |= p2_index.into_u64() << 21;
         addr |= p1_index.into_u64() << 12;
-        Page::containing_address(VirtAddr::new_truncate(addr))
+        Page::containing_address(VirtAddr48::new_truncate(addr))
     }
+}
 
+#[cfg(feature = "virt_addr_57")]
+impl Page<Size4KiB, FixedValidity<57>> {
+    /// Returns a 4KiB page from all five-level indices.
+    #[inline]
+    pub const fn from_page_table_indices(
+        p5_index: PageTableIndex,
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+        p1_index: PageTableIndex,
+    ) -> Self {
+        let addr = (p5_index.into_u64() << 48)
+            | (p4_index.into_u64() << 39)
+            | (p3_index.into_u64() << 30)
+            | (p2_index.into_u64() << 21)
+            | (p1_index.into_u64() << 12);
+        Page::containing_address(VirtAddr57::new(canonicalize_with_bits(addr, 57)))
+    }
+}
+
+impl<V: VirtAddrValidity> Page<Size4KiB, V> {
     /// Returns the level 1 page table index of this page.
     #[inline]
     pub const fn p1_index(self) -> PageTableIndex {
@@ -250,7 +326,149 @@ impl Page<Size4KiB> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for Page<S> {
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl Page<Size1GiB, RuntimeValidity> {
+    /// Tries to create a 1GiB page from all five-level indices.
+    ///
+    /// Returns an error if the indices do not describe an address that is canonical in the
+    /// cached active mode.
+    #[inline]
+    pub fn from_page_table_indices_1gib(
+        p5_index: PageTableIndex,
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
+        let addr =
+            (p5_index.into_u64() << 48) | (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
+        VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
+    }
+}
+
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl Page<Size2MiB, RuntimeValidity> {
+    /// Tries to create a 2MiB page from all five-level indices.
+    ///
+    /// Returns an error if the indices do not describe an address that is canonical in the
+    /// cached active mode.
+    #[inline]
+    pub fn from_page_table_indices_2mib(
+        p5_index: PageTableIndex,
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
+        let addr = (p5_index.into_u64() << 48)
+            | (p4_index.into_u64() << 39)
+            | (p3_index.into_u64() << 30)
+            | (p2_index.into_u64() << 21);
+        VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
+    }
+}
+
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl Page<Size4KiB, RuntimeValidity> {
+    /// Tries to create a 4KiB page from all five-level indices.
+    ///
+    /// Returns an error if the indices do not describe an address that is canonical in the
+    /// cached active mode.
+    #[inline]
+    pub fn from_page_table_indices(
+        p5_index: PageTableIndex,
+        p4_index: PageTableIndex,
+        p3_index: PageTableIndex,
+        p2_index: PageTableIndex,
+        p1_index: PageTableIndex,
+    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
+        let addr = (p5_index.into_u64() << 48)
+            | (p4_index.into_u64() << 39)
+            | (p3_index.into_u64() << 30)
+            | (p2_index.into_u64() << 21)
+            | (p1_index.into_u64() << 12);
+        VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
+    }
+}
+
+#[cfg(feature = "virt_addr_57")]
+impl<S: PageSize> From<Page<S, FixedValidity<48>>> for Page<S, FixedValidity<57>> {
+    #[inline]
+    fn from(page: Page<S, FixedValidity<48>>) -> Self {
+        Page {
+            start_address: page.start_address.into(),
+            size: PhantomData,
+        }
+    }
+}
+
+#[cfg(feature = "virt_addr_57")]
+impl<S: PageSize> TryFrom<Page<S, FixedValidity<57>>> for Page<S, FixedValidity<48>> {
+    type Error = crate::addr::VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(page: Page<S, FixedValidity<57>>) -> Result<Self, Self::Error> {
+        VirtAddr48::try_from(page.start_address).map(|start_address| Page {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl<S: PageSize> From<Page<S, FixedValidity<48>>> for Page<S, RuntimeValidity> {
+    #[inline]
+    fn from(page: Page<S, FixedValidity<48>>) -> Self {
+        Page {
+            start_address: page.start_address.into(),
+            size: PhantomData,
+        }
+    }
+}
+
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+impl<S: PageSize> TryFrom<Page<S, RuntimeValidity>> for Page<S, FixedValidity<48>> {
+    type Error = crate::addr::VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(page: Page<S, RuntimeValidity>) -> Result<Self, Self::Error> {
+        VirtAddr48::try_from(page.start_address).map(|start_address| Page {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
+#[cfg(all(
+    feature = "virt_addr_57",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+impl<S: PageSize> From<Page<S, RuntimeValidity>> for Page<S, FixedValidity<57>> {
+    #[inline]
+    fn from(page: Page<S, RuntimeValidity>) -> Self {
+        Page {
+            start_address: page.start_address.into(),
+            size: PhantomData,
+        }
+    }
+}
+
+#[cfg(all(
+    feature = "virt_addr_57",
+    feature = "virt_addr_rt",
+    target_arch = "x86_64"
+))]
+impl<S: PageSize> TryFrom<Page<S, FixedValidity<57>>> for Page<S, RuntimeValidity> {
+    type Error = crate::addr::VirtAddrNotValid;
+
+    #[inline]
+    fn try_from(page: Page<S, FixedValidity<57>>) -> Result<Self, Self::Error> {
+        VirtAddrRT::try_from(page.start_address).map(|start_address| Page {
+            start_address,
+            size: PhantomData,
+        })
+    }
+}
+
+impl<S: PageSize, V: VirtAddrValidity> fmt::Debug for Page<S, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_fmt(format_args!(
             "Page[{}]({:#x})",
@@ -260,7 +478,7 @@ impl<S: PageSize> fmt::Debug for Page<S> {
     }
 }
 
-impl<S: PageSize> Add<u64> for Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> Add<u64> for Page<S, V> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: u64) -> Self::Output {
@@ -268,14 +486,14 @@ impl<S: PageSize> Add<u64> for Page<S> {
     }
 }
 
-impl<S: PageSize> AddAssign<u64> for Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> AddAssign<u64> for Page<S, V> {
     #[inline]
     fn add_assign(&mut self, rhs: u64) {
         *self = *self + rhs;
     }
 }
 
-impl<S: PageSize> Sub<u64> for Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> Sub<u64> for Page<S, V> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: u64) -> Self::Output {
@@ -283,14 +501,14 @@ impl<S: PageSize> Sub<u64> for Page<S> {
     }
 }
 
-impl<S: PageSize> SubAssign<u64> for Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> SubAssign<u64> for Page<S, V> {
     #[inline]
     fn sub_assign(&mut self, rhs: u64) {
         *self = *self - rhs;
     }
 }
 
-impl<S: PageSize> Sub<Self> for Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> Sub<Self> for Page<S, V> {
     type Output = u64;
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
@@ -299,7 +517,7 @@ impl<S: PageSize> Sub<Self> for Page<S> {
 }
 
 #[cfg(feature = "step_trait")]
-impl<S: PageSize> Step for Page<S> {
+impl<S: PageSize, V: VirtAddrValidity> Step for Page<S, V> {
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         Self::steps_between_impl(start, end)
     }
@@ -312,7 +530,7 @@ impl<S: PageSize> Step for Page<S> {
         use core::convert::TryFrom;
 
         let count = u64::try_from(count).ok()?.checked_mul(S::SIZE)?;
-        let start_address = VirtAddr::backward_checked_u64(start.start_address, count)?;
+        let start_address = VirtAddrGeneric::<V>::backward_checked_u64(start.start_address, count)?;
         Some(Self {
             start_address,
             size: PhantomData,
@@ -336,14 +554,14 @@ impl<S: PageSize> Step for Page<S> {
 
 /// A range of pages with exclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PageRange<S: PageSize = Size4KiB> {
+pub struct PageRange<S: PageSize = Size4KiB, V: VirtAddrValidity = FixedValidity<48>> {
     /// The start of the range, inclusive.
-    pub start: Page<S>,
+    pub start: Page<S, V>,
     /// The end of the range, exclusive.
-    pub end: Page<S>,
+    pub end: Page<S, V>,
 }
 
-impl<S: PageSize> PageRange<S> {
+impl<S: PageSize, V: VirtAddrValidity> PageRange<S, V> {
     /// Returns whether this range contains no pages.
     #[inline]
     pub fn is_empty(&self) -> bool {
@@ -354,23 +572,30 @@ impl<S: PageSize> PageRange<S> {
     #[inline]
     pub fn len(&self) -> u64 {
         if !self.is_empty() {
-            self.end - self.start
+            Self::start_end_len(&self.start, &self.end)
         } else {
             0
         }
     }
 
     /// Returns the size in bytes of all pages within the range.
+    ///
+    /// The runtime address-width cache and Ring 0 requirements of [`Self::len`] apply.
     #[inline]
     pub fn size(&self) -> u64 {
         S::SIZE * self.len()
     }
+
+    #[inline]
+    fn start_end_len(start: &Page<S, V>, end: &Page<S, V>) -> u64 {
+        Page::<S, V>::steps_between_u64(start, end).unwrap_or(0)
+    }
 }
 
-impl<S: PageSize> IntoIterator for PageRange<S> {
-    type Item = Page<S>;
+impl<S: PageSize, V: VirtAddrValidity> IntoIterator for PageRange<S, V> {
+    type Item = Page<S, V>;
 
-    type IntoIter = PageRangeIter<S>;
+    type IntoIter = PageRangeIter<S, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         PageRangeIter(self)
@@ -379,10 +604,12 @@ impl<S: PageSize> IntoIterator for PageRange<S> {
 
 /// By-value [`PageRange`] iterator.
 #[derive(Clone, Debug)]
-pub struct PageRangeIter<S: PageSize = Size4KiB>(PageRange<S>);
+pub struct PageRangeIter<S: PageSize = Size4KiB, V: VirtAddrValidity = FixedValidity<48>>(
+    PageRange<S, V>,
+);
 
-impl<S: PageSize> Iterator for PageRangeIter<S> {
-    type Item = Page<S>;
+impl<S: PageSize, V: VirtAddrValidity> Iterator for PageRangeIter<S, V> {
+    type Item = Page<S, V>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -414,7 +641,9 @@ impl<S: PageSize> Iterator for PageRangeIter<S> {
         }
 
         // Figure out how many steps there are until the address range gap.
-        let second_half_start = Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
+        let second_half_start = Page::<S, V>::containing_address(unsafe {
+            VirtAddrGeneric::<V>::new_unsafe(V::upper_half_start())
+        });
         let steps_until_gap = Page::steps_between_u64(&self.0.start, &second_half_start)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
@@ -437,7 +666,7 @@ impl<S: PageSize> Iterator for PageRangeIter<S> {
     }
 }
 
-impl<S: PageSize> DoubleEndedIterator for PageRangeIter<S> {
+impl<S: PageSize, V: VirtAddrValidity> DoubleEndedIterator for PageRangeIter<S, V> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.0.start < self.0.end {
@@ -467,7 +696,10 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeIter<S> {
         }
 
         // Figure out how many steps there are until the address range gap.
-        let first_half_end = Page::<S>::containing_address(VirtAddr::new(0x7fff_ffff_f000));
+        // The last canonical byte belongs to the last page, for every page size.
+        let first_half_end = Page::<S, V>::containing_address(unsafe {
+            VirtAddrGeneric::<V>::new_unsafe(V::lower_half_end())
+        });
         let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.0.end)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
@@ -483,10 +715,10 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeIter<S> {
     }
 }
 
-impl PageRange<Size2MiB> {
+impl<V: VirtAddrValidity> PageRange<Size2MiB, V> {
     /// Converts the range of 2MiB pages to a range of 4KiB pages.
     #[inline]
-    pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {
+    pub fn as_4kib_page_range(self) -> PageRange<Size4KiB, V> {
         PageRange {
             start: Page::containing_address(self.start.start_address()),
             end: Page::containing_address(self.end.start_address()),
@@ -494,7 +726,7 @@ impl PageRange<Size2MiB> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PageRange<S> {
+impl<S: PageSize, V: VirtAddrValidity> fmt::Debug for PageRange<S, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageRange")
             .field("start", &self.start)
@@ -505,14 +737,14 @@ impl<S: PageSize> fmt::Debug for PageRange<S> {
 
 /// A range of pages with inclusive upper bound.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PageRangeInclusive<S: PageSize = Size4KiB> {
+pub struct PageRangeInclusive<S: PageSize = Size4KiB, V: VirtAddrValidity = FixedValidity<48>> {
     /// The start of the range, inclusive.
-    pub start: Page<S>,
+    pub start: Page<S, V>,
     /// The end of the range, inclusive.
-    pub end: Page<S>,
+    pub end: Page<S, V>,
 }
 
-impl<S: PageSize> PageRangeInclusive<S> {
+impl<S: PageSize, V: VirtAddrValidity> PageRangeInclusive<S, V> {
     /// Returns whether this range contains no pages.
     #[inline]
     pub fn is_empty(&self) -> bool {
@@ -523,23 +755,27 @@ impl<S: PageSize> PageRangeInclusive<S> {
     #[inline]
     pub fn len(&self) -> u64 {
         if !self.is_empty() {
-            self.end - self.start + 1
+            Page::<S, V>::steps_between_u64(&self.start, &self.end)
+                .and_then(|n| n.checked_add(1))
+                .unwrap_or(0)
         } else {
             0
         }
     }
 
     /// Returns the size in bytes of all pages within the range.
+    ///
+    /// The runtime address-width cache and Ring 0 requirements of [`Self::len`] apply.
     #[inline]
     pub fn size(&self) -> u64 {
         S::SIZE * self.len()
     }
 }
 
-impl<S: PageSize> IntoIterator for PageRangeInclusive<S> {
-    type Item = Page<S>;
+impl<S: PageSize, V: VirtAddrValidity> IntoIterator for PageRangeInclusive<S, V> {
+    type Item = Page<S, V>;
 
-    type IntoIter = PageRangeInclusiveIter<S>;
+    type IntoIter = PageRangeInclusiveIter<S, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         PageRangeInclusiveIter(self)
@@ -548,10 +784,12 @@ impl<S: PageSize> IntoIterator for PageRangeInclusive<S> {
 
 /// By-value [`PageRangeInclusive`] iterator.
 #[derive(Clone, Debug)]
-pub struct PageRangeInclusiveIter<S: PageSize = Size4KiB>(PageRangeInclusive<S>);
+pub struct PageRangeInclusiveIter<S: PageSize = Size4KiB, V: VirtAddrValidity = FixedValidity<48>>(
+    PageRangeInclusive<S, V>,
+);
 
-impl<S: PageSize> Iterator for PageRangeInclusiveIter<S> {
-    type Item = Page<S>;
+impl<S: PageSize, V: VirtAddrValidity> Iterator for PageRangeInclusiveIter<S, V> {
+    type Item = Page<S, V>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -561,7 +799,8 @@ impl<S: PageSize> Iterator for PageRangeInclusiveIter<S> {
             // If the end of the inclusive range is the maximum page possible for size S,
             // incrementing start until it is greater than the end will cause an integer overflow.
             // So instead, in that case we decrement end rather than incrementing start.
-            let max_page_addr = VirtAddr::new(u64::MAX) - (S::SIZE - 1);
+            let max_page_addr =
+                unsafe { VirtAddrGeneric::<V>::new_unsafe(u64::MAX) } - (S::SIZE - 1);
             if self.0.start.start_address() < max_page_addr {
                 self.0.start += 1;
             } else {
@@ -592,7 +831,9 @@ impl<S: PageSize> Iterator for PageRangeInclusiveIter<S> {
         }
 
         // Figure out how many steps there are until the address range gap.
-        let second_half_start = Page::<S>::containing_address(VirtAddr::new(0xffff_8000_0000_0000));
+        let second_half_start = Page::<S, V>::containing_address(unsafe {
+            VirtAddrGeneric::<V>::new_unsafe(V::upper_half_start())
+        });
         let steps_until_gap = Page::steps_between_u64(&self.0.start, &second_half_start)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
@@ -615,7 +856,7 @@ impl<S: PageSize> Iterator for PageRangeInclusiveIter<S> {
     }
 }
 
-impl<S: PageSize> DoubleEndedIterator for PageRangeInclusiveIter<S> {
+impl<S: PageSize, V: VirtAddrValidity> DoubleEndedIterator for PageRangeInclusiveIter<S, V> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.0.start <= self.0.end {
@@ -654,7 +895,10 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeInclusiveIter<S> {
         }
 
         // Figure out how many steps there are until the address range gap.
-        let first_half_end = Page::<S>::containing_address(VirtAddr::new(0x7fff_ffff_f000));
+        // The last canonical byte belongs to the last page, for every page size.
+        let first_half_end = Page::<S, V>::containing_address(unsafe {
+            VirtAddrGeneric::<V>::new_unsafe(V::lower_half_end())
+        });
         let steps_until_gap = Page::steps_between_u64(&first_half_end, &self.0.end)
             .filter(|steps| *steps <= n && *steps > 0);
         if let Some(steps_until_gap) = steps_until_gap {
@@ -670,7 +914,7 @@ impl<S: PageSize> DoubleEndedIterator for PageRangeInclusiveIter<S> {
     }
 }
 
-impl<S: PageSize> fmt::Debug for PageRangeInclusive<S> {
+impl<S: PageSize, V: VirtAddrValidity> fmt::Debug for PageRangeInclusive<S, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageRangeInclusive")
             .field("start", &self.start)
@@ -699,8 +943,294 @@ impl fmt::Display for AddressNotAligned {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::addr::VirtAddr;
+
+    const CONST_PAGE_1G: Page<Size1GiB> = Page::<Size1GiB>::from_page_table_indices_1gib(
+        PageTableIndex::new(1),
+        PageTableIndex::new(2),
+    );
+    const CONST_PAGE_2M: Page<Size2MiB> = Page::<Size2MiB>::from_page_table_indices_2mib(
+        PageTableIndex::new(1),
+        PageTableIndex::new(2),
+        PageTableIndex::new(3),
+    );
+    const CONST_PAGE_4K: Page<Size4KiB> = Page::<Size4KiB>::from_page_table_indices(
+        PageTableIndex::new(1),
+        PageTableIndex::new(2),
+        PageTableIndex::new(3),
+        PageTableIndex::new(4),
+    );
+
+    #[cfg(feature = "virt_addr_57")]
+    const CONST_PAGE_57_1G: Page<Size1GiB, FixedValidity<57>> =
+        Page::<Size1GiB, FixedValidity<57>>::from_page_table_indices_1gib(
+            PageTableIndex::new(1),
+            PageTableIndex::new(2),
+            PageTableIndex::new(3),
+        );
+    #[cfg(feature = "virt_addr_57")]
+    const CONST_PAGE_57_2M: Page<Size2MiB, FixedValidity<57>> =
+        Page::<Size2MiB, FixedValidity<57>>::from_page_table_indices_2mib(
+            PageTableIndex::new(1),
+            PageTableIndex::new(2),
+            PageTableIndex::new(3),
+            PageTableIndex::new(4),
+        );
+    #[cfg(feature = "virt_addr_57")]
+    const CONST_PAGE_57_4K: Page<Size4KiB, FixedValidity<57>> =
+        Page::<Size4KiB, FixedValidity<57>>::from_page_table_indices(
+            PageTableIndex::new(1),
+            PageTableIndex::new(2),
+            PageTableIndex::new(3),
+            PageTableIndex::new(4),
+            PageTableIndex::new(5),
+        );
+
+    #[test]
+    fn fixed_page_index_constructors_are_const() {
+        assert_eq!(CONST_PAGE_1G.p4_index(), PageTableIndex::new(1));
+        assert_eq!(CONST_PAGE_1G.p3_index(), PageTableIndex::new(2));
+        assert_eq!(CONST_PAGE_2M.p2_index(), PageTableIndex::new(3));
+        assert_eq!(CONST_PAGE_4K.p1_index(), PageTableIndex::new(4));
+
+        #[cfg(feature = "virt_addr_57")]
+        {
+            assert_eq!(CONST_PAGE_57_1G.p5_index(), PageTableIndex::new(1));
+            assert_eq!(CONST_PAGE_57_2M.p5_index(), PageTableIndex::new(1));
+            assert_eq!(CONST_PAGE_57_4K.p1_index(), PageTableIndex::new(5));
+        }
+    }
+
+    #[test]
+    fn four_level_fixed_constructors_preserve_indices() {
+        let zero = PageTableIndex::new(0);
+        for p4 in [0, 255, 256, 511] {
+            let p4 = PageTableIndex::new(p4);
+            let one_gib = Page::<Size1GiB>::from_page_table_indices_1gib(p4, zero);
+            let two_mib = Page::<Size2MiB>::from_page_table_indices_2mib(p4, zero, zero);
+            let four_kib = Page::<Size4KiB>::from_page_table_indices(p4, zero, zero, zero);
+            assert_eq!(one_gib.p4_index(), p4);
+            assert_eq!(two_mib.p4_index(), p4);
+            assert_eq!(four_kib.p4_index(), p4);
+        }
+        let high =
+            Page::<Size4KiB>::from_page_table_indices(PageTableIndex::new(256), zero, zero, zero);
+        assert_eq!(high.start_address().as_u64(), 0xffff_8000_0000_0000);
+    }
+
+    #[test]
+    fn four_level_va48_high_half_constructors_are_const() {
+        const P4: PageTableIndex = PageTableIndex::new(256);
+        const ZERO: PageTableIndex = PageTableIndex::new(0);
+        const PAGE_1G: Page<Size1GiB> = Page::<Size1GiB>::from_page_table_indices_1gib(P4, ZERO);
+        const PAGE_2M: Page<Size2MiB> =
+            Page::<Size2MiB>::from_page_table_indices_2mib(P4, ZERO, ZERO);
+        const PAGE_4K: Page<Size4KiB> =
+            Page::<Size4KiB>::from_page_table_indices(P4, ZERO, ZERO, ZERO);
+        for address in [
+            PAGE_1G.start_address(),
+            PAGE_2M.start_address(),
+            PAGE_4K.start_address(),
+        ] {
+            assert_eq!(address.as_u64(), 0xffff_8000_0000_0000);
+        }
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn five_level_va57_constructors_preserve_all_indices_at_p5_boundaries() {
+        for p5 in [0, 1, 255, 256, 510, 511] {
+            let index = PageTableIndex::new;
+            let addresses = [
+                Page::<Size1GiB, FixedValidity<57>>::from_page_table_indices_1gib(
+                    index(p5),
+                    index(2),
+                    index(3),
+                )
+                .start_address()
+                .as_u64(),
+                Page::<Size2MiB, FixedValidity<57>>::from_page_table_indices_2mib(
+                    index(p5),
+                    index(2),
+                    index(3),
+                    index(4),
+                )
+                .start_address()
+                .as_u64(),
+                Page::<Size4KiB, FixedValidity<57>>::from_page_table_indices(
+                    index(p5),
+                    index(2),
+                    index(3),
+                    index(4),
+                    index(5),
+                )
+                .start_address()
+                .as_u64(),
+            ];
+            for (address, low_bits) in addresses.into_iter().zip([
+                3 << 30,
+                (3 << 30) | (4 << 21),
+                (3 << 30) | (4 << 21) | (5 << 12),
+            ]) {
+                assert_eq!((address >> 48) & 511, u64::from(p5));
+                assert_eq!((address >> 39) & 511, 2);
+                assert_eq!(address & ((1 << 39) - 1), low_bits);
+                assert_eq!(address >> 57, if p5 < 256 { 0 } else { 127 });
+            }
+        }
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn five_level_page_preserves_p5_index() {
+        type Page57 = Page<Size4KiB, FixedValidity<57>>;
+        let low = Page57::containing_address(VirtAddr57::new(0x1234));
+        let high = Page57::containing_address(VirtAddr57::new(0xffff_8000_0000_0000));
+        assert_eq!(low.p5_index(), PageTableIndex::new(0));
+        assert_eq!(high.p5_index(), PageTableIndex::new(511));
+        let reconstructed = Page57::from_page_table_indices(
+            PageTableIndex::new(511),
+            PageTableIndex::new(0),
+            PageTableIndex::new(0),
+            PageTableIndex::new(0),
+            PageTableIndex::new(0),
+        );
+        assert_eq!(reconstructed.p5_index(), PageTableIndex::new(511));
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn fixed_page_validity_conversions_preserve_page_size_and_address() {
+        fn assert_conversion<S: PageSize>(page48: Page<S>) {
+            let page57: Page<S, FixedValidity<57>> = page48.into();
+            assert_eq!(
+                page57.start_address().as_u64(),
+                page48.start_address().as_u64()
+            );
+            assert_eq!(page57.size(), page48.size());
+            let converted_back = Page::<S>::try_from(page57).unwrap();
+            assert_eq!(converted_back, page48);
+        }
+
+        assert_conversion(Page::<Size4KiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size2MiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size1GiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+
+        let page57 = Page::<Size4KiB, FixedValidity<57>>::containing_address(VirtAddr57::new(
+            0x0001_0000_0000_1000,
+        ));
+        assert!(Page::<Size4KiB>::try_from(page57).is_err());
+    }
+
+    #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+    #[test]
+    fn runtime_page_48_conversions_match_address_conversions() {
+        fn assert_conversion<S: PageSize>(page48: Page<S>)
+        where
+            Page<S>: Into<Page<S, RuntimeValidity>>,
+            Page<S, RuntimeValidity>: TryFrom<Page<S>>,
+        {
+            let page_rt: Page<S, RuntimeValidity> = page48.into();
+            assert_eq!(
+                page_rt.start_address().as_u64(),
+                page48.start_address().as_u64()
+            );
+            assert_eq!(page_rt.size(), page48.size());
+            assert_eq!(Page::<S>::try_from(page_rt).unwrap(), page48);
+
+            #[cfg(feature = "virt_addr_57")]
+            {
+                let page57: Page<S, FixedValidity<57>> = page_rt.into();
+                assert_eq!(
+                    page57.start_address().as_u64(),
+                    page48.start_address().as_u64()
+                );
+                assert_eq!(page57.size(), page48.size());
+            }
+        }
+
+        assert_conversion(Page::<Size4KiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size2MiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+        assert_conversion(Page::<Size1GiB>::containing_address(VirtAddr::new(
+            0xffff_8000_1234_5000,
+        )));
+    }
+
+    #[cfg(all(
+        feature = "virt_addr_57",
+        feature = "virt_addr_rt",
+        target_arch = "x86_64"
+    ))]
+    #[test]
+    fn runtime_page_57_conversions_match_address_conversions() {
+        fn assert_conversion<S: PageSize>()
+        where
+            Page<S, RuntimeValidity>: Into<Page<S, FixedValidity<57>>>,
+            Page<S, FixedValidity<57>>: TryFrom<Page<S, RuntimeValidity>>,
+            Page<S, RuntimeValidity>: TryFrom<Page<S, FixedValidity<57>>>,
+        {
+        }
+
+        assert_conversion::<Size4KiB>();
+        assert_conversion::<Size2MiB>();
+        assert_conversion::<Size1GiB>();
+    }
 
     fn test_is_hash<T: core::hash::Hash>() {}
+
+    fn check_range_copies<S: PageSize, V: VirtAddrValidity>(start: Page<S, V>) {
+        let end = start + 3;
+        let range = Page::range(start, end);
+        let mut first = range.into_iter();
+        let mut second = range.into_iter();
+        assert_eq!(first.next(), Some(start));
+        assert_eq!(first.nth_back(1), Some(start + 1));
+        assert_eq!(first.next(), None);
+        assert_eq!(second.size_hint(), (3, Some(3)));
+        assert_eq!(second.nth(2), Some(start + 2));
+        assert_eq!(second.next(), None);
+        assert_eq!(range.start, start);
+        assert_eq!(range.end, end);
+
+        let inclusive = Page::range_inclusive(start, end);
+        let mut first = inclusive.into_iter();
+        let mut second = inclusive.into_iter();
+        assert_eq!(first.next_back(), Some(end));
+        assert_eq!(first.nth(2), Some(start + 2));
+        assert_eq!(first.next_back(), None);
+        assert_eq!(second.size_hint(), (4, Some(4)));
+        assert_eq!(second.nth_back(3), Some(start));
+        assert_eq!(second.next(), None);
+        assert_eq!(inclusive.start, start);
+        assert_eq!(inclusive.end, end);
+    }
+
+    #[test]
+    fn page_range_copies_have_independent_iterators() {
+        for raw in [0x4000_0000, 0xffff_8000_4000_0000] {
+            let address = VirtAddr::new(raw);
+            check_range_copies(Page::<Size4KiB>::containing_address(address));
+            check_range_copies(Page::<Size2MiB>::containing_address(address));
+            check_range_copies(Page::<Size1GiB>::containing_address(address));
+        }
+        #[cfg(feature = "virt_addr_57")]
+        for raw in [0x0001_0000_4000_0000, 0xff00_0000_4000_0000] {
+            let address = crate::addr::VirtAddr57::new(raw);
+            check_range_copies(Page::<Size4KiB, _>::containing_address(address));
+            check_range_copies(Page::<Size2MiB, _>::containing_address(address));
+            check_range_copies(Page::<Size1GiB, _>::containing_address(address));
+        }
+    }
 
     #[test]
     pub fn test_page_is_hash() {
@@ -735,6 +1265,78 @@ mod tests {
             );
         }
         assert_eq!(range_inclusive_iter.next(), None);
+    }
+
+    fn check_nth_back_lower_half_end<S: PageSize, const BITS: usize>(inclusive: bool)
+    where
+        FixedValidity<BITS>: VirtAddrValidity,
+    {
+        let last = Page::<S, FixedValidity<BITS>>::containing_address(VirtAddrGeneric::<
+            FixedValidity<BITS>,
+        >::new(
+            FixedValidity::<BITS>::lower_half_end(),
+        ));
+        let start = last - 2;
+        // Check skipping, exhaustion, and the state left for the next call.
+        for n in 0..=4 {
+            if inclusive {
+                let mut range = Page::range_inclusive(start, last).into_iter();
+                let expected = (n < 3).then(|| last - n as u64);
+                assert_eq!(range.nth_back(n), expected);
+                assert_eq!(range.next_back(), (n < 2).then(|| last - (n + 1) as u64));
+            } else {
+                let mut range = Page::range(start, last).into_iter();
+                let expected = (n < 2).then(|| last - (n + 1) as u64);
+                assert_eq!(range.nth_back(n), expected);
+                assert_eq!(range.next_back(), (n == 0).then_some(start));
+            }
+        }
+    }
+
+    #[test]
+    fn page_range_nth_back_lower_half_end_48() {
+        check_nth_back_lower_half_end::<Size4KiB, 48>(false);
+        check_nth_back_lower_half_end::<Size2MiB, 48>(false);
+        check_nth_back_lower_half_end::<Size1GiB, 48>(false);
+    }
+
+    #[test]
+    fn page_range_inclusive_nth_back_lower_half_end_48() {
+        check_nth_back_lower_half_end::<Size4KiB, 48>(true);
+        check_nth_back_lower_half_end::<Size2MiB, 48>(true);
+        check_nth_back_lower_half_end::<Size1GiB, 48>(true);
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn page_range_nth_back_lower_half_end_57() {
+        check_nth_back_lower_half_end::<Size4KiB, 57>(false);
+        check_nth_back_lower_half_end::<Size2MiB, 57>(false);
+        check_nth_back_lower_half_end::<Size1GiB, 57>(false);
+    }
+
+    #[cfg(feature = "virt_addr_57")]
+    #[test]
+    fn page_range_inclusive_nth_back_lower_half_end_57() {
+        check_nth_back_lower_half_end::<Size4KiB, 57>(true);
+        check_nth_back_lower_half_end::<Size2MiB, 57>(true);
+        check_nth_back_lower_half_end::<Size1GiB, 57>(true);
+    }
+
+    #[test]
+    #[should_panic = "attempt to subtract resulted in non-canonical virtual address"]
+    fn page_range_nth_back_crossing_gap_panics() {
+        let start = Page::<Size4KiB>::containing_address(VirtAddr::new(0x7fff_ffff_d000));
+        let end = Page::containing_address(VirtAddr::new(0xffff_8000_0000_1000));
+        Page::range(start, end).into_iter().nth_back(2);
+    }
+
+    #[test]
+    #[should_panic = "attempt to subtract resulted in non-canonical virtual address"]
+    fn page_range_inclusive_nth_back_crossing_gap_panics() {
+        let start = Page::<Size4KiB>::containing_address(VirtAddr::new(0x7fff_ffff_d000));
+        let end = Page::containing_address(VirtAddr::new(0xffff_8000_0000_1000));
+        Page::range_inclusive(start, end).into_iter().nth_back(2);
     }
 
     #[test]

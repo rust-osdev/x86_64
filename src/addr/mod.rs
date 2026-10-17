@@ -274,19 +274,25 @@ where
     where
         U: Into<u64>,
     {
-        self.align_down_u64(align.into())
-    }
-
-    /// Aligns the virtual address downwards to the given alignment.
-    ///
-    /// This variant accepts the alignment as a `u64` for internal users.
-    #[inline]
-    pub(crate) const fn align_down_u64(self, align: u64) -> Self {
-        Self::new_truncate(align_down(self.0, align))
+        Self::new_truncate(align_down(self.0, align.into()))
     }
 }
 
 impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
+    /// Aligns the virtual address downwards to the given alignment.
+    ///
+    /// This internal variant accepts the alignment as a `u64` and preserves the
+    /// validity policy of the address.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the alignment is not greater than the half
+    /// of the size of the address space.
+    #[inline]
+    pub(crate) const unsafe fn align_down_u64(self, align: u64) -> Self {
+        // Clearing low address bits cannot change the canonical sign extension.
+        VirtAddrGeneric(align_down(self.0, align), PhantomData)
+    }
     /// Creates a new virtual address, without any checks.
     ///
     /// ## Safety
