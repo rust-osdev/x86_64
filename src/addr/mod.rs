@@ -293,6 +293,7 @@ impl<V: VirtAddrValidity> VirtAddrGeneric<V> {
         // Clearing low address bits cannot change the canonical sign extension.
         VirtAddrGeneric(align_down(self.0, align), PhantomData)
     }
+
     /// Creates a new virtual address, without any checks.
     ///
     /// ## Safety

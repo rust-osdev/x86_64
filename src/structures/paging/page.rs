@@ -2,14 +2,14 @@
 
 #[cfg(feature = "virt_addr_57")]
 use crate::addr::VirtAddr57;
+use crate::addr::{FixedValidity, VirtAddr48, VirtAddrGeneric, VirtAddrValidity};
+#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
+use crate::addr::{RuntimeValidity, VirtAddrRT};
 #[cfg(any(
     feature = "virt_addr_57",
     all(feature = "virt_addr_rt", target_arch = "x86_64")
 ))]
-use crate::addr::canonicalize_with_bits;
-use crate::addr::{FixedValidity, VirtAddr48, VirtAddrGeneric, VirtAddrValidity};
-#[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
-use crate::addr::{RuntimeValidity, VirtAddrRT};
+use crate::addr::{VirtAddrNotValid, canonicalize_with_bits};
 use crate::sealed::Sealed;
 use crate::structures::paging::PageTableIndex;
 use crate::structures::paging::page_table::PageTableLevel;
@@ -337,7 +337,7 @@ impl Page<Size1GiB, RuntimeValidity> {
         p5_index: PageTableIndex,
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
-    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
+    ) -> Result<Self, VirtAddrNotValid> {
         let addr =
             (p5_index.into_u64() << 48) | (p4_index.into_u64() << 39) | (p3_index.into_u64() << 30);
         VirtAddrRT::try_new(canonicalize_with_bits(addr, 57)).map(Page::containing_address)
@@ -356,7 +356,7 @@ impl Page<Size2MiB, RuntimeValidity> {
         p4_index: PageTableIndex,
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
-    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
+    ) -> Result<Self, VirtAddrNotValid> {
         let addr = (p5_index.into_u64() << 48)
             | (p4_index.into_u64() << 39)
             | (p3_index.into_u64() << 30)
@@ -378,7 +378,7 @@ impl Page<Size4KiB, RuntimeValidity> {
         p3_index: PageTableIndex,
         p2_index: PageTableIndex,
         p1_index: PageTableIndex,
-    ) -> Result<Self, crate::addr::VirtAddrNotValid> {
+    ) -> Result<Self, VirtAddrNotValid> {
         let addr = (p5_index.into_u64() << 48)
             | (p4_index.into_u64() << 39)
             | (p3_index.into_u64() << 30)
@@ -401,7 +401,7 @@ impl<S: PageSize> From<Page<S, FixedValidity<48>>> for Page<S, FixedValidity<57>
 
 #[cfg(feature = "virt_addr_57")]
 impl<S: PageSize> TryFrom<Page<S, FixedValidity<57>>> for Page<S, FixedValidity<48>> {
-    type Error = crate::addr::VirtAddrNotValid;
+    type Error = VirtAddrNotValid;
 
     #[inline]
     fn try_from(page: Page<S, FixedValidity<57>>) -> Result<Self, Self::Error> {
@@ -425,7 +425,7 @@ impl<S: PageSize> From<Page<S, FixedValidity<48>>> for Page<S, RuntimeValidity> 
 
 #[cfg(all(feature = "virt_addr_rt", target_arch = "x86_64"))]
 impl<S: PageSize> TryFrom<Page<S, RuntimeValidity>> for Page<S, FixedValidity<48>> {
-    type Error = crate::addr::VirtAddrNotValid;
+    type Error = VirtAddrNotValid;
 
     #[inline]
     fn try_from(page: Page<S, RuntimeValidity>) -> Result<Self, Self::Error> {
@@ -457,7 +457,7 @@ impl<S: PageSize> From<Page<S, RuntimeValidity>> for Page<S, FixedValidity<57>> 
     target_arch = "x86_64"
 ))]
 impl<S: PageSize> TryFrom<Page<S, FixedValidity<57>>> for Page<S, RuntimeValidity> {
-    type Error = crate::addr::VirtAddrNotValid;
+    type Error = VirtAddrNotValid;
 
     #[inline]
     fn try_from(page: Page<S, FixedValidity<57>>) -> Result<Self, Self::Error> {
