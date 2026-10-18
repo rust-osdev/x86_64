@@ -4,7 +4,6 @@ use bit_field::BitField;
 
 use crate::{
     PrivilegeLevel, VirtAddr,
-    addr::{VirtAddrGeneric, VirtAddrValidity},
     instructions::segmentation::{CS, Segment},
     structures::paging::{
         Page, PageSize, Size2MiB, Size4KiB,
@@ -15,7 +14,7 @@ use core::{arch::asm, cmp, convert::TryFrom, fmt};
 
 /// Invalidate the given address in the TLB using the `invlpg` instruction.
 #[inline]
-pub fn flush<V: VirtAddrValidity>(addr: VirtAddrGeneric<V>) {
+pub fn flush(addr: VirtAddr) {
     unsafe {
         asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
     }
