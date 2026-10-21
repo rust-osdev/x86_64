@@ -156,6 +156,8 @@ bitflags! {
         /// Also enables the `IA32_PKRS` MSR to set supervisor-mode protection
         /// key access controls.
         const PROTECTION_KEY_SUPERVISOR = 1 << 24;
+        /// Enables Flexible Event and Return Delivery (FRED).
+        const FRED = 1 << 32;
     }
 }
 

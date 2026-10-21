@@ -78,6 +78,22 @@ pub struct ApicBase;
 #[derive(Debug)]
 pub struct Pat;
 
+/// IA32_FRED_RSPn: stack pointer for stack level n.
+#[derive(Debug)]
+pub struct FredRsp;
+
+/// IA32_FRED_STKLVLS: exception stack levels.
+#[derive(Debug)]
+pub struct FredStackLevels;
+
+/// IA32_FRED_SSPn: shadow stack pointer for stack level n.
+#[derive(Debug)]
+pub struct FredSsp;
+
+/// IA32_FRED_CONFIG: entrypoint and interrupt stack level.
+#[derive(Debug)]
+pub struct FredConfig;
+
 impl Efer {
     /// The underlying model specific register.
     pub const MSR: Msr = Msr(0xC000_0080);
@@ -142,6 +158,39 @@ impl Pat {
         PatMemoryType::Uncacheable,
         PatMemoryType::StrongUncacheable,
     ];
+}
+
+impl FredRsp {
+    /// The underlying model specific register for stack level 0.
+    pub const RSP0: Msr = Msr(0x1CC);
+    /// The underlying model specific register for stack level 1.
+    pub const RSP1: Msr = Msr(0x1CD);
+    /// The underlying model specific register for stack level 2.
+    pub const RSP2: Msr = Msr(0x1CE);
+    /// The underlying model specific register for stack level 3.
+    pub const RSP3: Msr = Msr(0x1CF);
+}
+
+impl FredStackLevels {
+    /// The underlying model specific register for IA32_FRED_STKLVLS.
+    pub const MSR: Msr = Msr(0x1D0);
+}
+
+impl FredSsp {
+    /// The underlying model specific register for shadow stack level 0.
+    /// Aliases IA32_PL0_SSP.
+    pub const SSP0: Msr = Msr(0x6A4);
+    /// The underlying model specific register for shadow stack level 1.
+    pub const SSP1: Msr = Msr(0x1D1);
+    /// The underlying model specific register for shadow stack level 2.
+    pub const SSP2: Msr = Msr(0x1D2);
+    /// The underlying model specific register for shadow stack level 3.
+    pub const SSP3: Msr = Msr(0x1D3);
+}
+
+impl FredConfig {
+    /// The underlying model specific register for IA32_FRED_CONFIG.
+    pub const MSR: Msr = Msr(0x1D4);
 }
 
 bitflags! {
@@ -254,6 +303,9 @@ mod x86_64 {
     use crate::PrivilegeLevel;
     use crate::addr::VirtAddr;
     use crate::registers::rflags::RFlags;
+    use crate::structures::fred::FredConfigValue;
+    use crate::structures::fred::FredStackLevel;
+    use crate::structures::fred::FredStackLevelsValue;
     use crate::structures::gdt::SegmentSelector;
     use crate::structures::paging::Page;
     use crate::structures::paging::PhysFrame;
@@ -829,6 +881,264 @@ mod x86_64 {
             unsafe {
                 msr.write(bits);
             }
+        }
+    }
+
+    impl FredRsp {
+        /// Return the corresponding MSR for the specificed FRED stack level.
+        fn msr(level: FredStackLevel) -> Msr {
+            match level {
+                FredStackLevel::Level0 => Self::RSP0,
+                FredStackLevel::Level1 => Self::RSP1,
+                FredStackLevel::Level2 => Self::RSP2,
+                FredStackLevel::Level3 => Self::RSP3,
+            }
+        }
+
+        /// Read the raw IA32_FRED_RSPn.
+        #[inline]
+        fn read_raw(level: FredStackLevel) -> u64 {
+            let msr = Self::msr(level);
+            unsafe { msr.read() }
+        }
+
+        /// Write the raw IA32_FRED_RSPn.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that the address points to a valid stack.
+        #[inline]
+        unsafe fn write_raw(level: FredStackLevel, value: u64) {
+            let mut msr = Self::msr(level);
+
+            unsafe {
+                msr.write(value);
+            }
+        }
+
+        /// Read IA32_FRED_RSPn. Returns the stack pointer for the FRED stack level.
+        #[inline]
+        pub fn read(level: FredStackLevel) -> VirtAddr {
+            VirtAddr::new(Self::read_raw(level))
+        }
+
+        /// Write IA32_FRED_RSPn.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that the address points to a valid stack.
+        #[inline]
+        pub unsafe fn write(level: FredStackLevel, stack_top: VirtAddr) {
+            assert!(
+                stack_top.is_aligned(64u64),
+                "FRED stack pointer must be 64-byte aligned",
+            );
+            unsafe { Self::write_raw(level, stack_top.as_u64()) };
+        }
+
+        /// Updates IA32_FRED_RSPn.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that the address points to a valid stack.
+        #[inline]
+        pub unsafe fn update<F>(level: FredStackLevel, f: F)
+        where
+            F: FnOnce(&mut VirtAddr),
+        {
+            let mut stack_top = Self::read(level);
+            f(&mut stack_top);
+            unsafe { Self::write(level, stack_top) };
+        }
+    }
+
+    impl FredStackLevels {
+        /// Read the raw IA32_FRED_STKLVLS.
+        #[inline]
+        fn read_raw() -> u64 {
+            unsafe { Self::MSR.read() }
+        }
+
+        /// Write the raw IA32_FRED_STKLVLS.
+        #[inline]
+        unsafe fn write_raw(value: u64) {
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(value);
+            }
+        }
+
+        /// Read the IA32_FRED_STKLVLS into a [`FredStackLevelsValue`].
+        #[inline]
+        pub fn read() -> FredStackLevelsValue {
+            let bits = Self::read_raw();
+            unsafe { FredStackLevelsValue::from_bits_unchecked(bits) }
+        }
+
+        /// Write a [`FredStackLevelsValue`] into IA32_FRED_STKLVLS.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that CPL = 0.
+        #[inline]
+        pub unsafe fn write(config: FredStackLevelsValue) {
+            let bits = config.bits();
+            unsafe {
+                Self::write_raw(bits);
+            }
+        }
+
+        /// Updates IA32_FRED_STKLVLS.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that CPL = 0.
+        #[inline]
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut FredStackLevelsValue),
+        {
+            let mut levels = Self::read();
+            f(&mut levels);
+            unsafe { Self::write(levels) };
+        }
+    }
+
+    impl FredSsp {
+        /// Return the corresponding MSR for the specificed FRED stack level.
+        fn msr(level: FredStackLevel) -> Msr {
+            match level {
+                FredStackLevel::Level0 => Self::SSP0,
+                FredStackLevel::Level1 => Self::SSP1,
+                FredStackLevel::Level2 => Self::SSP2,
+                FredStackLevel::Level3 => Self::SSP3,
+            }
+        }
+
+        /// Read the raw IA32_FRED_SSPn.
+        #[inline]
+        fn read_raw(level: FredStackLevel) -> u64 {
+            let msr = Self::msr(level);
+            unsafe { msr.read() }
+        }
+
+        /// Write the raw IA32_FRED_SSPn.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that the selected register can be accessed
+        /// and that the address identifies a correctly configured supervisor
+        /// stack with sufficient space whenever FRED may use it.
+        ///
+        /// Changing this pointer must preserve the validity of any outstanding
+        /// FRED returns.
+        #[inline]
+        unsafe fn write_raw(level: FredStackLevel, value: u64) {
+            let mut msr = Self::msr(level);
+
+            unsafe {
+                msr.write(value);
+            }
+        }
+
+        /// Read IA32_FRED_SSPn. Returns the stack pointer for stack level.
+        #[inline]
+        pub fn read(level: FredStackLevel) -> VirtAddr {
+            VirtAddr::new(Self::read_raw(level))
+        }
+
+        /// Write IA32_FRED_SSPn.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that the selected register can be accessed
+        /// and that the address identifies a correctly configured supervisor
+        /// shadow stack with sufficient space whenever FRED may use it.
+        ///
+        /// Changing this pointer must preserve the validity of any outstanding
+        /// FRED returns.
+        #[inline]
+        pub unsafe fn write(level: FredStackLevel, stack_top: VirtAddr) {
+            assert!(
+                stack_top.is_aligned(8u64),
+                "FRED shadow stack pointer at stack level must be 8-byte aligned",
+            );
+
+            unsafe { Self::write_raw(level, stack_top.as_u64()) };
+        }
+
+        /// Updates IA32_FRED_SSPn.
+        ///
+        /// ## Safety
+        ///
+        /// The caller must ensure that the selected register can be accessed
+        /// and that the address identifies a correctly configured supervisor
+        /// shadow stack with sufficient space whenever FRED may use it.
+        ///
+        /// Changing this pointer must preserve the validity of any outstanding
+        /// FRED returns.
+        #[inline]
+        pub unsafe fn update<F>(level: FredStackLevel, f: F)
+        where
+            F: FnOnce(&mut VirtAddr),
+        {
+            let mut stack_top = Self::read(level);
+            f(&mut stack_top);
+            unsafe { Self::write(level, stack_top) };
+        }
+    }
+
+    impl FredConfig {
+        /// Read the raw IA32_FRED_CONFIG.
+        #[inline]
+        fn read_raw() -> u64 {
+            unsafe { Self::MSR.read() }
+        }
+
+        /// Write the raw IA32_FRED_CONFIG.
+        #[inline]
+        unsafe fn write_raw(value: u64) {
+            let mut msr = Self::MSR;
+            unsafe {
+                msr.write(value);
+            }
+        }
+
+        /// Read the IA32_FRED_CONFIG into a [`FredConfigValue`].
+        #[inline]
+        pub fn read() -> FredConfigValue {
+            let bits = Self::read_raw();
+            unsafe { FredConfigValue::from_bits_unchecked(bits) }
+        }
+
+        /// Write a [`FredConfigValue`] into IA32_FRED_CONFIG.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that config is valid, and that it is canonical
+        /// relative to the processor’s maximum linear-address width.
+        #[inline]
+        pub unsafe fn write(config: FredConfigValue) {
+            let bits = config.bits();
+            unsafe {
+                Self::write_raw(bits);
+            }
+        }
+
+        /// Updates IA32_FRED_CONFIG.
+        ///
+        /// ## Safety
+        ///
+        /// Caller must ensure that config is valid, and that it is canonical
+        /// relative to the processor’s maximum linear-address width.
+        #[inline]
+        pub unsafe fn update<F>(f: F)
+        where
+            F: FnOnce(&mut FredConfigValue),
+        {
+            let mut config = Self::read();
+            f(&mut config);
+            unsafe { Self::write(config) };
         }
     }
 }
