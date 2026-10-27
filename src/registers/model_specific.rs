@@ -78,7 +78,7 @@ pub struct ApicBase;
 #[derive(Debug)]
 pub struct Pat;
 
-/// IA32_FRED_RSPn: stack pointer for stack level n.
+/// IA32_FRED_RSP_N: stack pointer for stack level n.
 #[derive(Debug)]
 pub struct FredRsp;
 
@@ -86,7 +86,7 @@ pub struct FredRsp;
 #[derive(Debug)]
 pub struct FredStackLevels;
 
-/// IA32_FRED_SSPn: shadow stack pointer for stack level n.
+/// IA32_FRED_SSP_N: shadow stack pointer for stack level n.
 #[derive(Debug)]
 pub struct FredSsp;
 
@@ -885,7 +885,7 @@ mod x86_64 {
     }
 
     impl FredRsp {
-        /// Return the corresponding MSR for the specificed FRED stack level.
+        /// Return the corresponding MSR for the specified FRED stack level.
         fn msr(level: FredStackLevel) -> Msr {
             match level {
                 FredStackLevel::Level0 => Self::RSP0,
@@ -895,14 +895,14 @@ mod x86_64 {
             }
         }
 
-        /// Read the raw IA32_FRED_RSPn.
+        /// Read the raw IA32_FRED_RSP_N.
         #[inline]
         fn read_raw(level: FredStackLevel) -> u64 {
             let msr = Self::msr(level);
             unsafe { msr.read() }
         }
 
-        /// Write the raw IA32_FRED_RSPn.
+        /// Write the raw IA32_FRED_RSP_N.
         ///
         /// ## Safety
         ///
@@ -916,13 +916,13 @@ mod x86_64 {
             }
         }
 
-        /// Read IA32_FRED_RSPn. Returns the stack pointer for the FRED stack level.
+        /// Read IA32_FRED_RSP_N. Returns the stack pointer for the FRED stack level.
         #[inline]
         pub fn read(level: FredStackLevel) -> VirtAddr {
             VirtAddr::new(Self::read_raw(level))
         }
 
-        /// Write IA32_FRED_RSPn.
+        /// Write IA32_FRED_RSP_N.
         ///
         /// ## Safety
         ///
@@ -936,7 +936,7 @@ mod x86_64 {
             unsafe { Self::write_raw(level, stack_top.as_u64()) };
         }
 
-        /// Updates IA32_FRED_RSPn.
+        /// Updates IA32_FRED_RSP_N.
         ///
         /// ## Safety
         ///
@@ -1005,7 +1005,7 @@ mod x86_64 {
     }
 
     impl FredSsp {
-        /// Return the corresponding MSR for the specificed FRED stack level.
+        /// Return the corresponding MSR for the specified FRED stack level.
         fn msr(level: FredStackLevel) -> Msr {
             match level {
                 FredStackLevel::Level0 => Self::SSP0,
@@ -1015,14 +1015,14 @@ mod x86_64 {
             }
         }
 
-        /// Read the raw IA32_FRED_SSPn.
+        /// Read the raw IA32_FRED_SSP_N.
         #[inline]
         fn read_raw(level: FredStackLevel) -> u64 {
             let msr = Self::msr(level);
             unsafe { msr.read() }
         }
 
-        /// Write the raw IA32_FRED_SSPn.
+        /// Write the raw IA32_FRED_SSP_N.
         ///
         /// ## Safety
         ///
@@ -1041,13 +1041,13 @@ mod x86_64 {
             }
         }
 
-        /// Read IA32_FRED_SSPn. Returns the stack pointer for stack level.
+        /// Read IA32_FRED_SSP_N. Returns the stack pointer for stack level.
         #[inline]
         pub fn read(level: FredStackLevel) -> VirtAddr {
             VirtAddr::new(Self::read_raw(level))
         }
 
-        /// Write IA32_FRED_SSPn.
+        /// Write IA32_FRED_SSP_N.
         ///
         /// ## Safety
         ///
@@ -1067,7 +1067,7 @@ mod x86_64 {
             unsafe { Self::write_raw(level, stack_top.as_u64()) };
         }
 
-        /// Updates IA32_FRED_SSPn.
+        /// Updates IA32_FRED_SSP_N.
         ///
         /// ## Safety
         ///

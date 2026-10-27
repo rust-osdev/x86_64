@@ -240,7 +240,7 @@ pub struct FredEventFrame {
     /// The code segment.
     pub code_segment: SegmentSelector,
     /// Bits `0..=1` contains the current stack level (CSL).
-    /// Bit 2 is 1 if event occured in Ring 0 and IBT tracker enabled.
+    /// Bit 2 is 1 if event occurred in Ring 0 and IBT tracker enabled.
     auxiliary: u16,
     _reserved2: [u8; 4],
     /// The flags register.
@@ -453,13 +453,13 @@ bitflags! {
         const B2 = 1 << 2;
         /// This bit indicates that the breakpoint condition 3 was met.
         const B3 = 1 << 3;
-        /// This bit indicates that the cause of the exception was a bus lock acquisation.
+        /// This bit indicates that the cause of the exception was a bus lock acquisition.
         const BLD = 1 << 11;
         /// This bit indicates that the cause of the exception was debug register access.
         const BD = 1 << 13;
         /// This bit indicates that the cause of the exception was a single instruction.
         const BS = 1 << 14;
-        /// This bit indicates that a debug exception or a breakpoint exception occured
+        /// This bit indicates that a debug exception or a breakpoint exception occurred
         /// inside of an RTM region while advanced debugging of RTM transactional regions was enabled.
         const RTM = 1 << 16;
     }
