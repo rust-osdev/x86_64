@@ -349,16 +349,9 @@ impl FredEventFrame {
     }
 
     /// Gets the event type.
-    /// 0 = external interrupt;
-    /// 2 = non-maskable interrupt;
-    /// 3 = hardware exception (e.g., page fault);
-    /// 4 = software interrupt (INT n);
-    /// 5 = privileged software exception (INT1);
-    /// 6 = software exception (INT3 or INTO);
-    /// 7 = other event (used for SYSCALL and SYSENTER).
     #[inline]
-    pub const fn event_type(&self) -> u8 {
-        ((self.event_information >> 16) & 0xf) as u8
+    pub const fn event_type(&self) -> FredEventType {
+        FredEventType(((self.event_information >> 16) & 0xf) as u8)
     }
 
     /// Interprets the event data using the event type and vector.
@@ -370,12 +363,18 @@ impl FredEventFrame {
         let event_type = self.event_type();
 
         match (event_type, vector) {
-            (3, 14) => FredEventData::PageFault(VirtAddr::new(self.event_data)),
-            (3 | 5, 1) => {
+            (FredEventType::HARDWARE_EXCEPTION, 14) => {
+                FredEventData::PageFault(VirtAddr::new(self.event_data))
+            }
+            (FredEventType::HARDWARE_EXCEPTION | FredEventType::PRIV_SOFTWARE_EXCEPTION, 1) => {
                 FredEventData::DebugException(FredEventDataDebug::from_bits_retain(self.event_data))
             }
-            (3, 7) => FredEventData::DeviceNotAvailable(self.event_data),
-            (2, 2) => FredEventData::NonMaskableInterrupt(self.event_data as u16),
+            (FredEventType::HARDWARE_EXCEPTION, 7) => {
+                FredEventData::DeviceNotAvailable(self.event_data)
+            }
+            (FredEventType::NON_MASKABLE_INTERRUPT, 2) => {
+                FredEventData::NonMaskableInterrupt(self.event_data as u16)
+            }
             _ => FredEventData::Other(self.event_data),
         }
     }
@@ -399,6 +398,27 @@ bitflags! {
         /// The event being delivered is a non-maskable interrupt.
         const NMI = 1 << 2;
     }
+}
+
+/// Stores the type of the FRED event.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FredEventType(pub u8);
+
+impl FredEventType {
+    /// External interrupt.
+    pub const EXTERNAL_INTERRUPT: Self = Self(0);
+    /// Non Maskable Interrupt (NMI).
+    pub const NON_MASKABLE_INTERRUPT: Self = Self(2);
+    /// Hardware exception, for example a page fault.
+    pub const HARDWARE_EXCEPTION: Self = Self(3);
+    /// Software interrupt, for example INT n.
+    pub const SOFTWARE_INTERRUPT: Self = Self(4);
+    /// Privileged software exception, for example INT 1.
+    pub const PRIV_SOFTWARE_EXCEPTION: Self = Self(5);
+    /// Software exception, for example INT 3 or INTO.
+    pub const SOFTWARE_EXCEPTION: Self = Self(6);
+    /// Other kind of event, used for SYSCALL and SYSENTER.
+    pub const OTHER_EVENT: Self = Self(7);
 }
 
 /// Possible FRED Event Data types.
