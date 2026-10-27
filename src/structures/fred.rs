@@ -196,7 +196,7 @@ impl fmt::Debug for FredConfigValue {
                 "interrupt_stack_level",
                 &(self.ring0_interrupt_stack_level()),
             )
-            .field("entry_base", &format_args!("{:#x}", self.entry_addr()))
+            .field("entry_base", &self.entry_addr())
             .finish()
     }
 }
