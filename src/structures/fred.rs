@@ -7,6 +7,7 @@ use bitflags::bitflags;
 use crate::VirtAddr;
 use crate::registers::rflags::RFlags;
 use crate::structures::gdt::SegmentSelector;
+use crate::structures::paging::Page;
 
 /// Represents a stack level under FRED.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -178,18 +179,28 @@ impl FredConfigValue {
         self.bits = (self.bits & !(0b11 << 9)) | ((sl as u64) << 9);
     }
 
-    /// Gets the linear address of FRED event entrypoint.
+    /// Gets the page of FRED event entrypoint.
     #[inline]
-    pub const fn entry_addr(&self) -> VirtAddr {
-        let addr = self.bits & !0xFFF;
-        VirtAddr::new(addr)
+    pub const fn entry_page(&self) -> Page {
+        let addr = VirtAddr::new(self.bits & !0xFFF);
+        Page::containing_address(addr)
     }
 
-    /// Sets the linear address of FRED event entrypoint.
+    /// Sets the page of FRED event entrypoint.
     #[inline]
-    pub const fn set_entry_addr(&mut self, addr: VirtAddr) {
-        assert!(addr.is_aligned_u64(4096));
-        self.bits = (self.bits & 0xFFF) | (addr.as_u64() & !0xFFF)
+    pub const fn set_entry_page(&mut self, page: Page) {
+        self.bits = (self.bits & 0xFFF) | page.start_address().as_u64();
+    }
+
+    /// Gets the linear address of the FRED user event entrypoint.
+    pub const fn user_entry_addr(&self) -> VirtAddr {
+        self.entry_page().start_address()
+    }
+
+    /// Gets the linear address of the FRED supervisor event entrypoint.
+    pub const fn supervisor_entry_addr(&self) -> VirtAddr {
+        let addr = self.entry_page().start_address().as_u64();
+        VirtAddr::new(addr + 0x100u64)
     }
 }
 
@@ -204,7 +215,7 @@ impl fmt::Debug for FredConfigValue {
                 "interrupt_stack_level",
                 &(self.ring0_interrupt_stack_level()),
             )
-            .field("entry_base", &self.entry_addr())
+            .field("entry_base", &self.entry_page())
             .finish()
     }
 }
