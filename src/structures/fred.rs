@@ -1,10 +1,8 @@
 //! Types for Flexible Event and Return Delivery (FRED).
 
 use core::fmt;
-use core::ops::Deref;
 
 use bitflags::bitflags;
-use volatile::Volatile;
 
 use crate::VirtAddr;
 use crate::registers::rflags::RFlags;
@@ -211,80 +209,6 @@ impl fmt::Debug for FredConfigValue {
     }
 }
 
-/// Wrapper type for the FRED event frame pushed by the CPU.
-///
-/// This type derefs to an [`FredEventFrameValue`], which allows reading the actual values.
-///
-/// This wrapper type ensures that no accidental modification of the fred event frame
-/// occurs, which can cause undefined behavior (see the [`as_mut`](FredEventFrame::as_mut)
-/// method for more information).
-#[repr(transparent)]
-pub struct FredEventFrame(FredEventFrameValue);
-const _: () = assert!(size_of::<FredEventFrame>() == 64);
-
-impl FredEventFrame {
-    /// Creates a new FRED event frame with the given values.
-    #[allow(clippy::too_many_arguments)]
-    #[inline]
-    pub const fn new(
-        error_code: FredEventErrorCode,
-        instruction_pointer: VirtAddr,
-        code_segment: SegmentSelector,
-        auxiliary: u16,
-        cpu_flags: RFlags,
-        stack_pointer: VirtAddr,
-        stack_segment: SegmentSelector,
-        return_flags: u16,
-        event_information: u32,
-        event_data: u64,
-    ) -> Self {
-        Self(FredEventFrameValue::new(
-            error_code,
-            instruction_pointer,
-            code_segment,
-            auxiliary,
-            cpu_flags,
-            stack_pointer,
-            stack_segment,
-            return_flags,
-            event_information,
-            event_data,
-        ))
-    }
-
-    /// Gives mutable access to the contents of the FRED event frame.
-    ///
-    /// The `Volatile` wrapper is used because LLVM optimizations remove non-volatile
-    /// modifications of the FRED event frame.
-    ///
-    /// ## Safety
-    ///
-    /// This function is unsafe since modifying the content of the FRED event frame
-    /// can easily lead to undefined behavior. For example, by writing an invalid value to
-    /// the instruction pointer field, the CPU can jump to arbitrary code at the end of the
-    /// event.
-    #[inline]
-    pub unsafe fn as_mut(&mut self) -> Volatile<&mut FredEventFrameValue> {
-        Volatile::new(&mut self.0)
-    }
-}
-
-impl Deref for FredEventFrame {
-    type Target = FredEventFrameValue;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl fmt::Debug for FredEventFrame {
-    #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
 // The FRED event frame pushed is as follows:
 //	  +--------+-----------------+
 //	  | Bytes  | Usage           |
@@ -307,7 +231,7 @@ impl fmt::Debug for FredEventFrame {
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct FredEventFrameValue {
+pub struct FredEventFrame {
     /// Defined only for certain exceptions; zero if none is defined.
     pub error_code: FredEventErrorCode,
     _reserved1: [u8; 6],
@@ -336,9 +260,9 @@ pub struct FredEventFrameValue {
     pub event_data: u64,
     _reserved3: [u8; 8],
 }
-const _: () = assert!(size_of::<FredEventFrameValue>() == 64);
+const _: () = assert!(size_of::<FredEventFrame>() == 64);
 
-impl FredEventFrameValue {
+impl FredEventFrame {
     /// Creates a new FRED event frame with the given values.
     #[allow(clippy::too_many_arguments)]
     #[inline]
@@ -513,7 +437,7 @@ bitflags! {
     }
 }
 
-impl fmt::Debug for FredEventFrameValue {
+impl fmt::Debug for FredEventFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FredEventFrame")
             .field("error_code", &self.error_code)
