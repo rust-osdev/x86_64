@@ -179,8 +179,8 @@ impl FredConfigValue {
     }
 
     /// Sets the linear address of FRED event entrypoint.
-    pub fn set_entry_addr(&mut self, addr: VirtAddr) {
-        assert!(addr.is_aligned(4096u64));
+    pub const fn set_entry_addr(&mut self, addr: VirtAddr) {
+        assert!(addr.is_aligned_u64(4096));
         self.bits = (self.bits & 0xFFF) | (addr.as_u64() & !0xFFF)
     }
 }
