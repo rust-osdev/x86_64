@@ -246,7 +246,7 @@ pub struct FredEventFrame {
     /// The flags register.
     pub cpu_flags: RFlags,
     /// The stack pointer.
-    pub stack_pointer: VirtAddr,
+    pub stack_pointer: u64,
     /// The stack segment descriptor.
     pub stack_segment: SegmentSelector,
     /// Bit 0 is 1 for event delivery of a hardware exception if STI was enabled.
@@ -272,7 +272,7 @@ impl FredEventFrame {
         code_segment: SegmentSelector,
         auxiliary: u16,
         cpu_flags: RFlags,
-        stack_pointer: VirtAddr,
+        stack_pointer: u64,
         stack_segment: SegmentSelector,
         return_flags: u16,
         event_information: u32,
