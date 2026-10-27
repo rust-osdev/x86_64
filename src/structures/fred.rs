@@ -299,6 +299,7 @@ impl FredEventFrame {
     /// stack level (CSL) at the time the event occurred.
     ///
     /// For delivery of events that occur in ring 3, these bits are cleared to 0.
+    #[inline]
     pub const fn csl(&self) -> FredStackLevel {
         let bits = self.auxiliary & 0b11;
         FredStackLevel::from_u16(bits)
@@ -306,24 +307,28 @@ impl FredEventFrame {
 
     /// Set to 1 if the event occurred in ring 0 and the indirect branch tracker
     /// was in the WAIT_FOR_ENDBRANCH state.
+    #[inline]
     pub const fn ibt_in_wfe(&self) -> bool {
         self.auxiliary & (1 << 2) != 0
     }
 
     /// Set to 1 for FRED event delivery of a hardware exception if interrupt blocking by STI
     /// was in effect at the time the exception occurred and is otherwise cleared to 0.
+    #[inline]
     pub const fn sti_blocking(&self) -> bool {
         self.return_flags & (1 << 0) != 0
     }
 
     /// Set to 1 for FRED event delivery of SYSCALL, SYSENTER, or INT n
     /// (for any value of n) and is otherwise cleared to 0.
+    #[inline]
     pub const fn from_syscall_sysenter_or_int(&self) -> bool {
         self.return_flags & (1 << 1) != 0
     }
 
     /// Set to 1 if the event being delivered is a non-maskable interrupt (NMI)
     /// and is otherwise cleared to 0.
+    #[inline]
     pub const fn is_nmi(&self) -> bool {
         self.return_flags & (1 << 2) != 0
     }
@@ -338,6 +343,7 @@ impl FredEventFrame {
     ///     - INT3 has vector 3;
     ///     - INTO has vector 4.
     /// - For SYSCALL and SYSENTER, vectors 1 and 2 are used, respectively.
+    #[inline]
     pub const fn event_vector(&self) -> u8 {
         (self.event_information & 0xff) as u8
     }
@@ -350,6 +356,7 @@ impl FredEventFrame {
     /// 5 = privileged software exception (INT1);
     /// 6 = software exception (INT3 or INTO);
     /// 7 = other event (used for SYSCALL and SYSENTER).
+    #[inline]
     pub const fn event_type(&self) -> u8 {
         ((self.event_information >> 16) & 0xf) as u8
     }
@@ -357,6 +364,7 @@ impl FredEventFrame {
     /// Interprets the event data using the event type and vector.
     ///
     /// Panics if a page-fault address is not representable by [`VirtAddr`].
+    #[inline]
     pub const fn event_data(&self) -> FredEventData {
         let vector = self.event_vector();
         let event_type = self.event_type();
