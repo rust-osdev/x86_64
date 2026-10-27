@@ -128,27 +128,32 @@ impl FredConfigValue {
     }
 
     /// Gets the current stack level.
+    #[inline]
     pub const fn csl(&self) -> FredStackLevel {
         let csl = self.bits & 0b11;
         FredStackLevel::from_u16(csl as u16)
     }
 
     /// Sets the current stack level.
+    #[inline]
     pub const fn set_csl(&mut self, csl: FredStackLevel) {
         self.bits = (self.bits & !0b11) | csl as u64
     }
 
     /// Whether FRED decrements SSP by 8 bytes when the stack does not change.
+    #[inline]
     pub const fn decrement_ssp(&self) -> bool {
         self.bits & (1 << 3) != 0
     }
 
     /// Configures the 8-byte SSP decrement for events that stay on the same stack.
+    #[inline]
     pub const fn set_decrement_ssp(&mut self, value: bool) {
         self.bits = (self.bits & !(1 << 3)) | ((value as u64) << 3);
     }
 
     /// Gets the RSP decrement in bytes when the stack does not change.
+    #[inline]
     pub const fn redzone(&self) -> u16 {
         (self.bits & 0x1C0) as u16
     }
@@ -156,29 +161,34 @@ impl FredConfigValue {
     /// Sets the RSP decrement in bytes when the stack does not change.
     ///
     /// Panics unless `value` is a multiple of 64 in the range 0..=448.
+    #[inline]
     pub const fn set_redzone(&mut self, value: u16) {
         assert!(value <= 448 && value.is_multiple_of(64));
         self.bits = (self.bits & !0x1C0) | value as u64;
     }
 
     /// Gets the stack level for maskable interrupts delivered in ring 0.
+    #[inline]
     pub const fn ring0_interrupt_stack_level(&self) -> FredStackLevel {
         let ring0_isl = (self.bits >> 9) & 0b11;
         FredStackLevel::from_u16(ring0_isl as u16)
     }
 
     /// Sets the stack level for maskable interrupts delivered in ring 0.
+    #[inline]
     pub const fn set_ring0_interrupt_stack_level(&mut self, sl: FredStackLevel) {
         self.bits = (self.bits & !(0b11 << 9)) | ((sl as u64) << 9);
     }
 
     /// Gets the linear address of FRED event entrypoint.
+    #[inline]
     pub const fn entry_addr(&self) -> VirtAddr {
         let addr = self.bits & !0xFFF;
         VirtAddr::new(addr)
     }
 
     /// Sets the linear address of FRED event entrypoint.
+    #[inline]
     pub const fn set_entry_addr(&mut self, addr: VirtAddr) {
         assert!(addr.is_aligned_u64(4096));
         self.bits = (self.bits & 0xFFF) | (addr.as_u64() & !0xFFF)
