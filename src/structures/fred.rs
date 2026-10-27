@@ -70,13 +70,15 @@ impl FredStackLevelsValue {
     }
 
     /// Gets the stack level associated to the vector.
-    pub fn get(&self, vector: u8) -> FredStackLevel {
+    #[inline]
+    pub const fn get(&self, vector: u8) -> FredStackLevel {
         assert!(vector < 32);
         FredStackLevel::from_u16(((self.bits >> (vector * 2)) & 0b11) as u16)
     }
 
     /// Sets the stack level associated to the vector.
-    pub fn set(&mut self, vector: u8, level: FredStackLevel) {
+    #[inline]
+    pub const fn set(&mut self, vector: u8, level: FredStackLevel) {
         assert!(vector < 32);
         let shift = vector * 2;
         let mask = 0b11u64 << shift;
