@@ -316,11 +316,23 @@ impl FredEventFrame {
         FredStackLevel::from_u16(bits)
     }
 
+    /// Sets the current stack level of the even frame.
+    #[inline]
+    pub const fn set_csl(&mut self, csl: FredStackLevel) {
+        self.auxiliary = (self.auxiliary & !0b11) | csl as u16;
+    }
+
     /// Set to 1 if the event occurred in ring 0 and the indirect branch tracker
     /// was in the WAIT_FOR_ENDBRANCH state.
     #[inline]
     pub const fn ibt_in_wfe(&self) -> bool {
         self.auxiliary & (1 << 2) != 0
+    }
+
+    /// Sets whether the indirect branch tracker was in WAIT_FOR_ENDBRANCH state.
+    #[inline]
+    pub const fn set_ibt_in_wfe(&mut self, value: bool) {
+        self.auxiliary = (self.auxiliary & !(1 << 2)) | ((value as u16) << 2);
     }
 
     /// Set to 1 for FRED event delivery of a hardware exception if interrupt blocking by STI
@@ -330,6 +342,12 @@ impl FredEventFrame {
         self.return_flags & (1 << 0) != 0
     }
 
+    /// Sets whether the interrupt blocking by STI is in effect.
+    #[inline]
+    pub const fn set_sti_blocking(&mut self, value: bool) {
+        self.return_flags = (self.return_flags & !(1 << 0)) | value as u16;
+    }
+
     /// Set to 1 for FRED event delivery of SYSCALL, SYSENTER, or INT n
     /// (for any value of n) and is otherwise cleared to 0.
     #[inline]
@@ -337,11 +355,23 @@ impl FredEventFrame {
         self.return_flags & (1 << 1) != 0
     }
 
+    /// Sets whether the event delivery was by SYSCALL, SYSENTER, or INT n.
+    #[inline]
+    pub const fn set_from_syscall_sysenter_or_int(&mut self, value: bool) {
+        self.return_flags = (self.return_flags & !(1 << 1)) | ((value as u16) << 1);
+    }
+
     /// Set to 1 if the event being delivered is a non-maskable interrupt (NMI)
     /// and is otherwise cleared to 0.
     #[inline]
     pub const fn is_nmi(&self) -> bool {
         self.return_flags & (1 << 2) != 0
+    }
+
+    /// Sets whether the event is a non-maskable interrupt (NMI).
+    #[inline]
+    pub const fn set_is_nmi(&mut self, value: bool) {
+        self.return_flags = (self.return_flags & !(1 << 2)) | ((value as u16) << 2);
     }
 
     /// Gets the event vector. The vector depends on the type of event:
@@ -359,16 +389,40 @@ impl FredEventFrame {
         (self.event_information & 0xff) as u8
     }
 
+    /// Sets the event vector of the event frame.
+    #[inline]
+    pub const fn set_event_vector(&mut self, vector: u8) {
+        self.event_information = (self.event_information & !0xff) | vector as u32;
+    }
+
     /// Gets the event type.
     #[inline]
     pub const fn event_type(&self) -> FredEventType {
         FredEventType(((self.event_information >> 16) & 0xf) as u8)
     }
 
+    /// Sets the event type of the event frame.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the event type does not fit in four bits.
+    #[inline]
+    pub const fn set_event_type(&mut self, event_type: FredEventType) {
+        assert!(event_type.0 <= 0xf);
+        self.event_information =
+            (self.event_information & !(0xf << 16)) | ((event_type.0 as u32) << 16);
+    }
+
     /// Whether the event was incident to enclave execution.
     #[inline]
     pub const fn enclave_event(&self) -> bool {
         self.event_information & (1 << 24) != 0
+    }
+
+    /// Sets whether the event is incident to enclave execution.
+    #[inline]
+    pub const fn set_enclave_event(&mut self, value: bool) {
+        self.event_information = (self.event_information & !(1 << 24)) | ((value as u32) << 24);
     }
 
     /// Whether the previous context was in 64-bit mode.
@@ -378,6 +432,12 @@ impl FredEventFrame {
         self.event_information & (1 << 25) != 0
     }
 
+    /// Sets whether the event is in 64-bit mode.
+    #[inline]
+    pub const fn set_was_64_bit_mode(&mut self, value: bool) {
+        self.event_information = (self.event_information & !(1 << 25)) | ((value as u32) << 25);
+    }
+
     /// Whether the exception occurred during FRED event delivery.
     /// Double faults are not reported as nested exceptions.
     #[inline]
@@ -385,10 +445,27 @@ impl FredEventFrame {
         self.event_information & (1 << 26) != 0
     }
 
+    /// Sets whether event is a nested exception.
+    #[inline]
+    pub const fn set_nested_exception(&mut self, value: bool) {
+        self.event_information = (self.event_information & !(1 << 26)) | ((value as u32) << 26);
+    }
+
     /// Gets the instruction length encoded in the event information.
     #[inline]
     pub const fn instruction_length(&self) -> u8 {
         ((self.event_information >> 28) & 0xF) as u8
+    }
+
+    /// Sets the instruction length encoded in the event.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `length` is greater than 15.
+    #[inline]
+    pub const fn set_instruction_length(&mut self, length: u8) {
+        assert!(length <= 0xf);
+        self.event_information = (self.event_information & !(0xf << 28)) | ((length as u32) << 28);
     }
 
     /// Interprets the event data using the event type and vector.
