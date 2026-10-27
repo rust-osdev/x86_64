@@ -317,7 +317,7 @@ pub struct FredEventFrameValue {
     pub code_segment: SegmentSelector,
     /// Bits `0..=1` contains the current stack level (CSL).
     /// Bit 2 is 1 if event occured in Ring 0 and IBT tracker enabled.
-    pub auxiliary: u16,
+    auxiliary: u16,
     _reserved2: [u8; 4],
     /// The flags register.
     pub cpu_flags: RFlags,
@@ -328,10 +328,10 @@ pub struct FredEventFrameValue {
     /// Bit 0 is 1 for event delivery of a hardware exception if STI was enabled.
     /// Bit 1 is 1 for event delivery of SYSCALL, SYSENTER, or INT n.
     /// Bit 2 is 1 for event delivery for NMIs.
-    pub return_flags: u16,
+    return_flags: u16,
     /// Contains event information.
     /// This provides software with additional information about the event.
-    pub event_information: u32,
+    event_information: u32,
     /// Contains data related to the event.
     pub event_data: u64,
     _reserved3: [u8; 8],
