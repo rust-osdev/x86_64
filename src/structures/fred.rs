@@ -449,15 +449,18 @@ impl fmt::Debug for FredEventFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FredEventFrame")
             .field("error_code", &self.error_code)
+            .field("reserved", &self._reserved1)
             .field("instruction_pointer", &self.instruction_pointer)
             .field("code_segment", &self.code_segment)
             .field("auxiliary", &self.auxiliary)
+            .field("reserved", &self._reserved2)
             .field("cpu_flags", &self.cpu_flags)
             .field("stack_pointer", &self.stack_pointer)
             .field("stack_segment", &self.stack_segment)
             .field("event_flags", &self.return_flags)
             .field("event_information", &self.event_information)
             .field("event_data", &self.event_data)
+            .field("reserved", &self._reserved3)
             .finish()
     }
 }
