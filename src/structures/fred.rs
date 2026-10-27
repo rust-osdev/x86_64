@@ -365,6 +365,32 @@ impl FredEventFrame {
         FredEventType(((self.event_information >> 16) & 0xf) as u8)
     }
 
+    /// Whether the event was incident to enclave execution.
+    #[inline]
+    pub const fn enclave_event(&self) -> bool {
+        self.event_information & (1 << 24) != 0
+    }
+
+    /// Whether the previous context was in 64-bit mode.
+    /// False indicates compatibility mode.
+    #[inline]
+    pub const fn was_64_bit_mode(&self) -> bool {
+        self.event_information & (1 << 25) != 0
+    }
+
+    /// Whether the exception occurred during FRED event delivery.
+    /// Double faults are not reported as nested exceptions.
+    #[inline]
+    pub const fn nested_exception(&self) -> bool {
+        self.event_information & (1 << 26) != 0
+    }
+
+    /// Gets the instruction length encoded in the event information.
+    #[inline]
+    pub const fn instruction_length(&self) -> u8 {
+        ((self.event_information >> 28) & 0xF) as u8
+    }
+
     /// Interprets the event data using the event type and vector.
     ///
     /// Panics if a page-fault address is not representable by [`VirtAddr`].
