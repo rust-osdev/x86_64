@@ -357,7 +357,7 @@ impl FredEventFrame {
     /// Interprets the event data using the event type and vector.
     ///
     /// Panics if a page-fault address is not representable by [`VirtAddr`].
-    pub fn event_data(&self) -> FredEventData {
+    pub const fn event_data(&self) -> FredEventData {
         let vector = self.event_vector();
         let event_type = self.event_type();
 
