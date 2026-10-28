@@ -499,31 +499,6 @@ impl FredEventFrame {
         assert!(length <= 0xf);
         self.event_information = (self.event_information & !(0xf << 28)) | ((length as u32) << 28);
     }
-
-    /// Interprets the event data using the event type and vector.
-    ///
-    /// Panics if a page-fault address is not representable by [`VirtAddr`].
-    #[inline]
-    pub const fn event_data(&self) -> FredEventData {
-        let vector = self.event_vector();
-        let event_type = self.event_type();
-
-        match (event_type, vector) {
-            (FredEventType::HARDWARE_EXCEPTION, 14) => {
-                FredEventData::PageFault(VirtAddr::new(self.event_data))
-            }
-            (FredEventType::HARDWARE_EXCEPTION | FredEventType::PRIV_SOFTWARE_EXCEPTION, 1) => {
-                FredEventData::DebugException(FredEventDataDebug::from_bits_retain(self.event_data))
-            }
-            (FredEventType::HARDWARE_EXCEPTION, 7) => {
-                FredEventData::DeviceNotAvailable(self.event_data)
-            }
-            (FredEventType::NON_MASKABLE_INTERRUPT, 2) => {
-                FredEventData::NonMaskableInterrupt(self.event_data as u16)
-            }
-            _ => FredEventData::Other(self.event_data),
-        }
-    }
 }
 
 /// Contains FRED Event error code.
@@ -551,25 +526,6 @@ impl FredEventType {
     pub const SOFTWARE_EXCEPTION: Self = Self(6);
     /// Other kind of event, used for SYSCALL and SYSENTER.
     pub const OTHER_EVENT: Self = Self(7);
-}
-
-/// Possible FRED Event Data types.
-#[derive(Clone, Copy, Debug)]
-pub enum FredEventData {
-    /// If the event is a page fault, event data is the faulting linear address.
-    PageFault(VirtAddr),
-    /// If the event is a debug exception, event data identifies it.
-    DebugException(FredEventDataDebug),
-    /// If the event is a #NM, event data identifies it.
-    /// The event data is identical to what is loaded in the the IA32_XFD_ERR.
-    /// If the #NM was not caused by extended feature disable, the event data is zero.
-    DeviceNotAvailable(u64),
-    /// If the event is an NMI, event data contains the NMI-source bitmap.
-    NonMaskableInterrupt(u16),
-    /// For any other event, event data is zero.
-    /// The event data is determined differently when FRED event delivery is
-    /// used for an event injected by VM entry.
-    Other(u64),
 }
 
 bitflags! {
