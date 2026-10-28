@@ -106,6 +106,13 @@ impl FredStackLevelsValue {
     }
 }
 
+impl Default for FredStackLevelsValue {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Debug for FredStackLevelsValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let levels: [FredStackLevel; 32] = core::array::from_fn(|vector| self.get(vector as u8));
@@ -130,7 +137,7 @@ pub struct FredConfigValue {
 }
 
 impl FredConfigValue {
-    /// Constructs a FredConfigValue from an entry_page. 
+    /// Constructs a FredConfigValue from an entry_page.
     /// Rest of the fields are set to zero.
     #[inline]
     pub const fn new(entry_page: Page) -> Self {
