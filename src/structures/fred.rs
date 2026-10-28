@@ -500,20 +500,6 @@ impl FredEventFrame {
 #[repr(transparent)]
 pub struct FredEventErrorCode(pub u16);
 
-bitflags! {
-    /// Return-state flags saved in bits 18:16 of the augmented SS field.
-    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
-    #[repr(transparent)]
-    pub struct FredEventReturnFlags: u16 {
-        /// Interrupt blocking by STI was in effect when a hardware exception occurred.
-        const STI_BLOCKED = 1 << 0;
-        /// The event was delivered for SYSCALL, SYSENTER, or INT n.
-        const SOFTWARE_EVENT = 1 << 1;
-        /// The event being delivered is a non-maskable interrupt.
-        const NMI = 1 << 2;
-    }
-}
-
 /// Stores the type of the FRED event.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FredEventType(pub u8);
