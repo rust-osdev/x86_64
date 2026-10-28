@@ -979,7 +979,7 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// Caller must ensure that CPL = 0.
+        /// Caller must ensure that the stack levels are configured correctly.
         #[inline]
         pub unsafe fn write(config: FredStackLevelsValue) {
             let bits = config.bits();
@@ -992,7 +992,7 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// Caller must ensure that CPL = 0.
+        /// Caller must ensure that the stack levels are configured correctly.
         #[inline]
         pub unsafe fn update<F>(f: F)
         where
