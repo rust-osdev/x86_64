@@ -351,8 +351,6 @@ pub struct InterruptDescriptorTable {
     /// instruction that caused it. After resolving the violation, the handler
     /// can resume execution.
     ///
-    /// No error code is pushed. The vector number of the `#VE` exception is 20.
-    ///
     /// See the [Intel SDM], Volume 3A, "Event 20 - Virtualization Exception".
     ///
     /// [Intel SDM]: https://cdrdv2.intel.com/v1/dl/getContent/671447
