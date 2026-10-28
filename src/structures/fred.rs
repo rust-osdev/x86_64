@@ -51,6 +51,27 @@ pub struct FredStackLevelsValue {
 }
 
 impl FredStackLevelsValue {
+    /// Creates a new FredStackLevelsValue. Each vector's two-bit field specifying
+    /// the minimum stack level is 0.
+    #[inline]
+    pub const fn new() -> Self {
+        Self { bits: 0 }
+    }
+
+    /// Constructs a new FredStackLevelsValue from an array of FredStackLevels.
+    #[inline]
+    pub const fn from_levels(levels: [FredStackLevel; 32]) -> Self {
+        let mut config = Self::new();
+        let mut vector = 0;
+
+        while vector < 32 {
+            config.set(vector as u8, levels[vector]);
+            vector += 1;
+        }
+
+        config
+    }
+
     /// Convert from underlying bit representation, preserving all bits,
     /// Even those not corresponding to a defined field.
     ///
@@ -109,6 +130,15 @@ pub struct FredConfigValue {
 }
 
 impl FredConfigValue {
+    /// Constructs a FredConfigValue from an entry_page. 
+    /// Rest of the fields are set to zero.
+    #[inline]
+    pub const fn new(entry_page: Page) -> Self {
+        Self {
+            bits: entry_page.start_address().as_u64(),
+        }
+    }
+
     /// Convert from underlying bit representation, preserving all bits,
     /// Even those not corresponding to a defined field.
     ///
