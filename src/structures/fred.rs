@@ -58,7 +58,7 @@ impl FredStackLevelsValue {
         Self { bits: 0 }
     }
 
-    /// Constructs a new FredStackLevelsValue from an array of FredStackLevels.
+    /// Constructs a new FredStackLevelsValue from an array of FredStackLevel.
     #[inline]
     pub const fn from_levels(levels: [FredStackLevel; 32]) -> Self {
         let mut config = Self::new();
@@ -73,7 +73,7 @@ impl FredStackLevelsValue {
     }
 
     /// Convert from underlying bit representation, preserving all bits,
-    /// Even those not corresponding to a defined field.
+    /// even those not corresponding to a defined field.
     ///
     /// # Safety
     ///
@@ -89,7 +89,7 @@ impl FredStackLevelsValue {
         self.bits
     }
 
-    /// Gets the stack level associated to the vector.
+    /// Gets the stack level associated with the vector.
     #[inline]
     pub const fn get(&self, vector: u8) -> FredStackLevel {
         assert!(vector < 32);
@@ -120,8 +120,8 @@ impl fmt::Debug for FredStackLevelsValue {
 /// Wrapper for IA32_FRED_CONFIG.
 /// Bits `0..=1` contains current stack level (CSL).
 /// Bit `3` if set, if event delivery doesn't change stacks, decrement SSP by 8.
-/// Bits `6..=8` denotes how much the RSP decrements when event delivery uses the same stack.
-/// Bits `9..=10` identifies the stack level for maskable interrupts in ring 0.
+/// Bits `6..=8` denote how much the RSP decrements when event delivery uses the same stack.
+/// Bits `9..=10` identify the stack level for maskable interrupts in ring 0.
 /// Bits `12..=63` contain the linear address of a page containing event handlers.
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -341,7 +341,7 @@ impl FredEventFrame {
         FredStackLevel::from_u16(bits)
     }
 
-    /// Sets the current stack level of the even frame.
+    /// Sets the current stack level of the event frame.
     #[inline]
     pub const fn set_csl(&mut self, csl: FredStackLevel) {
         self.auxiliary = (self.auxiliary & !0b11) | csl as u16;
@@ -401,8 +401,8 @@ impl FredEventFrame {
 
     /// Gets the event vector. The vector depends on the type of event:
     /// - For an external interrupt, the vector is provided by the local APIC.
-    /// - or a non-maskable interrupt (NMI), the vector is 2.
-    /// - or a hardware exception, the vector is determined by the exception.
+    /// - For a non-maskable interrupt (NMI), the vector is 2.
+    /// - For a hardware exception, the vector is determined by the exception.
     /// - For a software interrupt (INT n), the vector comes from the instruction’s opcode (value n)
     /// - For a software exception, the vector is determined by the instruction opcode:
     ///     - INT1 has vector 1;
@@ -470,7 +470,7 @@ impl FredEventFrame {
         self.event_information & (1 << 26) != 0
     }
 
-    /// Sets whether event is a nested exception.
+    /// Sets whether the event is a nested exception.
     #[inline]
     pub const fn set_nested_exception(&mut self, value: bool) {
         self.event_information = (self.event_information & !(1 << 26)) | ((value as u32) << 26);
@@ -538,9 +538,9 @@ impl FredEventType {
     pub const HARDWARE_EXCEPTION: Self = Self(3);
     /// Software interrupt, for example INT n.
     pub const SOFTWARE_INTERRUPT: Self = Self(4);
-    /// Privileged software exception, for example INT 1.
+    /// Privileged software exception, for example INT1.
     pub const PRIV_SOFTWARE_EXCEPTION: Self = Self(5);
-    /// Software exception, for example INT 3 or INTO.
+    /// Software exception, for example INT3 or INTO.
     pub const SOFTWARE_EXCEPTION: Self = Self(6);
     /// Other kind of event, used for SYSCALL and SYSENTER.
     pub const OTHER_EVENT: Self = Self(7);
@@ -554,7 +554,7 @@ pub enum FredEventData {
     /// If the event is a debug exception, event data identifies it.
     DebugException(FredEventDataDebug),
     /// If the event is a #NM, event data identifies it.
-    /// The event data identical to what is loaded in the the IA32_XFD_ERR.
+    /// The event data is identical to what is loaded in the the IA32_XFD_ERR.
     /// If the #NM was not caused by extended feature disable, the event data is zero.
     DeviceNotAvailable(u64),
     /// If the event is an NMI, event data contains the NMI-source bitmap.
@@ -602,7 +602,7 @@ impl fmt::Debug for FredEventFrame {
             .field("cpu_flags", &self.cpu_flags)
             .field("stack_pointer", &self.stack_pointer)
             .field("stack_segment", &self.stack_segment)
-            .field("event_flags", &self.return_flags)
+            .field("return_flags", &self.return_flags)
             .field("event_information", &self.event_information)
             .field("event_data", &self.event_data)
             .field("reserved", &self._reserved3)
