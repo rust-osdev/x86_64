@@ -119,10 +119,8 @@ mod x86_64 {
     /// flags also used by Rust/LLVM can result in undefined behavior too.
     #[inline]
     pub unsafe fn write_raw(val: u64) {
-        // HACK: we mark this function as preserves_flags to prevent Rust from restoring
-        // saved flags after the "popf" below. See above note on safety.
         unsafe {
-            asm!("push {}; popfq", in(reg) val, options(nomem, preserves_flags));
+            asm!("push {}; popfq", in(reg) val, options(nomem));
         }
     }
 
