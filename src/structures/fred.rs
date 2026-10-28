@@ -275,33 +275,27 @@ const _: () = assert!(size_of::<FredEventFrame>() == 64);
 
 impl FredEventFrame {
     /// Creates a new FRED event frame with the given values.
-    #[allow(clippy::too_many_arguments)]
     #[inline]
     pub const fn new(
-        error_code: FredEventErrorCode,
         instruction_pointer: VirtAddr,
         code_segment: SegmentSelector,
-        auxiliary: u16,
         cpu_flags: RFlags,
         stack_pointer: u64,
         stack_segment: SegmentSelector,
-        return_flags: u16,
-        event_information: u32,
-        event_data: u64,
     ) -> Self {
         Self {
-            error_code,
+            error_code: FredEventErrorCode(0),
             _reserved1: [0; 6],
             instruction_pointer,
             code_segment,
-            auxiliary,
+            auxiliary: 0,
             _reserved2: [0; 4],
             cpu_flags,
             stack_pointer,
             stack_segment,
-            return_flags,
-            event_information,
-            event_data,
+            return_flags: 0,
+            event_information: 0,
+            event_data: 0,
             _reserved3: [0; 8],
         }
     }
