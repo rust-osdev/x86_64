@@ -2,6 +2,8 @@
 
 use crate::VirtAddr;
 
+pub mod fred;
+
 pub mod gdt;
 
 pub mod idt;
