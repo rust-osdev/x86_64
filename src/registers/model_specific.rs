@@ -903,10 +903,6 @@ mod x86_64 {
         }
 
         /// Write the raw IA32_FRED_RSP_N.
-        ///
-        /// ## Safety
-        ///
-        /// Caller must ensure that the address points to a valid stack.
         #[inline]
         unsafe fn write_raw(level: FredStackLevel, value: u64) {
             let mut msr = Self::msr(level);
@@ -927,6 +923,7 @@ mod x86_64 {
         /// ## Safety
         ///
         /// Caller must ensure that the address points to a valid stack.
+        /// The stack pointer must be 64-byte aligned.
         #[inline]
         pub unsafe fn write(level: FredStackLevel, stack_top: VirtAddr) {
             assert!(
@@ -941,6 +938,7 @@ mod x86_64 {
         /// ## Safety
         ///
         /// Caller must ensure that the address points to a valid stack.
+        /// The stack pointer must be 64-byte aligned.
         #[inline]
         pub unsafe fn update<F>(level: FredStackLevel, f: F)
         where
@@ -1023,15 +1021,6 @@ mod x86_64 {
         }
 
         /// Write the raw IA32_FRED_SSP_N.
-        ///
-        /// ## Safety
-        ///
-        /// The caller must ensure that the selected register can be accessed
-        /// and that the address identifies a correctly configured supervisor
-        /// stack with sufficient space whenever FRED may use it.
-        ///
-        /// Changing this pointer must preserve the validity of any outstanding
-        /// FRED returns.
         #[inline]
         unsafe fn write_raw(level: FredStackLevel, value: u64) {
             let mut msr = Self::msr(level);
@@ -1051,17 +1040,18 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// The caller must ensure that the selected register can be accessed
-        /// and that the address identifies a correctly configured supervisor
-        /// shadow stack with sufficient space whenever FRED may use it.
+        /// The caller must ensure that the address identifies a correctly configured
+        /// supervisor shadow stack with sufficient space whenever FRED may use it.
         ///
-        /// Changing this pointer must preserve the validity of any outstanding
-        /// FRED returns.
+        /// The FRED shadow stack pointer must be 8-byte aligned.
+        ///
+        /// The caller must preserve or restore the MSR value expected by any active
+        /// handler before it returns.
         #[inline]
         pub unsafe fn write(level: FredStackLevel, stack_top: VirtAddr) {
             assert!(
                 stack_top.is_aligned(8u64),
-                "FRED shadow stack pointer at stack level must be 8-byte aligned",
+                "FRED shadow stack pointer must be 8-byte aligned",
             );
 
             unsafe { Self::write_raw(level, stack_top.as_u64()) };
@@ -1071,12 +1061,13 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// The caller must ensure that the selected register can be accessed
-        /// and that the address identifies a correctly configured supervisor
-        /// shadow stack with sufficient space whenever FRED may use it.
+        /// The caller must ensure that the address identifies a correctly configured
+        /// supervisor shadow stack with sufficient space whenever FRED may use it.
         ///
-        /// Changing this pointer must preserve the validity of any outstanding
-        /// FRED returns.
+        /// The FRED shadow stack pointer must be 8-byte aligned.
+        ///
+        /// The caller must preserve or restore the MSR value expected by any active
+        /// handler before it returns.
         #[inline]
         pub unsafe fn update<F>(level: FredStackLevel, f: F)
         where
@@ -1115,8 +1106,7 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// Caller must ensure that config is valid, and that it is canonical
-        /// relative to the processor’s maximum linear-address width.
+        /// Caller must ensure that the configuration is valid.
         #[inline]
         pub unsafe fn write(config: FredConfigValue) {
             let bits = config.bits();
@@ -1129,8 +1119,7 @@ mod x86_64 {
         ///
         /// ## Safety
         ///
-        /// Caller must ensure that config is valid, and that it is canonical
-        /// relative to the processor’s maximum linear-address width.
+        /// Caller must ensure that the configuration is valid.
         #[inline]
         pub unsafe fn update<F>(f: F)
         where
