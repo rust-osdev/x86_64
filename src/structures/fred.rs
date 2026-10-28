@@ -208,14 +208,14 @@ impl fmt::Debug for FredConfigValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FredConfigValue")
             .field("bits", &format_args!("{:#018x}", self.bits))
-            .field("current_stack_level", &(self.csl()))
-            .field("shadow_stack_decrement", &(self.decrement_ssp()))
-            .field("stack_decrement_bytes", &(self.redzone()))
+            .field("csl", &(self.csl()))
+            .field("decrement_ssp", &(self.decrement_ssp()))
+            .field("redzone", &(self.redzone()))
             .field(
-                "interrupt_stack_level",
+                "ring0_interrupt_stack_level",
                 &(self.ring0_interrupt_stack_level()),
             )
-            .field("entry_base", &self.entry_page())
+            .field("entry_page", &self.entry_page())
             .finish()
     }
 }
