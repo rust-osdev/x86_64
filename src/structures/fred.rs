@@ -271,7 +271,8 @@ pub struct FredEventFrame {
     pub event_data: u64,
     _reserved3: [u8; 8],
 }
-const _: () = assert!(size_of::<FredEventFrame>() == 64);
+#[allow(unused_braces)]
+const _: () = { assert!(size_of::<FredEventFrame>() == 64) };
 
 impl FredEventFrame {
     /// Creates a new FRED event frame with the given values.
