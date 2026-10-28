@@ -343,7 +343,15 @@ pub struct InterruptDescriptorTable {
     /// The vector number of the `#XF` exception is 19.
     pub simd_floating_point: Entry<HandlerFunc>,
 
-    /// vector nr. 20
+    /// The virtualization exception (`#VE`) reports certain EPT violations in
+    /// VMX non-root operation on supported Intel processors. Other EPT
+    /// violations can cause a VM exit instead.
+    ///
+    /// This is a fault. The saved instruction pointer generally identifies the
+    /// instruction that caused it. After resolving the violation, the handler
+    /// can resume execution.
+    ///
+    /// The vector number of the `#VE` exception is 20.
     pub virtualization: Entry<HandlerFunc>,
 
     /// A #CP exception is generated when shadow stacks are enabled and mismatch
