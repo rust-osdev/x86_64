@@ -101,7 +101,7 @@ mod x86_64 {
     ///
     /// ## Safety
     ///
-    /// The value produced by `f` must satisfy the requirements of [`write`].
+    /// The value produced by `f` must satisfy the requirements of [`write()`].
     #[inline]
     pub unsafe fn update<F>(f: F)
     where
