@@ -76,22 +76,40 @@ mod x86_64 {
     }
 
     /// Write MXCSR.
+    ///
+    /// ## Safety
+    ///
+    /// Rust code assumes that floating-point operations run in the default
+    /// floating-point environment: all exceptions masked, round-to-nearest,
+    /// and denormals-are-zero and flush-to-zero disabled. Changing the
+    /// exception masks, the rounding control, `DENORMALS_ARE_ZEROS` or
+    /// `FLUSH_TO_ZERO` away from their defaults (see [`MxCsr::default`]) is
+    /// undefined behavior while any Rust code runs, even if the original
+    /// value is restored before the next floating-point operation in the
+    /// source. The caller must ensure that `mxcsr` keeps these bits at their
+    /// default values, or that no Rust code runs until they are restored
+    /// (for example when restoring a saved state immediately before
+    /// returning to a different execution context).
     #[inline]
-    pub fn write(mxcsr: MxCsr) {
+    pub unsafe fn write(mxcsr: MxCsr) {
         unsafe {
             asm!("ldmxcsr [{}]", in(reg) &mxcsr, options(nostack, readonly));
         }
     }
 
     /// Update MXCSR.
+    ///
+    /// ## Safety
+    ///
+    /// The value produced by `f` must satisfy the requirements of [`write()`].
     #[inline]
-    pub fn update<F>(f: F)
+    pub unsafe fn update<F>(f: F)
     where
         F: FnOnce(&mut MxCsr),
     {
         let mut mxcsr = self::read();
         f(&mut mxcsr);
-        self::write(mxcsr);
+        unsafe { self::write(mxcsr) };
     }
 
     #[cfg(test)]
@@ -113,7 +131,7 @@ mod x86_64 {
         #[test]
         fn mxcsr_write() {
             let mxcsr = read();
-            write(mxcsr);
+            unsafe { write(mxcsr) };
             assert_eq!(mxcsr, read());
         }
     }
