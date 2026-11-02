@@ -923,7 +923,10 @@ mod x86_64 {
         /// ## Safety
         ///
         /// Caller must ensure that the address points to a valid stack.
-        /// The stack pointer must be 64-byte aligned.
+        ///
+        /// ## Panics
+        ///
+        /// Panics if the stack pointer is not 64-byte aligned.
         #[inline]
         pub unsafe fn write(level: FredStackLevel, stack_top: VirtAddr) {
             assert!(
@@ -938,7 +941,10 @@ mod x86_64 {
         /// ## Safety
         ///
         /// Caller must ensure that the address points to a valid stack.
-        /// The stack pointer must be 64-byte aligned.
+        ///
+        /// ## Panics
+        ///
+        /// Panics if the stack pointer is not 64-byte aligned.
         #[inline]
         pub unsafe fn update<F>(level: FredStackLevel, f: F)
         where
@@ -1030,7 +1036,7 @@ mod x86_64 {
             }
         }
 
-        /// Read IA32_FRED_SSP_N. Returns the stack pointer for stack level.
+        /// Read IA32_FRED_SSP_N. Returns the shadow stack pointer for stack level.
         #[inline]
         pub fn read(level: FredStackLevel) -> VirtAddr {
             VirtAddr::new(Self::read_raw(level))
@@ -1043,10 +1049,12 @@ mod x86_64 {
         /// The caller must ensure that the address identifies a correctly configured
         /// supervisor shadow stack with sufficient space whenever FRED may use it.
         ///
-        /// The FRED shadow stack pointer must be 8-byte aligned.
-        ///
         /// The caller must preserve or restore the MSR value expected by any active
         /// handler before it returns.
+        ///
+        /// ## Panics
+        ///
+        /// The FRED shadow stack pointer must be 8-byte aligned.
         #[inline]
         pub unsafe fn write(level: FredStackLevel, stack_top: VirtAddr) {
             assert!(
