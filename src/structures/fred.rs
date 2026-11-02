@@ -278,7 +278,7 @@ impl fmt::Debug for FredConfigValue {
 /// Represents the interrupt stack frame pushed by the CPU on interrupt or exception entry.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct FredEventFrame {
+pub struct FredStackFrame {
     /// Defined only for certain exceptions; zero if none is defined.
     pub error_code: FredEventErrorCode,
     _reserved1: [u8; 6],
@@ -308,9 +308,9 @@ pub struct FredEventFrame {
     _reserved3: [u8; 8],
 }
 #[allow(unused_braces)]
-const _: () = { assert!(size_of::<FredEventFrame>() == 64) };
+const _: () = { assert!(size_of::<FredStackFrame>() == 64) };
 
-impl FredEventFrame {
+impl FredStackFrame {
     /// Creates a new FRED event frame with the given values.
     #[inline]
     pub const fn new(
@@ -552,7 +552,7 @@ bitflags! {
     }
 }
 
-impl fmt::Debug for FredEventFrame {
+impl fmt::Debug for FredStackFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FredEventFrame")
             .field("error_code", &self.error_code)
