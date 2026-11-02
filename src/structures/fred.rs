@@ -92,6 +92,10 @@ impl FredStackLevelsValue {
     }
 
     /// Sets the stack level associated to the vector.
+    ///
+    /// ## Panics
+    ///
+    /// Panics if vector is not less than 32.
     #[inline]
     pub const fn set(&mut self, vector: u8, level: FredStackLevel) {
         assert!(vector < 32);
