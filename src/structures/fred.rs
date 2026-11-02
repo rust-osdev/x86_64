@@ -72,14 +72,9 @@ impl FredStackLevelsValue {
         config
     }
 
-    /// Convert from underlying bit representation, preserving all bits,
-    /// even those not corresponding to a defined field.
-    ///
-    /// # Safety
-    ///
-    /// The bit representation must be a valid [`FredStackLevelsValue`].
+    /// Constructs a new FredStackLevelsValue from an underlying bit representation.
     #[inline]
-    pub const unsafe fn from_bits_unchecked(bits: u64) -> Self {
+    pub const fn from_bits(bits: u64) -> Self {
         Self { bits }
     }
 

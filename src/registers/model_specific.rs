@@ -976,7 +976,7 @@ mod x86_64 {
         #[inline]
         pub fn read() -> FredStackLevelsValue {
             let bits = Self::read_raw();
-            unsafe { FredStackLevelsValue::from_bits_unchecked(bits) }
+            FredStackLevelsValue::from_bits(bits)
         }
 
         /// Write a [`FredStackLevelsValue`] into IA32_FRED_STKLVLS.
