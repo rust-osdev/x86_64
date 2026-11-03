@@ -238,8 +238,10 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
                 }
                 Err(PageTableWalkError::MappedToHugePage) => {
                     // We have found a 1GiB page.
-                    let page =
-                        Page::from_page_table_indices_1gib(self.p4_index()?, self.p3_index()?);
+                    let page = Page::<Size1GiB>::from_page_table_indices_1gib(
+                        self.p4_index()?,
+                        self.p3_index()?,
+                    );
                     let entry = &p3[self.p3_index()?];
                     let frame = PhysFrame::containing_address(entry.addr());
                     let flags = entry.flags();
@@ -262,7 +264,7 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
                 }
                 Err(PageTableWalkError::MappedToHugePage) => {
                     // We have found a 2MiB page.
-                    let page = Page::from_page_table_indices_2mib(
+                    let page = Page::<Size2MiB>::from_page_table_indices_2mib(
                         self.p4_index()?,
                         self.p3_index()?,
                         self.p2_index()?,
@@ -287,7 +289,7 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
         }
 
         // We have found a 4KiB page.
-        let page = Page::from_page_table_indices(
+        let page = Page::<Size4KiB>::from_page_table_indices(
             self.p4_index()?,
             self.p3_index()?,
             self.p2_index()?,

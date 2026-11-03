@@ -464,7 +464,7 @@ impl From<PageOffset> for usize {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-/// A value between 1 and 4.
+/// A page-table level between 1 and 5.
 pub enum PageTableLevel {
     /// Represents the level for a page table.
     One = 1,
@@ -474,12 +474,15 @@ pub enum PageTableLevel {
     Three,
     /// Represents the level for a page-map level-4.
     Four,
+    /// Represents the level for a page-map level-5.
+    Five,
 }
 
 impl PageTableLevel {
     /// Returns the next lower level or `None` for level 1
     pub const fn next_lower_level(self) -> Option<Self> {
         match self {
+            PageTableLevel::Five => Some(PageTableLevel::Four),
             PageTableLevel::Four => Some(PageTableLevel::Three),
             PageTableLevel::Three => Some(PageTableLevel::Two),
             PageTableLevel::Two => Some(PageTableLevel::One),
@@ -487,10 +490,11 @@ impl PageTableLevel {
         }
     }
 
-    /// Returns the next higher level or `None` for level 4
+    /// Returns the next higher level or `None` for level 5
     pub const fn next_higher_level(self) -> Option<Self> {
         match self {
-            PageTableLevel::Four => None,
+            PageTableLevel::Five => None,
+            PageTableLevel::Four => Some(PageTableLevel::Five),
             PageTableLevel::Three => Some(PageTableLevel::Four),
             PageTableLevel::Two => Some(PageTableLevel::Three),
             PageTableLevel::One => Some(PageTableLevel::Two),

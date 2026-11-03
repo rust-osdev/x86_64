@@ -1037,7 +1037,7 @@ fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut P
 
 #[inline]
 fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
-    Page::from_page_table_indices(
+    Page::<Size4KiB>::from_page_table_indices(
         recursive_index,
         recursive_index,
         recursive_index,
@@ -1052,7 +1052,7 @@ fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -
 
 #[inline]
 fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {
-    Page::from_page_table_indices(
+    Page::<Size4KiB>::from_page_table_indices(
         recursive_index,
         recursive_index,
         page.p4_index(),
@@ -1067,7 +1067,7 @@ fn p1_ptr(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> *mut PageTab
 
 #[inline]
 fn p1_page(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> Page {
-    Page::from_page_table_indices(
+    Page::<Size4KiB>::from_page_table_indices(
         recursive_index,
         page.p4_index(),
         page.p3_index(),
