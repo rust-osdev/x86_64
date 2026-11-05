@@ -307,8 +307,10 @@ pub struct FredStackFrame {
     pub event_data: u64,
     _reserved3: [u8; 8],
 }
-#[allow(unused_braces)]
-const _: () = { assert!(size_of::<FredStackFrame>() == 64) };
+
+const _: () = {
+    assert!(size_of::<FredStackFrame>() == 64);
+};
 
 impl FredStackFrame {
     /// Creates a new FRED event frame with the given values.
