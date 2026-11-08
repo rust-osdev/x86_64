@@ -34,6 +34,47 @@ pub struct PageTableEntry {
     entry: u64,
 }
 
+#[inline(always)]
+#[cfg(not(feature = "memory_encryption"))]
+const fn physical_address_mask() -> u64 {
+    0x000f_ffff_ffff_f000
+}
+
+#[inline(always)]
+#[cfg(feature = "memory_encryption")]
+fn physical_address_mask() -> u64 {
+    PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed) & !0xfff
+}
+
+#[inline(always)]
+#[cfg(not(feature = "memory_encryption"))]
+const fn flags_from_bits(bits: u64) -> PageTableFlags {
+    PageTableFlags::from_bits_retain(bits & !physical_address_mask())
+}
+
+#[inline(always)]
+#[cfg(feature = "memory_encryption")]
+fn flags_from_bits(bits: u64) -> PageTableFlags {
+    PageTableFlags::from_bits_retain(bits & !physical_address_mask())
+}
+
+#[inline]
+fn addr_from_bits(bits: u64) -> PhysAddr {
+    PhysAddr::new(bits & physical_address_mask())
+}
+
+#[inline]
+fn frame_from_bits(bits: u64, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
+    let flags = flags_from_bits(bits);
+    if !flags.contains(PageTableFlags::PRESENT) {
+        Err(FrameError::FrameNotPresent)
+    } else if !is_level_1_entry && flags.contains(PageTableFlags::HUGE_PAGE) {
+        Err(FrameError::HugeFrame)
+    } else {
+        Ok(PhysFrame::containing_address(addr_from_bits(bits)))
+    }
+}
+
 impl PageTableEntry {
     /// Creates an unused page table entry.
     #[inline]
@@ -70,20 +111,20 @@ impl PageTableEntry {
     /// Sets this entry to zero.
     #[inline]
     pub fn set_unused(&mut self) {
-        self.entry = 0;
+        PageTableEntryBitsMut::set_unused(self)
     }
 
     /// Returns the flags of this entry.
     #[inline]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn flags(&self) -> PageTableFlags {
-        PageTableFlags::from_bits_retain(self.entry & !Self::physical_address_mask())
+        flags_from_bits(self.entry)
     }
 
     /// Returns the physical address mapped by this entry, might be zero.
     #[inline]
     pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & Self::physical_address_mask())
+        PageTableEntryBits::addr(self)
     }
 
     /// Returns the physical frame mapped by this entry.
@@ -98,44 +139,25 @@ impl PageTableEntry {
     ///   `addr` function must be used) and `is_level_1_entry` is `false`
     #[inline]
     pub fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
-        if !self.flags().contains(PageTableFlags::PRESENT) {
-            Err(FrameError::FrameNotPresent)
-        } else if !is_level_1_entry && self.flags().contains(PageTableFlags::HUGE_PAGE) {
-            Err(FrameError::HugeFrame)
-        } else {
-            Ok(PhysFrame::containing_address(self.addr()))
-        }
+        PageTableEntryBits::frame(self, is_level_1_entry)
     }
 
     /// Map the entry to the specified physical address with the specified flags.
     #[inline]
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
-        assert!(addr.is_aligned(Size4KiB::SIZE));
-        self.entry = (addr.as_u64()) | flags.bits();
+        PageTableEntryBitsMut::set_addr(self, addr, flags)
     }
 
     /// Map the entry to the specified physical frame with the specified flags.
     #[inline]
     pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
-        self.set_addr(frame.start_address(), flags)
+        PageTableEntryBitsMut::set_frame(self, frame, flags)
     }
 
     /// Sets the flags of this entry.
     #[inline]
     pub fn set_flags(&mut self, flags: PageTableFlags) {
-        self.entry = self.addr().as_u64() | flags.bits();
-    }
-
-    #[inline(always)]
-    #[cfg(not(feature = "memory_encryption"))]
-    const fn physical_address_mask() -> u64 {
-        0x000f_ffff_ffff_f000
-    }
-
-    #[inline(always)]
-    #[cfg(feature = "memory_encryption")]
-    fn physical_address_mask() -> u64 {
-        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed) & !0xfff
+        PageTableEntryBitsMut::set_flags(self, flags)
     }
 }
 
@@ -245,13 +267,13 @@ pub trait PageTableEntryBits: Sized {
     /// Returns the flags of this entry.
     #[inline]
     fn flags(&self) -> PageTableFlags {
-        PageTableEntry::from_bits(self.bits()).flags()
+        flags_from_bits(self.bits())
     }
 
     /// Returns the physical address mapped by this entry, might be zero.
     #[inline]
     fn addr(&self) -> PhysAddr {
-        PageTableEntry::from_bits(self.bits()).addr()
+        addr_from_bits(self.bits())
     }
 
     /// Returns the physical frame mapped by this entry.
@@ -265,7 +287,7 @@ pub trait PageTableEntryBits: Sized {
     /// and `is_level_1_entry` is `false`.
     #[inline]
     fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
-        PageTableEntry::from_bits(self.bits()).frame(is_level_1_entry)
+        frame_from_bits(self.bits(), is_level_1_entry)
     }
 }
 
@@ -293,26 +315,21 @@ pub trait PageTableEntryBitsMut: PageTableEntryBits {
     /// Sets the flags of this entry.
     #[inline]
     fn set_flags(&mut self, flags: PageTableFlags) {
-        let mut entry = PageTableEntry::from_bits(self.bits());
-        entry.set_flags(flags);
-        self.set_bits(entry.bits());
+        self.set_bits((self.bits() & physical_address_mask()) | flags.bits());
     }
 
     /// Maps the entry to the specified physical address with the specified
     /// flags.
     #[inline]
     fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
-        let mut entry = PageTableEntry::from_bits(self.bits());
-        entry.set_addr(addr, flags);
-        self.set_bits(entry.bits());
+        assert!(addr.is_aligned(Size4KiB::SIZE));
+        self.set_bits(addr.as_u64() | flags.bits());
     }
 
     /// Maps the entry to the specified physical frame with the specified flags.
     #[inline]
     fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
-        let mut entry = PageTableEntry::from_bits(self.bits());
-        entry.set_frame(frame, flags);
-        self.set_bits(entry.bits());
+        self.set_addr(frame.start_address(), flags);
     }
 }
 
