@@ -14,6 +14,9 @@
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_op_in_unsafe_fn)]
+// `bit_field`'s method names collide with unstable `core::num` methods on
+// recent nightlies; allow the lint until `bit_field` avoids the collision.
+#![allow(unstable_name_collisions)]
 
 pub use crate::addr::{PhysAddr, VirtAddr, align_down, align_up};
 
