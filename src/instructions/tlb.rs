@@ -404,26 +404,26 @@ unsafe fn flush_broadcast<S>(
     let mut edx = 0;
 
     if let Some((va, count)) = va_and_count {
-        rax.set_bit(0, true);
+        rax.set_bit_to(0, true);
         rax.set_bits(12.., va.start_address().as_u64().get_bits(12..));
 
         ecx.set_bits(0..=15, u32::from(count));
-        ecx.set_bit(31, S::SIZE == Size2MiB::SIZE);
+        ecx.set_bit_to(31, S::SIZE == Size2MiB::SIZE);
     }
 
     if let Some(pcid) = pcid {
-        rax.set_bit(1, true);
+        rax.set_bit_to(1, true);
         edx.set_bits(16..=27, u32::from(pcid.value()));
     }
 
     if let Some(asid) = asid {
-        rax.set_bit(2, true);
+        rax.set_bit_to(2, true);
         edx.set_bits(0..=15, u32::from(asid));
     }
 
-    rax.set_bit(3, include_global);
-    rax.set_bit(4, final_translation_only);
-    rax.set_bit(5, include_nested_translations);
+    rax.set_bit_to(3, include_global);
+    rax.set_bit_to(4, final_translation_only);
+    rax.set_bit_to(5, include_nested_translations);
 
     unsafe {
         asm!(

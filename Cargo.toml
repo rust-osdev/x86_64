@@ -19,7 +19,7 @@ edition = "2024"
 rust-version = "1.98"
 
 [dependencies]
-bit_field = "0.10.1"
+bit_field = "0.10.4"
 bitflags = "2.3.2"
 volatile = "0.4.4"
 const_fn = "0.4.11"

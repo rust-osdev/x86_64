@@ -959,7 +959,7 @@ impl EntryOptions {
     /// Set or reset the preset bit.
     #[inline]
     pub fn set_present(&mut self, present: bool) -> &mut Self {
-        self.bits.set_bit(15, present);
+        self.bits.set_bit_to(15, present);
         self
     }
 
@@ -971,7 +971,7 @@ impl EntryOptions {
     /// interrupts are disabled on handler invocation.
     #[inline]
     pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {
-        self.bits.set_bit(8, !disable);
+        self.bits.set_bit_to(8, !disable);
         self
     }
 
