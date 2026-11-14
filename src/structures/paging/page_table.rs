@@ -4,7 +4,9 @@ use core::fmt;
 #[cfg(feature = "step_trait")]
 use core::iter::Step;
 use core::ops::{Index, IndexMut};
-#[cfg(feature = "memory_encryption")]
+#[cfg(target_has_atomic = "64")]
+use core::sync::atomic::AtomicU64;
+#[cfg(any(feature = "memory_encryption", target_has_atomic = "64"))]
 use core::sync::atomic::Ordering;
 
 use super::{PageSize, PhysFrame, Size4KiB};
@@ -32,11 +34,72 @@ pub struct PageTableEntry {
     entry: u64,
 }
 
+#[inline(always)]
+#[cfg(not(feature = "memory_encryption"))]
+const fn physical_address_mask() -> u64 {
+    0x000f_ffff_ffff_f000
+}
+
+#[inline(always)]
+#[cfg(feature = "memory_encryption")]
+fn physical_address_mask() -> u64 {
+    PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed) & !0xfff
+}
+
+#[inline(always)]
+#[cfg(not(feature = "memory_encryption"))]
+const fn flags_from_bits(bits: u64) -> PageTableFlags {
+    PageTableFlags::from_bits_retain(bits & !physical_address_mask())
+}
+
+#[inline(always)]
+#[cfg(feature = "memory_encryption")]
+fn flags_from_bits(bits: u64) -> PageTableFlags {
+    PageTableFlags::from_bits_retain(bits & !physical_address_mask())
+}
+
+#[inline]
+fn addr_from_bits(bits: u64) -> PhysAddr {
+    PhysAddr::new(bits & physical_address_mask())
+}
+
+#[inline]
+fn frame_from_bits(bits: u64, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
+    let flags = flags_from_bits(bits);
+    if !flags.contains(PageTableFlags::PRESENT) {
+        Err(FrameError::FrameNotPresent)
+    } else if !is_level_1_entry && flags.contains(PageTableFlags::HUGE_PAGE) {
+        Err(FrameError::HugeFrame)
+    } else {
+        Ok(PhysFrame::containing_address(addr_from_bits(bits)))
+    }
+}
+
 impl PageTableEntry {
     /// Creates an unused page table entry.
     #[inline]
     pub const fn new() -> Self {
         PageTableEntry { entry: 0 }
+    }
+
+    /// Returns the raw 64-bit value of this entry.
+    ///
+    /// Every 64-bit value is a valid `PageTableEntry` representation. Reserved
+    /// bits are rejected by the hardware when a present entry is used, not when
+    /// the entry is built.
+    #[inline]
+    pub const fn bits(&self) -> u64 {
+        self.entry
+    }
+
+    /// Creates an entry from its raw 64-bit value.
+    ///
+    /// Every 64-bit value is a valid `PageTableEntry` representation. Reserved
+    /// bits are rejected by the hardware when a present entry is used, not when
+    /// the entry is built.
+    #[inline]
+    pub const fn from_bits(bits: u64) -> Self {
+        PageTableEntry { entry: bits }
     }
 
     /// Returns whether this entry is zero.
@@ -48,20 +111,20 @@ impl PageTableEntry {
     /// Sets this entry to zero.
     #[inline]
     pub fn set_unused(&mut self) {
-        self.entry = 0;
+        PageTableEntryBitsMut::set_unused(self)
     }
 
     /// Returns the flags of this entry.
     #[inline]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn flags(&self) -> PageTableFlags {
-        PageTableFlags::from_bits_retain(self.entry & !Self::physical_address_mask())
+        flags_from_bits(self.entry)
     }
 
     /// Returns the physical address mapped by this entry, might be zero.
     #[inline]
     pub fn addr(&self) -> PhysAddr {
-        PhysAddr::new(self.entry & Self::physical_address_mask())
+        PageTableEntryBits::addr(self)
     }
 
     /// Returns the physical frame mapped by this entry.
@@ -76,44 +139,25 @@ impl PageTableEntry {
     ///   `addr` function must be used) and `is_level_1_entry` is `false`
     #[inline]
     pub fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
-        if !self.flags().contains(PageTableFlags::PRESENT) {
-            Err(FrameError::FrameNotPresent)
-        } else if !is_level_1_entry && self.flags().contains(PageTableFlags::HUGE_PAGE) {
-            Err(FrameError::HugeFrame)
-        } else {
-            Ok(PhysFrame::containing_address(self.addr()))
-        }
+        PageTableEntryBits::frame(self, is_level_1_entry)
     }
 
     /// Map the entry to the specified physical address with the specified flags.
     #[inline]
     pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
-        assert!(addr.is_aligned(Size4KiB::SIZE));
-        self.entry = (addr.as_u64()) | flags.bits();
+        PageTableEntryBitsMut::set_addr(self, addr, flags)
     }
 
     /// Map the entry to the specified physical frame with the specified flags.
     #[inline]
     pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
-        self.set_addr(frame.start_address(), flags)
+        PageTableEntryBitsMut::set_frame(self, frame, flags)
     }
 
     /// Sets the flags of this entry.
     #[inline]
     pub fn set_flags(&mut self, flags: PageTableFlags) {
-        self.entry = self.addr().as_u64() | flags.bits();
-    }
-
-    #[inline(always)]
-    #[cfg(not(feature = "memory_encryption"))]
-    const fn physical_address_mask() -> u64 {
-        0x000f_ffff_ffff_f000
-    }
-
-    #[inline(always)]
-    #[cfg(feature = "memory_encryption")]
-    fn physical_address_mask() -> u64 {
-        PHYSICAL_ADDRESS_MASK.load(Ordering::Relaxed) & !0xfff
+        PageTableEntryBitsMut::set_flags(self, flags)
     }
 }
 
@@ -201,6 +245,360 @@ bitflags! {
         /// Can be only used when the no-execute page protection feature is enabled in the EFER
         /// register.
         const NO_EXECUTE =      1 << 63;
+    }
+}
+
+/// The raw bit operations shared by [`PageTableEntry`] and its atomic
+/// counterpart.
+///
+/// Only [`bits`](Self::bits) has to be implemented. The other methods are
+/// derived from the raw value. On [`PageTableEntry`] the inherent `const`
+/// methods take precedence when they are called directly.
+pub trait PageTableEntryBits: Sized {
+    /// Returns the raw 64-bit value of this entry.
+    fn bits(&self) -> u64;
+
+    /// Returns whether this entry is zero.
+    #[inline]
+    fn is_unused(&self) -> bool {
+        self.bits() == 0
+    }
+
+    /// Returns the flags of this entry.
+    #[inline]
+    fn flags(&self) -> PageTableFlags {
+        flags_from_bits(self.bits())
+    }
+
+    /// Returns the physical address mapped by this entry, might be zero.
+    #[inline]
+    fn addr(&self) -> PhysAddr {
+        addr_from_bits(self.bits())
+    }
+
+    /// Returns the physical frame mapped by this entry.
+    ///
+    /// Set `is_level_1_entry` to `true` if the entry is from a level 1 page
+    /// table.
+    ///
+    /// Returns [`FrameError::FrameNotPresent`] if the entry doesn't have the
+    /// `PRESENT` flag set, and [`FrameError::HugeFrame`] if the entry has the
+    /// `HUGE_PAGE` flag set (for huge pages [`addr`](Self::addr) must be used)
+    /// and `is_level_1_entry` is `false`.
+    #[inline]
+    fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
+        frame_from_bits(self.bits(), is_level_1_entry)
+    }
+}
+
+/// The mutable raw bit operations shared by [`PageTableEntry`] and its atomic
+/// counterpart.
+///
+/// Only [`set_bits`](Self::set_bits) has to be implemented. The other methods
+/// are derived from it. On [`PageTableEntry`] the inherent methods take
+/// precedence when they are called directly.
+///
+/// The setters are not a single atomic read-modify-write. On an atomic entry
+/// they use relaxed loads and stores, so they are intended for entries that
+/// are not being modified concurrently, for example while a table is being
+/// built. Use the atomic operations directly for live entries.
+pub trait PageTableEntryBitsMut: PageTableEntryBits {
+    /// Sets the raw 64-bit value of this entry.
+    fn set_bits(&mut self, bits: u64);
+
+    /// Sets this entry to zero.
+    #[inline]
+    fn set_unused(&mut self) {
+        self.set_bits(0)
+    }
+
+    /// Sets the flags of this entry.
+    #[inline]
+    fn set_flags(&mut self, flags: PageTableFlags) {
+        self.set_bits((self.bits() & physical_address_mask()) | flags.bits());
+    }
+
+    /// Maps the entry to the specified physical address with the specified
+    /// flags.
+    #[inline]
+    fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
+        assert!(addr.is_aligned(Size4KiB::SIZE));
+        self.set_bits(addr.as_u64() | flags.bits());
+    }
+
+    /// Maps the entry to the specified physical frame with the specified flags.
+    #[inline]
+    fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
+        self.set_addr(frame.start_address(), flags);
+    }
+}
+
+impl PageTableEntryBits for PageTableEntry {
+    #[inline]
+    fn bits(&self) -> u64 {
+        self.entry
+    }
+}
+
+impl PageTableEntryBitsMut for PageTableEntry {
+    #[inline]
+    fn set_bits(&mut self, bits: u64) {
+        self.entry = bits;
+    }
+}
+
+/// An atomic 64-bit page table entry.
+///
+/// This is the atomic counterpart of [`PageTableEntry`]. It is a
+/// `#[repr(transparent)]` wrapper around `AtomicU64`, so it has the same layout
+/// as `AtomicU64`. On x86_64 it also has the same size and alignment as
+/// [`PageTableEntry`].
+///
+/// The `PageTableEntry`-shaped methods (`is_unused`, `flags`, `addr`, `frame`
+/// and the setters) use relaxed loads and stores. They forward to the
+/// [`PageTableEntryBits`] and [`PageTableEntryBitsMut`] implementations, so the
+/// same methods are also available in generic code. Use
+/// [`load`](Self::load), [`store`](Self::store), [`swap`](Self::swap) or the
+/// compare-exchange methods when an ordering matters.
+#[cfg(target_has_atomic = "64")]
+#[repr(transparent)]
+pub struct AtomicPageTableEntry(AtomicU64);
+
+#[cfg(target_has_atomic = "64")]
+impl AtomicPageTableEntry {
+    /// Creates a zeroed entry.
+    #[inline]
+    pub const fn new() -> Self {
+        Self(AtomicU64::new(0))
+    }
+
+    /// Creates an entry with the given raw 64-bit value.
+    #[inline]
+    pub const fn from_bits(bits: u64) -> Self {
+        Self(AtomicU64::new(bits))
+    }
+
+    /// Returns the raw 64-bit value of this entry.
+    ///
+    /// This uses [`Ordering::Relaxed`]. Use [`load`](Self::load) to choose an
+    /// ordering.
+    #[inline]
+    pub fn bits(&self) -> u64 {
+        self.0.load(Ordering::Relaxed)
+    }
+
+    /// Loads the entry with the given ordering.
+    #[inline]
+    pub fn load(&self, order: Ordering) -> PageTableEntry {
+        PageTableEntry::from_bits(self.0.load(order))
+    }
+
+    /// Stores an entry with the given ordering.
+    #[inline]
+    pub fn store(&self, entry: PageTableEntry, order: Ordering) {
+        self.0.store(entry.bits(), order);
+    }
+
+    /// Stores an entry and returns the previous value.
+    #[inline]
+    pub fn swap(&self, entry: PageTableEntry, order: Ordering) -> PageTableEntry {
+        PageTableEntry::from_bits(self.0.swap(entry.bits(), order))
+    }
+
+    /// Compares and exchanges the entry with the given orderings.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `failure` is [`Ordering::Release`] or [`Ordering::AcqRel`].
+    #[inline]
+    pub fn compare_exchange(
+        &self,
+        current: PageTableEntry,
+        new: PageTableEntry,
+        success: Ordering,
+        failure: Ordering,
+    ) -> Result<PageTableEntry, PageTableEntry> {
+        match self
+            .0
+            .compare_exchange(current.bits(), new.bits(), success, failure)
+        {
+            Ok(bits) => Ok(PageTableEntry::from_bits(bits)),
+            Err(bits) => Err(PageTableEntry::from_bits(bits)),
+        }
+    }
+
+    /// Compares and exchanges the entry, allowing spurious failures.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `failure` is [`Ordering::Release`] or [`Ordering::AcqRel`].
+    #[inline]
+    pub fn compare_exchange_weak(
+        &self,
+        current: PageTableEntry,
+        new: PageTableEntry,
+        success: Ordering,
+        failure: Ordering,
+    ) -> Result<PageTableEntry, PageTableEntry> {
+        match self
+            .0
+            .compare_exchange_weak(current.bits(), new.bits(), success, failure)
+        {
+            Ok(bits) => Ok(PageTableEntry::from_bits(bits)),
+            Err(bits) => Err(PageTableEntry::from_bits(bits)),
+        }
+    }
+
+    /// Bitwise ANDs the entry with `bits` and returns the previous value.
+    #[inline]
+    pub fn fetch_and(&self, bits: u64, order: Ordering) -> PageTableEntry {
+        PageTableEntry::from_bits(self.0.fetch_and(bits, order))
+    }
+
+    /// Bitwise ORs the entry with `bits` and returns the previous value.
+    #[inline]
+    pub fn fetch_or(&self, bits: u64, order: Ordering) -> PageTableEntry {
+        PageTableEntry::from_bits(self.0.fetch_or(bits, order))
+    }
+
+    /// Returns a mutable reference to the entry.
+    #[inline]
+    pub fn get_mut(&mut self) -> &mut PageTableEntry {
+        // SAFETY: `PageTableEntry` is `#[repr(transparent)]` over `u64`, and
+        // `AtomicU64` has the same size as `u64` with an alignment at least as
+        // strict.
+        unsafe { &mut *(self.0.get_mut() as *mut u64).cast::<PageTableEntry>() }
+    }
+
+    /// Returns a pointer to the entry.
+    #[inline]
+    pub fn as_ptr(&self) -> *mut PageTableEntry {
+        self.0.as_ptr().cast()
+    }
+
+    /// Creates a reference to an atomic entry from a pointer.
+    ///
+    /// # Safety
+    ///
+    /// The pointer must be valid, properly aligned, and point to a
+    /// `PageTableEntry` that is only accessed atomically for the lifetime `'a`.
+    #[inline]
+    pub unsafe fn from_ptr<'a>(ptr: *mut PageTableEntry) -> &'a Self {
+        // SAFETY: guaranteed by the caller; `Self` has the same layout as
+        // `PageTableEntry`.
+        unsafe { &*ptr.cast::<Self>() }
+    }
+
+    /// Consumes the entry and returns its value.
+    #[inline]
+    pub fn into_inner(self) -> PageTableEntry {
+        PageTableEntry::from_bits(self.0.into_inner())
+    }
+
+    /// Returns whether this entry is zero.
+    ///
+    /// This forwards to [`PageTableEntryBits::is_unused`].
+    #[inline]
+    pub fn is_unused(&self) -> bool {
+        PageTableEntryBits::is_unused(self)
+    }
+
+    /// Returns the flags of this entry.
+    ///
+    /// This forwards to [`PageTableEntryBits::flags`].
+    #[inline]
+    pub fn flags(&self) -> PageTableFlags {
+        PageTableEntryBits::flags(self)
+    }
+
+    /// Returns the physical address mapped by this entry, might be zero.
+    ///
+    /// This forwards to [`PageTableEntryBits::addr`].
+    #[inline]
+    pub fn addr(&self) -> PhysAddr {
+        PageTableEntryBits::addr(self)
+    }
+
+    /// Returns the physical frame mapped by this entry.
+    ///
+    /// This forwards to [`PageTableEntryBits::frame`].
+    #[inline]
+    pub fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
+        PageTableEntryBits::frame(self, is_level_1_entry)
+    }
+
+    /// Sets this entry to zero.
+    ///
+    /// This forwards to [`PageTableEntryBitsMut::set_unused`].
+    #[inline]
+    pub fn set_unused(&mut self) {
+        PageTableEntryBitsMut::set_unused(self)
+    }
+
+    /// Sets the flags of this entry.
+    ///
+    /// This forwards to [`PageTableEntryBitsMut::set_flags`].
+    #[inline]
+    pub fn set_flags(&mut self, flags: PageTableFlags) {
+        PageTableEntryBitsMut::set_flags(self, flags)
+    }
+
+    /// Maps the entry to the specified physical address with the specified
+    /// flags.
+    ///
+    /// This forwards to [`PageTableEntryBitsMut::set_addr`].
+    #[inline]
+    pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
+        PageTableEntryBitsMut::set_addr(self, addr, flags)
+    }
+
+    /// Maps the entry to the specified physical frame with the specified flags.
+    ///
+    /// This forwards to [`PageTableEntryBitsMut::set_frame`].
+    #[inline]
+    pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {
+        PageTableEntryBitsMut::set_frame(self, frame, flags)
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl Clone for AtomicPageTableEntry {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self::from_bits(self.bits())
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl Default for AtomicPageTableEntry {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl fmt::Debug for AtomicPageTableEntry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_tuple("AtomicPageTableEntry")
+            .field(&self.load(Ordering::Relaxed))
+            .finish()
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl PageTableEntryBits for AtomicPageTableEntry {
+    #[inline]
+    fn bits(&self) -> u64 {
+        self.0.load(Ordering::Relaxed)
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl PageTableEntryBitsMut for AtomicPageTableEntry {
+    #[inline]
+    fn set_bits(&mut self, bits: u64) {
+        self.0.store(bits, Ordering::Relaxed);
     }
 }
 
@@ -314,6 +712,123 @@ impl Default for PageTable {
 }
 
 impl fmt::Debug for PageTable {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.entries[..].fmt(f)
+    }
+}
+
+/// An atomic page table.
+///
+/// This is the atomic counterpart of [`PageTable`] and exposes the same API:
+/// [`new`](Self::new), [`zero`](Self::zero), [`iter`](Self::iter),
+/// [`iter_mut`](Self::iter_mut), [`is_empty`](Self::is_empty), indexing,
+/// [`Default`], [`Clone`] and [`Debug`].
+///
+/// It is `#[repr(C, align(4096))]` over 512 [`AtomicPageTableEntry`] values, so
+/// it has the same size and alignment as [`PageTable`].
+///
+/// The CPU can update the `ACCESSED` and `DIRTY` bits of live entries on its
+/// own, so entries of a live table must only be accessed atomically.
+///
+/// Note that while this type implements [`Clone`], a cloned table is a separate
+/// copy of the entries.
+#[cfg(target_has_atomic = "64")]
+#[repr(align(4096))]
+#[repr(C)]
+#[derive(Clone)]
+pub struct AtomicPageTable {
+    entries: [AtomicPageTableEntry; ENTRY_COUNT],
+}
+
+#[cfg(target_has_atomic = "64")]
+impl AtomicPageTable {
+    /// Creates an empty page table.
+    #[inline]
+    pub const fn new() -> Self {
+        Self {
+            entries: [const { AtomicPageTableEntry::new() }; ENTRY_COUNT],
+        }
+    }
+
+    /// Clears all entries.
+    #[inline]
+    pub fn zero(&mut self) {
+        for entry in self.iter_mut() {
+            entry.set_unused();
+        }
+    }
+
+    /// Returns an iterator over the entries of the page table.
+    #[inline]
+    pub fn iter(&self) -> impl Iterator<Item = &AtomicPageTableEntry> {
+        (0..ENTRY_COUNT).map(move |i| &self.entries[i])
+    }
+
+    /// Returns an iterator that allows modifying the entries of the page table.
+    #[inline]
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AtomicPageTableEntry> {
+        // See `PageTable::iter_mut` for why this does not use `slice::Iter`.
+        let ptr = self.entries.as_mut_ptr();
+        (0..ENTRY_COUNT).map(move |i| {
+            // SAFETY: `i` is in `0..ENTRY_COUNT`, and the iterator borrows the
+            // table mutably for its lifetime.
+            unsafe { &mut *ptr.add(i) }
+        })
+    }
+
+    /// Checks if the page table is empty (all entries are zero).
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.iter().all(|entry| entry.is_unused())
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl Index<usize> for AtomicPageTable {
+    type Output = AtomicPageTableEntry;
+
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.entries[index]
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl IndexMut<usize> for AtomicPageTable {
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.entries[index]
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl Index<PageTableIndex> for AtomicPageTable {
+    type Output = AtomicPageTableEntry;
+
+    #[inline]
+    fn index(&self, index: PageTableIndex) -> &Self::Output {
+        &self.entries[usize::from(index)]
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl IndexMut<PageTableIndex> for AtomicPageTable {
+    #[inline]
+    fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {
+        &mut self.entries[usize::from(index)]
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl Default for AtomicPageTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(target_has_atomic = "64")]
+impl fmt::Debug for AtomicPageTable {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.entries[..].fmt(f)
@@ -505,6 +1020,183 @@ impl PageTableLevel {
     /// Returns the alignment for the address space described by an entry in a table of this level.
     pub const fn entry_address_space_alignment(self) -> u64 {
         1u64 << (((self as u8 - 1) * 9) + 12)
+    }
+}
+
+#[cfg(test)]
+mod entry_tests {
+    use super::*;
+
+    #[test]
+    fn page_table_entry_bits_roundtrip() {
+        let bits = 0x0000_0000_0000_1001;
+        let entry = PageTableEntry::from_bits(bits);
+        assert_eq!(entry.bits(), bits);
+        assert_eq!(PageTableEntry::new().bits(), 0);
+    }
+
+    #[test]
+    fn page_table_entry_shared_trait() {
+        fn check<E: PageTableEntryBitsMut>(entry: &mut E) {
+            assert!(entry.is_unused());
+
+            entry.set_addr(
+                PhysAddr::new(0x1000),
+                PageTableFlags::PRESENT | PageTableFlags::WRITABLE,
+            );
+            assert!(!entry.is_unused());
+            assert_eq!(entry.addr(), PhysAddr::new(0x1000));
+            assert!(entry.flags().contains(PageTableFlags::PRESENT));
+            assert!(entry.flags().contains(PageTableFlags::WRITABLE));
+
+            entry.set_frame(
+                PhysFrame::containing_address(PhysAddr::new(0x2000)),
+                PageTableFlags::PRESENT,
+            );
+            assert_eq!(entry.addr(), PhysAddr::new(0x2000));
+            assert_eq!(
+                entry.frame(true).unwrap(),
+                PhysFrame::containing_address(PhysAddr::new(0x2000))
+            );
+
+            entry.set_flags(PageTableFlags::PRESENT);
+            assert!(entry.flags().contains(PageTableFlags::PRESENT));
+            assert!(!entry.flags().contains(PageTableFlags::WRITABLE));
+
+            entry.set_unused();
+            assert!(entry.is_unused());
+        }
+
+        let mut entry = PageTableEntry::new();
+        check(&mut entry);
+
+        #[cfg(target_has_atomic = "64")]
+        {
+            let mut entry = AtomicPageTableEntry::new();
+            check(&mut entry);
+        }
+    }
+
+    #[cfg(target_has_atomic = "64")]
+    #[test]
+    fn atomic_page_table_entry_operations() {
+        use core::sync::atomic::Ordering;
+
+        let mut entry = AtomicPageTableEntry::new();
+        assert_eq!(entry.load(Ordering::Relaxed).bits(), 0);
+
+        entry.store(PageTableEntry::from_bits(0x1001), Ordering::Relaxed);
+        assert_eq!(entry.load(Ordering::Relaxed).bits(), 0x1001);
+
+        let old = entry.swap(PageTableEntry::from_bits(0x2001), Ordering::AcqRel);
+        assert_eq!(old.bits(), 0x1001);
+
+        let current = PageTableEntry::from_bits(0x2001);
+        let new = PageTableEntry::from_bits(0x3001);
+        let result = entry.compare_exchange(
+            current.clone(),
+            new.clone(),
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        );
+        assert_eq!(result.unwrap().bits(), 0x2001);
+        let result = entry.compare_exchange(current, new, Ordering::AcqRel, Ordering::Acquire);
+        assert_eq!(result.unwrap_err().bits(), 0x3001);
+
+        let old = entry.fetch_or(PageTableFlags::WRITABLE.bits(), Ordering::Relaxed);
+        assert_eq!(old.bits(), 0x3001);
+        assert_eq!(
+            entry.load(Ordering::Relaxed).bits(),
+            0x3001 | PageTableFlags::WRITABLE.bits()
+        );
+
+        let old = entry.fetch_and(!PageTableFlags::WRITABLE.bits(), Ordering::Relaxed);
+        assert_eq!(old.bits(), 0x3001 | PageTableFlags::WRITABLE.bits());
+        assert_eq!(entry.load(Ordering::Relaxed).bits(), 0x3001);
+
+        entry.get_mut().set_unused();
+        assert_eq!(entry.load(Ordering::Relaxed).bits(), 0);
+
+        entry.set_addr(PhysAddr::new(0x4000), PageTableFlags::PRESENT);
+        assert!(!entry.is_unused());
+        assert_eq!(entry.addr(), PhysAddr::new(0x4000));
+        assert!(entry.flags().contains(PageTableFlags::PRESENT));
+
+        let entry = AtomicPageTableEntry::from_bits(7);
+        assert_eq!(entry.into_inner().bits(), 7);
+    }
+
+    #[cfg(target_has_atomic = "64")]
+    #[test]
+    fn atomic_page_table_entry_pointers() {
+        use core::sync::atomic::Ordering;
+
+        let entry = AtomicPageTableEntry::new();
+        let ptr = entry.as_ptr();
+        assert_eq!(ptr as usize, &entry as *const _ as usize);
+
+        // SAFETY: the pointer comes from `entry` and outlives this call.
+        let borrowed = unsafe { AtomicPageTableEntry::from_ptr(ptr) };
+        borrowed.store(PageTableEntry::from_bits(0x1001), Ordering::Relaxed);
+        assert_eq!(entry.load(Ordering::Relaxed).bits(), 0x1001);
+    }
+
+    #[cfg(target_has_atomic = "64")]
+    #[test]
+    fn atomic_page_table_api() {
+        use core::sync::atomic::Ordering;
+
+        assert_eq!(core::mem::size_of::<AtomicPageTable>(), 4096);
+        assert_eq!(core::mem::align_of::<AtomicPageTable>(), 4096);
+
+        let mut table = AtomicPageTable::new();
+        assert!(table.is_empty());
+
+        table[0].store(PageTableEntry::from_bits(0x1001), Ordering::Relaxed);
+        assert!(!table.is_empty());
+        assert_eq!(
+            table[0].load(Ordering::Relaxed).addr(),
+            PhysAddr::new(0x1000)
+        );
+
+        table[PageTableIndex::new(1)].store(PageTableEntry::from_bits(0x2001), Ordering::Relaxed);
+        assert_eq!(table.iter().filter(|entry| !entry.is_unused()).count(), 2);
+
+        for entry in table.iter_mut() {
+            entry.set_unused();
+        }
+        assert!(table.is_empty());
+
+        table[0].store(PageTableEntry::from_bits(0x1001), Ordering::Relaxed);
+        table.zero();
+        assert!(table.is_empty());
+
+        let cloned = table.clone();
+        assert!(cloned.is_empty());
+        assert_eq!(cloned[0].load(Ordering::Relaxed).bits(), 0);
+
+        let _ = format!("{:?}", table);
+    }
+
+    #[cfg(all(target_arch = "x86_64", target_has_atomic = "64"))]
+    #[test]
+    fn atomic_page_table_layout_matches_page_table() {
+        assert_eq!(
+            core::mem::size_of::<AtomicPageTableEntry>(),
+            core::mem::size_of::<PageTableEntry>()
+        );
+        assert_eq!(
+            core::mem::align_of::<AtomicPageTableEntry>(),
+            core::mem::align_of::<PageTableEntry>()
+        );
+        assert_eq!(
+            core::mem::size_of::<AtomicPageTable>(),
+            core::mem::size_of::<PageTable>()
+        );
+        assert_eq!(
+            core::mem::align_of::<AtomicPageTable>(),
+            core::mem::align_of::<PageTable>()
+        );
     }
 }
 

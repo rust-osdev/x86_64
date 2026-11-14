@@ -14,7 +14,12 @@ pub use self::mapper::{Mapper, Translate};
 #[doc(no_inline)]
 pub use self::mapper::{OffsetPageTable, PhysOffset};
 pub use self::page::{Page, PageSize, Size1GiB, Size2MiB, Size4KiB};
-pub use self::page_table::{PageOffset, PageTable, PageTableFlags, PageTableIndex};
+#[cfg(target_has_atomic = "64")]
+pub use self::page_table::{AtomicPageTable, AtomicPageTableEntry};
+pub use self::page_table::{
+    PageOffset, PageTable, PageTableEntryBits, PageTableEntryBitsMut, PageTableFlags,
+    PageTableIndex,
+};
 
 pub mod frame;
 mod frame_alloc;
