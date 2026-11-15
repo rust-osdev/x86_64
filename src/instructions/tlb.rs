@@ -217,7 +217,7 @@ impl Invlpgb {
     #[inline]
     pub fn tlbsync(&self) {
         unsafe {
-            asm!("tlbsync", options(nomem, preserves_flags));
+            asm!("tlbsync", options(preserves_flags));
         }
     }
 }
