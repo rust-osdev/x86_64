@@ -6,7 +6,10 @@
 
 use std::{boxed::Box, vec::Vec};
 
-use super::*;
+use super::{
+    iter::{MappedPage, MappedPageItem},
+    *,
+};
 use crate::PhysAddr;
 
 const FLAGS: PageTableFlags = PageTableFlags::PRESENT.union(PageTableFlags::WRITABLE);
@@ -126,6 +129,43 @@ fn round_trip_2mib_with_pat() {
 fn round_trip_1gib_with_pat() {
     let flags = FLAGS | PageTableFlags::PAT_HUGE_PAGE;
     round_trip::<Size1GiB>(flags, flags | PageTableFlags::HUGE_PAGE);
+}
+
+#[test]
+fn iter_reports_pat_of_huge_pages() {
+    let mut level_4_table = PageTable::new();
+    let mut mapper = unsafe { MappedPageTable::new(&mut level_4_table, HostMapping) };
+    let mut allocator = TableAllocator::default();
+    let flags = FLAGS | PageTableFlags::PAT_HUGE_PAGE;
+
+    let page_2mib = page::<Size2MiB>();
+    let page_1gib = page::<Size1GiB>() + 1;
+    unsafe { mapper.map_to(page_2mib, frame(), flags, &mut allocator) }
+        .unwrap()
+        .ignore();
+    unsafe { mapper.map_to(page_1gib, frame(), flags, &mut allocator) }
+        .unwrap()
+        .ignore();
+
+    let flags = flags | PageTableFlags::HUGE_PAGE;
+    let mut iter = mapper.iter();
+    assert!(
+        iter.next()
+            == Some(MappedPageItem::Size2MiB(MappedPage {
+                page: page_2mib,
+                frame: frame(),
+                flags,
+            }))
+    );
+    assert!(
+        iter.next()
+            == Some(MappedPageItem::Size1GiB(MappedPage {
+                page: page_1gib,
+                frame: frame(),
+                flags,
+            }))
+    );
+    assert!(iter.next().is_none());
 }
 
 /// Sets and clears the PAT bit of an existing mapping.

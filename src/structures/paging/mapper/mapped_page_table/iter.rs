@@ -287,8 +287,8 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
                     let page =
                         Page::from_page_table_indices_1gib(self.p4_index()?, self.p3_index()?);
                     let entry = &p3[self.p3_index()?];
-                    let frame = PhysFrame::containing_address(entry.addr());
-                    let flags = entry.flags();
+                    let frame = PhysFrame::containing_address(entry.huge_addr());
+                    let flags = entry.huge_flags();
                     let mapped_page = MappedPageItem::Size1GiB(MappedPage { page, frame, flags });
 
                     // Make sure we don't land here next time.
@@ -314,8 +314,8 @@ impl<P: PageTableFrameMapping> MappedPageTableIter<'_, P> {
                         self.p2_index()?,
                     );
                     let entry = &p2[self.p2_index()?];
-                    let frame = PhysFrame::containing_address(entry.addr());
-                    let flags = entry.flags();
+                    let frame = PhysFrame::containing_address(entry.huge_addr());
+                    let flags = entry.huge_flags();
                     let mapped_page = MappedPageItem::Size2MiB(MappedPage { page, frame, flags });
 
                     // Make sure we don't land here next time.
