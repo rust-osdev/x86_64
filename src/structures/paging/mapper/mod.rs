@@ -209,6 +209,9 @@ pub trait Mapper<S: PageSize> {
     /// Depending on the used mapper implementation, the `PRESENT` and `WRITABLE` flags might
     /// be set for parent tables, even if they are not specified in `parent_table_flags`.
     ///
+    /// The `parent_table_flags` must not contain the `HUGE_PAGE` flag since parent table
+    /// entries point to page tables. Otherwise, `MapToError::InvalidFlags` is returned.
+    ///
     /// ## Safety
     ///
     /// Creating page table mappings is a fundamentally unsafe operation because

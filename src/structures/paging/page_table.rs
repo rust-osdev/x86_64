@@ -52,6 +52,10 @@ impl PageTableEntry {
     }
 
     /// Returns the flags of this entry.
+    ///
+    /// For entries that map a huge page, use [`huge_flags`](Self::huge_flags) instead. This
+    /// method treats bit 12 as part of the physical address, so it never returns
+    /// [`PAT_HUGE_PAGE`](PageTableFlags::PAT_HUGE_PAGE).
     #[inline]
     #[const_fn(cfg(not(feature = "memory_encryption")))]
     pub const fn flags(&self) -> PageTableFlags {
@@ -59,6 +63,10 @@ impl PageTableEntry {
     }
 
     /// Returns the physical address mapped by this entry, might be zero.
+    ///
+    /// For entries that map a huge page, use [`huge_addr`](Self::huge_addr) instead. This
+    /// method treats bit 12 as part of the physical address, but it is the PAT bit of such
+    /// entries.
     #[inline]
     pub fn addr(&self) -> PhysAddr {
         PhysAddr::new(self.entry & Self::physical_address_mask())
@@ -73,7 +81,7 @@ impl PageTableEntry {
     ///
     /// - `FrameError::FrameNotPresent` if the entry doesn't have the `PRESENT` flag set.
     /// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the
-    ///   `addr` function must be used) and `is_level_1_entry` is `false`
+    ///   `huge_addr` function must be used) and `is_level_1_entry` is `false`
     #[inline]
     pub fn frame(&self, is_level_1_entry: bool) -> Result<PhysFrame, FrameError> {
         if !self.flags().contains(PageTableFlags::PRESENT) {
@@ -275,9 +283,19 @@ bitflags! {
         const DIRTY =           1 << 6;
         /// Specifies that the entry maps a huge frame instead of a page table. This is the same bit
         /// as `PAT_4KIB_PAGE`.
+        ///
+        /// This flag is only valid for entries of level 2 and level 3 tables. The [`Mapper`]
+        /// implementations set it automatically for 2MiB and 1GiB pages and reject it in the
+        /// flags for parent tables.
+        ///
+        /// [`Mapper`]: super::Mapper
         const HUGE_PAGE =       1 << 7;
         /// This is the PAT bit for page table entries that point to 4KiB pages. This is the same
         /// bit as `HUGE_PAGE`.
+        ///
+        /// This flag is only valid for entries of level 1 tables. Use
+        /// [`PAT_HUGE_PAGE`](Self::PAT_HUGE_PAGE) for huge pages or [`pat`](Self::pat) to
+        /// select the right flag for a page size.
         const PAT_4KIB_PAGE =   1 << 7;
         /// Indicates that the mapping is present in all address spaces, so it isn't flushed from
         /// the TLB on an address space switch.
@@ -289,6 +307,22 @@ bitflags! {
         /// Available to the OS, can be used to store additional data, e.g. custom flags.
         const BIT_11 =          1 << 11;
         /// This is the PAT bit for page table entries that point to huge pages.
+        ///
+        /// This flag is only valid for entries that map a 2MiB or 1GiB page. In all other
+        /// entries, bit 12 is part of the physical address. Therefore:
+        ///
+        /// - The [`Mapper`] implementations only accept this flag for 2MiB and 1GiB pages and
+        ///   return an `InvalidFlags` error otherwise.
+        /// - [`PageTableEntry`] only reads and writes this flag through
+        ///   [`huge_flags`](PageTableEntry::huge_flags),
+        ///   [`set_huge_addr`](PageTableEntry::set_huge_addr), and
+        ///   [`set_huge_flags`](PageTableEntry::set_huge_flags). The other setters panic if
+        ///   this flag is passed.
+        ///
+        /// Use [`PAT_4KIB_PAGE`](Self::PAT_4KIB_PAGE) for 4KiB pages or [`pat`](Self::pat) to
+        /// select the right flag for a page size.
+        ///
+        /// [`Mapper`]: super::Mapper
         const PAT_HUGE_PAGE =   1 << 12;
         /// Available to the OS, can be used to store additional data, e.g. custom flags.
         const BIT_52 =          1 << 52;
