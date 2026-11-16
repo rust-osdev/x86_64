@@ -169,6 +169,24 @@ impl PageTableEntry {
         self.entry = self.huge_addr().as_u64() | flags.bits();
     }
 
+    /// Returns the bits of `flags` that overlap with the physical address of an entry that
+    /// points to a page table or maps a 4KiB page.
+    ///
+    /// Such flags can't be stored in the entry without corrupting its address.
+    #[inline]
+    pub(crate) fn flags_overlapping_addr(flags: PageTableFlags) -> PageTableFlags {
+        PageTableFlags::from_bits_retain(flags.bits() & Self::physical_address_mask())
+    }
+
+    /// Returns the bits of `flags` that overlap with the physical address of an entry that
+    /// maps a huge page.
+    ///
+    /// Such flags can't be stored in the entry without corrupting its address.
+    #[inline]
+    pub(crate) fn flags_overlapping_huge_addr(flags: PageTableFlags) -> PageTableFlags {
+        PageTableFlags::from_bits_retain(flags.bits() & Self::huge_physical_address_mask())
+    }
+
     /// The physical address bits of an entry that maps a huge page.
     ///
     /// Bit 12 is the PAT bit of such entries, so it is not part of the address.

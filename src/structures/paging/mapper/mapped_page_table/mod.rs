@@ -74,6 +74,9 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
+        check_page_flags::<Size1GiB>(flags)?;
+        check_table_flags(parent_table_flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
             &mut p4[page.p4_index()],
@@ -153,6 +156,8 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
+        check_page_flags::<Size1GiB>(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -179,6 +184,8 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p4_entry = &mut p4[page.p4_index()];
 
@@ -239,6 +246,9 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
+        check_page_flags::<Size2MiB>(flags)?;
+        check_table_flags(parent_table_flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
             &mut p4[page.p4_index()],
@@ -327,6 +337,8 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
+        check_page_flags::<Size2MiB>(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -356,6 +368,8 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p4_entry = &mut p4[page.p4_index()];
 
@@ -373,6 +387,8 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -429,6 +445,9 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
+        check_page_flags::<Size4KiB>(flags)?;
+        check_table_flags(parent_table_flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self.page_table_walker.create_next_table(
             &mut p4[page.p4_index()],
@@ -519,6 +538,8 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
+        check_page_flags::<Size4KiB>(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -544,6 +565,8 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p4_entry = &mut p4[page.p4_index()];
 
@@ -561,6 +584,8 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker
@@ -581,6 +606,8 @@ impl<P: PageTableFrameMapping> Mapper<Size4KiB> for MappedPageTable<'_, P> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.level_4_table;
         let p3 = self
             .page_table_walker

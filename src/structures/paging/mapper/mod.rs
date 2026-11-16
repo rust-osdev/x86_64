@@ -492,6 +492,17 @@ pub enum MapToError<S: PageSize> {
     ParentEntryHugePage,
     /// The given page is already mapped to a physical frame.
     PageAlreadyMapped(PhysFrame<S>),
+    /// The flags passed to the method contain bits that are not valid for the page table
+    /// entry they are used for. Only the invalid bits are returned.
+    ///
+    /// This error occurs if the passed flags overlap with the physical address of the entry,
+    /// e.g. when `PAT_HUGE_PAGE` is used for a 4KiB page or for a parent table. It also occurs
+    /// if `HUGE_PAGE` is passed in the flags for a parent table, because this would turn the
+    /// pointer to a page table into a huge page mapping.
+    ///
+    /// In contrast to `ParentEntryHugePage`, this error is about the arguments of the method
+    /// and not about the entries that are already present in the page table.
+    InvalidFlags(PageTableFlags),
 }
 
 /// An error indicating that an `unmap` call failed.
@@ -514,6 +525,70 @@ pub enum FlagUpdateError {
     /// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
     /// given page is part of a huge page and can't be freed individually.
     ParentEntryHugePage,
+    /// The flags passed to the method contain bits that are not valid for the page table
+    /// entry they are used for. Only the invalid bits are returned.
+    ///
+    /// This error occurs if the passed flags overlap with the physical address of the entry,
+    /// e.g. when `PAT_HUGE_PAGE` is used for a 4KiB page or for a parent table. It also occurs
+    /// if `HUGE_PAGE` is passed in the flags for a parent table, because this would turn the
+    /// pointer to a page table into a huge page mapping.
+    ///
+    /// In contrast to `ParentEntryHugePage`, this error is about the arguments of the method
+    /// and not about the entries that are already present in the page table.
+    InvalidFlags(PageTableFlags),
+}
+
+/// The invalid flags found by [`check_page_flags`] or [`check_table_flags`].
+struct InvalidFlags(PageTableFlags);
+
+impl<S: PageSize> From<InvalidFlags> for MapToError<S> {
+    #[inline]
+    fn from(InvalidFlags(flags): InvalidFlags) -> Self {
+        MapToError::InvalidFlags(flags)
+    }
+}
+
+impl From<InvalidFlags> for FlagUpdateError {
+    #[inline]
+    fn from(InvalidFlags(flags): InvalidFlags) -> Self {
+        FlagUpdateError::InvalidFlags(flags)
+    }
+}
+
+/// Checks that `flags` are valid for an entry that maps a page of size `S`.
+///
+/// The flags must not overlap with the physical address of the entry. Which bits belong to
+/// the address depends on the page size: bit 12 is the PAT bit for huge pages, but an address
+/// bit for 4KiB pages.
+#[inline]
+fn check_page_flags<S: PageSize>(flags: PageTableFlags) -> Result<(), InvalidFlags> {
+    let invalid = if S::SIZE == Size4KiB::SIZE {
+        PageTableEntry::flags_overlapping_addr(flags)
+    } else {
+        PageTableEntry::flags_overlapping_huge_addr(flags)
+    };
+
+    if invalid.is_empty() {
+        Ok(())
+    } else {
+        Err(InvalidFlags(invalid))
+    }
+}
+
+/// Checks that `flags` are valid for an entry that points to a page table.
+///
+/// The flags must not overlap with the physical address of the entry and must not contain
+/// `HUGE_PAGE`, which would turn the entry into a huge page mapping.
+#[inline]
+fn check_table_flags(flags: PageTableFlags) -> Result<(), InvalidFlags> {
+    let invalid =
+        PageTableEntry::flags_overlapping_addr(flags) | (flags & PageTableFlags::HUGE_PAGE);
+
+    if invalid.is_empty() {
+        Ok(())
+    } else {
+        Err(InvalidFlags(invalid))
+    }
 }
 
 /// An error indicating that an `translate` call failed.

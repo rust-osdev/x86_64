@@ -280,3 +280,109 @@ fn huge_page_methods_reject_page_table_pointers() {
     // The 4KiB mapping is still intact.
     assert_eq!(mapper.translate_page(page::<Size4KiB>()).unwrap(), frame());
 }
+
+#[test]
+fn round_trip_4kib_with_pat() {
+    let flags = FLAGS | PageTableFlags::PAT_4KIB_PAGE;
+    round_trip::<Size4KiB>(flags, flags);
+}
+
+/// Checks that mapping a page of size `S` with the given flags is rejected before anything
+/// is modified.
+fn map_to_rejects<S>(
+    flags: PageTableFlags,
+    parent_table_flags: PageTableFlags,
+    invalid: PageTableFlags,
+) where
+    S: PageSize + core::fmt::Debug,
+    for<'a> MappedPageTable<'a, HostMapping>: Mapper<S>,
+{
+    let mut level_4_table = PageTable::new();
+    let mut mapper = unsafe { MappedPageTable::new(&mut level_4_table, HostMapping) };
+    let mut allocator = TableAllocator::default();
+
+    let result = unsafe {
+        mapper.map_to_with_table_flags(
+            page::<S>(),
+            frame::<S>(),
+            flags,
+            parent_table_flags,
+            &mut allocator,
+        )
+    };
+    match result {
+        Err(MapToError::InvalidFlags(flags)) => assert_eq!(flags, invalid),
+        other => panic!("unexpected result: {:?}", other.map(|flush| flush.page())),
+    }
+
+    assert!(allocator.tables.is_empty());
+    assert!(level_4_table.is_empty());
+}
+
+#[test]
+fn map_to_rejects_huge_page_pat_for_4kib_page() {
+    map_to_rejects::<Size4KiB>(
+        FLAGS | PageTableFlags::PAT_HUGE_PAGE,
+        FLAGS,
+        PageTableFlags::PAT_HUGE_PAGE,
+    );
+}
+
+#[test]
+fn map_to_rejects_flags_in_address() {
+    let bit_13 = PageTableFlags::from_bits_retain(1 << 13);
+    map_to_rejects::<Size4KiB>(FLAGS | bit_13, FLAGS, bit_13);
+    map_to_rejects::<Size2MiB>(FLAGS | bit_13, FLAGS, bit_13);
+    map_to_rejects::<Size1GiB>(FLAGS | bit_13, FLAGS, bit_13);
+}
+
+#[test]
+fn map_to_rejects_invalid_parent_table_flags() {
+    let huge = PageTableFlags::HUGE_PAGE;
+    map_to_rejects::<Size4KiB>(FLAGS, FLAGS | huge, huge);
+    map_to_rejects::<Size2MiB>(FLAGS, FLAGS | huge, huge);
+    map_to_rejects::<Size1GiB>(FLAGS, FLAGS | huge, huge);
+
+    let pat = PageTableFlags::PAT_HUGE_PAGE;
+    map_to_rejects::<Size4KiB>(FLAGS, FLAGS | pat, pat);
+    map_to_rejects::<Size2MiB>(FLAGS, FLAGS | pat, pat);
+    map_to_rejects::<Size1GiB>(FLAGS, FLAGS | pat, pat);
+}
+
+#[test]
+fn update_flags_rejects_invalid_flags() {
+    let mut level_4_table = PageTable::new();
+    let mut mapper = unsafe { MappedPageTable::new(&mut level_4_table, HostMapping) };
+    let mut allocator = TableAllocator::default();
+    let page = page::<Size4KiB>();
+
+    unsafe { mapper.map_to(page, frame(), FLAGS, &mut allocator) }
+        .unwrap()
+        .ignore();
+
+    let pat = PageTableFlags::PAT_HUGE_PAGE;
+    assert!(matches!(
+        unsafe { mapper.update_flags(page, FLAGS | pat) },
+        Err(FlagUpdateError::InvalidFlags(flags)) if flags == pat
+    ));
+
+    let huge = PageTableFlags::HUGE_PAGE;
+    assert!(matches!(
+        unsafe { mapper.set_flags_p4_entry(page, FLAGS | huge) },
+        Err(FlagUpdateError::InvalidFlags(flags)) if flags == huge
+    ));
+    assert!(matches!(
+        unsafe { mapper.set_flags_p3_entry(page, FLAGS | huge) },
+        Err(FlagUpdateError::InvalidFlags(flags)) if flags == huge
+    ));
+    assert!(matches!(
+        unsafe { mapper.set_flags_p2_entry(page, FLAGS | pat) },
+        Err(FlagUpdateError::InvalidFlags(flags)) if flags == pat
+    ));
+
+    // The mapping is unchanged.
+    let (unmapped_frame, flags, flush) = mapper.unmap(page).unwrap();
+    flush.ignore();
+    assert_eq!(unmapped_frame, frame());
+    assert_eq!(flags, FLAGS);
+}
