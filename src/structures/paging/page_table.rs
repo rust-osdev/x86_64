@@ -7,7 +7,7 @@ use core::ops::{Index, IndexMut};
 #[cfg(feature = "memory_encryption")]
 use core::sync::atomic::Ordering;
 
-use super::{PageSize, PhysFrame, Size4KiB};
+use super::{PageSize, PhysFrame, Size2MiB, Size4KiB};
 use crate::addr::PhysAddr;
 #[cfg(feature = "memory_encryption")]
 use crate::structures::mem_encrypt::PHYSICAL_ADDRESS_MASK;
@@ -102,6 +102,80 @@ impl PageTableEntry {
     #[inline]
     pub fn set_flags(&mut self, flags: PageTableFlags) {
         self.entry = self.addr().as_u64() | flags.bits();
+    }
+
+    /// Returns the flags of this entry, assuming that it maps a huge page.
+    ///
+    /// In contrast to [`flags`](Self::flags), the returned flags include
+    /// [`PAT_HUGE_PAGE`](PageTableFlags::PAT_HUGE_PAGE) if bit 12 of the entry is set.
+    ///
+    /// This method must only be used for entries of level 2 or level 3 tables that have the
+    /// [`HUGE_PAGE`](PageTableFlags::HUGE_PAGE) flag set. For all other entries, bit 12 is part
+    /// of the physical address, so [`flags`](Self::flags) must be used instead.
+    #[inline]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    pub const fn huge_flags(&self) -> PageTableFlags {
+        PageTableFlags::from_bits_retain(self.entry & !Self::huge_physical_address_mask())
+    }
+
+    /// Returns the physical address mapped by this entry, assuming that it maps a huge page.
+    ///
+    /// In contrast to [`addr`](Self::addr), bit 12 of the entry is not treated as part of the
+    /// address because it is the PAT bit of entries that map a huge page.
+    ///
+    /// This method must only be used for entries of level 2 or level 3 tables that have the
+    /// [`HUGE_PAGE`](PageTableFlags::HUGE_PAGE) flag set. For all other entries, bit 12 is part
+    /// of the physical address, so [`addr`](Self::addr) must be used instead.
+    #[inline]
+    pub fn huge_addr(&self) -> PhysAddr {
+        PhysAddr::new(self.entry & Self::huge_physical_address_mask())
+    }
+
+    /// Map the entry to the specified physical address of a huge page with the specified flags.
+    ///
+    /// In contrast to [`set_addr`](Self::set_addr), the flags may contain
+    /// [`PAT_HUGE_PAGE`](PageTableFlags::PAT_HUGE_PAGE).
+    ///
+    /// This method must only be used for entries of level 2 or level 3 tables.
+    ///
+    /// ## Panics
+    ///
+    /// This method panics if `addr` is not aligned to 2MiB or if `flags` does not contain the
+    /// [`HUGE_PAGE`](PageTableFlags::HUGE_PAGE) flag.
+    #[inline]
+    pub fn set_huge_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {
+        assert!(addr.is_aligned(Size2MiB::SIZE));
+        assert!(flags.contains(PageTableFlags::HUGE_PAGE));
+        self.entry = (addr.as_u64()) | flags.bits();
+    }
+
+    /// Sets the flags of this entry, assuming that it maps a huge page.
+    ///
+    /// In contrast to [`set_flags`](Self::set_flags), the flags may contain
+    /// [`PAT_HUGE_PAGE`](PageTableFlags::PAT_HUGE_PAGE). If they don't, bit 12 of the entry is
+    /// cleared.
+    ///
+    /// This method must only be used for entries of level 2 or level 3 tables that map a huge
+    /// page. For all other entries, bit 12 is part of the physical address, so
+    /// [`set_flags`](Self::set_flags) must be used instead.
+    ///
+    /// ## Panics
+    ///
+    /// This method panics if `flags` does not contain the
+    /// [`HUGE_PAGE`](PageTableFlags::HUGE_PAGE) flag.
+    #[inline]
+    pub fn set_huge_flags(&mut self, flags: PageTableFlags) {
+        assert!(flags.contains(PageTableFlags::HUGE_PAGE));
+        self.entry = self.huge_addr().as_u64() | flags.bits();
+    }
+
+    /// The physical address bits of an entry that maps a huge page.
+    ///
+    /// Bit 12 is the PAT bit of such entries, so it is not part of the address.
+    #[inline(always)]
+    #[const_fn(cfg(not(feature = "memory_encryption")))]
+    const fn huge_physical_address_mask() -> u64 {
+        Self::physical_address_mask() & !PageTableFlags::PAT_HUGE_PAGE.bits()
     }
 
     #[inline(always)]
@@ -508,11 +582,80 @@ impl PageTableLevel {
     }
 }
 
-#[cfg(all(test, feature = "step_trait"))]
+#[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "step_trait")]
     use core::iter::Step;
 
+    #[test]
+    fn huge_entry_with_pat_bit() {
+        let addr = PhysAddr::new(0x4020_0000);
+        let flags = PageTableFlags::PRESENT
+            | PageTableFlags::WRITABLE
+            | PageTableFlags::HUGE_PAGE
+            | PageTableFlags::PAT_HUGE_PAGE;
+
+        let mut entry = PageTableEntry::new();
+        entry.set_huge_addr(addr, flags);
+        assert_eq!(entry.huge_addr(), addr);
+        assert_eq!(entry.huge_flags(), flags);
+
+        // The PAT bit can be cleared again without affecting the address.
+        let flags = PageTableFlags::PRESENT | PageTableFlags::HUGE_PAGE;
+        entry.set_huge_flags(flags);
+        assert_eq!(entry.huge_addr(), addr);
+        assert_eq!(entry.huge_flags(), flags);
+
+        // ... and set again.
+        let flags = flags | PageTableFlags::PAT_HUGE_PAGE;
+        entry.set_huge_flags(flags);
+        assert_eq!(entry.huge_addr(), addr);
+        assert_eq!(entry.huge_flags(), flags);
+    }
+
+    #[test]
+    fn huge_entry_without_pat_bit() {
+        let addr = PhysAddr::new(0x4020_0000);
+        let flags = PageTableFlags::PRESENT | PageTableFlags::HUGE_PAGE;
+
+        let mut entry = PageTableEntry::new();
+        entry.set_huge_addr(addr, flags);
+
+        // Without the PAT bit, both interpretations of the entry agree.
+        assert_eq!(entry.huge_addr(), entry.addr());
+        assert_eq!(entry.huge_flags(), entry.flags());
+    }
+
+    #[test]
+    #[should_panic]
+    fn set_huge_addr_requires_huge_page_flag() {
+        let mut entry = PageTableEntry::new();
+        entry.set_huge_addr(PhysAddr::new(0x4020_0000), PageTableFlags::PRESENT);
+    }
+
+    #[test]
+    #[should_panic]
+    fn set_huge_addr_requires_huge_alignment() {
+        let mut entry = PageTableEntry::new();
+        entry.set_huge_addr(
+            PhysAddr::new(0x4020_1000),
+            PageTableFlags::PRESENT | PageTableFlags::HUGE_PAGE,
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn set_huge_flags_requires_huge_page_flag() {
+        let mut entry = PageTableEntry::new();
+        entry.set_huge_addr(
+            PhysAddr::new(0x4020_0000),
+            PageTableFlags::PRESENT | PageTableFlags::HUGE_PAGE,
+        );
+        entry.set_huge_flags(PageTableFlags::PRESENT);
+    }
+
+    #[cfg(feature = "step_trait")]
     #[test]
     fn page_table_index_step_overflowing() {
         assert_eq!(
