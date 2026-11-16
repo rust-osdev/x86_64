@@ -137,7 +137,7 @@ pub fn enable_and_hlt() {
 #[inline]
 pub fn int3() {
     unsafe {
-        asm!("int3", options(nomem, nostack));
+        asm!("int3", options(nostack));
     }
 }
 
@@ -151,6 +151,6 @@ pub fn int3() {
 /// implementation (if it expects values/pointers to be passed in registers).
 pub unsafe fn software_interrupt<const NUM: u8>() {
     unsafe {
-        asm!("int {num}", num = const NUM, options(nomem, nostack));
+        asm!("int {num}", num = const NUM, options(nostack));
     }
 }
