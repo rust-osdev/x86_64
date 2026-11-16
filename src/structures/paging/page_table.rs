@@ -278,6 +278,32 @@ bitflags! {
     }
 }
 
+impl PageTableFlags {
+    /// Returns the PAT bit for page table entries that map a page of size `S`.
+    ///
+    /// The position of the PAT bit depends on the page size: this function returns
+    /// [`PAT_4KIB_PAGE`](Self::PAT_4KIB_PAGE) for 4KiB pages and
+    /// [`PAT_HUGE_PAGE`](Self::PAT_HUGE_PAGE) for 2MiB and 1GiB pages.
+    ///
+    /// Use [`Page::pat_flag`](super::Page::pat_flag) if the page size should be inferred from
+    /// a page.
+    ///
+    /// ```
+    /// use x86_64::structures::paging::{PageTableFlags, Size2MiB, Size4KiB};
+    ///
+    /// assert_eq!(PageTableFlags::pat::<Size4KiB>(), PageTableFlags::PAT_4KIB_PAGE);
+    /// assert_eq!(PageTableFlags::pat::<Size2MiB>(), PageTableFlags::PAT_HUGE_PAGE);
+    /// ```
+    #[inline]
+    pub const fn pat<S: PageSize>() -> Self {
+        if S::SIZE == Size4KiB::SIZE {
+            Self::PAT_4KIB_PAGE
+        } else {
+            Self::PAT_HUGE_PAGE
+        }
+    }
+}
+
 /// The number of entries in a page table.
 const ENTRY_COUNT: usize = 512;
 

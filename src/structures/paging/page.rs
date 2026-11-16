@@ -2,8 +2,8 @@
 
 use crate::VirtAddr;
 use crate::sealed::Sealed;
-use crate::structures::paging::PageTableIndex;
 use crate::structures::paging::page_table::PageTableLevel;
+use crate::structures::paging::{PageTableFlags, PageTableIndex};
 use core::convert::TryFrom;
 use core::fmt;
 #[cfg(feature = "step_trait")]
@@ -121,6 +121,23 @@ impl<S: PageSize> Page<S> {
     #[inline]
     pub const fn size(self) -> u64 {
         S::SIZE
+    }
+
+    /// Returns the PAT bit for a page table entry that maps this page.
+    ///
+    /// The position of the PAT bit depends on the page size, see [`PageTableFlags::pat`].
+    ///
+    /// ```
+    /// use x86_64::structures::paging::{Page, PageTableFlags, Size2MiB};
+    /// use x86_64::VirtAddr;
+    ///
+    /// let page = Page::<Size2MiB>::containing_address(VirtAddr::new(0x4000_0000));
+    /// let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE | page.pat_flag();
+    /// assert!(flags.contains(PageTableFlags::PAT_HUGE_PAGE));
+    /// ```
+    #[inline]
+    pub const fn pat_flag(self) -> PageTableFlags {
+        PageTableFlags::pat::<S>()
     }
 
     /// Add an offset to a page.
