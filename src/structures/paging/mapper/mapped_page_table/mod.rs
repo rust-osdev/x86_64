@@ -2,6 +2,8 @@ mod display;
 mod iter;
 mod offset_page_table;
 mod range_iter;
+#[cfg(test)]
+mod tests;
 
 pub use self::display::Display;
 #[cfg(target_pointer_width = "64")]
