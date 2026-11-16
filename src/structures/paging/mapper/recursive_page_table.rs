@@ -181,6 +181,9 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
+        check_page_flags::<Size1GiB>(flags)?;
+        check_table_flags(parent_table_flags)?;
+
         use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
@@ -273,6 +276,8 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size1GiB>, FlagUpdateError> {
+        check_page_flags::<Size1GiB>(flags)?;
+
         use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
@@ -303,6 +308,8 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
         page: Page<Size1GiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.p4;
         let p4_entry = &mut p4[page.p4_index()];
 
@@ -367,6 +374,9 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
+        check_page_flags::<Size2MiB>(flags)?;
+        check_table_flags(parent_table_flags)?;
+
         use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
@@ -481,6 +491,8 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size2MiB>, FlagUpdateError> {
+        check_page_flags::<Size2MiB>(flags)?;
+
         use crate::structures::paging::PageTableFlags as Flags;
         let p4 = &mut self.p4;
 
@@ -517,6 +529,8 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.p4;
         let p4_entry = &mut p4[page.p4_index()];
 
@@ -534,6 +548,8 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
         page: Page<Size2MiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -603,6 +619,9 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
     where
         A: FrameAllocator<Size4KiB> + ?Sized,
     {
+        check_page_flags::<Size4KiB>(flags)?;
+        check_table_flags(parent_table_flags)?;
+
         let p4 = &mut self.p4;
 
         let p3_page = p3_page(page, self.recursive_index);
@@ -730,6 +749,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlush<Size4KiB>, FlagUpdateError> {
+        check_page_flags::<Size4KiB>(flags)?;
+
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -764,6 +785,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.p4;
         let p4_entry = &mut p4[page.p4_index()];
 
@@ -781,6 +804,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
@@ -804,6 +829,8 @@ impl Mapper<Size4KiB> for RecursivePageTable<'_> {
         page: Page<Size4KiB>,
         flags: PageTableFlags,
     ) -> Result<MapperFlushAll, FlagUpdateError> {
+        check_table_flags(flags)?;
+
         let p4 = &mut self.p4;
 
         if p4[page.p4_index()].is_unused() {
