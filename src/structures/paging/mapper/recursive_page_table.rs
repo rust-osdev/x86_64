@@ -284,6 +284,14 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
         if p3[page.p3_index()].is_unused() {
             return Err(FlagUpdateError::PageNotMapped);
         }
+
+        if !p3[page.p3_index()]
+            .flags()
+            .contains(PageTableFlags::HUGE_PAGE)
+        {
+            return Err(FlagUpdateError::ParentEntryHugePage);
+        }
+
         p3[page.p3_index()].set_flags(flags | Flags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
@@ -334,6 +342,10 @@ impl Mapper<Size1GiB> for RecursivePageTable<'_> {
 
         if p3_entry.is_unused() {
             return Err(TranslateError::PageNotMapped);
+        }
+
+        if !p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(TranslateError::ParentEntryHugePage);
         }
 
         PhysFrame::from_start_address(p3_entry.addr())
@@ -486,6 +498,13 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
             return Err(FlagUpdateError::PageNotMapped);
         }
 
+        if !p2[page.p2_index()]
+            .flags()
+            .contains(PageTableFlags::HUGE_PAGE)
+        {
+            return Err(FlagUpdateError::ParentEntryHugePage);
+        }
+
         p2[page.p2_index()].set_flags(flags | Flags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
@@ -558,6 +577,10 @@ impl Mapper<Size2MiB> for RecursivePageTable<'_> {
 
         if p2_entry.is_unused() {
             return Err(TranslateError::PageNotMapped);
+        }
+
+        if !p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(TranslateError::ParentEntryHugePage);
         }
 
         PhysFrame::from_start_address(p2_entry.addr())

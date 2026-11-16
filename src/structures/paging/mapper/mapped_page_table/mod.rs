@@ -158,6 +158,14 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
         if p3[page.p3_index()].is_unused() {
             return Err(FlagUpdateError::PageNotMapped);
         }
+
+        if !p3[page.p3_index()]
+            .flags()
+            .contains(PageTableFlags::HUGE_PAGE)
+        {
+            return Err(FlagUpdateError::ParentEntryHugePage);
+        }
+
         p3[page.p3_index()].set_flags(flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
@@ -204,6 +212,10 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
 
         if p3_entry.is_unused() {
             return Err(TranslateError::PageNotMapped);
+        }
+
+        if !p3_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(TranslateError::ParentEntryHugePage);
         }
 
         PhysFrame::from_start_address(p3_entry.addr())
@@ -323,6 +335,13 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
             return Err(FlagUpdateError::PageNotMapped);
         }
 
+        if !p2[page.p2_index()]
+            .flags()
+            .contains(PageTableFlags::HUGE_PAGE)
+        {
+            return Err(FlagUpdateError::ParentEntryHugePage);
+        }
+
         p2[page.p2_index()].set_flags(flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
@@ -382,6 +401,10 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
 
         if p2_entry.is_unused() {
             return Err(TranslateError::PageNotMapped);
+        }
+
+        if !p2_entry.flags().contains(PageTableFlags::HUGE_PAGE) {
+            return Err(TranslateError::ParentEntryHugePage);
         }
 
         PhysFrame::from_start_address(p2_entry.addr())
