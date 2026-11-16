@@ -1,5 +1,32 @@
 # Unreleased
 
+## Breaking changes
+
+- [reject invalid page table flags that are passed to `Mapper` methods and `PageTableEntry` setters](https://github.com/rust-osdev/x86_64/pull/633)
+  - `MapToError` and `FlagUpdateError` have a new `InvalidFlags` variant. The `Mapper` methods return it if the flags passed by the caller can't be stored in the entry they are meant for:
+    - flags that overlap with the physical address of the entry, and
+    - the `HUGE_PAGE` flag in the `parent_table_flags` argument of `map_to_with_table_flags` or in the flags passed to `set_flags_p{4,3,2}_entry`. These entries point to page tables, so the flag would turn them into huge page mappings.
+  - Previously, such flags were written to the entry and silently corrupted it.
+  - This error is about the arguments of the call. It is unrelated to `ParentEntryHugePage`, which is returned if an entry that already exists in the page table maps a huge page.
+  - `PageTableEntry::set_addr`, `set_frame`, and `set_flags` now panic for flags that overlap with the physical address of the entry.
+- [the `Size2MiB` and `Size1GiB` implementations of `Mapper::update_flags` and `Mapper::translate_page` now return `ParentEntryHugePage` if the entry does not map a huge page](https://github.com/rust-osdev/x86_64/pull/633)
+  - Previously, `update_flags` turned an entry that points to a page table into a huge page mapping and `translate_page` interpreted the address of the page table as a frame address.
+
+## New Features
+
+- [add `PageTableEntry::{huge_addr, huge_flags, set_huge_addr, set_huge_flags}`](https://github.com/rust-osdev/x86_64/pull/633)
+  - These methods must be used for entries that map a huge page. They treat bit 12 as the PAT bit instead of as part of the address.
+- [add `PageTableFlags::pat` and `Page::pat_flag`](https://github.com/rust-osdev/x86_64/pull/633)
+  - These return the PAT flag for a given page size.
+
+## Fixes for `0.16.0-rc.0`
+
+These issues were introduced in `0.16.0-rc.0` and don't affect any stable release.
+
+- [fix the handling of `PageTableFlags::PAT_HUGE_PAGE`](https://github.com/rust-osdev/x86_64/pull/633)
+  - Huge pages that were mapped with this flag could not be unmapped or cleared (`InvalidFrameAddress`), the flag was never returned by `unmap`, `clear`, or `translate`, and `update_flags` could not clear it.
+  - Using the flag for a 4KiB page or in the flags for a parent table changed the address of the entry. This is now rejected with the new `InvalidFlags` error.
+
 # 0.16.0-rc.0 – 2026-09-24
 
 ## Breaking changes
