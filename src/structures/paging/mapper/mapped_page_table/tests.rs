@@ -116,6 +116,98 @@ fn round_trip_1gib() {
     round_trip::<Size1GiB>(FLAGS, FLAGS | PageTableFlags::HUGE_PAGE);
 }
 
+#[test]
+fn round_trip_2mib_with_pat() {
+    let flags = FLAGS | PageTableFlags::PAT_HUGE_PAGE;
+    round_trip::<Size2MiB>(flags, flags | PageTableFlags::HUGE_PAGE);
+}
+
+#[test]
+fn round_trip_1gib_with_pat() {
+    let flags = FLAGS | PageTableFlags::PAT_HUGE_PAGE;
+    round_trip::<Size1GiB>(flags, flags | PageTableFlags::HUGE_PAGE);
+}
+
+/// Sets and clears the PAT bit of an existing mapping.
+///
+/// The PAT bit is at a different position for 4KiB pages and huge pages, so the flag is
+/// selected through the page.
+fn update_pat<S>()
+where
+    S: PageSize + core::fmt::Debug,
+    for<'a> MappedPageTable<'a, HostMapping>: Mapper<S>,
+{
+    let mut level_4_table = PageTable::new();
+    let mut mapper = unsafe { MappedPageTable::new(&mut level_4_table, HostMapping) };
+    let mut allocator = TableAllocator::default();
+    let (page, frame) = (page::<S>(), frame::<S>());
+    let read_flags = |mapper: &MappedPageTable<'_, HostMapping>| {
+        let TranslateResult::Mapped { flags, .. } = mapper.translate(page.start_address()) else {
+            panic!("page should be mapped");
+        };
+        flags
+    };
+
+    // The mapper sets the `HUGE_PAGE` flag for huge pages.
+    let huge_page = if S::SIZE == Size4KiB::SIZE {
+        PageTableFlags::empty()
+    } else {
+        PageTableFlags::HUGE_PAGE
+    };
+    let with_pat = FLAGS | page.pat_flag();
+    // The PAT bit must be distinguishable from the `HUGE_PAGE` flag, otherwise the checks
+    // below would pass without it.
+    assert_ne!(with_pat | huge_page, FLAGS | huge_page);
+
+    unsafe { mapper.map_to(page, frame, FLAGS, &mut allocator) }
+        .unwrap()
+        .ignore();
+    assert_eq!(read_flags(&mapper), FLAGS | huge_page);
+
+    unsafe { mapper.update_flags(page, with_pat) }
+        .unwrap()
+        .ignore();
+    assert_eq!(read_flags(&mapper), with_pat | huge_page);
+    assert_eq!(mapper.translate_page(page).unwrap(), frame);
+
+    unsafe { mapper.update_flags(page, FLAGS) }
+        .unwrap()
+        .ignore();
+    assert_eq!(read_flags(&mapper), FLAGS | huge_page);
+    assert_eq!(mapper.translate_page(page).unwrap(), frame);
+
+    unsafe { mapper.update_flags(page, with_pat) }
+        .unwrap()
+        .ignore();
+    match mapper.clear(page).unwrap() {
+        UnmappedFrame::Present {
+            frame: cleared_frame,
+            flags,
+            flush,
+        } => {
+            flush.ignore();
+            assert_eq!(cleared_frame, frame);
+            assert_eq!(flags, with_pat | huge_page);
+        }
+        UnmappedFrame::NotPresent { .. } => panic!("page should be present"),
+    }
+}
+
+#[test]
+fn update_pat_4kib() {
+    update_pat::<Size4KiB>();
+}
+
+#[test]
+fn update_pat_2mib() {
+    update_pat::<Size2MiB>();
+}
+
+#[test]
+fn update_pat_1gib() {
+    update_pat::<Size1GiB>();
+}
+
 /// A 4KiB mapping creates page table pointers in the level 3 and level 2 tables. The huge
 /// page methods must not treat these entries as huge pages.
 #[test]

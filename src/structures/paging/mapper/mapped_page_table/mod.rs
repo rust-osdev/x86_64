@@ -84,7 +84,7 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
         if !p3[page.p3_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
         }
-        p3[page.p3_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
+        p3[page.p3_index()].set_huge_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
     }
@@ -107,9 +107,10 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
         if !flags.contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
+        let flags = p3_entry.huge_flags();
 
-        let frame = PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
+        let frame = PhysFrame::from_start_address(p3_entry.huge_addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.huge_addr()))?;
 
         p3_entry.set_unused();
         Ok((frame, flags, MapperFlush::new(page)))
@@ -134,9 +135,9 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
             return Ok(UnmappedFrame::NotPresent { entry: cloned });
         }
 
-        let frame = PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.addr()))?;
-        let flags = p3_entry.flags();
+        let frame = PhysFrame::from_start_address(p3_entry.huge_addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p3_entry.huge_addr()))?;
+        let flags = p3_entry.huge_flags();
 
         p3_entry.set_unused();
 
@@ -168,7 +169,7 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
             return Err(FlagUpdateError::ParentEntryHugePage);
         }
 
-        p3[page.p3_index()].set_flags(flags | PageTableFlags::HUGE_PAGE);
+        p3[page.p3_index()].set_huge_flags(flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
     }
@@ -220,8 +221,8 @@ impl<P: PageTableFrameMapping> Mapper<Size1GiB> for MappedPageTable<'_, P> {
             return Err(TranslateError::ParentEntryHugePage);
         }
 
-        PhysFrame::from_start_address(p3_entry.addr())
-            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p3_entry.addr()))
+        PhysFrame::from_start_address(p3_entry.huge_addr())
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p3_entry.huge_addr()))
     }
 }
 
@@ -253,7 +254,7 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
         if !p2[page.p2_index()].is_unused() {
             return Err(MapToError::PageAlreadyMapped(frame));
         }
-        p2[page.p2_index()].set_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
+        p2[page.p2_index()].set_huge_addr(frame.start_address(), flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
     }
@@ -279,9 +280,10 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
         if !flags.contains(PageTableFlags::HUGE_PAGE) {
             return Err(UnmapError::ParentEntryHugePage);
         }
+        let flags = p2_entry.huge_flags();
 
-        let frame = PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
+        let frame = PhysFrame::from_start_address(p2_entry.huge_addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.huge_addr()))?;
 
         p2_entry.set_unused();
         Ok((frame, flags, MapperFlush::new(page)))
@@ -308,9 +310,9 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
             p2_entry.set_unused();
             return Ok(UnmappedFrame::NotPresent { entry: cloned });
         }
-        let frame = PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.addr()))?;
-        let flags = p2_entry.flags();
+        let frame = PhysFrame::from_start_address(p2_entry.huge_addr())
+            .map_err(|AddressNotAligned| UnmapError::InvalidFrameAddress(p2_entry.huge_addr()))?;
+        let flags = p2_entry.huge_flags();
 
         p2_entry.set_unused();
         Ok(UnmappedFrame::Present {
@@ -344,7 +346,7 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
             return Err(FlagUpdateError::ParentEntryHugePage);
         }
 
-        p2[page.p2_index()].set_flags(flags | PageTableFlags::HUGE_PAGE);
+        p2[page.p2_index()].set_huge_flags(flags | PageTableFlags::HUGE_PAGE);
 
         Ok(MapperFlush::new(page))
     }
@@ -409,8 +411,8 @@ impl<P: PageTableFrameMapping> Mapper<Size2MiB> for MappedPageTable<'_, P> {
             return Err(TranslateError::ParentEntryHugePage);
         }
 
-        PhysFrame::from_start_address(p2_entry.addr())
-            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p2_entry.addr()))
+        PhysFrame::from_start_address(p2_entry.huge_addr())
+            .map_err(|AddressNotAligned| TranslateError::InvalidFrameAddress(p2_entry.huge_addr()))
     }
 }
 
@@ -630,10 +632,10 @@ impl<P: PageTableFrameMapping> Translate for MappedPageTable<'_, P> {
             Err(PageTableWalkError::NotMapped) => return TranslateResult::NotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 let entry = &p3[addr.p3_index()];
-                let frame = PhysFrame::containing_address(entry.addr());
+                let frame = PhysFrame::containing_address(entry.huge_addr());
                 #[allow(clippy::unusual_byte_groupings)]
                 let offset = addr.as_u64() & 0o_777_777_7777;
-                let flags = entry.flags();
+                let flags = entry.huge_flags();
                 return TranslateResult::Mapped {
                     frame: MappedFrame::Size1GiB(frame),
                     offset,
@@ -646,10 +648,10 @@ impl<P: PageTableFrameMapping> Translate for MappedPageTable<'_, P> {
             Err(PageTableWalkError::NotMapped) => return TranslateResult::NotMapped,
             Err(PageTableWalkError::MappedToHugePage) => {
                 let entry = &p2[addr.p2_index()];
-                let frame = PhysFrame::containing_address(entry.addr());
+                let frame = PhysFrame::containing_address(entry.huge_addr());
                 #[allow(clippy::unusual_byte_groupings)]
                 let offset = addr.as_u64() & 0o_777_7777;
-                let flags = entry.flags();
+                let flags = entry.huge_flags();
                 return TranslateResult::Mapped {
                     frame: MappedFrame::Size2MiB(frame),
                     offset,
